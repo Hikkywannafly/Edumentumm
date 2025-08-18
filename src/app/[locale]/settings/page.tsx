@@ -16,7 +16,7 @@ export default async function SettingPage({
       <div className="flex min-h-screen flex-col">
         {/* Header */}
         <PageHeaderClient
-          title={"Setting"}
+          title={"Settings"}
           showThemeToggle={true}
           showLanguageSwitcher={true}
         />
