@@ -114,7 +114,7 @@ export default function GroupStoreContent() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4 sm:p-6 lg:p-8 dark:bg-gray-950">
+    <div className="min-h-screen p-4 sm:p-6 lg:p-8 dark:bg-gray-950">
       <div className="mx-auto max-w-6xl space-y-6">
         <GroupStoreHeader
           onCreateFolder={() => setIsFolderDialogOpen(true)}
