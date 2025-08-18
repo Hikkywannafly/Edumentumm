@@ -15,11 +15,15 @@ import {
   Trophy,
   Zap,
 } from "lucide-react";
+import { useAuth } from "../../../contexts/auth-context";
 
 export default function UserProfile() {
+  const { user } = useAuth();
+
+  const displayName = user?.username || user?.email || "User";
+
   // Mock user data
   const userData = {
-    name: "bien",
     level: 1,
     xp: 0,
     maxXp: 100,
@@ -119,12 +123,12 @@ export default function UserProfile() {
           <Avatar className="mb-6 h-32 w-32 border-4 border-background">
             <AvatarImage src={userData.avatar || "/placeholder.svg"} />
             <AvatarFallback className="bg-muted font-bold text-4xl">
-              {userData.name.charAt(0).toUpperCase()}
+              {displayName.charAt(0).toUpperCase()}
             </AvatarFallback>
           </Avatar>
 
           <div>
-            <h1 className="mb-4 font-bold text-4xl">{userData.name}</h1>
+            <h1 className="mb-4 font-bold text-4xl">{displayName}</h1>
             <div className="mb-2 flex items-center justify-center gap-4 text-muted-foreground">
               <Badge variant="secondary" className="bg-blue-100 text-blue-800">
                 Level {userData.level}
