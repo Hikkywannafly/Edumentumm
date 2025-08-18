@@ -1,9 +1,12 @@
 "use client";
 
+import type React from "react";
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
 import {
   Award,
   BarChart3,
@@ -13,12 +16,20 @@ import {
   Eye,
   Target,
   Trophy,
+  Upload,
   Zap,
 } from "lucide-react";
+import { useRef, useState } from "react";
 import { useAuth } from "../../../contexts/auth-context";
 
 export default function UserProfile() {
   const { user } = useAuth();
+  const { toast } = useToast();
+  const [avatarImage, setAvatarImage] = useState<string | null>(null);
+  const [bannerImage, setBannerImage] = useState<string | null>(null);
+  const [isHoveringAvatar, setIsHoveringAvatar] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+  const bannerInputRef = useRef<HTMLInputElement>(null);
 
   const displayName = user?.username || user?.email || "User";
 
@@ -30,9 +41,82 @@ export default function UserProfile() {
     streak: 0,
     joinDate: "July 2025",
     profileViews: 1,
-    avatar: null,
+    avatar: avatarImage,
     bannerImage:
+      bannerImage ||
       "https://t3.ftcdn.net/jpg/04/12/12/98/360_F_412129819_HaLS1MLvkJBPaBPMagPUOYm1SfAcaT7h.jpg",
+  };
+
+  const handleAvatarUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file size (5MB max)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Please select an image smaller than 5MB.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      toast({
+        title: "Invalid file type",
+        description: "Please select a valid image file (JPG, PNG, WebP).",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const result = e.target?.result as string;
+      setAvatarImage(result);
+      toast({
+        title: "Avatar updated",
+        description: "Your profile picture has been updated successfully.",
+      });
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleBannerUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file size (10MB max)
+    if (file.size > 10 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Please select an image smaller than 10MB.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      toast({
+        title: "Invalid file type",
+        description: "Please select a valid image file (JPG, PNG, WebP).",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const result = e.target?.result as string;
+      setBannerImage(result);
+      toast({
+        title: "Banner updated",
+        description: "Your profile banner has been updated successfully.",
+      });
+    };
+    reader.readAsDataURL(file);
   };
 
   const stats = [
@@ -102,6 +186,22 @@ export default function UserProfile() {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Hidden file inputs */}
+      <input
+        ref={avatarInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleAvatarUpload}
+        className="hidden"
+      />
+      <input
+        ref={bannerInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleBannerUpload}
+        className="hidden"
+      />
+
       {/* Header with Banner */}
       <div className="relative h-48 overflow-hidden bg-gradient-to-r from-purple-600 via-pink-600 to-orange-500">
         <img
@@ -110,7 +210,11 @@ export default function UserProfile() {
           className="h-full w-full object-cover"
         />
         <div className="absolute top-4 right-4">
-          <Button variant="secondary" size="sm">
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => bannerInputRef.current?.click()}
+          >
             <Camera className="mr-2 h-4 w-4" />
             Change Banner
           </Button>
@@ -120,12 +224,33 @@ export default function UserProfile() {
       {/* Profile Info */}
       <div className="-mt-16 container relative z-10 mx-auto px-4">
         <div className="mb-8 flex flex-col items-start text-start">
-          <Avatar className="mb-6 h-32 w-32 border-4 border-background">
-            <AvatarImage src={userData.avatar || "/placeholder.svg"} />
-            <AvatarFallback className="bg-muted font-bold text-4xl">
-              {displayName.charAt(0).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
+          <div
+            className="relative mb-6"
+            onMouseEnter={() => setIsHoveringAvatar(true)}
+            onMouseLeave={() => setIsHoveringAvatar(false)}
+          >
+            <Avatar className="h-32 w-32 border-4 border-background">
+              <AvatarImage src={userData.avatar || "/placeholder.svg"} />
+              <AvatarFallback className="bg-muted font-bold text-4xl">
+                {displayName.charAt(0).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+
+            {/* Hover overlay with change button */}
+            {isHoveringAvatar && (
+              <div className="absolute inset-0 flex cursor-pointer items-center justify-center rounded-full bg-black/50 transition-opacity">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => avatarInputRef.current?.click()}
+                  className="bg-white/90 text-black hover:bg-white"
+                >
+                  <Upload className="mr-2 h-4 w-4" />
+                  Change
+                </Button>
+              </div>
+            )}
+          </div>
 
           <div>
             <h1 className="mb-4 font-bold text-4xl">{displayName}</h1>
