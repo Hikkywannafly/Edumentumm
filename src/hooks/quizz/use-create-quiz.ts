@@ -1,41 +1,40 @@
-import { useToast } from "@/hooks/use-toast";
-import { quizCRUDAPI } from "@/lib/api/quiz/crud";
+import { QUIZ_QUERY_KEYS } from "@/hooks/quizz/use-quiz";
+import { quizCRUDAPI } from "@/lib/api/quiz/";
 import type { CreateQuizRequest, QuizResponse } from "@/types/quiz";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 
 interface UseCreateQuizOptions {
   onSuccess?: (data: QuizResponse) => void;
   onError?: (error: Error) => void;
+  redirectToEdit?: boolean;
 }
 
-export function useCreateQuiz(options?: UseCreateQuizOptions) {
+export function useCreateQuiz(options: UseCreateQuizOptions = {}) {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
+  const router = useRouter();
 
-  return useMutation({
-    mutationFn: (quizRequest: CreateQuizRequest) =>
-      quizCRUDAPI.createQuiz(quizRequest),
+  const { onSuccess, onError, redirectToEdit = true } = options;
 
-    onSuccess: (data: QuizResponse) => {
-      // Invalidate and refetch quiz-related queries
-      queryClient.invalidateQueries({ queryKey: ["quizzes"] });
+  return useMutation<QuizResponse, Error, CreateQuizRequest>({
+    mutationFn: (data) => quizCRUDAPI.createQuiz(data),
 
-      toast({
-        title: "Success",
-        description: "Quiz created successfully!",
+    onSuccess: (data) => {
+      queryClient.setQueryData(QUIZ_QUERY_KEYS.detail(data.id), data);
+
+      queryClient.invalidateQueries({
+        queryKey: QUIZ_QUERY_KEYS.lists(),
       });
 
-      options?.onSuccess?.(data);
+      onSuccess?.(data);
+
+      if (redirectToEdit) {
+        router.push(`/quizzes/edit?id=${data.id}`);
+      }
     },
-
-    onError: (error: Error) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to create quiz",
-        variant: "destructive",
-      });
-
-      options?.onError?.(error);
+    onError: (error) => {
+      console.error("Error creating quiz:", error);
+      onError?.(error);
     },
   });
 }
