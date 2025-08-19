@@ -1,31 +1,43 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Save } from "lucide-react";
+import { ArrowLeft, Upload } from "lucide-react";
 
 interface QuizEditorHeaderProps {
-  onSave: () => void;
   onCreateQuiz: () => void;
-  canSave: boolean;
+  onBack?: () => void;
   canCreate: boolean;
+  isCreating?: boolean;
 }
 
 export function QuizEditorHeader({
-  onSave,
   onCreateQuiz,
-  canSave,
+  onBack,
   canCreate,
+  isCreating = false,
 }: QuizEditorHeaderProps) {
   return (
-    <div className=" flex w-full items-center justify-end p-4">
-      <div className="pb- flex w-full gap-2 border-gray-200 border-b-1 p-2">
-        <Button onClick={onSave} disabled={!canSave}>
-          <Save className="mr-2 h-4 w-4" />
-          Save Draft
+    <div className="flex w-full items-center justify-between p-4">
+      {onBack && (
+        <Button
+          variant="ghost"
+          onClick={onBack}
+          className="flex items-center gap-2"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back
         </Button>
-        <Button onClick={onCreateQuiz} disabled={!canCreate}>
-          <Save className="mr-2 h-4 w-4" />
-          Create Quiz
+      )}
+
+      {/* Right side - Create button */}
+      <div className="flex gap-2 border-gray-200 border-b pb-2">
+        <Button
+          onClick={onCreateQuiz}
+          disabled={!canCreate || isCreating}
+          size="lg"
+        >
+          <Upload className="mr-2 h-4 w-4" />
+          {isCreating ? "Creating..." : "Create Quiz"}
         </Button>
       </div>
     </div>

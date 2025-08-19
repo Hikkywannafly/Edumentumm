@@ -38,26 +38,26 @@ export function useQuiz(id: number | null, options: UseQuizOptions = {}) {
   });
 }
 
-export function useQuizzes(filters: any = {}) {
-  return useQuery({
-    queryKey: QUIZ_QUERY_KEYS.list(filters),
-    queryFn: () => quizCRUDAPI.getQuizzes(filters),
-    refetchOnWindowFocus: false,
-    staleTime: 2 * 60 * 1000,
-  });
-}
+// export function useQuizzes(filters: any = {}) {
+//   return useQuery({
+//     queryKey: QUIZ_QUERY_KEYS.list(filters),
+//     queryFn: () => quizCRUDAPI.getQuizzes(filters),
+//     refetchOnWindowFocus: false,
+//     staleTime: 2 * 60 * 1000,
+//   });
+// }
 
-export function useQuizStats(id: number | null) {
-  return useQuery({
-    queryKey: id ? QUIZ_QUERY_KEYS.stats(id) : ["quiz", "stats", "empty"],
-    queryFn: () => {
-      if (!id) {
-        throw new Error("Quiz ID is required for stats");
-      }
-      return quizCRUDAPI.getQuizStats(id);
-    },
-    enabled: !!id,
-    refetchOnWindowFocus: false,
-    staleTime: 10 * 60 * 1000,
-  });
-}
+// export function useQuizStats(id: number | null) {
+//   return useQuery({
+//     queryKey: id ? QUIZ_QUERY_KEYS.stats(id) : ["quiz", "stats", "empty"],
+//     queryFn: () => {
+//       if (!id) {
+//         throw new Error("Quiz ID is required for stats");
+//       }
+//       return quizCRUDAPI.getQuizStats(id);
+//     },
+//     enabled: !!id,
+//     refetchOnWindowFocus: false,
+//     staleTime: 10 * 60 * 1000,
+//   });
+// }

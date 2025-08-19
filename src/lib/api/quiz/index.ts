@@ -31,10 +31,12 @@ export class QuizCRUDAPI extends BaseQuizAPI {
    * Create a new quiz
    */
   async createQuiz(quizRequest: CreateQuizRequest): Promise<QuizResponse> {
-    const response = await this.request<QuizResponse>("/student/quiz", {
+    console.log(quizRequest);
+    const response = await this.request<QuizResponse>("/student/quizzes", {
       method: "POST",
       body: JSON.stringify(quizRequest),
     });
+    console.log(quizRequest);
     return response;
   }
 
@@ -42,7 +44,7 @@ export class QuizCRUDAPI extends BaseQuizAPI {
    * Get quiz by ID
    */
   async getQuizById(id: number): Promise<QuizResponse> {
-    const response = await this.request<QuizResponse>(`/student/quiz/${id}`);
+    const response = await this.request<QuizResponse>(`/student/quizzes/${id}`);
     return response;
   }
 
@@ -81,10 +83,13 @@ export class QuizCRUDAPI extends BaseQuizAPI {
   async updateQuiz(updateRequest: UpdateQuizRequest): Promise<QuizResponse> {
     const { id, ...updateData } = updateRequest;
 
-    const response = await this.request<QuizResponse>(`/student/quiz/${id}`, {
-      method: "PUT",
-      body: JSON.stringify(updateData),
-    });
+    const response = await this.request<QuizResponse>(
+      `/student/quizzes/${id}`,
+      {
+        method: "PUT",
+        body: JSON.stringify(updateData),
+      },
+    );
     return response;
   }
 
@@ -92,7 +97,7 @@ export class QuizCRUDAPI extends BaseQuizAPI {
    * Delete a quiz
    */
   async deleteQuiz(id: number): Promise<void> {
-    await this.request<void>(`/student/quiz/${id}`, {
+    await this.request<void>(`/student/quizzes/${id}`, {
       method: "DELETE",
     });
   }
