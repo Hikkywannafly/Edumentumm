@@ -1,12 +1,20 @@
+"use client";
+
+import { usePublicFlashcards } from "@/hooks/use-public-flashcards";
+import { useState } from "react";
 import ThinLayout from "../layout/thin-layout";
 import { Card } from "../ui";
 import ExploreCard from "./explore-card";
 import ExploreFilter from "./explore-filter";
 import ExplorePaging from "./explore-paging";
 import ExploreTitle from "./explore-title";
+import FlashcardExploreCard from "./flashcard-explore-card";
 
 export default function ExploreContent() {
-  const mockData = [
+  const [activeTab, setActiveTab] = useState("quizzes");
+  const { flashcardSets, isLoading, error } = usePublicFlashcards();
+
+  const mockQuizData = [
     { title: "Debt Instruments and Valuation Quiz", questions: 10, daysAgo: 9 },
     {
       title: "Trắc nghiệm Triết học Mác-Lênin (Chương 1)",
@@ -23,16 +31,60 @@ export default function ExploreContent() {
     { title: "Triết học Mác - Lênin", questions: 9, daysAgo: 20 },
   ];
 
-  return (
-    <ThinLayout>
-      <ExploreTitle />
-      <ExploreFilter />
-      <ExplorePaging />
+  const renderContent = () => {
+    if (activeTab === "flashcards") {
+      if (isLoading) {
+        return (
+          <Card className="flex items-center justify-center border-none py-12">
+            <p className="text-muted-foreground">Loading flashcards...</p>
+          </Card>
+        );
+      }
+
+      if (error) {
+        return (
+          <Card className="flex items-center justify-center border-none py-12">
+            <p className="text-red-500">Error loading flashcards: {error}</p>
+          </Card>
+        );
+      }
+
+      if (flashcardSets.length === 0) {
+        return (
+          <Card className="flex items-center justify-center border-none py-12">
+            <p className="text-muted-foreground">No public flashcards found</p>
+          </Card>
+        );
+      }
+
+      return (
+        <Card className="grid gap-4 border-none py-6 md:grid-cols-3">
+          {flashcardSets.map((flashcardSet) => (
+            <FlashcardExploreCard
+              key={flashcardSet.id}
+              flashcardSet={flashcardSet}
+            />
+          ))}
+        </Card>
+      );
+    }
+
+    // Render quizzes (default tab)
+    return (
       <Card className="grid gap-4 border-none py-6 md:grid-cols-3">
-        {mockData.map((item, idx) => (
+        {mockQuizData.map((item, idx) => (
           <ExploreCard key={idx} {...item} />
         ))}
       </Card>
+    );
+  };
+
+  return (
+    <ThinLayout>
+      <ExploreTitle />
+      <ExploreFilter tab={activeTab} onTabChange={setActiveTab} />
+      <ExplorePaging />
+      {renderContent()}
     </ThinLayout>
   );
 }
