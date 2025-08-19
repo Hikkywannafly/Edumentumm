@@ -1,6 +1,5 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -9,262 +8,226 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { AlertCircle, CheckCircle, FileText, Upload, X } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useFileProcessor } from "@/hooks/use-file-processor";
+import {
+  FILE_UPLOAD_LIMITS,
+  getAcceptedFileTypes,
+} from "@/lib/utils/file-utils";
+import { useLocalizedNavigation } from "@/lib/utils/navigation";
+import { useFlashcardEditorStore } from "@/stores/flashcard-editor-store";
+import type { Language, ParsingMode, Visibility } from "@/types/quiz";
+import { CheckCircle, Loader2, Settings } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import { useDropzone } from "react-dropzone";
+import { FileList } from "../quizzes/file-list";
+import { FileUploadArea } from "../quizzes/file-upload-area";
 
-interface UploadedFile {
-  id: string;
-  name: string;
-  size: number;
-  status: "uploading" | "processing" | "success" | "error";
-  progress: number;
-  error?: string;
+interface FileWithAnswersUploaderProps {
+  onProcessingStart?: (fileName: string, label?: string) => void;
+  onProcessingDone?: (done: boolean) => void;
 }
 
-export function FileWithAnswersUploader() {
+export function FileWithAnswersUploader({
+  onProcessingStart,
+  onProcessingDone,
+}: FileWithAnswersUploaderProps) {
   const t = useTranslations("Flashcards");
-  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
+  const { goFlashcardEdit } = useLocalizedNavigation();
+  const [isCreatingFlashcard, setIsCreatingFlashcard] = useState(false);
 
-  const onDrop = useCallback((acceptedFiles: File[]) => {
-    const newFiles: UploadedFile[] = acceptedFiles.map((file, index) => ({
-      id: `${Date.now()}-${index}`,
-      name: file.name,
-      size: file.size,
-      status: "uploading",
-      progress: 0,
-    }));
+  // Settings for extraction
+  const [visibility, setVisibility] = useState<Visibility>("PRIVATE");
+  const [language, setLanguage] = useState<Language>("AUTO");
+  const [parsingMode, setParsingMode] = useState<ParsingMode>("BALANCED");
 
-    setUploadedFiles((prev) => [...prev, ...newFiles]);
+  const {
+    uploadedFiles,
+    addFiles,
+    removeFile,
+    extractQuestionsFromFiles,
+    isProcessing,
+    hasFiles,
+  } = useFileProcessor();
 
-    // Simulate file processing
-    newFiles.forEach((file, _index) => {
-      simulateFileProcessing(file.id);
-    });
-  }, []);
+  const { setEditing } = useFlashcardEditorStore();
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop,
-    accept: {
-      "application/pdf": [".pdf"],
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
-        [".docx"],
-      "application/msword": [".doc"],
-      "application/vnd.openxmlformats-officedocument.presentationml.presentation":
-        [".pptx"],
-      "application/vnd.ms-powerpoint": [".ppt"],
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [
-        ".xlsx",
-      ],
-      "application/vnd.ms-excel": [".xls"],
-      "application/json": [".json"],
-      "text/markdown": [".md"],
+  // Busy when creating flashcard or underlying processor is working
+  const isBusy = isCreatingFlashcard || isProcessing;
+
+  const { isDragActive } = useDropzone({
+    disabled: isBusy,
+    onDrop: (files) => {
+      if (!isBusy) addFiles(files);
     },
-    maxFiles: 10,
-    maxSize: 20 * 1024 * 1024, // 20MB
+    accept: getAcceptedFileTypes(),
+    maxFiles: FILE_UPLOAD_LIMITS.maxFiles,
+    maxSize: FILE_UPLOAD_LIMITS.maxSize,
   });
 
-  const simulateFileProcessing = (fileId: string) => {
-    const interval = setInterval(() => {
-      setUploadedFiles((prev) =>
-        prev.map((file) => {
-          if (file.id === fileId) {
-            if (file.progress < 100) {
-              return { ...file, progress: file.progress + 10 };
-            }
-            clearInterval(interval);
-            return { ...file, status: "processing" };
-          }
-          return file;
-        }),
-      );
-    }, 200);
+  const handleCreateFlashcard = async () => {
+    if (isCreatingFlashcard || isProcessing) return; // guard against double submit
 
-    // Simulate processing completion
-    setTimeout(() => {
-      setUploadedFiles((prev) =>
-        prev.map((file) => {
-          if (file.id === fileId) {
-            return { ...file, status: "success" };
-          }
-          return file;
-        }),
-      );
-    }, 3000);
-  };
+    setIsCreatingFlashcard(true);
 
-  const removeFile = (fileId: string) => {
-    setUploadedFiles((prev) => prev.filter((file) => file.id !== fileId));
-  };
+    onProcessingStart?.(
+      uploadedFiles[0]?.name || "File",
+      t("create.fileWithAnswers.processing"),
+    );
 
-  const getFileIcon = (fileName: string) => {
-    const extension = fileName.split(".").pop()?.toLowerCase();
-    switch (extension) {
-      case "pdf":
-        return <FileText className="h-8 w-8 text-red-500" />;
-      case "docx":
-      case "doc":
-        return <FileText className="h-8 w-8 text-blue-500" />;
-      case "pptx":
-      case "ppt":
-        return <FileText className="h-8 w-8 text-orange-500" />;
-      case "xlsx":
-      case "xls":
-        return <FileText className="h-8 w-8 text-green-500" />;
-      case "json":
-        return <FileText className="h-8 w-8 text-purple-500" />;
-      case "md":
-        return <FileText className="h-8 w-8 text-gray-500" />;
-      default:
-        return <FileText className="h-8 w-8 text-gray-500" />;
+    try {
+      await extractQuestionsFromFiles({
+        language,
+        parsingMode,
+      });
+
+      // Navigate immediately; parent overlay stays until route change
+      onProcessingDone?.(true);
+      setEditing(true);
+      goFlashcardEdit();
+    } catch (error) {
+      console.error("Error creating flashcard:", error);
+      setIsCreatingFlashcard(false);
+
+      onProcessingDone?.(false);
     }
-  };
-
-  const getStatusIcon = (status: UploadedFile["status"]) => {
-    switch (status) {
-      case "uploading":
-        return (
-          <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
-        );
-      case "processing":
-        return (
-          <div className="h-4 w-4 animate-spin rounded-full border-2 border-yellow-500 border-t-transparent" />
-        );
-      case "success":
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case "error":
-        return <AlertCircle className="h-4 w-4 text-red-500" />;
-    }
-  };
-
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return "0 Bytes";
-    const k = 1024;
-    const sizes = ["Bytes", "KB", "MB", "GB"];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return `${Number.parseFloat((bytes / k ** i).toFixed(2))} ${sizes[i]}`;
   };
 
   return (
-    <div className="space-y-6 border-none">
-      {/* Upload Area */}
-      <Card className="border-none">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Upload className="h-5 w-5" />
-            {t("create.manual.title")}
-          </CardTitle>
-          <CardDescription>{t("create.manual.description")}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div
-            {...getRootProps()}
-            className={`rounded-lg border-2 border-dashed p-8 text-center transition-colors ${
-              isDragActive
-                ? "border-blue-500 bg-blue-50"
-                : "border-gray-300 hover:border-gray-400"
-            }`}
-          >
-            <input {...getInputProps()} />
-            <Upload className="mx-auto mb-4 h-12 w-12 text-gray-400" />
-            <p className="mb-2 font-medium text-lg">
-              {isDragActive
-                ? t("create.aiGenerated.dropHere")
-                : t("create.aiGenerated.dropOrSelect")}
+    <div className="space-y-6">
+      <div
+        className={`grid gap-6 lg:grid-cols-3 ${isBusy ? "pointer-events-none opacity-60" : ""}`}
+        aria-busy={isBusy}
+      >
+        {/* File upload area */}
+        <div className="space-y-6 lg:col-span-2">
+          <FileUploadArea
+            onDrop={isBusy ? () => {} : addFiles}
+            isDragActive={isDragActive}
+            variant="file-with-answers"
+          />
+          <FileList files={uploadedFiles} onRemoveFile={removeFile} />
+
+          <div className="flex items-center justify-between">
+            <p className="text-muted-foreground text-sm">
+              {t("create.fileWithAnswers.guidance")}
             </p>
-            <p className="mb-4 text-muted-foreground text-sm">
-              {t("create.aiGenerated.supportedFormats")}
-            </p>
-            <div className="mb-4 flex flex-wrap justify-center gap-2">
-              <Badge variant="outline">PDF</Badge>
-              <Badge variant="outline">DOC(X)</Badge>
-              <Badge variant="outline">PPT(X)</Badge>
-              <Badge variant="outline">XLS(X)</Badge>
-              <Badge variant="outline">JSON</Badge>
-              <Badge variant="outline">MD</Badge>
+            <div className="flex gap-2">
+              <Button
+                disabled={!hasFiles || isProcessing || isCreatingFlashcard}
+                onClick={handleCreateFlashcard}
+                className="flex items-center gap-2"
+              >
+                {isCreatingFlashcard ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />{" "}
+                    {t("create.fileWithAnswers.processing")}
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle className="h-4 w-4" />{" "}
+                    {t("create.fileWithAnswers.createDeck")}
+                  </>
+                )}
+              </Button>
             </div>
-            <p className="text-muted-foreground text-xs">
-              {t("create.aiGenerated.limits")}
-            </p>
           </div>
-        </CardContent>
-      </Card>
+        </div>
 
-      {/* Uploaded Files */}
-      {uploadedFiles.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>{t("create.manual.uploadedFiles")}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {uploadedFiles.map((file) => (
-                <div
-                  key={file.id}
-                  className="flex items-center gap-4 rounded-lg border p-4"
+        <div>
+          <Card className="border-none">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Settings className="h-5 w-5" /> {t("create.settings.title")}
+              </CardTitle>
+              <CardDescription>
+                {t("create.settings.description")}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-5 border-none">
+              <div className="space-y-2">
+                <Label>{t("create.settings.visibility")}</Label>
+                <Select
+                  value={visibility}
+                  onValueChange={(v: Visibility) => setVisibility(v)}
+                  disabled={isBusy}
                 >
-                  {getFileIcon(file.name)}
-                  <div className="min-w-0 flex-1">
-                    <div className="mb-1 flex items-center gap-2">
-                      <p className="truncate font-medium">{file.name}</p>
-                      {getStatusIcon(file.status)}
-                    </div>
-                    <div className="flex items-center gap-4 text-muted-foreground text-sm">
-                      <span>{formatFileSize(file.size)}</span>
-                      {file.status === "uploading" && (
-                        <span>{t("create.manual.uploading")}</span>
-                      )}
-                      {file.status === "processing" && (
-                        <span>{t("create.manual.processing")}</span>
-                      )}
-                      {file.status === "success" && (
-                        <span className="text-green-600">
-                          {t("create.manual.success")}
-                        </span>
-                      )}
-                      {file.status === "error" && (
-                        <span className="text-red-600">{file.error}</span>
-                      )}
-                    </div>
-                    {(file.status === "uploading" ||
-                      file.status === "processing") && (
-                      <Progress value={file.progress} className="mt-2" />
-                    )}
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => removeFile(file.id)}
-                    className="text-muted-foreground hover:text-red-500"
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+                  <SelectTrigger className="w-full" disabled={isBusy}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="w-full">
+                    <SelectItem value="PRIVATE">
+                      {t("create.settings.private")}
+                    </SelectItem>
+                    <SelectItem value="PUBLIC">
+                      {t("create.settings.public")}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-      {/* Action Buttons */}
-      <div className="flex items-center justify-between">
-        <p className="text-muted-foreground text-sm">
-          {t("create.manual.guidance")}
-        </p>
-        <Button
-          disabled={
-            uploadedFiles.length === 0 ||
-            uploadedFiles.some(
-              (f) => f.status === "uploading" || f.status === "processing",
-            )
-          }
-          className="flex items-center gap-2"
-        >
-          <CheckCircle className="h-4 w-4" />
-          {t("create.manual.createDeck")}
-        </Button>
+              <div className="space-y-2">
+                <Label>{t("create.settings.language")}</Label>
+                <Select
+                  value={language}
+                  onValueChange={(v: Language) => setLanguage(v)}
+                  disabled={isBusy}
+                >
+                  <SelectTrigger className="w-full" disabled={isBusy}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="w-full">
+                    <SelectItem value="AUTO">
+                      🌐 {t("create.settings.autoDetect")}
+                    </SelectItem>
+                    <SelectItem value="EN">🇺🇸 English</SelectItem>
+                    <SelectItem value="VI">🇻🇳 Tiếng Việt</SelectItem>
+                    <SelectItem value="KO">🇰🇷 한국어</SelectItem>
+                    <SelectItem value="ZH">🇨🇳 中文</SelectItem>
+                    <SelectItem value="JA">🇯🇵 日本語</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>{t("create.settings.parsingMode")}</Label>
+                <Select
+                  value={parsingMode}
+                  onValueChange={(v: ParsingMode) => setParsingMode(v)}
+                  disabled={isBusy}
+                >
+                  <SelectTrigger className="w-full" disabled={isBusy}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="w-full">
+                    <SelectItem value="FAST">
+                      {t("create.settings.fast")}
+                    </SelectItem>
+                    <SelectItem value="BALANCED">
+                      {t("create.settings.balanced")}
+                    </SelectItem>
+                    <SelectItem value="THOROUGH">
+                      {t("create.settings.thorough")}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                {parsingMode === "FAST" && (
+                  <p className="text-muted-foreground text-xs">
+                    {t("create.settings.fastModeWarning")}
+                  </p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );

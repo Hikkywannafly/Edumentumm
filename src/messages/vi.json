@@ -514,7 +514,9 @@
     "createCTA": {
       "title": "Tạo bộ flashcard đầu tiên",
       "description": "Bắt đầu xây dựng flashcards tương tác để cải thiện trí nhớ",
-      "button": "Tạo bộ flashcard mới"
+      "button": "Tạo bộ flashcard mới",
+      "updating": "Đang cập nhật...",
+      "saving": "Đang lưu..."
     },
     "create": {
       "title": "Tạo bộ Flashcard",
@@ -523,20 +525,25 @@
       "subtitle": "Nhanh chóng tạo bộ flashcard mới từ tài liệu học tập của bạn!",
       "tabs": {
         "manual": "Tạo thủ công",
-        "aiGenerated": "AI tạo"
+        "aiGenerated": "AI tạo",
+        "fileWithAnswers": "File có đáp án",
+        "textContent": "Nội dung văn bản"
       },
       "settings": {
         "title": "Cài đặt Flashcard",
         "description": "Cấu hình cài đặt tạo flashcard",
+        "generationMode": "Chế độ tạo",
+        "modeGenerate": "Tạo",
+        "modeExtract": "Trích xuất",
+        "fileProcessing": "Xử lý File",
+        "fileProcessingParseThenSend": "Phân tích rồi gửi",
+        "fileProcessingSendDirect": "Gửi trực tiếp",
         "visibility": "Hiển thị",
         "private": "Riêng tư",
         "public": "Công khai",
         "language": "Ngôn ngữ flashcards",
+        "languageOfTheQuiz": "Ngôn ngữ của flashcards",
         "autoDetect": "Tự động phát hiện",
-        "cardType": "Loại thẻ",
-        "mixed": "Hỗn hợp",
-        "questionAnswer": "Câu hỏi/Đáp án",
-        "cloze": "Điền vào chỗ trống",
         "numberOfCards": "Số thẻ",
         "difficulty": "Độ khó",
         "easy": "Dễ",
@@ -584,6 +591,33 @@
         "startGeneration": "Bắt đầu tạo AI",
         "createDeck": "Tạo bộ thẻ",
         "guidance": "Sử dụng tài liệu có thông tin chính xác để có kết quả tốt nhất."
+      },
+      "fileWithAnswers": {
+        "title": "Upload file có đáp án",
+        "description": "Upload file đã chứa nội dung flashcard",
+        "dropOrSelect": "Kéo thả hoặc chọn file",
+        "dropHere": "Thả file vào đây",
+        "supportedFormats": "Hỗ trợ: PDF, DOC(X), PPT(X), XLS(X), JSON, MD",
+        "limits": "Tối đa 10 file, 20 MB tổng cộng",
+        "uploadedFiles": "File đã upload",
+        "uploading": "Đang upload...",
+        "processing": "Đang xử lý...",
+        "success": "Thành công",
+        "createDeck": "Tạo bộ thẻ",
+        "editDeck": "Chỉnh sửa bộ thẻ",
+        "editDeckDescription": "Xem lại và chỉnh sửa flashcards đã trích xuất trước khi tạo bộ thẻ",
+        "guidance": "Sử dụng tài liệu có thông tin chính xác để có kết quả tốt nhất."
+      },
+      "textContent": {
+        "title": "Nội dung văn bản",
+        "description": "Dán hoặc nhập nội dung trực tiếp để trích xuất flashcards",
+        "placeholder": "Nhập nội dung văn bản của bạn vào đây...\n\nVí dụ:\nChương 1: Giới thiệu về Sinh học\nSinh học là khoa học nghiên cứu về sự sống và các sinh vật sống.\n\nThuật ngữ chính:\n- Tế bào: Đơn vị cơ bản của sự sống\n- DNA: Axit deoxyribonucleic",
+        "pasteContent": "Dán nội dung",
+        "clearContent": "Xóa nội dung",
+        "extractFlashcards": "Trích xuất Flashcards",
+        "extractingFlashcards": "Đang trích xuất Flashcards...",
+        "createDeck": "Tạo bộ thẻ",
+        "guidance": "Dán nội dung rõ ràng và có cấu trúc tốt để trích xuất flashcard tốt hơn."
       }
     },
     "editPage": {
