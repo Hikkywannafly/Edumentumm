@@ -14,45 +14,6 @@ export default function QuizEditorPage() {
   // const router = useRouter();
   // const { quizData } = useQuizEditorStore();
   const t = useTranslations("Quizzes");
-
-  // const handleSave = async () => {
-  //   try {
-  //     // Navigate back to quizzes page
-  //     router.push("/quizzes");
-  //   } catch (error) {
-  //     console.error("Error saving quiz:", error);
-  //   }
-  // };
-
-  // const handleCreateQuiz = async () => {
-  //   if (!quizData) return;
-
-  //   try {
-  //     const quizDataToCreate = {
-  //       title: quizData.title,
-  //       description: quizData.description,
-  //       visibility: true,
-  //       total: quizData.questions.length,
-  //       topic: "Auto-generated",
-  //       quizCreationType: "FILE_UPLOAD" as const,
-  //       questions: quizData.questions,
-  //     };
-
-  //     // Import quizAPI dynamically to avoid SSR issues
-  //     const { quizAPI } = await import("@/lib/api/quiz");
-  //     const response = await quizAPI.createQuiz(quizDataToCreate);
-  //     console.log("Quiz created successfully:", response);
-
-  //     // Navigate back to quizzes page
-  //     router.push("/quizzes");
-  //   } catch (error) {
-  //     console.error("Error creating quiz:", error);
-  //   }
-  // };
-
-  // const canSave = !!(quizData && quizData.questions.length > 0);
-  // const canCreate = !!(quizData && quizData.questions.length > 0);
-
   return (
     <DashboardLayout>
       <div className="flex min-h-screen flex-col">

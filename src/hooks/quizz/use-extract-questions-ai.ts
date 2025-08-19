@@ -91,8 +91,6 @@ export function useExtractQuestionsAI() {
       };
       setQuizData(quizData);
 
-      console.log(`✅ Extracted ${data.questions.length} questions using AI`);
-
       // Generate better title with AI (async, non-blocking)
       try {
         const contentForTitle =
