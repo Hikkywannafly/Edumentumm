@@ -670,5 +670,9 @@
         "done": "Đã hoàn thành"
       }
     }
+  },
+  "Explore": {
+    "title": "Khám Phá",
+    "description": "Khám phá các bài kiểm tra và thẻ flash được tạo bởi sinh viên khác."
   }
 }
