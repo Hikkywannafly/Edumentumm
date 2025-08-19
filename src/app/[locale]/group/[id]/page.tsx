@@ -1,7 +1,7 @@
 import { ArrowLeft } from "lucide-react";
 import GroupDetailContent from "../../../../components/group/detail/group-detail-content";
+import { PageHeader } from "../../../../components/layout";
 import DashboardLayout from "../../../../components/layout/dashboard-layout";
-import { PageHeaderClient } from "../../../../components/layout/page-header-client";
 import { LocalizedLink } from "../../../../components/localized-link";
 import { Button } from "../../../../components/ui";
 
@@ -18,7 +18,7 @@ export default async function GroupDetailPage({
       <DashboardLayout>
         <div className="flex min-h-screen flex-col">
           {/* Header */}
-          <PageHeaderClient
+          <PageHeader
             title={"Group Page"}
             showThemeToggle={true}
             showLanguageSwitcher={true}

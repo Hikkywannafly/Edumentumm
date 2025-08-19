@@ -1,6 +1,6 @@
 import GroupContent from "../../../components/group/group-content";
+import { PageHeader } from "../../../components/layout";
 import DashboardLayout from "../../../components/layout/dashboard-layout";
-import { PageHeaderClient } from "../../../components/layout/page-header-client";
 
 export default function GroupPage() {
   return (
@@ -8,7 +8,7 @@ export default function GroupPage() {
       <DashboardLayout>
         <div className="flex min-h-screen flex-col">
           {/* Header */}
-          <PageHeaderClient
+          <PageHeader
             title={"Group Page"}
             showThemeToggle={true}
             showLanguageSwitcher={true}
