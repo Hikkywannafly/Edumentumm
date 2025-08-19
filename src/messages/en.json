@@ -666,5 +666,9 @@
         "done": "Done"
       }
     }
+  },
+  "Explore": {
+    "title": "Explore",
+    "description": "Explore quizzes and flashcards made by other students."
   }
 }
