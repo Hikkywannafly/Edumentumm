@@ -56,7 +56,8 @@ export default function FlashcardCard({
   };
 
   const handleAddChoice = () => {
-    const updatedChoices = [...flashcard.choices, ""];
+    const choiceNumber = flashcard.choices.length + 1;
+    const updatedChoices = [...flashcard.choices, `Choice ${choiceNumber}`];
     onUpdate({ ...flashcard, choices: updatedChoices });
   };
 

@@ -13,6 +13,7 @@ interface FlashcardCardsEditorProps {
   onDeleteFlashcard: (index: number) => void;
   onMoveFlashcard: (fromIndex: number, toIndex: number) => void;
   onAddFlashcard?: () => void;
+  onAddFlashcardAfter?: (afterIndex: number) => void;
 }
 
 export function FlashcardCardsEditor({
@@ -21,10 +22,14 @@ export function FlashcardCardsEditor({
   onDeleteFlashcard,
   onMoveFlashcard,
   onAddFlashcard,
+  onAddFlashcardAfter,
 }: FlashcardCardsEditorProps) {
-  const handleAddFlashcardAfter = (_afterIndex: number) => {
+  const handleAddFlashcardAfter = (afterIndex: number) => {
     // This will add a new flashcard after the specified index
-    if (onAddFlashcard) {
+    if (onAddFlashcardAfter) {
+      onAddFlashcardAfter(afterIndex);
+    } else if (onAddFlashcard) {
+      // Fallback to adding at the end
       onAddFlashcard();
     }
   };

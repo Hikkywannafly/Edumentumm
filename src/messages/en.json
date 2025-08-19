@@ -515,7 +515,9 @@
     "createCTA": {
       "title": "Create your first flashcard deck",
       "description": "Start building interactive flashcards to enhance your memory",
-      "button": "Create New Flashcard Deck"
+      "button": "Create New Flashcard Deck",
+      "updating": "Updating...",
+      "saving": "Saving..."
     },
     "create": {
       "title": "Create Flashcard Deck",
@@ -524,20 +526,25 @@
       "subtitle": "Quickly create a new flashcard deck from your study materials!",
       "tabs": {
         "manual": "Manual Creation",
-        "aiGenerated": "AI Generated"
+        "aiGenerated": "AI Generated",
+        "fileWithAnswers": "File with Answers",
+        "textContent": "Text Content"
       },
       "settings": {
         "title": "Flashcard Settings",
         "description": "Configure your flashcard generation settings",
+        "generationMode": "Generation Mode",
+        "modeGenerate": "Generate",
+        "modeExtract": "Extract",
+        "fileProcessing": "File Processing",
+        "fileProcessingParseThenSend": "Parse then Send",
+        "fileProcessingSendDirect": "Send Direct",
         "visibility": "Visibility",
         "private": "Private",
         "public": "Public",
         "language": "Language of the flashcards",
+        "languageOfTheQuiz": "Language of the flashcards",
         "autoDetect": "Auto detect",
-        "cardType": "Card type",
-        "mixed": "Mixed",
-        "questionAnswer": "Question/Answer",
-        "cloze": "Cloze deletion",
         "numberOfCards": "Number of cards",
         "difficulty": "Difficulty",
         "easy": "Easy",
@@ -580,6 +587,33 @@
         "startGeneration": "Start AI Generation",
         "createDeck": "Create Deck",
         "guidance": "Use documents with accurate factual information for best results."
+      },
+      "fileWithAnswers": {
+        "title": "Upload Files with Answers",
+        "description": "Upload files that already contain flashcard content",
+        "dropOrSelect": "Drop or select files",
+        "dropHere": "Drop files here",
+        "supportedFormats": "Currently supported: PDF, DOC(X), PPT(X), XLS(X), JSON, MD",
+        "limits": "Up to 10 files, 20 MB total",
+        "uploadedFiles": "Uploaded Files",
+        "uploading": "Uploading...",
+        "processing": "Processing...",
+        "success": "Success",
+        "createDeck": "Create Deck",
+        "editDeck": "Edit Deck",
+        "editDeckDescription": "Review and edit the extracted flashcards before creating your deck",
+        "guidance": "Use documents with accurate factual information for best results."
+      },
+      "textContent": {
+        "title": "Text Content",
+        "description": "Paste or type your content directly to extract flashcards",
+        "placeholder": "Enter your text content here...\n\nExample:\nChapter 1: Introduction to Biology\nBiology is the study of life and living organisms.\n\nKey Terms:\n- Cell: The basic unit of life\n- DNA: Deoxyribonucleic acid",
+        "pasteContent": "Paste Content",
+        "clearContent": "Clear Content",
+        "extractFlashcards": "Extract Flashcards",
+        "extractingFlashcards": "Extracting Flashcards...",
+        "createDeck": "Create Deck",
+        "guidance": "Paste clear and well-structured content for better flashcard extraction."
       }
     },
     "editPage": {

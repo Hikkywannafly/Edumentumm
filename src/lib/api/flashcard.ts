@@ -120,24 +120,14 @@ class FlashcardService {
     flashcardSetData: UpdateFlashcardSetRequest,
   ): Promise<FlashcardSet> {
     try {
-      // Use Next.js API route for CORS handling (proxy pattern)
-      const response = await fetch(`/api/flashcards/${id}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
+      const response = await this.request<FlashcardSetApiResponse>(
+        `/student/flashcards/${id}`,
+        {
+          method: "PATCH",
+          body: JSON.stringify(flashcardSetData),
         },
-        body: JSON.stringify(flashcardSetData),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(
-          errorData.message || `HTTP error! status: ${response.status}`,
-        );
-      }
-
-      const apiResponse: FlashcardSetApiResponse = await response.json();
-      return apiResponse.data;
+      );
+      return response.data;
     } catch (error) {
       console.error(
         "❌ FlashcardService: Error updating flashcard set:",
