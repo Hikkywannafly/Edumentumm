@@ -1,50 +1,90 @@
 "use client";
 
-import { CheckCircle, Loader2 } from "lucide-react";
+import { AlertCircle, CheckCircle, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 
 interface ProcessingScreenProps {
   fileName: string;
   label?: string;
   isDone?: boolean;
+  hasError?: boolean;
+  onComplete?: () => void;
 }
 
 export function ProcessingScreen({
   fileName,
   label,
-  isDone,
+  isDone = false,
+  hasError = false,
+  onComplete,
 }: ProcessingScreenProps) {
-  const [showComplete, setShowComplete] = useState(false);
+  const [showResult, setShowResult] = useState(false);
 
   useEffect(() => {
     if (!isDone) {
-      setShowComplete(false);
+      setShowResult(false);
       return;
     }
-    const t = setTimeout(() => setShowComplete(true), 500);
-    return () => clearTimeout(t);
-  }, [isDone]);
+
+    const timer = setTimeout(() => {
+      setShowResult(true);
+
+      if (onComplete) {
+        setTimeout(onComplete, 1500);
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [isDone, onComplete]);
+
+  const getIcon = () => {
+    if (!isDone) {
+      return <Loader2 className="h-8 w-8 animate-spin text-blue-600" />;
+    }
+    if (hasError) {
+      return <AlertCircle className="h-8 w-8 text-red-600" />;
+    }
+    return <CheckCircle className="h-8 w-8 text-green-600" />;
+  };
+
+  const getTitle = () => {
+    if (!isDone) return "Preparing your quiz";
+    if (hasError) return "Something went wrong";
+    return "Quiz Ready!";
+  };
+
+  const getDescription = () => {
+    if (!isDone) return label || "Please wait a moment";
+    if (hasError) return "Please try again";
+    return "Your quiz has been created successfully";
+  };
 
   return (
-    <div className="w-full max-w-sm rounded-lg p-6 text-center ">
-      <div className="mb-4 flex justify-center">
-        <div className="flex h-12 w-12 items-center justify-center rounded-full ">
-          {showComplete ? (
-            <CheckCircle className="h-6 w-6 text-green-600" />
-          ) : (
-            <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
-          )}
+    <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-background/80 ">
+      <div className="w-full max-w-sm bg-card p-8 text-center ">
+        <div className="mb-6 flex justify-center">
+          <div
+            className={`rounded-full p-3 ${
+              hasError ? "bg-red-50" : showResult ? "bg-green-50" : "bg-blue-50"
+            }`}
+          >
+            {getIcon()}
+          </div>
         </div>
+
+        <h3 className="mb-3 font-semibold text-lg">{getTitle()}</h3>
+
+        <p className="mb-4 text-muted-foreground text-sm">{getDescription()}</p>
+
+        <p className="truncate text-muted-foreground text-xs">{fileName}</p>
+
+        {/* Progress indicator for loading state */}
+        {!isDone && (
+          <div className="mt-4 h-1 w-full overflow-hidden rounded-full bg-gray-200">
+            <div className="h-full w-full animate-pulse bg-blue-600" />
+          </div>
+        )}
       </div>
-      <h3 className="mb-2 font-semibold text-gray-900 text-lg">
-        {showComplete ? "Quiz Ready!" : "Preparing your quiz"}
-      </h3>
-      <p className="mb-3 text-gray-600 text-sm">
-        {showComplete
-          ? "Your quiz has been created"
-          : label || "Please wait a moment"}
-      </p>
-      <p className="truncate text-gray-400 text-xs">{fileName}</p>
     </div>
   );
 }

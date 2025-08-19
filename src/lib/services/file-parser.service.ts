@@ -24,24 +24,82 @@ export class FileParserService {
   }
 
   private async parsePDF(file: File): Promise<string> {
-    const pdfjsLib = await import("pdfjs-dist");
-    const arrayBuffer = await file.arrayBuffer();
-    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-
-    // Extract pages concurrently for speed on large PDFs
-    const pageExtractions: Promise<string>[] = [];
-    for (let i = 1; i <= pdf.numPages; i++) {
-      pageExtractions.push(
-        (async () => {
-          const page = await pdf.getPage(i);
-          const textContent = await page.getTextContent();
-          return textContent.items.map((item: any) => item.str).join(" ");
-        })(),
-      );
+    if (file.size > 10 * 1024 * 1024) {
+      throw new Error("PDF file quá lớn (>10MB). Vui lòng chọn file nhỏ hơn.");
     }
 
-    const pages = await Promise.all(pageExtractions);
-    return pages.join("\n");
+    try {
+      const pdfjsLib = await import("pdfjs-dist");
+
+      if (
+        typeof window !== "undefined" &&
+        !pdfjsLib.GlobalWorkerOptions.workerSrc
+      ) {
+        pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+          "pdfjs-dist/build/pdf.worker.min.mjs",
+          import.meta.url,
+        ).toString();
+      }
+
+      const arrayBuffer = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({
+        data: arrayBuffer,
+        useWorkerFetch: false,
+        isEvalSupported: false,
+        useSystemFonts: true,
+      }).promise;
+
+      const maxPages = Math.min(pdf.numPages, 50);
+      // if (pdf.numPages > 50) {
+      //   console.warn(`PDF có ${pdf.numPages} trang, chỉ xử lý 50 trang đầu`);
+      // }
+
+      let totalTextLength = 0;
+      for (let i = 1; i <= Math.min(maxPages, 3); i++) {
+        const page = await pdf.getPage(i);
+        const textContent = await page.getTextContent();
+        const pageText = textContent.items
+          .map((item: any) => item.str)
+          .join(" ");
+        totalTextLength += pageText.trim().length;
+      }
+
+      if (totalTextLength < 50) {
+        throw new Error("Error");
+      }
+
+      const pageExtractions: Promise<string>[] = [];
+      for (let i = 1; i <= maxPages; i++) {
+        pageExtractions.push(
+          (async () => {
+            try {
+              const page = await pdf.getPage(i);
+              const textContent = await page.getTextContent();
+              return textContent.items
+                .map((item: any) => item.str)
+                .filter((str) => str.trim())
+                .join(" ");
+            } catch (pageError) {
+              console.error(`Error parsing page ${i}:`, pageError);
+              return "";
+            }
+          })(),
+        );
+      }
+
+      const pages = await Promise.all(pageExtractions);
+      const content = pages.filter((page) => page.trim()).join("\n\n");
+
+      if (!content.trim()) {
+        throw new Error("Error");
+      }
+
+      return content;
+    } catch (error) {
+      console.error("Error parsing PDF:", error);
+
+      throw new Error(`Không thể đọc file PDF: ${"Lỗi không xác định"}`);
+    }
   }
 
   private async parseWord(file: File): Promise<string> {

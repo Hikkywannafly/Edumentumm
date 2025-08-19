@@ -3,6 +3,7 @@
 import ThinLayout from "@/components/layout/thin-layout";
 import {} from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useProcessingOverlay } from "@/hooks/use-processing-overlay";
 import { FileText, Sparkles, Type } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
@@ -10,43 +11,21 @@ import { AIGeneratedUploader } from "./ai-generated-uploader";
 import { FileWithAnswersUploader } from "./file-with-answers-uploader";
 import { ProcessingScreen } from "./processing-screen";
 import { TextContentUploader } from "./text-content-uploader";
-
 export function QuizCreator() {
   const t = useTranslations("Quizzes");
   const [activeTab, setActiveTab] = useState("ai-generated");
 
-  // Centralized processing overlay state
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [processingDone, setProcessingDone] = useState(false);
-  const [processingLabel, setProcessingLabel] = useState<string | undefined>();
-  const [processingFileName, setProcessingFileName] = useState<string>("");
+  const {
+    isVisible: isProcessing,
+    fileName: processingFileName,
+    label: processingLabel,
+    isDone: processingDone,
+    hasError: processingError,
+    startProcessing,
+    finishProcessing,
+    hideProcessing,
+  } = useProcessingOverlay();
 
-  const handleProcessingStart = (fileName: string, label?: string) => {
-    setProcessingFileName(fileName);
-    setProcessingLabel(label);
-    setProcessingDone(false);
-    setIsProcessing(true);
-  };
-
-  const handleProcessingDone = (done: boolean) => {
-    setProcessingDone(done);
-    if (done) {
-      setTimeout(() => {
-        setIsProcessing(false);
-        setProcessingDone(false);
-        setProcessingLabel(undefined);
-        setProcessingFileName("");
-      }, 1500);
-    } else {
-      // Hide immediately on error
-      setIsProcessing(false);
-      setProcessingDone(false);
-      setProcessingLabel(undefined);
-      setProcessingFileName("");
-    }
-  };
-
-  // Lock background scroll while processing to keep overlay fixed and clean
   useEffect(() => {
     if (isProcessing) {
       const prev = document.body.style.overflow;
@@ -70,9 +49,11 @@ export function QuizCreator() {
         {isProcessing && (
           <div className="fixed inset-0 z-[1000] flex h-screen w-screen items-center justify-center bg-background ">
             <ProcessingScreen
-              fileName={processingFileName || "File"}
+              fileName={processingFileName}
               label={processingLabel}
               isDone={processingDone}
+              hasError={processingError}
+              onComplete={hideProcessing}
             />
           </div>
         )}
@@ -116,8 +97,8 @@ export function QuizCreator() {
               </TabsList>
               <TabsContent value="ai-generated" className="mt-6">
                 <AIGeneratedUploader
-                  onProcessingStart={handleProcessingStart}
-                  onProcessingDone={handleProcessingDone}
+                  onProcessingStart={startProcessing}
+                  onProcessingDone={finishProcessing}
                 />
               </TabsContent>
               <TabsContent
@@ -125,14 +106,14 @@ export function QuizCreator() {
                 className="mt-6 border-none"
               >
                 <FileWithAnswersUploader
-                  onProcessingStart={handleProcessingStart}
-                  onProcessingDone={handleProcessingDone}
+                  onProcessingStart={startProcessing}
+                  onProcessingDone={finishProcessing}
                 />
               </TabsContent>
               <TabsContent value="text-content" className="mt-6 border-none">
                 <TextContentUploader
-                  onProcessingStart={handleProcessingStart}
-                  onProcessingDone={handleProcessingDone}
+                  onProcessingStart={startProcessing}
+                  onProcessingDone={finishProcessing}
                 />
               </TabsContent>
             </Tabs>

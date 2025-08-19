@@ -204,7 +204,7 @@ importers:
         specifier: ^3.8.16
         version: 3.8.16(next@15.3.2(@playwright/test@1.54.2)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       pdfjs-dist:
-        specifier: ^5.4.54
+        specifier: 5.4.54
         version: 5.4.54
       react:
         specifier: ^19.1.0
