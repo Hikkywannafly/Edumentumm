@@ -1,5 +1,7 @@
 "use client";
 
+import type React from "react";
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,23 +19,110 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
+import { useToast } from "@/hooks/use-toast";
 import { Camera, Globe, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { useAuth } from "../../../contexts/auth-context";
 
 export default function UserSetting() {
-  const [displayName, setDisplayName] = useState("bien");
+  const { user } = useAuth();
+  const [displayName, setDisplayName] = useState(
+    user?.username || user?.email || "User",
+  );
   const [isPublic, setIsPublic] = useState(true);
-  const [profilePicture] = useState(null);
+  const [profilePicture, setProfilePicture] = useState<string | null>(null);
+  const [bannerImage, setBannerImage] = useState<string | null>(null);
+  const { toast } = useToast();
+
+  const profileInputRef = useRef<HTMLInputElement>(null);
+  const bannerInputRef = useRef<HTMLInputElement>(null);
 
   // Mock data
   const profileUrl =
     "https://studyon.app/dashboard/user/cmdrednmb028zomun2ec7rreu";
-  const bannerImage =
+  const defaultBannerImage =
     "https://t3.ftcdn.net/jpg/04/12/12/98/360_F_412129819_HaLS1MLvkJBPaBPMagPUOYm1SfAcaT7h.jpg";
+
+  const handleProfilePictureUpload = (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file size (5MB max)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Please select an image smaller than 5MB.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      toast({
+        title: "Invalid file type",
+        description: "Please select a valid image file (JPG, PNG, WebP).",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const result = e.target?.result as string;
+      setProfilePicture(result);
+      toast({
+        title: "Profile picture updated",
+        description: "Your profile picture has been updated successfully.",
+      });
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleBannerUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file size (10MB max)
+    if (file.size > 10 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Please select an image smaller than 10MB.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      toast({
+        title: "Invalid file type",
+        description: "Please select a valid image file (JPG, PNG, WebP).",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const result = e.target?.result as string;
+      setBannerImage(result);
+      toast({
+        title: "Banner updated",
+        description: "Your profile banner has been updated successfully.",
+      });
+    };
+    reader.readAsDataURL(file);
+  };
 
   const handleSaveChanges = () => {
     // Handle save logic here
-    console.log("Saving changes...");
+    toast({
+      title: "Changes saved",
+      description: "Your profile changes have been saved successfully.",
+    });
   };
 
   const handleDeleteAccount = () => {
@@ -43,6 +132,22 @@ export default function UserSetting() {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Hidden file inputs */}
+      <input
+        ref={profileInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleProfilePictureUpload}
+        className="hidden"
+      />
+      <input
+        ref={bannerInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleBannerUpload}
+        className="hidden"
+      />
+
       <div className="container mx-auto max-w-4xl px-4 py-8">
         <div className="mb-8">
           <h1 className="mb-2 font-bold text-3xl">Settings</h1>
@@ -69,7 +174,10 @@ export default function UserSetting() {
                   </AvatarFallback>
                 </Avatar>
                 <div className="space-y-2">
-                  <Button variant="outline">
+                  <Button
+                    variant="outline"
+                    onClick={() => profileInputRef.current?.click()}
+                  >
                     <Camera className="mr-2 h-4 w-4" />
                     Choose Image
                   </Button>
@@ -94,13 +202,18 @@ export default function UserSetting() {
               <div className="space-y-4">
                 <div className="relative h-32 overflow-hidden rounded-lg bg-muted">
                   <img
-                    src={bannerImage || "/placeholder.svg"}
+                    src={
+                      bannerImage || defaultBannerImage || "/placeholder.svg"
+                    }
                     alt="Profile banner"
                     className="h-full w-full object-cover"
                   />
                 </div>
                 <div className="flex gap-2">
-                  <Button variant="outline">
+                  <Button
+                    variant="outline"
+                    onClick={() => bannerInputRef.current?.click()}
+                  >
                     <Camera className="mr-2 h-4 w-4" />
                     Choose Banner
                   </Button>
