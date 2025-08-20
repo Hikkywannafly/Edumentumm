@@ -31,7 +31,7 @@ export default async function GroupStore({ params }: GroupDetailPageProps) {
               </div>
             }
           />
-          <GroupStoreContent />
+          <GroupStoreContent id={id} />
         </div>
       </DashboardLayout>
     </>

@@ -1,5 +1,5 @@
 import { ArrowLeft } from "lucide-react";
-import GroupDetailContent from "../../../../components/group/detail/group-detail-content";
+import GroupDetailContentV2 from "../../../../components/group/detail-v2/group-detail-content-v2";
 import { PageHeader } from "../../../../components/layout";
 import DashboardLayout from "../../../../components/layout/dashboard-layout";
 import { LocalizedLink } from "../../../../components/localized-link";
@@ -33,7 +33,7 @@ export default async function GroupDetailPage({
               </div>
             }
           />
-          <GroupDetailContent id={id} />
+          <GroupDetailContentV2 id={id} />
         </div>
       </DashboardLayout>
     </>

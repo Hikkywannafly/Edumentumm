@@ -1,11 +1,12 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
+import type { FolderResponse } from "../../../../types/folder";
 import { FolderItem } from "./folder-item";
-import type { FolderType, ViewMode } from "./types";
+import type { ViewMode } from "./types";
 
 interface FoldersTabContentProps {
-  folders: FolderType[];
+  folders: FolderResponse[];
   viewMode: ViewMode;
   onFolderSelect: (folderId: string) => void;
 }
