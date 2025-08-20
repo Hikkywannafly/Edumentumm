@@ -4,51 +4,89 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { FolderPlus } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+import { folderAPI } from "../../../../lib/api/folder";
+import type { FolderResponse } from "../../../../types/folder";
 
 interface CreateFolderDialogProps {
+  groupId: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onSuccess?: (newFolder: FolderResponse) => void;
 }
 
 export function CreateFolderDialog({
+  groupId,
   open,
   onOpenChange,
+  onSuccess,
 }: CreateFolderDialogProps) {
+  const [name, setName] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleCreate = async () => {
+    if (!name.trim()) return;
+    try {
+      setLoading(true);
+      const newFolder = await folderAPI.createGroup(groupId, name.trim());
+      console.log(newFolder);
+      onSuccess?.(newFolder);
+      onOpenChange(false);
+      setName("");
+      toast.success("Tạo thư mục thành công!");
+    } catch (err) {
+      console.error("Lỗi tạo folder:", err);
+      toast.error("Tạo thư mục thất bại!");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="rounded-xl sm:max-w-sm">
         <DialogHeader>
-          <DialogTitle>Tạo thư mục mới</DialogTitle>
-          <DialogDescription>
-            Tạo thư mục để tổ chức tài liệu theo chủ đề
-          </DialogDescription>
-        </DialogHeader>
-        <div className="space-y-4">
-          <div>
-            <Label htmlFor="folder-name">Tên thư mục</Label>
-            <Input id="folder-name" placeholder="Nhập tên thư mục..." />
+          <div className="flex items-center gap-2">
+            <FolderPlus className="h-5 w-5 text-primary" />
+            <DialogTitle className="font-medium text-base">
+              Tạo thư mục
+            </DialogTitle>
           </div>
-          <div>
-            <Label htmlFor="folder-description">Mô tả</Label>
-            <Textarea
-              id="folder-description"
-              placeholder="Mô tả ngắn về thư mục..."
+        </DialogHeader>
+
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="folder-name">Tên thư mục</Label>
+            <Input
+              id="folder-name"
+              placeholder="Nhập tên thư mục..."
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="rounded-lg"
+              disabled={loading}
             />
           </div>
         </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+
+        <DialogFooter className="gap-2">
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={loading}
+          >
             Hủy
           </Button>
-          <Button onClick={() => onOpenChange(false)}>Tạo thư mục</Button>
+          <Button onClick={handleCreate} disabled={loading}>
+            {loading ? "Đang tạo..." : "Tạo"}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
