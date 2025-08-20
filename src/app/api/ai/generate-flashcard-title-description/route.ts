@@ -17,6 +17,7 @@ const GenerateFlashcardTitleDescriptionRequestSchema = z.object({
   category: z.string().optional(),
   tags: z.array(z.string()).optional(),
   modelName: z.string().default("openai/gpt-oss-20b:free"),
+  apiKey: z.string(),
 });
 
 const OPENROUTER_API_BASE = "https://openrouter.ai/api/v1";
@@ -47,10 +48,8 @@ export async function POST(request: NextRequest) {
       category,
       tags,
       modelName,
+      apiKey,
     } = validated.data;
-
-    const apiKey =
-      request.headers.get("x-api-key") || process.env.OPENROUTER_API_KEY;
 
     if (!apiKey) {
       return NextResponse.json(

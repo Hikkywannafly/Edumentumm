@@ -20,6 +20,11 @@ export const generateFlashcardTitleDescription = async (
   },
 ): Promise<{ title: string; description: string } | null> => {
   try {
+    const apiKey = process.env.NEXT_PUBLIC_OPENROUTER_API_KEY;
+    if (!apiKey) {
+      throw new Error("OpenRouter API key not configured");
+    }
+
     const result = await generateTitleDescriptionService({
       content,
       flashcards,
@@ -28,6 +33,7 @@ export const generateFlashcardTitleDescription = async (
       filename: options?.filename,
       category: options?.category,
       tags: options?.tags,
+      apiKey,
     });
 
     if (result.success && result.title && result.description) {

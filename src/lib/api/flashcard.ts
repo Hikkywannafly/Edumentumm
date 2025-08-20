@@ -12,23 +12,23 @@ export interface CreateFlashcardSetRequest {
   description: string;
   isPublic: boolean;
   flashcards: Array<{
-    question: string;
-    choices: string[];
+    question: string; // Should be <= 250 characters
+    choices: string[]; // Each choice <= 200 characters
     correctAnswer: number;
-    explanation?: string;
+    explanation?: string; // Should be <= 250 characters
   }>;
 }
 
 export interface UpdateFlashcardSetRequest {
-  title?: string;
-  description?: string;
+  title?: string; // Should be <= 255 characters
+  description?: string; // Should be <= 500 characters
   isPublic?: boolean;
   flashcards?: Array<{
     id?: number;
-    question: string;
-    choices: string[];
+    question: string; // Should be <= 250 characters
+    choices: string[]; // Each choice <= 200 characters
     correctAnswer: number;
-    explanation?: string;
+    explanation?: string; // Should be <= 250 characters
   }>;
 }
 
@@ -157,15 +157,70 @@ class FlashcardService {
     }
   }
 
+  // Utility function to truncate text safely
+  private truncateText(text: string, maxLength: number): string {
+    if (!text || text.length <= maxLength) return text;
+    // Find the last space before the limit to avoid cutting words
+    const truncated = text.substring(0, maxLength);
+    const lastSpace = truncated.lastIndexOf(" ");
+    if (lastSpace > maxLength * 0.8) {
+      return `${truncated.substring(0, lastSpace)}...`;
+    }
+    return `${truncated.substring(0, maxLength - 3)}...`;
+  }
+
+  // Validate and sanitize flashcard data before sending to API
+  private validateFlashcardData(
+    data: CreateFlashcardSetRequest,
+  ): CreateFlashcardSetRequest {
+    return {
+      ...data,
+      title: this.truncateText(data.title, 255),
+      description: this.truncateText(data.description, 500),
+      flashcards: data.flashcards.map((flashcard) => ({
+        ...flashcard,
+        question: this.truncateText(flashcard.question, 250),
+        choices: flashcard.choices.map((choice) =>
+          this.truncateText(choice, 200),
+        ),
+        explanation: this.truncateText(flashcard.explanation || "", 250),
+      })),
+    };
+  }
+
+  // Validate and sanitize update flashcard data
+  private validateUpdateFlashcardData(
+    data: UpdateFlashcardSetRequest,
+  ): UpdateFlashcardSetRequest {
+    return {
+      ...data,
+      title: data.title ? this.truncateText(data.title, 255) : data.title,
+      description: data.description
+        ? this.truncateText(data.description, 500)
+        : data.description,
+      flashcards: data.flashcards?.map((flashcard) => ({
+        ...flashcard,
+        question: this.truncateText(flashcard.question, 250),
+        choices: flashcard.choices.map((choice) =>
+          this.truncateText(choice, 200),
+        ),
+        explanation: this.truncateText(flashcard.explanation || "", 250),
+      })),
+    };
+  }
+
   async createFlashcardSet(
     flashcardSetData: CreateFlashcardSetRequest,
   ): Promise<FlashcardSet> {
     try {
+      // Validate and sanitize data before sending to API
+      const validatedData = this.validateFlashcardData(flashcardSetData);
+
       const response = await this.request<FlashcardSetApiResponse>(
         "/student/flashcards",
         {
           method: "POST",
-          body: JSON.stringify(flashcardSetData),
+          body: JSON.stringify(validatedData),
         },
       );
       return response.data;
@@ -183,11 +238,14 @@ class FlashcardService {
     flashcardSetData: UpdateFlashcardSetRequest,
   ): Promise<FlashcardSet> {
     try {
+      // Validate and sanitize data before sending to API
+      const validatedData = this.validateUpdateFlashcardData(flashcardSetData);
+
       const response = await this.request<FlashcardSetApiResponse>(
         `/student/flashcards/${id}`,
         {
           method: "PATCH",
-          body: JSON.stringify(flashcardSetData),
+          body: JSON.stringify(validatedData),
         },
       );
       return response.data;

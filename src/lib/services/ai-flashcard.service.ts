@@ -31,13 +31,35 @@ function makeRequestKey(
   return `${hash.toString(36)}-${Date.now().toString(36)}`;
 }
 
+// Utility function to safely truncate text fields
+function truncateText(text: string, maxLength: number): string {
+  if (text.length <= maxLength) return text;
+  // Find the last space before the limit to avoid cutting words
+  const truncated = text.substring(0, maxLength);
+  const lastSpace = truncated.lastIndexOf(" ");
+  if (lastSpace > maxLength * 0.8) {
+    return `${truncated.substring(0, lastSpace)}...`;
+  }
+  return `${truncated.substring(0, maxLength - 3)}...`;
+}
+
 // Zod schemas for validation
 const FlashcardSchema = z.object({
   id: z.union([z.string(), z.number()]).transform(String),
-  question: z.string().min(1),
-  choices: z.array(z.string()).min(2).max(6),
+  question: z
+    .string()
+    .min(1)
+    .transform((text) => truncateText(text, 250)),
+  choices: z
+    .array(z.string())
+    .min(2)
+    .max(6)
+    .transform((choices) => choices.map((choice) => truncateText(choice, 200))),
   correctAnswer: z.number().int().min(0),
-  explanation: z.string().default(""),
+  explanation: z
+    .string()
+    .default("")
+    .transform((text) => truncateText(text, 250)),
   difficulty: z.enum(["EASY", "MEDIUM", "HARD"]).default("EASY"),
   tags: z.array(z.string()).default([]),
   sourceFile: z.string().optional(),
@@ -245,6 +267,7 @@ export async function generateFlashcardTitleDescription(params: {
   category?: string;
   tags?: string[];
   modelName?: string;
+  apiKey: string;
 }): Promise<{
   success: boolean;
   title?: string;
@@ -260,6 +283,7 @@ export async function generateFlashcardTitleDescription(params: {
     category,
     tags,
     modelName = DEFAULT_MODEL,
+    apiKey,
   } = params;
 
   try {
@@ -276,6 +300,7 @@ export async function generateFlashcardTitleDescription(params: {
       category,
       tags,
       modelName,
+      apiKey,
     });
 
     if (!result.success || !result.title || !result.description) {

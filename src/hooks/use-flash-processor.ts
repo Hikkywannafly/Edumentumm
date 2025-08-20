@@ -135,8 +135,8 @@ export function useFlashProcessor() {
   const reset = useCallback(() => {
     setUploadedFiles([]);
     setFlashcardData(null as any);
-    if (generateAI.reset) generateAI.reset();
-    if (extractAI.reset) extractAI.reset();
+    generateAI.reset();
+    extractAI.reset();
 
     // Clear all related cache
     queryClient.removeQueries({
@@ -199,8 +199,8 @@ export function useFlashProcessor() {
     isProcessingFiles: processFilesMutation.isPending,
     isExtractingAI: extractAI.isExtracting,
     isGenerating: generateAI.isGenerating,
-    // No title mutation in flashcard, so skip isTitleGenerating
 
+    // Add title generation loading states
     isTitleGenerating:
       generateAI.isTitleGenerating || extractAI.isTitleGenerating,
 
