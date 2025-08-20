@@ -15,7 +15,7 @@ interface ExtractFlashcardsAIParams {
   files?: UploadedFile[];
   settings?: {
     language?: string;
-    numberOfCards?: string;
+    numberOfCards?: number;
     difficulty?: string;
     generationMode?: "GENERATE" | "EXTRACT";
     fileProcessing?: string;

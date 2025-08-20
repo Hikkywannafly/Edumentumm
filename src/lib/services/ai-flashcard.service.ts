@@ -7,15 +7,12 @@ const inFlight = new Map<string, Promise<FlashcardAIResponse>>();
 
 // Strong hash key generation using crypto-like approach
 function makeRequestKey(
-  content: string | undefined,
+  content: string,
   model: string,
   settings?: any,
 ): string {
-  // Ensure content is a string and provide fallback
-  const safeContent = typeof content === "string" ? content : "";
-
   const raw = JSON.stringify({
-    content: safeContent.slice(0, 2000),
+    content: content.slice(0, 2000),
     model,
     settings,
     timestamp: Math.floor(Date.now() / 60000), // 1-minute cache window
@@ -28,7 +25,7 @@ function makeRequestKey(
     hash = (hash * 16777619) >>> 0;
   }
 
-  hash ^= safeContent.length;
+  hash ^= content.length;
   hash ^= model.length << 8;
 
   return `${hash.toString(36)}-${Date.now().toString(36)}`;
@@ -310,7 +307,7 @@ export async function generateFlashcards(
     settings?: {
       visibility?: string;
       language?: string;
-      numberOfCards?: string;
+      numberOfCards?: number;
       difficulty?: string;
       generationMode?: "GENERATE" | "EXTRACT";
       fileProcessing?: string;
@@ -340,7 +337,7 @@ export async function generateFlashcards(
 
   const promise = (async (): Promise<FlashcardAIResponse> => {
     try {
-      const numberOfCards = settings.numberOfCards || "5-10";
+      const numberOfCards = Number(settings.numberOfCards) || 5;
 
       // Get available categories for AI selection if enabled
       let availableCategories = "";
@@ -352,6 +349,18 @@ export async function generateFlashcards(
           availableCategories = "No categories available";
         }
       }
+
+      console.log("🚀 Calling generate-flashcards API with payload:", {
+        title,
+        description,
+        apiKey: apiKey ? "***" : "missing",
+        fileContent: fileContent ? `${fileContent.length} chars` : "empty",
+        modelName,
+        settings: { ...settings, numberOfCards },
+        availableCategories: availableCategories
+          ? `${availableCategories.length} chars`
+          : "empty",
+      });
 
       const result = await callServerAPI(
         "generate-flashcards",
@@ -404,7 +413,7 @@ export async function generateFlashcardsFromFile(params: {
   settings?: {
     visibility?: string;
     language?: string;
-    numberOfCards?: string;
+    numberOfCards?: number;
     difficulty?: string;
     generationMode?: "GENERATE" | "EXTRACT";
     fileProcessing?: string;
@@ -484,7 +493,7 @@ export async function extractFlashcardsWithAI(params: {
   settings?: {
     visibility?: string;
     language?: string;
-    numberOfCards?: string;
+    numberOfCards?: number;
     difficulty?: string;
     generationMode?: "GENERATE" | "EXTRACT";
     fileProcessing?: string;

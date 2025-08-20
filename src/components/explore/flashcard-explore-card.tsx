@@ -1,5 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import type { FlashcardSet } from "@/types/flashcard";
+import { LocalizedLink } from "../localized-link";
 
 type FlashcardExploreCardProps = {
   flashcardSet: FlashcardSet;
@@ -40,18 +41,22 @@ export default function FlashcardExploreCard({
   };
 
   return (
-    <Card className="transition hover:shadow-md">
+    <Card className="cursor-pointer transition hover:shadow-md">
       <CardContent className="p-4">
-        <p className="text-muted-foreground text-sm">
-          {formatTimeAgo(flashcardSet.createdAt)}
-        </p>
-        <h3 className="mt-1 font-semibold">{stripHtml(flashcardSet.title)}</h3>
-        <p className="mt-1 text-muted-foreground text-sm">
-          {flashcardSet.flashcards.length} flashcards
-        </p>
-        <p className="mt-1 text-muted-foreground text-xs">
-          by {flashcardSet.user?.username || "Anonymous"}
-        </p>
+        <LocalizedLink href={`/flashcards/${flashcardSet.id}`}>
+          <p className="text-muted-foreground text-sm">
+            {formatTimeAgo(flashcardSet.createdAt)}
+          </p>
+          <h3 className="mt-1 font-semibold">
+            {stripHtml(flashcardSet.title)}
+          </h3>
+          <p className="mt-1 text-muted-foreground text-sm">
+            {flashcardSet.flashcards.length} flashcards
+          </p>
+          <p className="mt-1 text-muted-foreground text-xs">
+            by {flashcardSet.user?.username || "Anonymous"}
+          </p>
+        </LocalizedLink>
       </CardContent>
     </Card>
   );

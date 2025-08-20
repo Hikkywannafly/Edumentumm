@@ -226,16 +226,6 @@ export const useFlashcardEditorStore = create<FlashcardEditorState>()(
         flashcardData: state.flashcardData,
         isEditing: state.isEditing,
       }),
-      onRehydrateStorage: () => {
-        // Clean up old localStorage key when store is rehydrated
-        return () => {
-          try {
-            localStorage.removeItem("flashcard-editor-storage");
-          } catch (error) {
-            console.warn("Failed to clean up old localStorage key:", error);
-          }
-        };
-      },
     },
   ),
 );
