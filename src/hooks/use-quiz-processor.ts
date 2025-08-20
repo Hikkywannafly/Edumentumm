@@ -1,7 +1,7 @@
 import { quizQueryKeys } from "@/hooks/quiz-query-keys";
-import { useExtractQuestionsAI } from "@/hooks/quizz/use-extract-questions-ai";
-import { useExtractQuestionsDirect } from "@/hooks/quizz/use-extract-questions-direct";
-import { useGenerateQuestionsAI } from "@/hooks/quizz/use-generate-questions-ai";
+import { useExtractQuestionsAI } from "@/hooks/quiz/use-extract-questions-ai";
+import { useExtractQuestionsDirect } from "@/hooks/quiz/use-extract-questions-direct";
+import { useGenerateQuestionsAI } from "@/hooks/quiz/use-generate-questions-ai";
 import { FileParserService } from "@/lib/services/file-parser.service";
 import { useQuizEditorStore } from "@/stores/quiz-editor-store";
 import type { GeneratedQuiz, UploadedFile } from "@/stores/quiz-editor-store";

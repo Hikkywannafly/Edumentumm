@@ -1,4 +1,4 @@
-import { QUIZ_QUERY_KEYS } from "@/hooks/quizz/use-quiz";
+import { QUIZ_QUERY_KEYS } from "@/hooks/quiz/use-quiz";
 import { quizCRUDAPI } from "@/lib/api/quiz/";
 import type { CreateQuizRequest, QuizResponse } from "@/types/quiz";
 import { useMutation, useQueryClient } from "@tanstack/react-query";

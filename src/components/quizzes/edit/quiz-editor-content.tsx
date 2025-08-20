@@ -1,7 +1,7 @@
 "use client";
 
 import ThinLayout from "@/components/layout/thin-layout";
-import { useCreateQuiz } from "@/hooks/quizz/";
+import { useCreateQuiz } from "@/hooks/quiz";
 import { useQuizEditorSync } from "@/hooks/use-quiz-editor-sync";
 import { useQuizEditorStore } from "@/stores/quiz-editor-store";
 import { useRouter } from "next/navigation";
