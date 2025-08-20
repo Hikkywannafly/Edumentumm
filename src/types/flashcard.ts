@@ -25,7 +25,7 @@ export interface FlashcardSet {
   description: string;
   isPublic: boolean;
   createdAt: string;
-  user: User;
+  user?: User;
   flashcards: FlashcardData[];
 }
 

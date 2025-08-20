@@ -12,7 +12,7 @@ export default function ExploreCard({
   daysAgo,
 }: ExploreCardProps) {
   return (
-    <Card className="transition hover:shadow-md">
+    <Card className="cursor-pointer transition hover:shadow-md">
       <CardContent className="p-4">
         <p className="text-muted-foreground text-sm">{daysAgo} days ago</p>
         <h3 className="mt-1 font-semibold">{title}</h3>
