@@ -3,7 +3,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { Separator } from "@/components/ui/separator";
 
 import type React from "react";
-
+import { SettingMenu } from "../setting-menu";
 
 interface PageHeaderProps {
   title: string;
@@ -20,11 +20,12 @@ export function PageHeader({
   children,
   className = "",
   showThemeToggle = true,
-  showLanguageSwitcher = true
+  showLanguageSwitcher = true,
 }: PageHeaderProps) {
-
   return (
-    <header className={`flex h-16 shrink-0 items-center gap-2 border-b px-4 ${className}`}>
+    <header
+      className={`flex h-16 shrink-0 items-center gap-2 border-b px-4 ${className}`}
+    >
       {/* Left side: Title */}
       <Separator orientation="vertical" className="mr-2 h-4" />
       <h1 className="font-semibold text-xl">{title}</h1>
@@ -41,7 +42,7 @@ export function PageHeader({
         <div className="flex items-center gap-2">
           {showThemeToggle && <ThemeToggle />}
           {showLanguageSwitcher && <LanguageSwitcher />}
-
+          <SettingMenu />
         </div>
       </div>
     </header>
