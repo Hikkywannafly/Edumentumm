@@ -200,6 +200,16 @@
       "averageScore": "Average Score",
       "avgDuration": "Avg. Duration (min)"
     },
+    "editor": {
+      "back": "Back",
+      "save": "Save",
+      "saving": "Saving...",
+      "createQuiz": "Create Quiz",
+      "creating": "Creating...",
+      "settings": "Settings",
+      "quizInfo": "Quiz Info",
+      "deleteQuiz": "Delete Quiz"
+    },
     "yourQuizzes": "Your Quizzes",
     "quizCard": {
       "questions": "questions",
