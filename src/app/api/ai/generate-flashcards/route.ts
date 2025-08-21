@@ -8,7 +8,7 @@ const GenerateFlashcardsRequestSchema = z.object({
   description: z.string(),
   apiKey: z.string(),
   fileContent: z.string().optional(),
-  modelName: z.string().default("google/gemini-2.0-flash-001"),
+  modelName: z.string().default("google/gemini-2.0-flash-exp:free"),
   availableCategories: z.string().optional(),
   settings: z
     .object({

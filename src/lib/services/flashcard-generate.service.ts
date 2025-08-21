@@ -20,6 +20,11 @@ export const generateFlashcardTitleDescription = async (
   },
 ): Promise<{ title: string; description: string } | null> => {
   try {
+    const apiKey = process.env.NEXT_PUBLIC_OPENROUTER_API_KEY;
+    if (!apiKey) {
+      throw new Error("OpenRouter API key not configured");
+    }
+
     const result = await generateTitleDescriptionService({
       content,
       flashcards,
@@ -28,6 +33,7 @@ export const generateFlashcardTitleDescription = async (
       filename: options?.filename,
       category: options?.category,
       tags: options?.tags,
+      apiKey,
     });
 
     if (result.success && result.title && result.description) {
@@ -106,7 +112,6 @@ export const generateFlashcardsWithAI = async (
     };
 
     if (useDirectMode && actualFile) {
-      console.log("📄 Using direct file mode for:", actualFile.name);
       const fileForAI = await fileToAIService.convertFileToAI(actualFile);
       result = await generateFlashcardsFromFile({
         title: "Generated Flashcards",
@@ -120,7 +125,6 @@ export const generateFlashcardsWithAI = async (
         },
       });
     } else {
-      console.log("📝 Using text content mode");
       result = await generateFlashcards({
         title: "AI Generated Flashcards",
         description: "Flashcards generated from the provided content.",
