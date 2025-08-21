@@ -1,6 +1,6 @@
 import type { AutoSaveQuizPayload, BackendQuizEntity } from "@/types/quiz";
 import { type NextRequest, NextResponse } from "next/server";
-
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 export async function POST(request: NextRequest) {
   try {
     const payload: AutoSaveQuizPayload = await request.json();
@@ -30,9 +30,8 @@ export async function POST(request: NextRequest) {
       task: payload.task,
       parsing_mode: payload.parsingMode,
       source_type: payload.sourceType,
-      source_content: payload.sourceContent || "",
       is_ai_generated: payload.isAiGenerated,
-      ai_model: payload.aiModel || "openai/gpt-4o-mini",
+      ai_model: payload.aiModel,
       generation_mode: payload.generationMode,
       file_processing_mode: payload.fileProcessingMode,
       quiz_data: {
@@ -46,8 +45,7 @@ export async function POST(request: NextRequest) {
     };
 
     // Call backend API
-    const backendUrl = process.env.BACKEND_API_URL || "http://localhost:8080";
-    const response = await fetch(`${backendUrl}/api/v1/student/quizzes`, {
+    const response = await fetch(`${API_BASE_URL}/student/quizzes`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -55,7 +53,7 @@ export async function POST(request: NextRequest) {
       },
       body: JSON.stringify(backendPayload),
     });
-    console.log("Response:", response);
+    console.log("Response:", response, backendPayload);
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       console.error("Backend API error:", errorData);

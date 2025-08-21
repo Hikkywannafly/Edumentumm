@@ -5,14 +5,29 @@ import { useGenerateQuestionsAI } from "@/hooks/quiz/use-generate-questions-ai";
 import { FileParserService } from "@/lib/services/file-parser.service";
 import { useQuizEditorStore } from "@/stores/quiz-editor-store";
 import type { GeneratedQuiz, UploadedFile } from "@/stores/quiz-editor-store";
-import type { Language, ParsingMode } from "@/types/quiz";
+import type {
+  AutoSaveQuizPayload,
+  BackendQuizEntity,
+  Language,
+  ParsingMode,
+} from "@/types/quiz";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useState } from "react";
 
 const fileParser = new FileParserService();
 
-export function useQuizProcessor() {
+interface QuizProcessorOptions {
+  userId?: number;
+  autoSave?: boolean;
+  sourceType?: "FILE" | "TEXT" | "AI_GENERATED";
+}
+
+export function useQuizProcessor(options: QuizProcessorOptions = {}) {
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
+  const [isAutoSaving, setIsAutoSaving] = useState(false);
+  const [autoSaveError, setAutoSaveError] = useState<string | null>(null);
+  const [savedQuiz, setSavedQuiz] = useState<BackendQuizEntity | null>(null);
+
   const { setQuizData, updateQuizData, quizData } = useQuizEditorStore();
   const queryClient = useQueryClient();
 
@@ -143,7 +158,146 @@ export function useQuizProcessor() {
     });
   }, [setQuizData, extractAI, generateAI, extractDirect, queryClient]);
 
-  // Update quiz details function (missing in current code)
+  // Auto-save function
+  const autoSaveQuiz = useCallback(
+    async (sourceContent?: string): Promise<BackendQuizEntity | null> => {
+      if (!options.autoSave || !options.userId || !quizData) {
+        return null;
+      }
+
+      setIsAutoSaving(true);
+      setAutoSaveError(null);
+
+      try {
+        const payload: AutoSaveQuizPayload = {
+          title: quizData.title,
+          description: quizData.description,
+          userId: options.userId,
+          categoryId: quizData.metadata?.category
+            ? Number.parseInt(quizData.metadata.category)
+            : undefined,
+          visibility: "PRIVATE",
+          language: "AUTO",
+          questionType: "MULTIPLE_CHOICE",
+          numberOfQuestions: quizData.questions.length,
+          mode: "QUIZ",
+          difficulty: "MEDIUM",
+          task: "GENERATE_QUIZ",
+          parsingMode: "BALANCED",
+          sourceType: options.sourceType || "FILE",
+          sourceContent,
+          isAiGenerated: true,
+          aiModel: "openai/gpt-4o-mini",
+          generationMode: "GENERATE",
+          fileProcessingMode: "PARSE_THEN_SEND",
+          quizData: {
+            questions: quizData.questions,
+            settings: quizData.settings || {},
+            metadata: quizData.metadata || {},
+          },
+          tags: quizData.metadata?.tags || [],
+          estimatedTime: quizData.metadata?.estimated_time || 10,
+          passingScore: 70,
+        };
+
+        const response = await fetch("/api/quiz/auto-save", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || "Failed to auto-save quiz");
+        }
+
+        const result = await response.json();
+        const savedQuizEntity = result.quiz;
+
+        setSavedQuiz(savedQuizEntity);
+        updateQuizData({
+          savedQuizId: savedQuizEntity.id,
+          isAutoSaved: true,
+          lastSavedAt: new Date().toISOString(),
+        });
+
+        console.log("✅ Quiz auto-saved successfully:", savedQuizEntity.id);
+        return savedQuizEntity;
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : "Unknown error";
+        setAutoSaveError(errorMessage);
+        console.error("❌ Auto-save failed:", error);
+        return null;
+      } finally {
+        setIsAutoSaving(false);
+      }
+    },
+    [
+      options.autoSave,
+      options.userId,
+      options.sourceType,
+      quizData,
+      updateQuizData,
+    ],
+  );
+
+  // Enhanced generation functions with auto-save
+  const generateFromFilesWithAutoSave = useCallback(
+    async (settings?: any) => {
+      const result = await generateAI.generateQuestionsAI({
+        source: "files",
+        files: uploadedFiles,
+        settings,
+      });
+
+      // Auto-save immediately after generation
+      if (options.autoSave && options.userId) {
+        // Wait for quizData to be updated
+        setTimeout(async () => {
+          const sourceContent = uploadedFiles
+            .filter((f) => f.parsedContent)
+            .map((f) => f.parsedContent)
+            .join("\n\n--- FILE SEPARATOR ---\n\n");
+
+          await autoSaveQuiz(sourceContent);
+        }, 100);
+      }
+
+      return result;
+    },
+    [generateAI, uploadedFiles, options.autoSave, options.userId, autoSaveQuiz],
+  );
+
+  const extractFromFilesAIWithAutoSave = useCallback(
+    async (settings?: any) => {
+      const result = await extractAI.extractQuestionsAI({
+        source: "files",
+        files: uploadedFiles,
+        settings,
+      });
+
+      // Auto-save immediately after extraction
+      if (options.autoSave && options.userId) {
+        // Wait for quizData to be updated
+        setTimeout(async () => {
+          const sourceContent = uploadedFiles
+            .filter((f) => f.parsedContent)
+            .map((f) => f.parsedContent)
+            .join("\n\n--- FILE SEPARATOR ---\n\n");
+
+          await autoSaveQuiz(sourceContent);
+        }, 100);
+      }
+
+      return result;
+    },
+    [extractAI, uploadedFiles, options.autoSave, options.userId, autoSaveQuiz],
+  );
+
+  // Update quiz details function
   const updateQuizDetails = useCallback(
     (updates: Partial<GeneratedQuiz>) => {
       updateQuizData(updates);
@@ -201,6 +355,11 @@ export function useQuizProcessor() {
     generateFromText: (content: string, settings?: any) =>
       generateAI.generateQuestionsAI({ source: "text", content, settings }),
 
+    // Enhanced functions with auto-save
+    generateFromFilesWithAutoSave,
+    extractFromFilesAIWithAutoSave,
+    autoSaveQuiz,
+
     updateQuizDetails,
 
     // Loading states - Aggregated
@@ -208,6 +367,7 @@ export function useQuizProcessor() {
     isExtracting: extractDirect.isExtracting,
     isExtractingAI: extractAI.isExtracting,
     isGenerating: generateAI.isGenerating,
+    isAutoSaving,
 
     // Add title generation loading states
     isTitleGenerating:
@@ -220,13 +380,15 @@ export function useQuizProcessor() {
       extractAI.isExtracting ||
       generateAI.isGenerating ||
       extractAI.isTitleGenerating ||
-      generateAI.isTitleGenerating,
+      generateAI.isTitleGenerating ||
+      isAutoSaving,
 
     // Errors - Aggregated
     fileError: processFilesMutation.error,
     extractError: extractDirect.error,
     extractAIError: extractAI.error,
     generateError: generateAI.error,
+    autoSaveError,
 
     //  Add title generation errors
     titleError: extractAI.titleError || generateAI.titleError,
@@ -240,6 +402,11 @@ export function useQuizProcessor() {
     totalQuestions: quizData?.questions?.length || 0,
     totalPoints:
       quizData?.questions?.reduce((sum, q) => sum + (q.points || 1), 0) || 0,
+
+    // Auto-save state
+    savedQuiz,
+    canAutoSave: !!quizData && quizData.questions.length > 0,
+    autoSaveEnabled: options.autoSave,
 
     // Direct access to specialized hooks (if needed)
     hooks: {
