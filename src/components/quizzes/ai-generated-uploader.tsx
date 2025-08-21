@@ -22,7 +22,6 @@ import {
   getAcceptedFileTypes,
 } from "@/lib/utils/file-utils";
 import { useLocalizedNavigation } from "@/lib/utils/navigation";
-import { useQuizEditorStore } from "@/stores/quiz-editor-store";
 import type {
   Difficulty,
   Language,
@@ -86,8 +85,6 @@ export function AIGeneratedUploader({
     hasFiles,
   } = useQuizProcessor();
 
-  const { setEditing } = useQuizEditorStore();
-
   const { isDragActive } = useDropzone({
     onDrop: addFiles,
     accept: getAcceptedFileTypes(),
@@ -143,8 +140,13 @@ export function AIGeneratedUploader({
           await extractFromFilesAI(settings);
         }
       }
-      setEditing(true);
-      goQuizEdit();
+
+      setIsGenerating(false);
+
+      setTimeout(() => {
+        onProcessingDone?.(true);
+        goQuizEdit();
+      }, 2000);
     } catch (error) {
       console.error("Error generating quiz:", error);
       setIsGenerating(false);

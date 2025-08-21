@@ -61,8 +61,6 @@ export function useQuizProcessor() {
                   : f,
               ),
             );
-
-            // Cache file content
             queryClient.setQueryData(quizQueryKeys.fileContent(fileInfo.id), {
               content,
               timestamp: Date.now(),
