@@ -12,7 +12,26 @@ import FlashcardExploreCard from "./flashcard-explore-card";
 
 export default function ExploreContent() {
   const [activeTab, setActiveTab] = useState("quizzes");
-  const { flashcardSets, isLoading, error } = usePublicFlashcards();
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 6;
+
+  const { flashcardSets, pagination, isLoading, error, refetch } =
+    usePublicFlashcards(activeTab === "flashcards" ? currentPage : 1, pageSize);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    if (activeTab === "flashcards") {
+      refetch(page, pageSize);
+    }
+  };
+
+  console.log("Explore Content Debug:", {
+    activeTab,
+    flashcardSets: flashcardSets.length,
+    pagination,
+    isLoading,
+    error,
+  });
 
   const mockQuizData = [
     { title: "Debt Instruments and Valuation Quiz", questions: 10, daysAgo: 9 },
@@ -83,8 +102,12 @@ export default function ExploreContent() {
     <ThinLayout>
       <ExploreTitle />
       <ExploreFilter tab={activeTab} onTabChange={setActiveTab} />
-      <ExplorePaging />
       {renderContent()}
+      <ExplorePaging
+        pagination={pagination}
+        onPageChange={handlePageChange}
+        show={activeTab === "flashcards"}
+      />
     </ThinLayout>
   );
 }
