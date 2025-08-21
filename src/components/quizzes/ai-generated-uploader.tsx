@@ -79,11 +79,18 @@ export function AIGeneratedUploader({
     uploadedFiles,
     addFiles,
     removeFile,
-    generateFromFiles,
-    extractFromFilesAI,
+    generateFromFilesWithAutoSave,
+    extractFromFilesAIWithAutoSave,
     isProcessing,
+    isAutoSaving,
     hasFiles,
-  } = useQuizProcessor();
+    // savedQuiz,
+    // autoSaveError,
+  } = useQuizProcessor({
+    userId: 1, // TODO: Get from auth context
+    autoSave: true,
+    sourceType: "FILE",
+  });
 
   const { isDragActive } = useDropzone({
     onDrop: addFiles,
@@ -130,17 +137,15 @@ export function AIGeneratedUploader({
         task,
         parsingMode,
       };
-
       if (inputMode === "FILE") {
-        // Generate from files based on generation mode
+        // Generate from files based on generation mode with auto-save
         if (generationMode === "GENERATE") {
-          await generateFromFiles(settings);
+          await generateFromFilesWithAutoSave(settings);
         } else {
-          // Use AI extraction instead of manual extraction
-          await extractFromFilesAI(settings);
+          // Use AI extraction instead of manual extraction with auto-save
+          await extractFromFilesAIWithAutoSave(settings);
         }
       }
-
       setIsGenerating(false);
 
       setTimeout(() => {
@@ -176,16 +181,20 @@ export function AIGeneratedUploader({
             </p>
             <div className="flex gap-2">
               <Button
-                disabled={!hasFiles || isProcessing || isGenerating}
+                disabled={
+                  !hasFiles || isProcessing || isGenerating || isAutoSaving
+                }
                 onClick={handleGenerateQuiz}
                 className="flex items-center gap-2"
               >
-                {isGenerating ? (
+                {isGenerating || isAutoSaving ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    {generationMode === "GENERATE"
-                      ? t("create.aiGenerated.aiGenerating")
-                      : t("create.fileWithAnswers.processing")}
+                    {isAutoSaving
+                      ? "Saving quiz..."
+                      : generationMode === "GENERATE"
+                        ? t("create.aiGenerated.aiGenerating")
+                        : t("create.fileWithAnswers.processing")}
                   </>
                 ) : (
                   <>

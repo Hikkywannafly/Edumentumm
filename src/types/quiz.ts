@@ -28,6 +28,7 @@ export type ParsingMode = "FAST" | "BALANCED" | "THOROUGH";
 export type SourceType =
   | "FILE"
   | "TEXT"
+  | "AI_GENERATED"
   | "LINK"
   | "DRIVE"
   | "MATERIAL"
