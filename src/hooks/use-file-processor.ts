@@ -5,14 +5,9 @@ import {
   generateQuestionsWithAI,
   generateQuizTitleDescription,
 } from "@/lib/services/quiz-generate.service";
-import {
-  type GeneratedQuiz,
-  useQuizEditorStore,
-} from "@/stores/quiz-editor-store";
-import type { Language, ParsingMode, QuestionData } from "@/types/quiz";
+import { useQuizEditorStore } from "@/stores/quiz-editor-store";
+import type { GeneratedQuiz, QuestionData, UploadedFile } from "@/types/quiz";
 import { useCallback, useEffect, useState } from "react";
-
-import type { UploadedFile } from "@/stores/quiz-editor-store";
 
 const fileParser = new FileParserService();
 
@@ -103,10 +98,7 @@ export function useFileProcessor() {
   );
 
   const extractQuestionsFromFiles = useCallback(
-    async (settings?: {
-      language?: Language;
-      parsingMode?: ParsingMode;
-    }) => {
+    async (settings?: any) => {
       const successfulFiles = uploadedFiles.filter(
         (f) => f.status === "success" && f.parsedContent,
       );
@@ -164,7 +156,7 @@ export function useFileProcessor() {
       mode?: string;
       difficulty?: string;
       task?: string;
-      parsingMode?: ParsingMode;
+      parsingMode?: any;
     }) => {
       const successfulFiles = uploadedFiles.filter(
         (f) => f.status === "success" && f.parsedContent,
@@ -313,13 +305,7 @@ export function useFileProcessor() {
 
   // Extract existing questions directly from TEXT content (no AI)
   const extractQuestionsFromText = useCallback(
-    async (
-      content: string,
-      settings?: {
-        language?: Language;
-        parsingMode?: ParsingMode;
-      },
-    ) => {
+    async (content: string, settings?: any) => {
       if (!content || content.trim().length === 0) {
         throw new Error("No text content provided");
       }
@@ -351,7 +337,7 @@ export function useFileProcessor() {
         mode?: string;
         difficulty?: string;
         task?: string;
-        parsingMode?: ParsingMode;
+        parsingMode?: any;
         includeCategories?: boolean;
       },
     ) => {

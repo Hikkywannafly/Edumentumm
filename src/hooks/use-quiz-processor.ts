@@ -28,6 +28,7 @@ export function useQuizProcessor() {
         id: `${Date.now()}-${index}`,
         name: file.name,
         size: file.size,
+        file: file,
         status: "uploading",
         progress: 0,
       }));

@@ -267,7 +267,8 @@
       "creating": "Đang tạo...",
       "settings": "Cài đặt",
       "quizInfo": "Thông tin quiz",
-      "deleteQuiz": "Xóa quiz"
+      "deleteQuiz": "Xóa quiz",
+      "backToTop": "Quay lại đầu trang"
     },
     "yourQuizzes": "Bài kiểm tra của bạn",
     "quizCard": {

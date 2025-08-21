@@ -1,8 +1,13 @@
 import { quizQueryKeys } from "@/hooks/quiz-query-keys";
 import { extractQuestionsFromContent } from "@/lib/services/quiz-generate.service";
 import { useQuizEditorStore } from "@/stores/quiz-editor-store";
-import type { GeneratedQuiz, UploadedFile } from "@/stores/quiz-editor-store";
-import type { Language, ParsingMode, QuestionData } from "@/types/quiz";
+import type {
+  GeneratedQuiz,
+  Language,
+  ParsingMode,
+  QuestionData,
+  UploadedFile,
+} from "@/types/quiz";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 interface ExtractDirectParams {
