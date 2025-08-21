@@ -50,19 +50,8 @@ class FlashcardService {
       ...options,
     };
 
-    console.log("🌐 API Request:", {
-      url,
-      config: { ...config, headers: config.headers },
-    });
-
     try {
       const response = await fetch(url, config);
-
-      console.log(
-        "📡 API Response status:",
-        response.status,
-        response.statusText,
-      );
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -96,23 +85,9 @@ class FlashcardService {
 
   async getPublicFlashcards(): Promise<FlashcardApiResponse> {
     try {
-      console.log("🔍 FlashcardService: Fetching public flashcards...");
-
-      // Check if token exists
-      const accessToken = localStorage.getItem("accessToken");
-      console.log("🔑 Token exists:", !!accessToken);
-      if (accessToken) {
-        console.log(`🔑 Token preview: ${accessToken.substring(0, 20)}...`);
-      }
-
       // Try the current endpoint first
       const response = await this.request<FlashcardApiResponse>(
         "/student/flashcards/public",
-      );
-
-      console.log(
-        "✅ FlashcardService: Successfully fetched public flashcards:",
-        response,
       );
       return response;
     } catch (error) {
@@ -123,9 +98,6 @@ class FlashcardService {
 
       // If 403, try a different approach - maybe all flashcards with filtering
       if (error instanceof Error && error.message.includes("403")) {
-        console.log(
-          "🔄 Trying to get all flashcards and filter public ones...",
-        );
         try {
           const allFlashcards = await this.getAllFlashcards();
           // Filter only public flashcards
@@ -133,7 +105,6 @@ class FlashcardService {
             ...allFlashcards,
             data: allFlashcards.data.filter((flashcard) => flashcard.isPublic),
           };
-          console.log("✅ Filtered public flashcards:", publicFlashcards);
           return publicFlashcards;
         } catch (fallbackError) {
           console.error("❌ Fallback also failed:", fallbackError);
@@ -263,7 +234,6 @@ class FlashcardService {
       await this.request(`/student/flashcards/${id}`, {
         method: "DELETE",
       });
-      console.log("✅ Flashcard set deleted successfully");
     } catch (error) {
       console.error(
         "❌ FlashcardService: Error deleting flashcard set:",

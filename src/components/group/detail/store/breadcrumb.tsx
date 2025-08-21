@@ -1,11 +1,11 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import type { FolderType } from "./types";
+import type { FolderResponse } from "../../../../types/folder";
 
 interface BreadcrumbProps {
   selectedFolder: string | null;
-  folders: FolderType[];
+  folders: FolderResponse[];
   onNavigateBack: () => void;
 }
 
@@ -28,7 +28,7 @@ export function Breadcrumb({
       </Button>
       <span>/</span>
       <span className="font-medium">
-        {folders.find((f) => f.id === selectedFolder)?.name}
+        {folders.find((f) => f.id === selectedFolder)?.folderName}
       </span>
     </div>
   );

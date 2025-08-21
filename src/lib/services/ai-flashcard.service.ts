@@ -164,10 +164,6 @@ function parseFlashcardAIResponse(aiResponse: string): {
     .replace(/```\s*([\s\S]*?)\s*```/i, "$1")
     .trim();
 
-  if (process.env.NODE_ENV === "development") {
-    console.log("🔍 Parsing Flashcard AI response:", content.substring(0, 500));
-  }
-
   // Try direct JSON parse with Zod validation
   try {
     const parsed = JSON.parse(content);
@@ -185,7 +181,6 @@ function parseFlashcardAIResponse(aiResponse: string): {
         tags: fc.tags,
       }));
 
-      console.log(`✅ Zod validation success: ${flashcards.length} flashcards`);
       return {
         flashcards,
         title: data.title,
@@ -233,9 +228,6 @@ function parseFlashcardAIResponse(aiResponse: string): {
           }
 
           if (validFlashcards.length > 0) {
-            console.log(
-              `✅ Fallback parsing success: ${validFlashcards.length} flashcards`,
-            );
             return {
               flashcards: validFlashcards,
               title: "AI Generated Flashcards",
@@ -249,7 +241,6 @@ function parseFlashcardAIResponse(aiResponse: string): {
     console.warn("⚠️ Fallback parsing failed:", error);
   }
 
-  console.error("❌ Failed to parse flashcard AI response");
   return {
     flashcards: [],
     title: "AI Generated Flashcards",
@@ -313,7 +304,6 @@ export async function generateFlashcardTitleDescription(params: {
       description: result.description,
     };
   } catch (error) {
-    console.warn("AI flashcard title/description generation failed:", error);
     return {
       success: false,
       error: error instanceof Error ? error.message : "Unknown error",
@@ -374,18 +364,6 @@ export async function generateFlashcards(
           availableCategories = "No categories available";
         }
       }
-
-      console.log("🚀 Calling generate-flashcards API with payload:", {
-        title,
-        description,
-        apiKey: apiKey ? "***" : "missing",
-        fileContent: fileContent ? `${fileContent.length} chars` : "empty",
-        modelName,
-        settings: { ...settings, numberOfCards },
-        availableCategories: availableCategories
-          ? `${availableCategories.length} chars`
-          : "empty",
-      });
 
       const result = await callServerAPI(
         "generate-flashcards",
@@ -488,9 +466,6 @@ export async function generateFlashcardsFromFile(params: {
 
     const parsed = parseFlashcardAIResponse(JSON.stringify(result));
 
-    console.log(
-      `✅ Successfully generated ${parsed.flashcards.length} flashcards from file`,
-    );
     return {
       success: true,
       flashcards: parsed.flashcards,
@@ -500,7 +475,6 @@ export async function generateFlashcardsFromFile(params: {
       selectedCategory: parsed.selectedCategory,
     };
   } catch (error) {
-    console.error("❌ Flashcard generation from file failed:", error);
     return {
       success: false,
       error: error instanceof Error ? error.message : String(error),
@@ -568,9 +542,6 @@ export async function extractFlashcardsWithAI(params: {
 
     const parsed = parseFlashcardAIResponse(JSON.stringify(result));
 
-    console.log(
-      `✅ Successfully extracted ${parsed.flashcards.length} flashcards`,
-    );
     return {
       success: true,
       flashcards: parsed.flashcards,
@@ -580,7 +551,6 @@ export async function extractFlashcardsWithAI(params: {
       selectedCategory: parsed.selectedCategory,
     };
   } catch (error) {
-    console.error("❌ Flashcard extraction failed:", error);
     return {
       success: false,
       error: error instanceof Error ? error.message : String(error),
