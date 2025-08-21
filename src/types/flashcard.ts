@@ -29,11 +29,20 @@ export interface FlashcardSet {
   flashcards: FlashcardData[];
 }
 
+export interface PaginationInfo {
+  currentPage: number;
+  pageSize: number;
+  totalElements: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrevious: boolean;
+}
+
 export interface FlashcardApiResponse {
-  total: number;
+  pagination: PaginationInfo;
+  data: FlashcardSet[];
   message: string;
   status: string;
-  data: FlashcardSet[];
 }
 
 export interface FlashcardSetApiResponse {

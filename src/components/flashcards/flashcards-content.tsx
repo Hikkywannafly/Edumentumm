@@ -6,12 +6,23 @@ import { Input } from "@/components/ui/input";
 import { useFlashcards } from "@/hooks/use-flashcards";
 import { AlertCircle, Filter, Loader2, Plus, Search } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { useState } from "react";
 import ThinLayout from "../layout/thin-layout";
 import { FlashcardGrid } from "./flashcard-grid";
+import FlashcardPagination from "./flashcard-pagination";
 
 export function FlashcardsContent() {
   const t = useTranslations("Flashcards");
-  const { flashcardSets, stats, isLoading, error, refetch } = useFlashcards();
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 6;
+
+  const { flashcardSets, pagination, stats, isLoading, error, refetch } =
+    useFlashcards(currentPage, pageSize);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    refetch(page, pageSize);
+  };
 
   if (isLoading) {
     return (
@@ -35,7 +46,9 @@ export function FlashcardsContent() {
             Error loading flashcards
           </h3>
           <p className="mb-4 text-muted-foreground">{error}</p>
-          <Button onClick={refetch}>Try again</Button>
+          <Button onClick={() => refetch(currentPage, pageSize)}>
+            Try again
+          </Button>
         </div>
       </ThinLayout>
     );
@@ -132,6 +145,13 @@ export function FlashcardsContent() {
             </div>
           </CardContent>
         </Card>
+      )}
+      {/* Pagination */}
+      {flashcardSets.length > 0 && (
+        <FlashcardPagination
+          pagination={pagination}
+          onPageChange={handlePageChange}
+        />
       )}
     </ThinLayout>
   );

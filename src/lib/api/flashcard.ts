@@ -5,30 +5,31 @@ import type {
   FlashcardStats,
 } from "@/types/flashcard";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_URL_LOCAL;
 
 export interface CreateFlashcardSetRequest {
   title: string;
   description: string;
   isPublic: boolean;
   flashcards: Array<{
-    question: string; // Should be <= 250 characters
-    choices: string[]; // Each choice <= 200 characters
+    question: string;
+    choices: string[];
     correctAnswer: number;
-    explanation?: string; // Should be <= 250 characters
+    explanation?: string;
   }>;
 }
 
 export interface UpdateFlashcardSetRequest {
-  title?: string; // Should be <= 255 characters
-  description?: string; // Should be <= 500 characters
+  title?: string;
+  description?: string;
   isPublic?: boolean;
   flashcards?: Array<{
     id?: number;
-    question: string; // Should be <= 250 characters
-    choices: string[]; // Each choice <= 200 characters
+    question: string;
+    choices: string[];
     correctAnswer: number;
-    explanation?: string; // Should be <= 250 characters
+    explanation?: string;
   }>;
 }
 
@@ -71,10 +72,10 @@ class FlashcardService {
     }
   }
 
-  async getAllFlashcards(): Promise<FlashcardApiResponse> {
+  async getAllFlashcards(page = 0, size = 6): Promise<FlashcardApiResponse> {
     try {
       const response = await this.request<FlashcardApiResponse>(
-        "/student/flashcards",
+        `/student/flashcards?page=${page}&size=${size}`,
       );
       return response;
     } catch (error) {
@@ -83,11 +84,11 @@ class FlashcardService {
     }
   }
 
-  async getPublicFlashcards(): Promise<FlashcardApiResponse> {
+  async getPublicFlashcards(page = 0, size = 6): Promise<FlashcardApiResponse> {
     try {
       // Try the current endpoint first
       const response = await this.request<FlashcardApiResponse>(
-        "/student/flashcards/public",
+        `/student/flashcards/public?page=${page}&size=${size}`,
       );
       return response;
     } catch (error) {
@@ -99,7 +100,7 @@ class FlashcardService {
       // If 403, try a different approach - maybe all flashcards with filtering
       if (error instanceof Error && error.message.includes("403")) {
         try {
-          const allFlashcards = await this.getAllFlashcards();
+          const allFlashcards = await this.getAllFlashcards(page, size);
           // Filter only public flashcards
           const publicFlashcards = {
             ...allFlashcards,
@@ -243,8 +244,11 @@ class FlashcardService {
     }
   }
 
-  calculateStats(flashcards: FlashcardSet[]): FlashcardStats {
-    const totalDecks = flashcards.length;
+  calculateStats(
+    flashcards: FlashcardSet[],
+    pagination?: { totalElements: number },
+  ): FlashcardStats {
+    const totalDecks = pagination?.totalElements ?? flashcards.length;
     const totalFlashcards = flashcards.reduce(
       (sum, deck) => sum + deck.flashcards.length,
       0,
