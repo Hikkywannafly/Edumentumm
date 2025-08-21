@@ -1,8 +1,12 @@
 import { quizQueryKeys } from "@/hooks/quiz-query-keys";
 import { extractQuestionsWithAIHandler } from "@/lib/services/quiz-generate.service";
 import { useQuizEditorStore } from "@/stores/quiz-editor-store";
-import type { GeneratedQuiz, UploadedFile } from "@/stores/quiz-editor-store";
-import type { ParsingMode, QuestionData } from "@/types/quiz";
+import type {
+  GeneratedQuiz,
+  ParsingMode,
+  QuestionData,
+  UploadedFile,
+} from "@/types/quiz";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useGenerateTitleDescription } from "./use-generate-title-description";
 

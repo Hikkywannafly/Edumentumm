@@ -1,12 +1,12 @@
 import type { QuizResponse } from "@/types/quiz";
 
 // Re-export new modular APIs
-export { quizCRUDAPI } from "./quiz/crud";
-export {
-  calculateTotalPoints,
-  calculateEstimatedTime,
-  validateQuizData,
-} from "./quiz/index";
+export { quizCRUDAPI } from "./quiz/";
+// export {
+//   calculateTotalPoints,
+//   calculateEstimatedTime,
+//   validateQuizData,
+// } from "./quiz/index";
 
 // Legacy compatibility - keep existing interfaces and types that other files might import
 export interface QuizListParams {

@@ -40,7 +40,6 @@ export function FileUploadArea({
 
   return (
     <Card className="border-none">
-      L
       <CardHeader>
         <CardTitle className="flex items-center gap-2 border-none">
           <Upload className="h-5 w-5" />

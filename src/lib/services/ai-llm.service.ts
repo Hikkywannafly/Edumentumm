@@ -1,4 +1,4 @@
-import type { Difficulty, ParsingMode, QuestionData } from "@/types/quiz";
+import type { Difficulty, QuestionData } from "@/types/quiz";
 import { z } from "zod";
 import { categoriesService } from "./categories.service";
 import { ContentExtractor } from "./content-extractor.service";
@@ -64,7 +64,7 @@ const AIResponseSchema = z.object({
 });
 
 // Server-side only constants
-const DEFAULT_MODEL = "openai/gpt-4o-mini";
+const DEFAULT_MODEL = "google/gemini-2.5-flash-lite";
 
 // Drop-in utility functions
 function validateQuestionCount(
@@ -116,36 +116,25 @@ export function generateAnswerId(
   return `a-${Date.now()}-${questionIndex}-${answerIndex}`;
 }
 
-// For AI-based quiz generation from content
-interface GenerateQuestionsParams {
+// Consolidated interface for all AI operations
+interface AIQuizParams {
   questionHeader: string;
   questionDescription: string;
   apiKey: string;
   fileContent?: string;
   modelName?: string;
-  settings?: {
-    visibility?: string;
-    language?: string;
-    questionType?: string;
-    numberOfQuestions?: number;
-    mode?: string;
-    difficulty?: string;
-    task?: string;
-    parsingMode?: ParsingMode;
-    promptOverride?: string;
-    includeCategories?: boolean;
-  };
+  settings?: any; // Flexible to accept any settings structure
+  file?: FileForAI;
+  useMultiAgent?: boolean;
 }
 
-// For direct extraction from files with existing questions
+// Simple extraction params
 interface ExtractQuestionsParams {
   fileContent: string;
-  settings?: {
-    language?: string;
-    parsingMode?: ParsingMode;
-  };
+  settings?: any; // Flexible settings
 }
 
+// Use QuizProcessingResult instead
 export interface AIResponse {
   success: boolean;
   questions?: QuestionData[];
@@ -332,7 +321,7 @@ function parseAIResponse(aiResponse: string): QuestionData[] {
 
 export function parseQuestionsFromAI(
   aiResponse: string,
-  _settings?: GenerateQuestionsParams["settings"], // Deprecated parameter, kept for backward compatibility
+  _settings?: any, // Deprecated parameter, kept for backward compatibility
 ): QuestionData[] {
   console.warn(
     "⚠️ Using deprecated parseQuestionsFromAI - migrate to parseAIResponse",
@@ -343,7 +332,7 @@ export function parseQuestionsFromAI(
 // Enhanced question processing with validation (deprecated - use Zod validation)
 export function processQuestionArray(
   parsed: any[],
-  settings?: GenerateQuestionsParams["settings"],
+  settings?: any,
 ): QuestionData[] {
   console.warn(
     "⚠️ Using deprecated processQuestionArray - migrate to Zod validation",
@@ -417,10 +406,19 @@ export async function extractQuestions(
     };
   }
 }
-
-// Generate NEW questions using AI from content (server-side only)
-export async function generateQuestions(
-  params: GenerateQuestionsParams & { useMultiAgent?: boolean },
+async function processQuestionsWithAI(
+  endpoint: string,
+  params: {
+    questionHeader: string;
+    questionDescription: string;
+    apiKey: string;
+    fileContent?: string;
+    modelName?: string;
+    settings: any; // Flexible settings to avoid TypeScript conflicts
+    file?: FileForAI;
+    defaultQuestionCount?: number;
+    useExactMode?: boolean;
+  },
   signal?: AbortSignal,
 ): Promise<AIResponse> {
   const {
@@ -429,8 +427,12 @@ export async function generateQuestions(
     apiKey,
     fileContent = "",
     modelName = DEFAULT_MODEL,
-    settings = {},
+    settings,
+    file,
+    defaultQuestionCount = 5,
+    useExactMode = true,
   } = params;
+
   const requestKey = makeRequestKey(fileContent, modelName, settings);
 
   if (inFlight.has(requestKey)) {
@@ -444,9 +446,18 @@ export async function generateQuestions(
     try {
       const numberOfQuestions = Math.max(
         5,
-        Math.min(10, settings.numberOfQuestions || 5),
+        Math.min(
+          10,
+          settings.number_of_questions ||
+            settings.numberOfQuestions ||
+            defaultQuestionCount,
+        ),
       );
-      const mode = settings.numberOfQuestions ? "exact" : "max";
+      const mode =
+        useExactMode &&
+        (settings.number_of_questions || settings.numberOfQuestions)
+          ? "exact"
+          : "max";
 
       // Get available categories for AI selection if enabled
       let availableCategories = "";
@@ -459,22 +470,33 @@ export async function generateQuestions(
         }
       }
 
+      const normalizedSettings = {
+        ...settings,
+        numberOfQuestions: numberOfQuestions,
+        mode,
+        parsingMode: settings.parsing_mode || settings.parsingMode,
+        questionType: settings.question_type || settings.questionType,
+      };
+
       const result = await callServerAPI(
-        "generate-questions",
+        endpoint,
         {
           questionHeader,
           questionDescription,
           apiKey,
           fileContent,
           modelName,
-          settings: { ...settings, numberOfQuestions, mode },
+          settings: normalizedSettings,
+          file,
           availableCategories,
         },
         signal,
       );
 
       if (!result.success || !result.questions) {
-        throw new Error(result.error || "Failed to generate questions");
+        throw new Error(
+          result.error || `Failed to ${endpoint.replace("-", " ")}`,
+        );
       }
 
       const questions = parseAIResponse(
@@ -502,138 +524,43 @@ export async function generateQuestions(
   return promise;
 }
 
+// Generate NEW questions using AI from content (server-side only)
+export async function generateQuestions(
+  params: AIQuizParams,
+  signal?: AbortSignal,
+): Promise<AIResponse> {
+  return processQuestionsWithAI(
+    "generate-questions",
+    {
+      ...params,
+      settings: params.settings || {},
+      defaultQuestionCount: 5,
+      useExactMode: true,
+    },
+    signal,
+  );
+}
+
 // Extract questions using AI (for content that already has quiz format)
 export async function extractQuestionsWithAI(
-  params: GenerateQuestionsParams & {
-    useMultiAgent?: boolean;
-    file?: FileForAI;
-  },
+  params: AIQuizParams,
 ): Promise<AIResponse> {
-  const {
-    questionHeader,
-    questionDescription,
-    apiKey,
-    fileContent,
-    modelName = DEFAULT_MODEL,
-    settings = {},
-    file,
-  } = params;
-
-  try {
-    const numberOfQuestions = Math.max(
-      5,
-      Math.min(10, settings.numberOfQuestions || 10),
-    );
-    const mode = "max"; // Extraction typically allows up to N questions
-
-    // Get available categories for AI selection if enabled
-    let availableCategories = "";
-    if (settings.includeCategories !== false) {
-      try {
-        availableCategories = await categoriesService.getCategoriesForAI();
-      } catch (error) {
-        console.warn("Failed to fetch categories for AI:", error);
-        availableCategories = "No categories available";
-      }
-    }
-
-    const result = await callServerAPI("extract-questions-ai", {
-      questionHeader,
-      questionDescription,
-      apiKey,
-      fileContent,
-      modelName,
-      settings: { ...settings, numberOfQuestions, mode },
-      file,
-      availableCategories,
-    });
-
-    if (!result.success || !result.questions) {
-      throw new Error(result.error || "Failed to extract questions");
-    }
-
-    const questions = parseAIResponse(
-      JSON.stringify({ questions: result.questions }),
-    );
-    console.log(`✅ Successfully extracted ${questions.length} questions`);
-
-    return { success: true, questions: ensureCorrectAnswers(questions) };
-  } catch (error) {
-    console.error("❌ Question extraction failed:", error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : String(error),
-    };
-  }
+  return processQuestionsWithAI("extract-questions-ai", {
+    ...params,
+    settings: params.settings || {},
+    defaultQuestionCount: 10,
+    useExactMode: false, // Extraction allows up to N questions
+  });
 }
 
 // Generate questions directly from file
 export async function generateQuestionsFromFile(
-  params: GenerateQuestionsParams & {
-    useMultiAgent?: boolean;
-    file: FileForAI;
-  },
+  params: AIQuizParams & { file: FileForAI },
 ): Promise<AIResponse> {
-  const {
-    questionHeader,
-    questionDescription,
-    apiKey,
-    modelName = DEFAULT_MODEL,
-    settings = {},
-    file,
-  } = params;
-
-  try {
-    const numberOfQuestions = Math.max(
-      5,
-      Math.min(10, settings.numberOfQuestions || 5),
-    );
-    const mode = settings.numberOfQuestions ? "exact" : "max";
-
-    // Get available categories for AI selection if enabled
-    let availableCategories = "";
-    if (settings.includeCategories !== false) {
-      try {
-        availableCategories = await categoriesService.getCategoriesForAI();
-      } catch (error) {
-        console.warn("Failed to fetch categories for AI:", error);
-        availableCategories = "No categories available";
-      }
-    }
-
-    const result = await callServerAPI("generate-questions-from-file", {
-      questionHeader,
-      questionDescription,
-      apiKey,
-      modelName,
-      settings: { ...settings, numberOfQuestions, mode },
-      file,
-      availableCategories,
-    });
-
-    if (!result.success || !result.questions) {
-      throw new Error(result.error || "Failed to generate questions from file");
-    }
-
-    const questions = parseAIResponse(
-      JSON.stringify({ questions: result.questions }),
-    );
-
-    if (!validateQuestionCount(questions, numberOfQuestions, mode)) {
-      console.warn(
-        `⚠️ Question count validation failed: got ${questions.length}, expected ${mode} ${numberOfQuestions}`,
-      );
-    }
-
-    console.log(
-      `✅ Successfully generated ${questions.length} questions from file`,
-    );
-    return { success: true, questions: ensureCorrectAnswers(questions) };
-  } catch (error) {
-    console.error("❌ Question generation from file failed:", error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : String(error),
-    };
-  }
+  return processQuestionsWithAI("generate-questions-from-file", {
+    ...params,
+    settings: params.settings || {},
+    defaultQuestionCount: 5,
+    useExactMode: true,
+  });
 }

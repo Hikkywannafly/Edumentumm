@@ -15,10 +15,143 @@ const GenerateTitleDescriptionRequestSchema = z.object({
   filename: z.string().optional(),
   category: z.string().optional(),
   tags: z.array(z.string()).optional(),
-  modelName: z.string().default("openai/gpt-oss-20b:free"),
+  modelName: z.string().default("google/gemini-2.0-flash-exp:free"),
 });
 
 const OPENROUTER_API_BASE = "https://openrouter.ai/api/v1";
+
+function detectLanguage(content: string): boolean {
+  const vietnameseChars =
+    /[ăâêôơưđàáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ]/i;
+  return vietnameseChars.test(content);
+}
+
+function createFallbackTitle(
+  filename: string | undefined,
+  isVietnamese: boolean,
+): string {
+  if (filename) {
+    const cleanFilename = filename.replace(/\.[^/.]+$/, "");
+    return isVietnamese
+      ? `Bài kiểm tra: ${cleanFilename}`
+      : `${cleanFilename} Quiz`;
+  }
+  return isVietnamese ? "Bài kiểm tra được tạo" : "Generated Quiz";
+}
+
+function createFallbackDescription(
+  questionCount: number,
+  isVietnamese: boolean,
+): string {
+  return isVietnamese
+    ? `Bài kiểm tra với ${questionCount} câu hỏi về các chủ đề khác nhau`
+    : `Quiz with ${questionCount} questions covering various topics`;
+}
+
+function parseAIResponse(
+  aiResponse: string,
+): { title: string; description: string } | null {
+  try {
+    const parsed = JSON.parse(aiResponse);
+
+    // Handle both array and object responses
+    let result = parsed;
+    if (Array.isArray(parsed) && parsed.length > 0) {
+      result = parsed[0];
+      console.log("AI returned array, using first item:", result);
+    }
+
+    if (result.title && result.description) {
+      return {
+        title: result.title,
+        description: result.description,
+      };
+    }
+
+    console.error("Missing fields in parsed response:", parsed);
+    console.error("Processed result:", result);
+    return null;
+  } catch (parseError) {
+    console.error("JSON parse error:", parseError);
+    console.error("Raw AI response:", aiResponse);
+    return null;
+  }
+}
+
+function buildContextInfo(
+  questions: any[],
+  isExtractMode: boolean,
+  filename?: string,
+  category?: string,
+  tags?: string[],
+): string {
+  const contextParts = [
+    `Questions: ${questions.length}`,
+    `Source: ${isExtractMode ? "Extracted from document" : "AI Generated"}`,
+    filename ? `File: ${filename.replace(/\.[^/.]+$/, "")}` : "",
+    category ? `Topic: ${category}` : "",
+    tags && tags.length ? `Tags: ${tags.join(", ")}` : "",
+  ];
+
+  return contextParts.filter(Boolean).join(" | ");
+}
+
+function createSystemPrompt(): string {
+  return `You are an expert quiz title and description generator. Your task is to analyze quiz content and create engaging, specific titles that reflect the actual subject matter.
+
+RULES:
+1. NEVER use generic phrases like "AI Generated Quiz", "Quiz from [filename]", or "Test Quiz"
+2. Focus on the ACTUAL SUBJECT MATTER and topics covered
+3. Create titles that students would find appealing and descriptive
+4. DETECT THE LANGUAGE OF THE CONTENT AND RESPOND IN THE SAME LANGUAGE
+5. Make titles specific to the content, not the source file
+6. Keep titles concise but descriptive (30-60 characters)
+7. Make descriptions informative and engaging (80-150 characters)
+
+LANGUAGE DETECTION RULES:
+- If content contains Vietnamese characters (ă, â, ê, ô, ơ, ư, đ), respond in Vietnamese
+- If content is in English, respond in English
+- If content is mixed, use the dominant language
+- NEVER default to English if content is in another language
+
+EXAMPLES OF GOOD TITLES:
+- Vietnamese content → "Toán học lớp 12: Hàm số và đạo hàm"
+- English content → "English Grammar: Tenses and Conditionals"
+- Vietnamese content → "Lịch sử Việt Nam: Thời kỳ kháng chiến"
+
+Always return valid JSON with title and description fields.`;
+}
+
+function createUserPrompt(
+  contentPreview: string,
+  questionSamples: string,
+  contextInfo: string,
+): string {
+  return `Analyze this quiz content and create a specific, engaging title and description:
+
+CONTENT PREVIEW:
+${contentPreview}
+
+SAMPLE QUESTIONS:
+${questionSamples}
+
+CONTEXT: ${contextInfo}
+
+CRITICAL REQUIREMENTS:
+1. DETECT THE LANGUAGE OF THE CONTENT FIRST
+2. If content contains Vietnamese characters (ă, â, ê, ô, ơ, ư, đ), respond in Vietnamese
+3. If content is in English, respond in English
+4. Create a title that reflects the ACTUAL SUBJECT MATTER, not the filename
+5. Make it specific to the topics covered in the questions
+6. Avoid generic phrases like "AI Quiz", "Test Quiz", or "Quiz from file"
+7. Focus on what students will actually learn or be tested on
+
+Return JSON format:
+{
+  "title": "Specific subject-based title in the same language as content",
+  "description": "Detailed description of what the quiz covers in the same language as content"
+}`;
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -36,16 +169,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const {
-      content,
-      questions,
-      isExtractMode,
-      targetLanguage,
-      filename,
-      category,
-      tags,
-      modelName,
-    } = validated.data;
+    const { content, questions, isExtractMode, filename, category, tags } =
+      validated.data;
 
     const apiKey =
       process.env.OPENROUTER_API_KEY ||
@@ -57,55 +182,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Build prompt on server
-    const contentPreview = content.slice(0, 800);
+    // Prepare data for AI
+    const contentPreview = content.slice(0, 1500);
     const questionSamples = questions
-      .slice(0, 3)
-      .map((q) => q.question)
+      .slice(0, 5)
+      .map((q, i) => `${i + 1}. ${q.question}`)
       .join("\n");
-    const contextInfo = [
-      `- Questions: ${questions.length}`,
-      `- Type: ${isExtractMode ? "Extracted from document" : "AI Generated"}`,
-      filename ? `- File: ${filename}` : "",
-      category ? `- Topic: ${category}` : "",
-      tags && tags.length ? `- Tags: ${tags.join(", ")}` : "",
-    ]
-      .filter(Boolean)
-      .join("\n");
+    const contextInfo = buildContextInfo(
+      questions,
+      isExtractMode,
+      filename,
+      category,
+      tags,
+    );
 
-    // Language detection (simple heuristic) when targetLanguage = 'auto'
-    const detectLanguage = (text: string): string => {
-      const sample = text.toLowerCase();
-      // Vietnamese diacritics or common words
-      const viDiacritics =
-        /[ăâđêôơưàáảãạằắẳẵặầấẩẫậèéẻẽẹềếểễệìíỉĩịòóỏõọồốổỗộờớởỡợùúủũụừứửữựỳýỷỹỵ]/i;
-      const viWords =
-        /(câu hỏi|bài|trắc nghiệm|đúng|sai|mô tả|tiêu đề|nội dung)/i;
-      const ko = /[\u3131-\uD79D]/; // Hangul
-      const ja = /[\u3040-\u30ff]/; // Hiragana/Katakana
-      const zh = /[\u4e00-\u9fff]/; // CJK Unified Ideographs
-      if (viDiacritics.test(sample) || viWords.test(sample)) return "vi";
-      if (ko.test(sample)) return "ko";
-      if (ja.test(sample)) return "ja";
-      if (zh.test(sample)) return "zh";
-      return "en";
-    };
-
-    const requestedLang = (targetLanguage || "auto").toLowerCase();
-    const effectiveLanguage =
-      requestedLang === "auto"
-        ? detectLanguage(`${contentPreview}\n${questionSamples}`)
-        : requestedLang;
-
-    const languageNote =
-      effectiveLanguage === "vi"
-        ? "tiếng Việt tự nhiên"
-        : `natural ${effectiveLanguage}`;
-
-    const prompt =
-      effectiveLanguage === "vi"
-        ? `Dựa trên nội dung và câu hỏi dưới đây, hãy tạo một tiêu đề và mô tả hấp dẫn cho bài quiz này.\n\nNỘI DUNG:\n${contentPreview}\n\nCÂU HỎI MẪU:\n${questionSamples}\n\nTHÔNG TIN QUIZ:\n${contextInfo}\n\nYÊU CẦU:\n1. Tiêu đề: Ngắn gọn, hấp dẫn, phản ánh đúng chủ đề (tối đa 60 ký tự)\n2. Mô tả: Chi tiết hơn, giải thích nội dung và mục đích của quiz (80-150 ký tự)\n3. Sử dụng ${languageNote}\n4. Phản ánh đúng chủ đề và nội dung thực tế\n\nTrả về JSON format:\n{\n  "title": "Tiêu đề quiz",\n  "description": "Mô tả chi tiết về quiz"\n}`
-        : `Based on the content and questions below, create an engaging title and description for this quiz.\n\nCONTENT:\n${contentPreview}\n\nSAMPLE QUESTIONS:\n${questionSamples}\n\nQUIZ INFO:\n${contextInfo}\n\nREQUIREMENTS:\n1. Title: Concise, engaging, reflects the topic (max 60 characters)\n2. Description: Detailed explanation of quiz content and purpose (80-150 characters)\n3. Use ${languageNote}\n4. Accurately reflect the actual topic and content\n\nReturn JSON format:\n{\n  "title": "Quiz title",\n  "description": "Detailed quiz description"\n}`;
+    const systemPrompt = createSystemPrompt();
+    const userPrompt = createUserPrompt(
+      contentPreview,
+      questionSamples,
+      contextInfo,
+    );
 
     const response = await fetch(`${OPENROUTER_API_BASE}/chat/completions`, {
       method: "POST",
@@ -116,17 +212,13 @@ export async function POST(request: NextRequest) {
         "X-Title": "Edumentum Quiz Title Generator",
       },
       body: JSON.stringify({
-        model: modelName,
+        model: "google/gemini-2.5-flash-lite",
         messages: [
-          {
-            role: "system",
-            content:
-              "You are a quiz title and description generator. Always return valid JSON according to the schema. Do not add any explanations outside the JSON response.",
-          },
-          { role: "user", content: prompt },
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt },
         ],
-        temperature: 0.3,
-        max_tokens: 250,
+        temperature: 0.7,
+        max_tokens: 300,
         response_format: { type: "json_object" },
       }),
     });
@@ -144,21 +236,38 @@ export async function POST(request: NextRequest) {
       throw new Error("No content returned from AI");
     }
 
-    const parsed = JSON.parse(aiResponse);
-    if (!parsed.title || !parsed.description) {
-      throw new Error(
-        "Invalid AI response format - missing title or description",
-      );
+    console.log("AI Response:", aiResponse);
+
+    // Parse AI response
+    const parsedResult = parseAIResponse(aiResponse);
+    if (parsedResult) {
+      console.log("Successfully parsed AI response:", parsedResult);
+      return NextResponse.json({
+        success: true,
+        title: parsedResult.title,
+        description: parsedResult.description,
+      });
     }
+
+    const isVietnamese = detectLanguage(contentPreview);
+    const fallbackTitle = createFallbackTitle(filename, isVietnamese);
+    const fallbackDescription = createFallbackDescription(
+      questions.length,
+      isVietnamese,
+    );
+
+    console.log("Using fallback values:", {
+      fallbackTitle,
+      fallbackDescription,
+    });
 
     return NextResponse.json({
       success: true,
-      title: parsed.title,
-      description: parsed.description,
+      title: fallbackTitle,
+      description: fallbackDescription,
     });
   } catch (error) {
     console.error("Generate title/description API error:", error);
-
     const message = error instanceof Error ? error.message : "Unknown error";
     return NextResponse.json(
       { success: false, error: message },

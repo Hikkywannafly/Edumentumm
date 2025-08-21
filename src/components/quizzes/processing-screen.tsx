@@ -65,7 +65,7 @@ export function ProcessingScreen({
         <div className="mb-6 flex justify-center">
           <div
             className={`rounded-full p-3 ${
-              hasError ? "bg-red-50" : showResult ? "bg-green-50" : "bg-blue-50"
+              hasError ? "bg-red-50" : showResult ? "bg-green-50" : ""
             }`}
           >
             {getIcon()}

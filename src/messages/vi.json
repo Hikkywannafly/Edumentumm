@@ -259,6 +259,17 @@
       "averageScore": "Điểm trung bình",
       "avgDuration": "Thời gian TB (phút)"
     },
+    "editor": {
+      "back": "Quay lại",
+      "save": "Lưu",
+      "saving": "Đang lưu...",
+      "createQuiz": "Tạo quiz",
+      "creating": "Đang tạo...",
+      "settings": "Cài đặt",
+      "quizInfo": "Thông tin quiz",
+      "deleteQuiz": "Xóa quiz",
+      "backToTop": "Quay lại đầu trang"
+    },
     "yourQuizzes": "Bài kiểm tra của bạn",
     "quizCard": {
       "questions": "câu hỏi",

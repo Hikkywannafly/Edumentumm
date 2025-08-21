@@ -3,8 +3,8 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import type { UploadedFile } from "@/hooks/quiz/use-file-upload";
 import { formatFileSize, getFileIconClassName } from "@/lib/utils/file-utils";
-import type { UploadedFile } from "@/stores/quiz-editor-store";
 import { AlertCircle, CheckCircle, FileText, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 
