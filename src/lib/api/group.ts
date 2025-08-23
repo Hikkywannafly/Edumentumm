@@ -45,12 +45,21 @@ class GroupAPI {
     }
   }
 
-  async getGroups(): Promise<GroupResponse[]> {
+  async getGroups(
+    page: number,
+    size: number,
+    keyword: string,
+  ): Promise<GetGroupsAPIResponse> {
     const response = await this.request<GetGroupsAPIResponse>(
-      "/user/groups/public",
+      `/user/groups/public?page=${page}&size=${size}&keyword=${keyword}`,
     );
     console.log(response.data);
-    return response.data;
+    return {
+      status: response.status,
+      message: response.message || "Success",
+      data: response.data,
+      pagination: response.pagination,
+    };
   }
 
   async createGroup(createGroup: GroupRequest): Promise<GroupResponse> {
@@ -87,6 +96,12 @@ class GroupAPI {
     });
   }
 
+  async deleteGroup(groupId: number): Promise<void> {
+    await this.request(`/user/groups/${groupId}`, {
+      method: "DELETE",
+    });
+  }
+
   async updateGroup(
     createGroup: GroupRequest,
     id: string,
@@ -97,6 +112,17 @@ class GroupAPI {
     });
     console.log(response.data);
     return response.data;
+  }
+
+  async donatePoint(
+    groupId: number,
+    points: number,
+    message: string,
+  ): Promise<void> {
+    await this.request(`/user/groups/${groupId}/donate`, {
+      method: "POST",
+      body: JSON.stringify({ points, message }),
+    });
   }
 }
 

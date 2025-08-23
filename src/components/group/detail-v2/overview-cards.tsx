@@ -8,13 +8,17 @@ import { BookOpen, Copy, Trophy, Users } from "lucide-react";
 type OverviewCardsProps = {
   memberLimit?: number;
   memberCount?: number;
-  key?: string;
+  keyG?: string;
+  contributionPoints?: string;
+  groupTier?: string;
 };
 
 export function OverviewCards({
   memberCount,
   memberLimit,
-  key,
+  keyG,
+  groupTier,
+  contributionPoints,
 }: OverviewCardsProps) {
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
@@ -37,7 +41,7 @@ export function OverviewCards({
           <Copy className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="font-semibold text-xl tracking-wider">{key}</div>
+          <div className="font-semibold text-xl tracking-wider">{keyG}</div>
           <Button variant="outline" size="sm" className="mt-2 w-full">
             Sao chép
           </Button>
@@ -51,9 +55,9 @@ export function OverviewCards({
           <Trophy className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="font-bold text-2xl">10.230</div>
+          <div className="font-bold text-2xl">{contributionPoints}</div>
           <Badge variant="secondary" className="mt-2">
-            Legend
+            {groupTier}
           </Badge>
         </CardContent>
       </Card>

@@ -2,36 +2,38 @@
 
 import { Button } from "@/components/ui/button";
 import { KeyRound, Plus, Search } from "lucide-react";
-import { useEffect, useState } from "react";
-import { groupAPI } from "../../lib/api/group";
+import { useState } from "react";
+import { useMyGroups, usePublicGroups } from "../../hooks/group";
 import type { GroupResponse } from "../../types/group";
 import { LocalizedLink } from "../localized-link";
 import GroupDialog from "./group-dialog";
+import GroupPaging from "./group-paging";
 import { StudyGroupCard } from "./study-group-card";
 
 export default function GroupContent() {
-  const [groups, setGroups] = useState<GroupResponse[]>([]);
-  const [myGroups, setMyGroups] = useState<GroupResponse[]>([]);
   const [selectedGroup, setSelectedGroup] = useState<GroupResponse | null>(
     null,
   );
-  const [searchTerm, setSearchTerm] = useState("");
+  const pageSize = 8;
 
-  useEffect(() => {
-    const fetchGroups = async () => {
-      const [allGroups, myGroupsData] = await Promise.all([
-        groupAPI.getGroups(),
-        groupAPI.getMyGroups(),
-      ]);
-      setGroups(allGroups);
-      setMyGroups(myGroupsData);
-    };
-    fetchGroups();
-  }, []);
+  const {
+    myGroups,
+    isLoading: myGroupsLoading,
+    error: myGroupsError,
+    addGroup,
+  } = useMyGroups();
 
-  const filteredGroups = groups.filter((g) =>
-    g.name.toLowerCase().includes(searchTerm.toLowerCase()),
-  );
+  const {
+    groups,
+    paging,
+    isLoading: groupsLoading,
+    error: groupsError,
+    keyword,
+    setKeyword,
+    setPage,
+    isSearching,
+    removeGroup,
+  } = usePublicGroups(pageSize);
 
   const renderGroupList = (
     list: GroupResponse[],
@@ -95,40 +97,73 @@ export default function GroupContent() {
         <h2 className="mb-4 font-semibold text-foreground text-xl">
           My Groups
         </h2>
+        {myGroupsError && (
+          <div className="mb-4 text-red-500">{myGroupsError.message}</div>
+        )}
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {renderGroupList(myGroups, true)}
+          {myGroupsLoading ? (
+            <div className="col-span-full flex justify-center py-10">
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+            </div>
+          ) : (
+            renderGroupList(myGroups, true)
+          )}
         </div>
       </section>
 
       {/* Discover Groups */}
       <section>
-        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mb-4 flex flex-col gap-3 sm:flex-col sm:justify-between">
           <h2 className="font-semibold text-foreground text-xl">
             Discover Groups
           </h2>
-          <div className="relative w-full sm:w-64">
-            <Search className="absolute top-2.5 left-3 h-4 w-4 text-gray-400" />
+          <div className="relative w-full sm:w-180">
+            <Search
+              className={`absolute top-2.5 left-3 h-4 w-4 ${
+                isSearching ? "animate-pulse text-blue-500" : "text-gray-400"
+              }`}
+            />
             <input
               type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              value={keyword}
+              onChange={(e) => setKeyword(e.target.value)}
               placeholder="Search groups..."
               className="w-full rounded-lg border border-gray-300 bg-white py-2 pr-3 pl-9 text-sm shadow-sm focus:border-blue-500 focus:outline-none dark:border-zinc-700 dark:bg-zinc-900 dark:text-white"
             />
+            {isSearching && (
+              <span className="absolute top-2.5 right-3 text-muted-foreground text-xs">
+                Searching...
+              </span>
+            )}
           </div>
         </div>
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {renderGroupList(filteredGroups, false, setSelectedGroup)}
-        </div>
+
+        {groupsError && (
+          <div className="mb-4 text-red-500">{groupsError.message}</div>
+        )}
+
+        {groupsLoading ? (
+          <div className="flex justify-center py-10">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {renderGroupList(groups, false, setSelectedGroup)}
+          </div>
+        )}
       </section>
+
+      <div className="mt-8">
+        <GroupPaging pagination={paging} pageIndex={setPage} />
+      </div>
 
       {/* Dialog */}
       <GroupDialog
         selectedGroup={selectedGroup}
         onClose={() => setSelectedGroup(null)}
         onJoinSuccess={(group) => {
-          setMyGroups((prev) => [...prev, group]);
-          setGroups((prev) => prev.filter((g) => g.id !== group.id));
+          addGroup(group);
+          removeGroup(group.id);
         }}
       />
     </div>
