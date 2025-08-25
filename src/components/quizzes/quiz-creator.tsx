@@ -24,6 +24,7 @@ export function QuizCreator() {
     startProcessing,
     finishProcessing,
     hideProcessing,
+    updateProcessingState,
   } = useProcessingOverlay();
 
   useEffect(() => {
@@ -35,6 +36,21 @@ export function QuizCreator() {
       };
     }
   }, [isProcessing]);
+
+  const handleProcessingStart = (fileName: string, label?: string) => {
+    startProcessing(fileName, label || "Processing...");
+  };
+
+  const handleProcessingUpdate = (label: string) => {
+    updateProcessingState({ label });
+  };
+
+  const handleProcessingDone = (success: boolean) => {
+    if (success) {
+      handleProcessingUpdate("Quiz created successfully!");
+    }
+    finishProcessing(success);
+  };
 
   return (
     <ThinLayout maxWidth="6xl" classNames="py-6">
@@ -54,6 +70,8 @@ export function QuizCreator() {
               isDone={processingDone}
               hasError={processingError}
               onComplete={hideProcessing}
+              showSuccessFor={2500}
+              autoNavigate={!processingError}
             />
           </div>
         )}
@@ -97,8 +115,8 @@ export function QuizCreator() {
               </TabsList>
               <TabsContent value="ai-generated" className="mt-6">
                 <AIGeneratedUploader
-                  onProcessingStart={startProcessing}
-                  onProcessingDone={finishProcessing}
+                  onProcessingStart={handleProcessingStart}
+                  onProcessingDone={handleProcessingDone}
                 />
               </TabsContent>
               <TabsContent
@@ -106,14 +124,14 @@ export function QuizCreator() {
                 className="mt-6 border-none"
               >
                 <FileWithAnswersUploader
-                  onProcessingStart={startProcessing}
-                  onProcessingDone={finishProcessing}
+                  onProcessingStart={handleProcessingStart}
+                  onProcessingDone={handleProcessingDone}
                 />
               </TabsContent>
               <TabsContent value="text-content" className="mt-6 border-none">
                 <TextContentUploader
-                  onProcessingStart={startProcessing}
-                  onProcessingDone={finishProcessing}
+                  onProcessingStart={handleProcessingStart}
+                  onProcessingDone={handleProcessingDone}
                 />
               </TabsContent>
             </Tabs>

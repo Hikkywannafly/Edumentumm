@@ -106,7 +106,7 @@ export function useAutoSaveQuiz(options: UseAutoSaveQuizOptions = {}) {
           } else {
             navigateToEdit(savedQuizEntity.id, true);
           }
-        }, 500);
+        }, 200);
 
         return savedQuizEntity;
       } catch (error) {
