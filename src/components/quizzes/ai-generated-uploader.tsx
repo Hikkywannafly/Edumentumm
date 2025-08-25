@@ -55,10 +55,8 @@ export function AIGeneratedUploader({
   const [isInitialMount, setIsInitialMount] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
 
-  // Input mode selection (auto-detected)
   const [inputMode, setInputMode] = useState<InputMode>("FILE");
 
-  // AI Generation Settings
   const [generationMode, setGenerationMode] = useState<"GENERATE" | "EXTRACT">(
     "GENERATE",
   );
@@ -90,6 +88,12 @@ export function AIGeneratedUploader({
     userId: 1,
     enabled: true,
     sourceType: inputMode === "FILE" ? "FILE" : "AI_GENERATED",
+    onSaveSuccess: (quizId: number) => {
+      setTimeout(() => {
+        onProcessingDone?.(true);
+        goQuizEdit(quizId);
+      }, 1000);
+    },
   });
 
   const { isDragActive } = useDropzone({
@@ -99,14 +103,12 @@ export function AIGeneratedUploader({
     maxSize: FILE_UPLOAD_LIMITS.maxSize,
   });
 
-  // Mark initial mount as complete
   useEffect(() => {
     if (isInitialMount) {
       setIsInitialMount(false);
     }
   }, [isInitialMount]);
 
-  // Auto-select mode depending on input presence
   useEffect(() => {
     if (hasFiles) {
       setInputMode("FILE");
@@ -123,7 +125,6 @@ export function AIGeneratedUploader({
         ? t("create.aiGenerated.aiGenerating")
         : t("create.fileWithAnswers.processing"),
     );
-
     try {
       const settings = {
         generationMode,
@@ -137,26 +138,15 @@ export function AIGeneratedUploader({
         task,
         parsingMode,
       };
-      let savedQuizId: number | null = null;
       if (inputMode === "FILE") {
         if (generationMode === "GENERATE") {
           await generateFromFiles(settings);
         } else {
           await extractFromFilesAI(settings);
         }
-        const savedQuiz = await autoSaveQuiz(settings);
-        savedQuizId = savedQuiz?.id || null;
+        await autoSaveQuiz(settings);
       }
       setIsGenerating(false);
-
-      setTimeout(() => {
-        onProcessingDone?.(true);
-        if (savedQuizId) {
-          goQuizEdit(`?id=${savedQuizId}`);
-        } else {
-          goQuizEdit();
-        }
-      }, 2000);
     } catch (error) {
       console.error("Error generating quiz:", error);
       setIsGenerating(false);

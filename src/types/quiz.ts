@@ -302,7 +302,7 @@ export interface BackendQuizEntity {
   id?: number;
   title: string;
   description?: string;
-  userId: number;
+  userId?: number;
   categoryId?: number;
   visibility: Visibility;
   language: Language;
@@ -331,7 +331,7 @@ export interface BackendQuizEntity {
 export interface AutoSaveQuizPayload {
   title: string;
   description?: string;
-  userId: number;
+  userId?: number;
   categoryId?: number;
   visibility: Visibility;
   language: Language;
