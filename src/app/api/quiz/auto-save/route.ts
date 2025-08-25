@@ -1,7 +1,8 @@
+import { apiClient } from "@/lib/api/client";
 import type { AutoSaveQuizPayload, BackendQuizEntity } from "@/types/quiz";
+import axios from "axios";
 import { type NextRequest, NextResponse } from "next/server";
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/v1";
+
 export async function POST(request: NextRequest) {
   try {
     const payload: AutoSaveQuizPayload = await request.json();
@@ -49,30 +50,15 @@ export async function POST(request: NextRequest) {
       passingScore: payload.passingScore || 70,
     };
 
-    // Call backend API
-    const response = await fetch(`${API_BASE_URL}/student/quizzes`, {
-      method: "POST",
+    console.log("Creating quiz with payload:", backendPayload);
+
+    const response = await apiClient.post("/student/quizzes", backendPayload, {
       headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${request.headers.get("authorization")?.replace("Bearer ", "")}`,
+        Authorization: authHeader,
       },
-      body: JSON.stringify(backendPayload),
     });
-    console.log(
-      "Response:",
 
-      backendPayload,
-    );
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      console.error("Backend API error:", errorData);
-      return NextResponse.json(
-        { error: "Failed to save quiz to database", details: errorData },
-        { status: response.status },
-      );
-    }
-
-    const savedQuiz: BackendQuizEntity = await response.json();
+    const savedQuiz: BackendQuizEntity = response.data;
 
     return NextResponse.json({
       success: true,
@@ -81,6 +67,20 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("Auto-save error:", error);
+
+    if (axios.isAxiosError(error)) {
+      const status = error.response?.status || 500;
+      const errorData = error.response?.data || { message: error.message };
+
+      return NextResponse.json(
+        {
+          error: "Failed to save quiz to database",
+          details: errorData,
+        },
+        { status },
+      );
+    }
+
     return NextResponse.json(
       {
         error: "Internal server error during auto-save",
@@ -103,11 +103,18 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    // Transform and update quiz
+    const authHeader = request.headers.get("authorization");
+    if (!authHeader) {
+      return NextResponse.json(
+        { error: "Authorization header is required" },
+        { status: 401 },
+      );
+    }
+
     const backendPayload = {
       title: payload.title,
       description: payload.description || "",
-      category_id: 1,
+      category_id: payload.categoryId || 1,
       visibility: payload.visibility,
       language: payload.language,
       question_type: payload.questionType,
@@ -132,24 +139,19 @@ export async function PUT(request: NextRequest) {
       passing_score: payload.passingScore || 70,
     };
 
-    const response = await fetch(`${API_BASE_URL}/student/quizzes/${quizId}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${request.headers.get("authorization")?.replace("Bearer ", "")}`,
+    console.log("Updating quiz:", quizId, "with payload:", backendPayload);
+
+    const response = await apiClient.put(
+      `/student/quizzes/${quizId}`,
+      backendPayload,
+      {
+        headers: {
+          Authorization: authHeader,
+        },
       },
-      body: JSON.stringify(backendPayload),
-    });
+    );
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      return NextResponse.json(
-        { error: "Failed to update quiz", details: errorData },
-        { status: response.status },
-      );
-    }
-
-    const updatedQuiz: BackendQuizEntity = await response.json();
+    const updatedQuiz: BackendQuizEntity = response.data;
 
     return NextResponse.json({
       success: true,
@@ -158,6 +160,20 @@ export async function PUT(request: NextRequest) {
     });
   } catch (error) {
     console.error("Quiz update error:", error);
+
+    if (axios.isAxiosError(error)) {
+      const status = error.response?.status || 500;
+      const errorData = error.response?.data || { message: error.message };
+
+      return NextResponse.json(
+        {
+          error: "Failed to update quiz",
+          details: errorData,
+        },
+        { status },
+      );
+    }
+
     return NextResponse.json(
       {
         error: "Internal server error during quiz update",

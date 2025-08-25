@@ -55,10 +55,8 @@ export function AIGeneratedUploader({
   const [isInitialMount, setIsInitialMount] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
 
-  // Input mode selection (auto-detected)
   const [inputMode, setInputMode] = useState<InputMode>("FILE");
 
-  // AI Generation Settings
   const [generationMode, setGenerationMode] = useState<"GENERATE" | "EXTRACT">(
     "GENERATE",
   );
@@ -93,7 +91,7 @@ export function AIGeneratedUploader({
     onSaveSuccess: (quizId: number) => {
       setTimeout(() => {
         onProcessingDone?.(true);
-        goQuizEdit(`?id=${quizId}`);
+        goQuizEdit(quizId);
       }, 1000);
     },
   });
@@ -127,7 +125,6 @@ export function AIGeneratedUploader({
         ? t("create.aiGenerated.aiGenerating")
         : t("create.fileWithAnswers.processing"),
     );
-
     try {
       const settings = {
         generationMode,
