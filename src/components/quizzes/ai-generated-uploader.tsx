@@ -16,6 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useAutoSaveQuiz } from "@/hooks/quiz/use-auto-save-quiz";
 import { useQuizProcessor } from "@/hooks/use-quiz-processor";
 import {
   FILE_UPLOAD_LIMITS,
@@ -79,17 +80,16 @@ export function AIGeneratedUploader({
     uploadedFiles,
     addFiles,
     removeFile,
-    generateFromFilesWithAutoSave,
-    extractFromFilesAIWithAutoSave,
+    generateFromFiles,
+    extractFromFilesAI,
     isProcessing,
-    isAutoSaving,
     hasFiles,
-    // savedQuiz,
-    // autoSaveError,
-  } = useQuizProcessor({
-    userId: 1, // TODO: Get from auth context
-    autoSave: true,
-    sourceType: "FILE",
+  } = useQuizProcessor();
+
+  const { autoSaveQuiz, isAutoSaving } = useAutoSaveQuiz({
+    userId: 1,
+    enabled: true,
+    sourceType: inputMode === "FILE" ? "FILE" : "AI_GENERATED",
   });
 
   const { isDragActive } = useDropzone({
@@ -137,20 +137,25 @@ export function AIGeneratedUploader({
         task,
         parsingMode,
       };
+      let savedQuizId: number | null = null;
       if (inputMode === "FILE") {
-        // Generate from files based on generation mode with auto-save
         if (generationMode === "GENERATE") {
-          await generateFromFilesWithAutoSave(settings);
+          await generateFromFiles(settings);
         } else {
-          // Use AI extraction instead of manual extraction with auto-save
-          await extractFromFilesAIWithAutoSave(settings);
+          await extractFromFilesAI(settings);
         }
+        const savedQuiz = await autoSaveQuiz(settings);
+        savedQuizId = savedQuiz?.id || null;
       }
       setIsGenerating(false);
 
       setTimeout(() => {
         onProcessingDone?.(true);
-        goQuizEdit();
+        if (savedQuizId) {
+          goQuizEdit(`?id=${savedQuizId}`);
+        } else {
+          goQuizEdit();
+        }
       }, 2000);
     } catch (error) {
       console.error("Error generating quiz:", error);

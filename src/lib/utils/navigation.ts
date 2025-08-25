@@ -68,8 +68,9 @@ export function useLocalizedNavigation() {
   /**
    * Navigate to quiz edit page
    */
-  const goQuizEdit = () => {
-    navigate("/quizzes/edit");
+  const goQuizEdit = (queryParams?: string) => {
+    const path = queryParams ? `/quizzes/edit${queryParams}` : "/quizzes/edit";
+    navigate(path);
   };
 
   /**
