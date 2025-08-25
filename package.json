@@ -93,7 +93,7 @@
     "embla-carousel-wheel-gestures": "latest",
     "framer-motion": "^12.23.9",
     "input-otp": "^1.4.2",
-    "lucide-react": "^0.485.0",
+    "lucide-react": "^0.541.0",
     "mammoth": "^1.10.0",
     "nanoid": "^5.1.5",
     "next": "15.3.2",
