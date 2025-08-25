@@ -1,4 +1,5 @@
 import { useAuth } from "@/contexts/auth-context";
+import { useQuizCacheStore } from "@/stores/quiz-cache-store";
 import { useQuizEditorStore } from "@/stores/quiz-editor-store";
 import type { AutoSaveQuizPayload, BackendQuizEntity } from "@/types/quiz";
 import { useCallback, useState } from "react";
@@ -7,6 +8,7 @@ interface UseAutoSaveQuizOptions {
   userId?: number;
   enabled?: boolean;
   sourceType?: "FILE" | "TEXT" | "AI_GENERATED";
+  onSaveSuccess?: (quizId: number) => void;
 }
 
 export function useAutoSaveQuiz(options: UseAutoSaveQuizOptions = {}) {
@@ -16,6 +18,7 @@ export function useAutoSaveQuiz(options: UseAutoSaveQuizOptions = {}) {
 
   const { quizData, updateQuizData } = useQuizEditorStore();
   const { accessToken } = useAuth();
+  const { cacheQuiz } = useQuizCacheStore();
   const autoSaveQuiz = useCallback(
     async (userSettings?: any): Promise<BackendQuizEntity | null> => {
       if (!options.enabled || !quizData) {
@@ -29,7 +32,7 @@ export function useAutoSaveQuiz(options: UseAutoSaveQuizOptions = {}) {
         const payload: AutoSaveQuizPayload = {
           title: quizData.title,
           description: quizData.description,
-
+          userId: options.userId || 1,
           categoryId: quizData.metadata?.category
             ? Number.parseInt(quizData.metadata.category)
             : 1,
@@ -87,6 +90,9 @@ export function useAutoSaveQuiz(options: UseAutoSaveQuizOptions = {}) {
         const result = await response.json();
         const savedQuizEntity = result.quiz;
 
+        // Cache quiz data sau khi tạo thành công
+        cacheQuiz(savedQuizEntity);
+
         setSavedQuiz(savedQuizEntity);
         updateQuizData({
           savedQuizId: savedQuizEntity.id,
@@ -94,7 +100,13 @@ export function useAutoSaveQuiz(options: UseAutoSaveQuizOptions = {}) {
           lastSavedAt: new Date().toISOString(),
         });
 
-        console.log("✅ Quiz auto-saved successfully:", savedQuizEntity.id);
+        console.log("✅ Quiz auto-saved and cached:", savedQuizEntity.id);
+
+        // Gọi callback nếu có
+        if (options.onSaveSuccess && savedQuizEntity.id) {
+          options.onSaveSuccess(savedQuizEntity.id);
+        }
+
         return savedQuizEntity;
       } catch (error) {
         const errorMessage =
@@ -108,11 +120,13 @@ export function useAutoSaveQuiz(options: UseAutoSaveQuizOptions = {}) {
     },
     [
       options.enabled,
-      // options.userId,
+      options.userId,
       options.sourceType,
+      options.onSaveSuccess,
       quizData,
       updateQuizData,
       accessToken,
+      cacheQuiz,
     ],
   );
 

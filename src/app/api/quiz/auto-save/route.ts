@@ -6,13 +6,9 @@ export async function POST(request: NextRequest) {
   try {
     const payload: AutoSaveQuizPayload = await request.json();
 
-    if (
-      !payload.title ||
-      !payload.userId ||
-      !payload.quizData?.questions?.length
-    ) {
+    if (!payload.title || !payload.quizData?.questions?.length) {
       return NextResponse.json(
-        { error: "Missing required fields: title, userId, or questions" },
+        { error: "Missing required fields: title or questions" },
         { status: 400 },
       );
     }
@@ -28,7 +24,7 @@ export async function POST(request: NextRequest) {
     const backendPayload = {
       title: payload.title,
       description: payload.description || "",
-      // user_id: payload.userId,
+      user_id: payload.userId || 1,
       categoryId: payload.categoryId || 1,
       visibility: payload.visibility,
       language: payload.language,
