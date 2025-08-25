@@ -1,18 +1,24 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import {
   Dialog,
   DialogClose,
   DialogContent,
+  DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Save, Trash2, X } from "lucide-react";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { toast } from "sonner";
-import { groupAPI } from "../../../lib/api/group";
+import { useUpdateGroup } from "../../../hooks/group/user-group-update";
 import { updateStudyGroupSchema } from "../../../lib/schemas/group";
 import type { UpdateStudyGroupFormData } from "../../../lib/schemas/group";
 
@@ -21,6 +27,7 @@ interface GroupSettingsDialogProps {
   onClose: () => void;
   group: UpdateStudyGroupFormData;
   onGroupUpdate?: (updated: UpdateStudyGroupFormData) => void;
+  onGroupDelete?: (id: number) => void;
 }
 
 export default function GroupSettingsDialog({
@@ -28,6 +35,7 @@ export default function GroupSettingsDialog({
   onClose,
   group,
   onGroupUpdate,
+  onGroupDelete,
 }: GroupSettingsDialogProps) {
   const {
     register,
@@ -39,95 +47,148 @@ export default function GroupSettingsDialog({
     defaultValues: group,
   });
 
-  // Reset form khi `group` thay đổi hoặc khi mở dialog
+  const { confirmDelete, setConfirmDelete, handleUpdate, handleDelete } =
+    useUpdateGroup({
+      onClose,
+      onGroupUpdate,
+      onGroupDelete,
+    });
+
   useEffect(() => {
     if (open) {
       reset(group);
     }
   }, [group, open, reset]);
 
-  const onSubmit = async (data: UpdateStudyGroupFormData) => {
-    try {
-      const updated = await groupAPI.updateGroup(data, String(data.id));
-      if (!updated) throw new Error("API returned invalid group data");
-      onGroupUpdate?.(updated);
-      toast.success("Cập nhật nhóm thành công.");
-      onClose();
-    } catch (err) {
-      console.error(err);
-      toast.error(
-        err instanceof Error
-          ? `Cập nhật thất bại: ${err.message}`
-          : "Cập nhật thất bại",
-      );
-    }
-  };
-
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="space-y-4 sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Cập nhật thông tin nhóm</DialogTitle>
+          <DialogTitle className="font-semibold text-lg">
+            Cập nhật thông tin nhóm
+          </DialogTitle>
+          <DialogDescription>
+            Chỉnh sửa tên, mô tả, giới hạn thành viên hoặc xóa nhóm.
+          </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+
+        <form
+          onSubmit={handleSubmit(handleUpdate)}
+          className="flex flex-col gap-4"
+        >
           <input type="hidden" {...register("id")} />
-          <label className="flex flex-col">
-            Tên nhóm
-            <input
+
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="name">Tên nhóm</Label>
+            <Input
+              id="name"
               type="text"
               {...register("name")}
-              className={`mt-1 rounded-md border p-2 ${
-                errors.name ? "border-red-500" : "border-gray-300"
-              }`}
+              className={errors.name ? "border-red-500" : ""}
+              placeholder="Nhập tên nhóm"
             />
             {errors.name && (
-              <span className="text-red-500">{errors.name.message}</span>
+              <span className="text-red-500 text-sm">
+                {errors.name.message}
+              </span>
             )}
-          </label>
-          <label className="flex flex-col">
-            Mô tả nhóm
-            <textarea
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="description">Mô tả nhóm</Label>
+            <Textarea
+              id="description"
               rows={3}
               {...register("description")}
-              className={`mt-1 rounded-md border p-2 ${
-                errors.description ? "border-red-500" : "border-gray-300"
-              }`}
+              className={errors.description ? "border-red-500" : ""}
+              placeholder="Nhập mô tả..."
             />
             {errors.description && (
-              <span className="text-red-500">{errors.description.message}</span>
+              <span className="text-red-500 text-sm">
+                {errors.description.message}
+              </span>
             )}
-          </label>
-          <label className="flex flex-col">
-            Số lượng thành viên
-            <input
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="memberLimit">Số lượng thành viên</Label>
+            <Input
+              id="memberLimit"
               type="number"
               {...register("memberLimit", { valueAsNumber: true })}
-              className={`mt-1 rounded-md border p-2 ${
-                errors.memberLimit ? "border-red-500" : "border-gray-300"
-              }`}
+              className={errors.memberLimit ? "border-red-500" : ""}
+              placeholder="Ví dụ: 100"
             />
             {errors.memberLimit && (
-              <span className="text-red-500">{errors.memberLimit.message}</span>
+              <span className="text-red-500 text-sm">
+                {errors.memberLimit.message}
+              </span>
             )}
-          </label>
-          <label className="flex items-center gap-2">
+          </div>
+
+          <div className="flex items-center gap-2">
             <input
+              id="public"
               type="checkbox"
               {...register("public")}
               className="rounded border-gray-300"
             />
-            Công khai nhóm
-          </label>
+            <Label htmlFor="public">Công khai nhóm</Label>
+          </div>
 
-          <div className="flex justify-end gap-2">
+          <DialogFooter className="flex justify-between">
             <DialogClose asChild>
-              <Button onClick={() => onClose()} type="button" variant="outline">
+              <Button type="button" variant="outline">
+                <X className="mr-1 h-4 w-4" />
                 Hủy
               </Button>
             </DialogClose>
-            <Button type="submit">Lưu thay đổi</Button>
-          </div>
+            <Button type="submit">
+              <Save className="mr-1 h-4 w-4" />
+              Lưu thay đổi
+            </Button>
+          </DialogFooter>
         </form>
+
+        {/* Delete group card */}
+        <Card className="border-red-300 bg-red-50 p-4">
+          {!confirmDelete ? (
+            <Button
+              type="button"
+              variant="destructive"
+              className="w-full"
+              onClick={() => setConfirmDelete(true)}
+            >
+              <Trash2 className="mr-1 h-4 w-4" />
+              Xóa nhóm
+            </Button>
+          ) : (
+            <div className="flex flex-col gap-3">
+              <p className="text-red-600 text-sm">
+                Bạn có chắc chắn muốn xóa nhóm này? Hành động không thể hoàn
+                tác.
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => setConfirmDelete(false)}
+                >
+                  Hủy
+                </Button>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  className="flex-1"
+                  onClick={() => handleDelete(group.id)}
+                >
+                  Xác nhận xóa
+                </Button>
+              </div>
+            </div>
+          )}
+        </Card>
       </DialogContent>
     </Dialog>
   );
