@@ -1,59 +1,33 @@
-import { useCallback, useEffect, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { groupAPI } from "../../lib/api/group";
 import type { GroupDetailResponse } from "../../types/group";
 
 export function useGroupDetail(id: string) {
-  const [groupDetail, setGroupDetail] = useState<GroupDetailResponse | null>(
-    null,
-  );
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
+  const queryClient = useQueryClient();
 
-  const handleGroupUpdate = useCallback(
-    (updated: Partial<GroupDetailResponse>) => {
-      setGroupDetail((prev) => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          ...updated,
-          ownerId: prev.ownerId,
-        };
-      });
-    },
-    [],
-  );
+  const {
+    data: groupDetail,
+    isLoading,
+    error,
+  } = useQuery<GroupDetailResponse, Error>({
+    queryKey: ["groupDetail", id],
+    queryFn: () => groupAPI.getGroupDetailById(Number(id)),
+    enabled: !!id,
+  });
 
-  useEffect(() => {
-    let isMounted = true;
-
-    const fetchData = async () => {
-      setIsLoading(true);
-      try {
-        const [group] = await Promise.all([
-          groupAPI.getGroupDetailById(Number(id)),
-        ]);
-        if (isMounted) {
-          setGroupDetail(group);
-        }
-      } catch (err) {
-        setError(
-          err instanceof Error
-            ? err
-            : new Error("Failed to fetch group detail"),
-        );
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    if (id) {
-      fetchData();
-    }
-
-    return () => {
-      isMounted = false;
-    };
-  }, [id]);
+  const handleGroupUpdate = (updated: Partial<GroupDetailResponse>) => {
+    queryClient.setQueryData<GroupDetailResponse>(
+      ["groupDetail", id],
+      (prev) =>
+        prev
+          ? {
+              ...prev,
+              ...updated,
+              ownerId: prev.ownerId,
+            }
+          : prev,
+    );
+  };
 
   return {
     groupDetail,
