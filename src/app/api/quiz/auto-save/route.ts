@@ -1,6 +1,7 @@
 import type { AutoSaveQuizPayload, BackendQuizEntity } from "@/types/quiz";
 import { type NextRequest, NextResponse } from "next/server";
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/v1";
 export async function POST(request: NextRequest) {
   try {
     const payload: AutoSaveQuizPayload = await request.json();
@@ -16,32 +17,40 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const authHeader = request.headers.get("authorization");
+    if (!authHeader) {
+      return NextResponse.json(
+        { error: "Authorization header is required" },
+        { status: 401 },
+      );
+    }
+
     const backendPayload = {
       title: payload.title,
       description: payload.description || "",
-      user_id: payload.userId,
-      category_id: payload.categoryId || null,
+      // user_id: payload.userId,
+      categoryId: payload.categoryId || 1,
       visibility: payload.visibility,
       language: payload.language,
-      question_type: payload.questionType,
-      number_of_questions: payload.numberOfQuestions,
+      questionType: payload.questionType,
+      numberOfQuestions: payload.numberOfQuestions,
       mode: payload.mode,
       difficulty: payload.difficulty,
       task: payload.task,
-      parsing_mode: payload.parsingMode,
-      source_type: payload.sourceType,
-      is_ai_generated: payload.isAiGenerated,
-      ai_model: payload.aiModel,
-      generation_mode: payload.generationMode,
-      file_processing_mode: payload.fileProcessingMode,
-      quiz_data: {
+      parsingMode: payload.parsingMode,
+      sourceType: payload.sourceType,
+      isAiGenerated: payload.isAiGenerated,
+      aiModel: payload.aiModel,
+      generationMode: payload.generationMode,
+      fileProcessingMode: payload.fileProcessingMode,
+      quizData: {
         questions: payload.quizData.questions,
         settings: payload.quizData.settings || {},
         metadata: payload.quizData.metadata || {},
       },
       tags: payload.tags || [],
-      estimated_time: payload.estimatedTime || 10,
-      passing_score: payload.passingScore || 70,
+      estimatedTime: payload.estimatedTime || 10,
+      passingScore: payload.passingScore || 70,
     };
 
     // Call backend API
@@ -55,7 +64,7 @@ export async function POST(request: NextRequest) {
     });
     console.log(
       "Response:",
-      `${API_BASE_URL} / student / quizzes`,
+
       backendPayload,
     );
     if (!response.ok) {
@@ -127,8 +136,7 @@ export async function PUT(request: NextRequest) {
       passing_score: payload.passingScore || 70,
     };
 
-    const backendUrl = process.env.BACKEND_API_URL || "http://localhost:8080";
-    const response = await fetch(`${backendUrl}/api/quizzes/${quizId}`, {
+    const response = await fetch(`${API_BASE_URL}/student/quizzes/${quizId}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",

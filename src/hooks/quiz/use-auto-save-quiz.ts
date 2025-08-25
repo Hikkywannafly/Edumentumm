@@ -1,3 +1,4 @@
+import { useAuth } from "@/contexts/auth-context";
 import { useQuizEditorStore } from "@/stores/quiz-editor-store";
 import type { AutoSaveQuizPayload, BackendQuizEntity } from "@/types/quiz";
 import { useCallback, useState } from "react";
@@ -14,10 +15,10 @@ export function useAutoSaveQuiz(options: UseAutoSaveQuizOptions = {}) {
   const [savedQuiz, setSavedQuiz] = useState<BackendQuizEntity | null>(null);
 
   const { quizData, updateQuizData } = useQuizEditorStore();
-
+  const { accessToken } = useAuth();
   const autoSaveQuiz = useCallback(
     async (userSettings?: any): Promise<BackendQuizEntity | null> => {
-      if (!options.enabled || !options.userId || !quizData) {
+      if (!options.enabled || !quizData) {
         return null;
       }
 
@@ -28,11 +29,10 @@ export function useAutoSaveQuiz(options: UseAutoSaveQuizOptions = {}) {
         const payload: AutoSaveQuizPayload = {
           title: quizData.title,
           description: quizData.description,
-          userId: options.userId,
+
           categoryId: quizData.metadata?.category
             ? Number.parseInt(quizData.metadata.category)
             : 1,
-          // Use user settings if provided, otherwise fallback to defaults
           visibility:
             userSettings?.visibility ||
             quizData.settings?.visibility ||
@@ -74,6 +74,7 @@ export function useAutoSaveQuiz(options: UseAutoSaveQuizOptions = {}) {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
           },
           body: JSON.stringify(payload),
         });
@@ -107,10 +108,11 @@ export function useAutoSaveQuiz(options: UseAutoSaveQuizOptions = {}) {
     },
     [
       options.enabled,
-      options.userId,
+      // options.userId,
       options.sourceType,
       quizData,
       updateQuizData,
+      accessToken,
     ],
   );
 
