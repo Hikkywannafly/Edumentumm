@@ -6,9 +6,8 @@ import { LocalizedLink } from "@/components/localized-link";
 import { QuizEditorContent } from "@/components/quizzes/edit";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/auth-context";
-import { useQuizCacheStore } from "@/stores/quiz-cache-store";
+import { loadQuizSafely } from "@/lib/utils/quiz-sync";
 import { useQuizEditorStore } from "@/stores/quiz-editor-store";
-import type { BackendQuizEntity } from "@/types/quiz";
 import { ArrowLeft } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useParams } from "next/navigation";
@@ -17,8 +16,7 @@ import { useEffect, useState } from "react";
 export default function QuizEditorPage() {
   const params = useParams();
   const quizId = params.id as string;
-  const { setQuizData } = useQuizEditorStore();
-  const { getCachedQuiz } = useQuizCacheStore();
+  const { setQuizData, forceReset } = useQuizEditorStore();
   const { accessToken } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -27,37 +25,22 @@ export default function QuizEditorPage() {
 
   useEffect(() => {
     if (quizId) {
+      forceReset();
       loadQuiz(Number.parseInt(quizId));
     }
-  }, [quizId]);
+  }, [quizId, forceReset]);
 
   const loadQuiz = async (id: number) => {
     setIsLoading(true);
     setError(null);
 
     try {
-      const cachedQuiz = getCachedQuiz(id);
-
-      if (cachedQuiz) {
-        setQuizData(convertBackendToFrontend(cachedQuiz));
-        setIsLoading(false);
-        return;
+      const result = await loadQuizSafely(id, accessToken || "");
+      if (result.success && result.quiz) {
+        setQuizData(result.quiz);
+      } else {
+        throw new Error(result.error || "Failed to load quiz");
       }
-      const response = await fetch(`/api/quiz/${id}`, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to load quiz: ${response.status}`);
-      }
-
-      const quiz: BackendQuizEntity = await response.json();
-
-      useQuizCacheStore.getState().cacheQuiz(quiz);
-
-      setQuizData(convertBackendToFrontend(quiz));
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error";
@@ -65,26 +48,6 @@ export default function QuizEditorPage() {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const convertBackendToFrontend = (quiz: BackendQuizEntity) => {
-    const quizDataObj =
-      quiz.quizData instanceof Map
-        ? Object.fromEntries(quiz.quizData)
-        : quiz.quizData;
-
-    return {
-      title: quiz.title,
-      description: quiz.description || "",
-      questions: quizDataObj?.questions || [],
-      settings: quizDataObj?.settings || {},
-      metadata: {
-        ...quizDataObj?.metadata,
-        savedQuizId: quiz.id,
-        isAutoSaved: true,
-        lastSavedAt: quiz.updatedAt || new Date().toISOString(),
-      },
-    };
   };
 
   if (isLoading) {
@@ -115,7 +78,6 @@ export default function QuizEditorPage() {
   return (
     <DashboardLayout>
       <div className="flex min-h-screen flex-col">
-        {/* Header */}
         <PageHeaderClient
           title={t("edit.title")}
           action={
@@ -131,7 +93,6 @@ export default function QuizEditorPage() {
           showThemeToggle={true}
           showLanguageSwitcher={true}
         />
-        {/* Main Content */}
         <QuizEditorContent />
       </div>
     </DashboardLayout>

@@ -1,5 +1,6 @@
 import { useAuth } from "@/contexts/auth-context";
-import { useQuizCacheStore } from "@/stores/quiz-cache-store";
+import { useQuizNavigation } from "@/hooks/use-quiz-navigation";
+import { syncQuizAfterSave } from "@/lib/utils/quiz-sync";
 import { useQuizEditorStore } from "@/stores/quiz-editor-store";
 import type { AutoSaveQuizPayload, BackendQuizEntity } from "@/types/quiz";
 import { useCallback, useState } from "react";
@@ -18,7 +19,7 @@ export function useAutoSaveQuiz(options: UseAutoSaveQuizOptions = {}) {
 
   const { quizData, updateQuizData } = useQuizEditorStore();
   const { accessToken } = useAuth();
-  const { cacheQuiz } = useQuizCacheStore();
+  const { navigateToEdit } = useQuizNavigation();
   const autoSaveQuiz = useCallback(
     async (userSettings?: any): Promise<BackendQuizEntity | null> => {
       if (!options.enabled || !quizData) {
@@ -90,8 +91,7 @@ export function useAutoSaveQuiz(options: UseAutoSaveQuizOptions = {}) {
         const result = await response.json();
         const savedQuizEntity = result.quiz;
 
-        // Cache quiz data sau khi tạo thành công
-        cacheQuiz(savedQuizEntity);
+        syncQuizAfterSave(savedQuizEntity, true);
 
         setSavedQuiz(savedQuizEntity);
         updateQuizData({
@@ -100,12 +100,13 @@ export function useAutoSaveQuiz(options: UseAutoSaveQuizOptions = {}) {
           lastSavedAt: new Date().toISOString(),
         });
 
-        console.log("✅ Quiz auto-saved and cached:", savedQuizEntity.id);
-
-        // Gọi callback nếu có
-        if (options.onSaveSuccess && savedQuizEntity.id) {
-          options.onSaveSuccess(savedQuizEntity.id);
-        }
+        setTimeout(() => {
+          if (options.onSaveSuccess && savedQuizEntity.id) {
+            options.onSaveSuccess(savedQuizEntity.id);
+          } else {
+            navigateToEdit(savedQuizEntity.id, true);
+          }
+        }, 500);
 
         return savedQuizEntity;
       } catch (error) {
@@ -126,7 +127,7 @@ export function useAutoSaveQuiz(options: UseAutoSaveQuizOptions = {}) {
       quizData,
       updateQuizData,
       accessToken,
-      cacheQuiz,
+      navigateToEdit,
     ],
   );
 

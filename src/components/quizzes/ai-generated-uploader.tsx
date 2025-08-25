@@ -23,6 +23,7 @@ import {
   getAcceptedFileTypes,
 } from "@/lib/utils/file-utils";
 import { useLocalizedNavigation } from "@/lib/utils/navigation";
+import { clearAllQuizData } from "@/lib/utils/quiz-sync";
 import type {
   Difficulty,
   Language,
@@ -118,6 +119,7 @@ export function AIGeneratedUploader({
   }, [hasFiles]);
 
   const handleGenerateQuiz = async () => {
+    clearAllQuizData();
     setIsGenerating(true);
     onProcessingStart?.(
       uploadedFiles[0]?.name || "File",
