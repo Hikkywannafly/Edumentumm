@@ -31,7 +31,7 @@ export function useAutoSaveQuiz(options: UseAutoSaveQuizOptions = {}) {
           userId: options.userId,
           categoryId: quizData.metadata?.category
             ? Number.parseInt(quizData.metadata.category)
-            : undefined,
+            : 1,
           // Use user settings if provided, otherwise fallback to defaults
           visibility:
             userSettings?.visibility ||

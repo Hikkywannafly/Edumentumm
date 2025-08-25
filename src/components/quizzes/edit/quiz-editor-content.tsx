@@ -69,80 +69,6 @@ export function QuizEditorContent() {
     setIsValidForCreation(validateQuizForCreation());
   }, [validateQuizForCreation]);
 
-  // Handle create quiz
-  const handleCreateQuiz = async () => {
-    if (!quizData || !validateQuizForCreation()) {
-      alert(
-        "Please complete all required fields and ensure each question has at least one correct answer.",
-      );
-      return;
-    }
-
-    // Prepare quiz data for API - using camelCase as expected by backend validation
-    const quizPayload = {
-      title: currentTitle.trim(),
-      description: currentDescription?.trim() || "",
-      categoryId: 1, // Default category, should be dynamic
-      quizData: {
-        questions: quizData.questions.map((question, index) => ({
-          id: question.id,
-          question: question.question,
-          type: question.type,
-          difficulty: question.difficulty || "MEDIUM",
-          bloom_level: "UNDERSTAND",
-          points: question.points || 1,
-          explanation: question.explanation,
-          tags: question.tags || [],
-          answers: question.answers,
-          order_index: index + 1,
-        })),
-        settings: {
-          visibility: "PRIVATE",
-          language: "AUTO",
-          question_type: "MIXED",
-          number_of_questions: quizData.questions.length,
-          mode: "QUIZ",
-          difficulty: "EASY",
-          task: "GENERATE_QUIZ",
-          parsing_mode: "BALANCED", // matches parsingMode field
-          shuffle_questions: false,
-          shuffle_answers: false,
-          show_explanations: true,
-          allow_retry: true,
-          time_limit_per_question: null,
-          passing_score: 70, // matches passingScore field
-        },
-        source_info: {
-          type: "TEXT", // matches sourceType field
-          content: "Created manually in quiz editor", // matches sourceContent field
-        },
-        ai_info: {
-          is_ai_generated: false, // matches isAiGenerated field
-          model: undefined, // matches aiModel field (using 'model' from AIInfo interface)
-          prompt: undefined,
-          generation_settings: undefined,
-          processing_time: undefined,
-        },
-        metadata: {
-          total_questions: quizData.questions.length,
-          total_points: quizData.questions.reduce(
-            (sum, q) => sum + (q.points || 1),
-            0,
-          ),
-          estimated_time: Math.ceil(quizData.questions.length * 1.5), // matches estimatedTime field
-          tags: quizData.metadata?.tags || [], // matches tags field (will be converted to String[])
-          category: quizData.metadata?.category,
-        },
-      },
-    };
-
-    try {
-      await createQuizMutation.mutateAsync(quizPayload as any);
-    } catch (error) {
-      console.error("Failed to create quiz:", error);
-    }
-  };
-
   // Handle navigation back
   const handleNavigateAway = () => {
     const confirmed = window.confirm(
@@ -261,7 +187,7 @@ export function QuizEditorContent() {
     <ThinLayout>
       <div className="space-y-1">
         <QuizEditorHeader
-          onCreateQuiz={handleCreateQuiz}
+          onCreateQuiz={() => {}}
           onBack={handleNavigateAway}
           canCreate={isValidForCreation && !createQuizMutation.isPending}
           isCreating={createQuizMutation.isPending}

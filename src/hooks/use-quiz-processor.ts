@@ -17,7 +17,6 @@ export function useQuizProcessor() {
   const { setQuizData, updateQuizData, quizData } = useQuizEditorStore();
   const queryClient = useQueryClient();
 
-  // Import specialized hooks
   const extractAI = useExtractQuestionsAI();
   const generateAI = useGenerateQuestionsAI();
   const extractDirect = useExtractQuestionsDirect();

@@ -53,7 +53,11 @@ export async function POST(request: NextRequest) {
       },
       body: JSON.stringify(backendPayload),
     });
-    console.log("Response:", response, backendPayload);
+    console.log(
+      "Response:",
+      `${API_BASE_URL} / student / quizzes`,
+      backendPayload,
+    );
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       console.error("Backend API error:", errorData);
@@ -98,7 +102,7 @@ export async function PUT(request: NextRequest) {
     const backendPayload = {
       title: payload.title,
       description: payload.description || "",
-      category_id: payload.categoryId || null,
+      category_id: 1,
       visibility: payload.visibility,
       language: payload.language,
       question_type: payload.questionType,
@@ -110,7 +114,7 @@ export async function PUT(request: NextRequest) {
       source_type: payload.sourceType,
       source_content: payload.sourceContent || "",
       is_ai_generated: payload.isAiGenerated,
-      ai_model: payload.aiModel || "openai/gpt-4o-mini",
+      ai_model: payload.aiModel,
       generation_mode: payload.generationMode,
       file_processing_mode: payload.fileProcessingMode,
       quiz_data: {

@@ -86,7 +86,6 @@ export function AIGeneratedUploader({
     hasFiles,
   } = useQuizProcessor();
 
-  // Separate auto-save hook
   const { autoSaveQuiz, isAutoSaving } = useAutoSaveQuiz({
     userId: 1,
     enabled: true,
@@ -138,25 +137,25 @@ export function AIGeneratedUploader({
         task,
         parsingMode,
       };
-
+      let savedQuizId: number | null = null;
       if (inputMode === "FILE") {
-        // Generate from files based on generation mode
         if (generationMode === "GENERATE") {
           await generateFromFiles(settings);
         } else {
-          // Use AI extraction instead of manual extraction
           await extractFromFilesAI(settings);
         }
-        setTimeout(async () => {
-          await autoSaveQuiz(settings);
-        }, 100);
+        const savedQuiz = await autoSaveQuiz(settings);
+        savedQuizId = savedQuiz?.id || null;
       }
-
       setIsGenerating(false);
 
       setTimeout(() => {
         onProcessingDone?.(true);
-        goQuizEdit();
+        if (savedQuizId) {
+          goQuizEdit(`?id=${savedQuizId}`);
+        } else {
+          goQuizEdit();
+        }
       }, 2000);
     } catch (error) {
       console.error("Error generating quiz:", error);
