@@ -20,7 +20,6 @@ export function SettingMenu() {
   const router = useRouter();
   const pathname = usePathname();
 
-  // Get user initials from username or email
   const getInitials = (username?: string, email?: string) => {
     if (username) {
       return username
@@ -33,7 +32,7 @@ export function SettingMenu() {
     if (email) {
       return email.slice(0, 2).toUpperCase();
     }
-    return "US"; // Default fallback
+    return "US";
   };
 
   const initials = getInitials(user?.username, user?.email);
@@ -53,11 +52,11 @@ export function SettingMenu() {
     return (
       <Button
         variant="ghost"
-        className="relative h-8 w-8 rounded-full"
+        className="relative h-10 w-10 animate-pulse rounded-full"
         disabled
       >
-        <Avatar className="h-8 w-8">
-          <AvatarFallback className="font-medium text-xs">...</AvatarFallback>
+        <Avatar className="h-10 w-10">
+          <AvatarFallback className="font-medium text-base">...</AvatarFallback>
         </Avatar>
       </Button>
     );
@@ -70,52 +69,70 @@ export function SettingMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-          <Avatar className="h-8 w-8">
-            <AvatarImage src={"/placeholder.svg"} alt={displayName} />
-            <AvatarFallback className="font-medium text-xs">
+        <Button
+          variant="ghost"
+          className="relative h-10 w-10 rounded-full ring-2 ring-indigo-500/70 transition hover:ring-indigo-600"
+        >
+          <Avatar className="h-10 w-10">
+            <AvatarImage src={user.imageUrl || undefined} alt={displayName} />
+            <AvatarFallback className="font-semibold text-base">
               {initials}
             </AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56" align="end" forceMount>
-        <DropdownMenuLabel className="font-normal">
-          <div className="flex flex-col space-y-1">
-            <p className="font-medium text-sm leading-none">{displayName}</p>
-            {user?.email && (
-              <p className="text-muted-foreground text-xs leading-none">
-                {user.email}
-              </p>
-            )}
-            {user?.roles && user.roles.length > 0 && (
-              <p className="text-muted-foreground text-xs leading-none">
-                {user.roles
-                  .map((role) => role.name.replace("ROLE_", ""))
-                  .join(", ")}
-              </p>
-            )}
+      <DropdownMenuContent
+        className="w-64 rounded-xl border-0 bg-white p-0 shadow-xl dark:bg-zinc-900"
+        align="end"
+        forceMount
+      >
+        <DropdownMenuLabel className="border-zinc-100 border-b p-4 pb-2 font-normal dark:border-zinc-800">
+          <div className="flex items-center gap-3">
+            <Avatar className="h-12 w-12 ring-2 ring-indigo-500/70">
+              <AvatarImage src={user.imageUrl || undefined} alt={displayName} />
+              <AvatarFallback className="font-semibold text-lg">
+                {initials}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex flex-col">
+              <span className="font-semibold text-base">{displayName}</span>
+              {user?.email && (
+                <span className="text-xs text-zinc-500 dark:text-zinc-400">
+                  {user.email}
+                </span>
+              )}
+              {user?.roles && user.roles.length > 0 && (
+                <span className="mt-1 text-indigo-600 text-xs dark:text-indigo-400">
+                  {user.roles
+                    .map((role) => role.name.replace("ROLE_", ""))
+                    .join(", ")}
+                </span>
+              )}
+            </div>
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem
-          className="cursor-pointer"
+          className="flex cursor-pointer items-center gap-2 px-4 py-3 transition hover:bg-indigo-50 dark:hover:bg-zinc-800"
           onClick={handleProfileClick}
         >
-          <User className="mr-2 h-4 w-4" />
-          <span>Profile</span>
+          <User className="h-5 w-5" />
+          <span className="font-medium">Trang cá nhân</span>
         </DropdownMenuItem>
         <DropdownMenuItem
-          className="cursor-pointer"
+          className="flex cursor-pointer items-center gap-2 px-4 py-3 transition hover:bg-indigo-50 dark:hover:bg-zinc-800"
           onClick={handleSettingsClick}
         >
-          <Settings className="mr-2 h-4 w-4" />
-          <span>Settings</span>
+          <Settings className="h-5 w-5" />
+          <span className="font-medium">Cài đặt</span>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem className="cursor-pointer" onClick={logout}>
-          <LogOut className="mr-2 h-4 w-4" />
-          <span>Log out</span>
+        <DropdownMenuItem
+          className="flex cursor-pointer items-center gap-2 px-4 py-3 text-red-600 transition hover:bg-red-50 dark:hover:bg-zinc-800"
+          onClick={logout}
+        >
+          <LogOut className="h-5 w-5 text-red-600" />
+          <span className="font-medium ">Đăng xuất</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
