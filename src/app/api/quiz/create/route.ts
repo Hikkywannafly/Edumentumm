@@ -141,8 +141,6 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Transform the validated data to match the backend API format
-    // Using the exact same format as the working auto-save route
     const backendPayload = {
       title: finalTitle,
       description: finalDescription,
@@ -189,8 +187,8 @@ export async function POST(request: NextRequest) {
         },
       },
       tags: data.tags || [],
-      estimatedTime: data.estimatedTime || 10, // Match auto-save default
-      passingScore: data.passingScore || 70, // Match auto-save default
+      estimatedTime: data.estimatedTime || 10,
+      passingScore: data.passingScore || 70,
     };
 
     console.log(
@@ -198,7 +196,6 @@ export async function POST(request: NextRequest) {
       JSON.stringify(backendPayload, null, 2),
     );
 
-    // Call the backend API directly using apiClient like the auto-save route
     const response = await apiClient.post("/student/quizzes", backendPayload, {
       headers: {
         Authorization: authHeader,
@@ -206,8 +203,6 @@ export async function POST(request: NextRequest) {
     });
 
     const savedQuiz = response.data;
-
-    console.log("✅ Quiz created successfully:", savedQuiz.id);
 
     return NextResponse.json({
       success: true,

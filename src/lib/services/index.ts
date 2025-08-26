@@ -1,4 +1,4 @@
-export { FileParserService } from "./file-parser.service";
+export { FileParserService } from "./file-parser-old.service";
 export {
   ContentExtractor,
   type QuestionData,

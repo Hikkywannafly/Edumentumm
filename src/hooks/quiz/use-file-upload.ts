@@ -1,4 +1,4 @@
-import { FileParserService } from "@/lib/services/file-parser.service";
+import { FileParserService } from "@/lib/services/file-parser-old.service";
 import { useCallback, useState } from "react";
 
 export interface UploadedFile {

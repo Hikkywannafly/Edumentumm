@@ -1,5 +1,6 @@
 "use client";
 
+import {} from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -31,7 +32,13 @@ import type {
   Task,
   Visibility,
 } from "@/types/quiz";
-import { Brain, Loader2, Settings, Sparkles } from "lucide-react";
+import {
+  AlertTriangle,
+  Brain,
+  Loader2,
+  Settings,
+  Sparkles,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { useDropzone } from "react-dropzone";
@@ -81,8 +88,49 @@ export function AIGeneratedUploader({
   const [task, setTask] = useState<Task>("GENERATE_QUIZ");
   const [parsingMode, setParsingMode] = useState<ParsingMode>("BALANCED");
 
+  const getModeInfo = (mode: ParsingMode) => {
+    switch (mode) {
+      case "FAST":
+        return {
+          description:
+            t("create.settings.fastModeDescription") ||
+            "Quick processing, skips images and complex tables",
+          warning:
+            t("create.settings.fastModeWarning") ||
+            "Some content may be skipped for faster processing",
+          color: "text-orange-600",
+        };
+      case "BALANCED":
+        return {
+          description:
+            t("create.settings.balancedModeDescription") ||
+            "Good balance of speed and accuracy",
+          warning: null,
+          color: "text-blue-600",
+        };
+      case "THOROUGH":
+        return {
+          description:
+            t("create.settings.thoroughModeDescription") ||
+            "Complete processing, includes all content",
+          warning:
+            t("create.settings.thoroughModeInfo") ||
+            "May take longer but captures all content",
+          icon: "🔍",
+          color: "text-green-600",
+        };
+      default:
+        return {
+          description: "Standard processing mode",
+          warning: null,
+          color: "text-blue-600",
+        };
+    }
+  };
+
+  const currentModeInfo = getModeInfo(parsingMode);
+
   const { isDragActive } = useDropzone({
-    onDrop: addFiles,
     accept: getAcceptedFileTypes(),
     maxFiles: FILE_UPLOAD_LIMITS.maxFiles,
     maxSize: FILE_UPLOAD_LIMITS.maxSize,
@@ -120,12 +168,10 @@ export function AIGeneratedUploader({
       const result = await saveQuiz(quiz, settings);
 
       onProcessingDone?.(true);
-
-      // Schedule navigation with proper timing to ensure processing screen completes
       setTimeout(() => {
         reset();
         goQuizEdit(result.id);
-      }, 2600); // Slightly longer than processing screen duration for smooth transition
+      }, 2600);
     } catch (error) {
       console.error("Error processing quiz:", error);
       onProcessingDone?.(false);
@@ -139,7 +185,7 @@ export function AIGeneratedUploader({
         <div className="space-y-6 lg:col-span-2">
           {/* Upload Area */}
           <FileUploadArea
-            onDrop={addFiles}
+            onDrop={(files) => addFiles(files, parsingMode)}
             isDragActive={isDragActive}
             variant="ai"
           />
@@ -430,22 +476,42 @@ export function AIGeneratedUploader({
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="FAST">
-                          {t("create.settings.fast")}
+                        <SelectItem value="FAST" className="flex items-center">
+                          <div className="flex items-center gap-2">
+                            ⚡ {t("create.settings.fast")}
+                          </div>
                         </SelectItem>
-                        <SelectItem value="BALANCED">
-                          {t("create.settings.balanced")}
+                        <SelectItem
+                          value="BALANCED"
+                          className="flex items-center"
+                        >
+                          <div className="flex items-center gap-2">
+                            ⚖️ {t("create.settings.balanced")}
+                          </div>
                         </SelectItem>
-                        <SelectItem value="THOROUGH">
-                          {t("create.settings.thorough")}
+                        <SelectItem
+                          value="THOROUGH"
+                          className="flex items-center"
+                        >
+                          <div className="flex items-center gap-2">
+                            🔍 {t("create.settings.thorough")}
+                          </div>
                         </SelectItem>
                       </SelectContent>
                     </Select>
-                    {parsingMode === "FAST" && (
-                      <p className="text-muted-foreground text-xs">
-                        {t("create.settings.fastModeWarning")}
+
+                    {/* Mode-specific descriptions */}
+                    <div className="space-y-1 text-muted-foreground text-xs">
+                      <p className={currentModeInfo.color}>
+                        {currentModeInfo.icon} {currentModeInfo.description}
                       </p>
-                    )}
+                      {currentModeInfo.warning && (
+                        <p className="flex items-center gap-1 text-orange-600">
+                          <AlertTriangle className="h-3 w-3" />
+                          {currentModeInfo.warning}
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </>
               )}

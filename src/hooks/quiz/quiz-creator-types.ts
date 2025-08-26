@@ -1,6 +1,7 @@
 import type {
   CreateQuizPayload,
   GeneratedQuiz,
+  ParsingMode,
   UploadedFile,
 } from "@/types/quiz";
 
@@ -19,7 +20,7 @@ export interface QuizCreatorSettings {
 
 export interface UseFileProcessorReturn {
   uploadedFiles: UploadedFile[];
-  addFiles: (files: File[]) => Promise<void>;
+  addFiles: (files: File[], parsingMode?: ParsingMode) => Promise<void>;
   removeFile: (fileId: string) => void;
   clearFiles: () => void;
   isProcessingFiles: boolean;

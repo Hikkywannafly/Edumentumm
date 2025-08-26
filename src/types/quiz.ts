@@ -387,4 +387,16 @@ export interface UploadedFile {
   parsedContent?: string;
   extractedQuestions?: QuestionData[];
   actualFile?: File;
+  parsingMode?: ParsingMode;
+  metadata?: {
+    totalPages?: number;
+    processedPages?: number;
+    skippedContent?: string[];
+    processingTime?: number;
+    parsingMode?: ParsingMode;
+    originalFileSize?: number;
+    contentLength?: number;
+    processingTimestamp?: string;
+    errorTimestamp?: string;
+  };
 }

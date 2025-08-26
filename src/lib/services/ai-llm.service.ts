@@ -5,7 +5,6 @@ import type { FileForAI } from "./file-to-ai.service";
 
 const inFlight = new Map<string, Promise<AIResponse>>();
 
-// Strong hash key generation using crypto-like approach
 function makeRequestKey(
   content: string,
   model: string,
@@ -267,6 +266,22 @@ async function callServerAPI(
       if (endpoint === "generate-questions") {
         // Direct server-side implementation for generate-questions
         return await generateQuestionsServerSide(payload);
+      }
+
+      if (endpoint === "extract-questions-ai") {
+        const { POST } = await import(
+          "@/app/api/ai/extract-questions-ai/route"
+        );
+        const request = new Request(
+          "http://localhost:3000/api/ai/extract-questions-ai",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          },
+        );
+        const response = await POST(request as any);
+        return await response.json();
       }
 
       // For other endpoints, return mock data for now
@@ -887,17 +902,7 @@ async function processQuestionsWithAI(
           ? "exact"
           : "max";
 
-      // Get available categories for AI selection if enabled
       const availableCategories = "";
-      // Temporarily disabled due to server-side URL issues
-      // if (settings.includeCategories !== false) {
-      //   try {
-      //     availableCategories = await categoriesService.getCategoriesForAI();
-      //   } catch (error) {
-      //     console.warn("Failed to fetch categories for AI:", error);
-      //     availableCategories = "No categories available";
-      //   }
-      // }
 
       const normalizedSettings = {
         ...settings,
