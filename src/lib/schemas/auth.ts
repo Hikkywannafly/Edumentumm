@@ -56,6 +56,7 @@ export const userSchema = z.object({
   }),
   roles: z.array(roleSchema),
   isActive: z.boolean(),
+
   imageUrl: z.string().nullable(),
 });
 
