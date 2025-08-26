@@ -17,10 +17,11 @@ const UpdateQuizSchema = z.object({
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const quizId = Number.parseInt(params.id);
+    const { id } = await params;
+    const quizId = Number.parseInt(id);
 
     if (Number.isNaN(quizId)) {
       return NextResponse.json(
@@ -31,11 +32,9 @@ export async function GET(
 
     let authHeader = request.headers.get("authorization");
 
-    // If no auth header, try to get from cookies (for browser requests)
     if (!authHeader) {
       const cookies = request.headers.get("cookie");
       if (cookies) {
-        // Extract access token from cookies
         const match = cookies.match(/accessToken=([^;]+)/);
         if (match) {
           authHeader = `Bearer ${match[1]}`;
@@ -52,10 +51,7 @@ export async function GET(
       if (authHeader) {
         requestHeaders.Authorization = authHeader;
       } else {
-        // For development, you might want to use a default token or handle this case
         console.warn("⚠️ No authentication token available for backend request");
-        // Optionally, you could return a 401 error here:
-        // return NextResponse.json({ error: "Authentication required" }, { status: 401 });
       }
 
       const response = await apiClient.get(`/student/quizzes/${quizId}`, {
@@ -109,7 +105,6 @@ export async function GET(
   }
 }
 
-// PUT /api/quiz/[id] - Update quiz
 export async function PUT(
   request: NextRequest,
   { params }: { params: { id: string } },
@@ -138,7 +133,6 @@ export async function PUT(
       );
     }
 
-    // Check for authorization header
     const authHeader = request.headers.get("authorization");
 
     try {
