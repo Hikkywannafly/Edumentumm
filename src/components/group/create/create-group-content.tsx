@@ -25,13 +25,14 @@ import {
 } from "@/lib/schemas/group";
 import type { GroupRequest } from "@/types/group";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "next/navigation"; // ✅ thêm import
+import { useRouter } from "next/navigation";
 import { type SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { groupAPI } from "../../../lib/api/group";
+import { useCreateGroup } from "../../../hooks/group/use-create-group";
 
 export function CreateGroupContent() {
-  const router = useRouter(); // ✅ khởi tạo router
+  const router = useRouter();
+  const { mutateAsync: createGroup, isPending } = useCreateGroup();
 
   const form = useForm<CreateStudyGroupFormData>({
     resolver: zodResolver(createStudyGroupSchema),
@@ -51,36 +52,43 @@ export function CreateGroupContent() {
         memberLimit: values.memberLimit,
         public: values.public,
       };
-      await groupAPI.createGroup(payload);
+
+      await createGroup(payload);
       toast.success("Tạo nhóm thành công!");
       form.reset();
       router.back();
     } catch (err) {
+      toast.error("Có lỗi khi tạo nhóm");
       console.error(err);
     }
   };
 
   return (
-    <div className="container mx-auto px-4 md:px-6 lg:px-8">
+    <div className="container mx-auto px-4 py-8 md:px-6 lg:px-8">
+      {/* Header */}
       <div className="mb-8 text-center">
-        <h1 className="mb-2 font-bold text-2xl text-primary tracking-tight">
+        <h1 className="font-bold text-3xl text-foreground tracking-tight">
           Create Study Group
         </h1>
-        <p className="text-lg text-muted-foreground">
+        <p className="mt-2 text-muted-foreground">
           Create a new study group to compete and learn with friends.
         </p>
       </div>
 
-      <Card className="mx-auto w-full max-w-4xl rounded-sm border border-border bg-muted/30 shadow-sm">
-        <CardHeader>
-          <CardTitle className="text-xl">Group Details</CardTitle>
+      {/* Form Card */}
+      <Card className="mx-auto max-w-3xl rounded-2xl border border-gray-200 bg-gradient-to-br from-white to-gray-50 p-6 shadow-md transition-all hover:shadow-lg dark:border-zinc-700 dark:from-zinc-900 dark:to-zinc-800">
+        <CardHeader className="pb-4">
+          <CardTitle className="font-semibold text-2xl">
+            Group Details
+          </CardTitle>
           <CardDescription>
-            Set up your study group with a name and description
+            Set up your study group with a name, description, and settings
           </CardDescription>
         </CardHeader>
-        <CardContent className="p-6">
+        <CardContent>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+              {/* Group Name */}
               <FormField
                 control={form.control}
                 name="name"
@@ -91,6 +99,7 @@ export function CreateGroupContent() {
                       <Input
                         placeholder="e.g., Physics Study Squad"
                         {...field}
+                        className="rounded-lg border-gray-300 dark:border-zinc-700"
                       />
                     </FormControl>
                     <FormMessage />
@@ -98,6 +107,7 @@ export function CreateGroupContent() {
                 )}
               />
 
+              {/* Description */}
               <FormField
                 control={form.control}
                 name="description"
@@ -107,7 +117,7 @@ export function CreateGroupContent() {
                     <FormControl>
                       <Textarea
                         placeholder="What's your group about?"
-                        className="min-h-[100px]"
+                        className="min-h-[100px] rounded-lg border-gray-300 dark:border-zinc-700"
                         {...field}
                       />
                     </FormControl>
@@ -116,6 +126,7 @@ export function CreateGroupContent() {
                 )}
               />
 
+              {/* Member Limit */}
               <FormField
                 control={form.control}
                 name="memberLimit"
@@ -123,18 +134,24 @@ export function CreateGroupContent() {
                   <FormItem>
                     <FormLabel>Maximum Members</FormLabel>
                     <FormControl>
-                      <Input type="number" placeholder="20" {...field} />
+                      <Input
+                        type="number"
+                        placeholder="20"
+                        {...field}
+                        className="rounded-lg border-gray-300 dark:border-zinc-700"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
+              {/* Public Switch */}
               <FormField
                 control={form.control}
                 name="public"
                 render={({ field }) => (
-                  <FormItem className="flex flex-row items-center justify-between rounded-lg border bg-muted/20 p-4">
+                  <FormItem className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-zinc-700 dark:bg-zinc-800">
                     <div>
                       <FormLabel className="font-medium">
                         Public Group
@@ -153,17 +170,22 @@ export function CreateGroupContent() {
                 )}
               />
 
+              {/* Actions */}
               <div className="flex justify-end gap-3 pt-6">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => router.back()}
-                  className="rounded-full"
+                  className="rounded-sm"
                 >
                   Cancel
                 </Button>
-                <Button type="submit" className="rounded-full px-6">
-                  Create Group
+                <Button
+                  type="submit"
+                  className="rounded-sm px-6"
+                  disabled={isPending}
+                >
+                  {isPending ? "Creating..." : "Create Group"}
                 </Button>
               </div>
             </form>

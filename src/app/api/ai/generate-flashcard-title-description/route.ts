@@ -17,6 +17,7 @@ const GenerateFlashcardTitleDescriptionRequestSchema = z.object({
   category: z.string().optional(),
   tags: z.array(z.string()).optional(),
   modelName: z.string().default("openai/gpt-oss-20b:free"),
+  apiKey: z.string(),
 });
 
 const OPENROUTER_API_BASE = "https://openrouter.ai/api/v1";
@@ -47,10 +48,8 @@ export async function POST(request: NextRequest) {
       category,
       tags,
       modelName,
+      apiKey,
     } = validated.data;
-
-    const apiKey =
-      request.headers.get("x-api-key") || process.env.OPENROUTER_API_KEY;
 
     if (!apiKey) {
       return NextResponse.json(
@@ -86,8 +85,8 @@ CONTENT PREVIEW:
 ${content.slice(0, 1000)}...
 
 REQUIREMENTS:
-1. Create a concise, engaging title (max 60 characters)
-2. Write a clear, informative description (100-200 words)
+1. Create a concise, engaging title (max 50 characters)
+2. Write a clear, informative description (30-80 words)
 3. Title should reflect the main topic/subject matter
 4. Description should explain what learners will gain from these flashcards
 5. Use ${targetLanguage === "auto" ? "the same language as the content" : targetLanguage}

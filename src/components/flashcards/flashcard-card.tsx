@@ -70,10 +70,10 @@ export function FlashcardCard({ flashcardSet }: FlashcardCardProps) {
           <div className="flex items-center gap-2">
             <User className="h-3 w-3 text-muted-foreground" />
             <span className="text-muted-foreground text-sm">
-              {flashcardSet.user.username}
+              {flashcardSet.user?.username}
             </span>
             <Badge variant="secondary" className="text-xs">
-              {flashcardSet.user.roles[0]?.name.replace("ROLE_", "")}
+              {flashcardSet.user?.roles[0]?.name.replace("ROLE_", "")}
             </Badge>
           </div>
         </div>

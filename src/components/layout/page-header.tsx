@@ -3,6 +3,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { Separator } from "@/components/ui/separator";
 
 import type React from "react";
+import { SettingMenu } from "../setting-menu";
 
 interface PageHeaderProps {
   title: string;
@@ -41,6 +42,7 @@ export function PageHeader({
         <div className="flex items-center gap-2">
           {showThemeToggle && <ThemeToggle />}
           {showLanguageSwitcher && <LanguageSwitcher />}
+          <SettingMenu />
         </div>
       </div>
     </header>

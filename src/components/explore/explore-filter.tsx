@@ -10,17 +10,22 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Clock } from "lucide-react";
-import { useState } from "react";
 import { Card } from "../ui";
 
-export default function ExploreFilter() {
-  const [tab, setTab] = useState("quizzes");
+type ExploreFilterProps = {
+  tab: string;
+  onTabChange: (value: string) => void;
+};
 
+export default function ExploreFilter({
+  tab,
+  onTabChange,
+}: ExploreFilterProps) {
   return (
     <Card className="w-full border-none py-6">
       <div className="flex w-full flex-col gap-4">
         {/* Tabs - Full Width */}
-        <Tabs value={tab} onValueChange={setTab} className="w-full">
+        <Tabs value={tab} onValueChange={onTabChange} className="w-full">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger
               value="quizzes"

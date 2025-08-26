@@ -1,51 +1,92 @@
 import { useAuth } from "@/contexts/auth-context";
 import { flashcardService } from "@/lib/api/flashcard";
-import type { FlashcardSet, FlashcardStats } from "@/types/flashcard";
-import { useCallback, useEffect, useState } from "react";
+import type {
+  FlashcardSet,
+  FlashcardStats,
+  PaginationInfo,
+} from "@/types/flashcard";
+import { useCallback, useEffect, useRef, useState } from "react";
 
-export function useFlashcards() {
+export function useFlashcards(page = 1, size = 6) {
   const { accessToken } = useAuth();
+  const isFirstLoad = useRef(true);
   const [flashcardSets, setFlashcardSets] = useState<FlashcardSet[]>([]);
+  const [pagination, setPagination] = useState<PaginationInfo>({
+    currentPage: 1,
+    pageSize: 6,
+    totalElements: 0,
+    totalPages: 0,
+    hasNext: false,
+    hasPrevious: false,
+  });
   const [stats, setStats] = useState<FlashcardStats>({
     totalFlashcards: 0,
     totalDecks: 0,
     averageScore: 0,
     studyTime: "0h",
   });
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchFlashcards = useCallback(async () => {
-    if (!accessToken) {
-      setIsLoading(false);
-      setError("No access token available");
-      return;
-    }
+  const fetchFlashcards = useCallback(
+    async (currentPage = page, currentSize = size) => {
+      if (!accessToken) {
+        setIsLoading(false);
+        setIsInitialLoad(false);
+        setError("No access token available");
+        return;
+      }
 
-    try {
-      setIsLoading(true);
-      setError(null);
+      try {
+        setIsLoading(true);
+        setError(null);
 
-      const response = await flashcardService.getAllFlashcards();
-      setFlashcardSets(response.data);
+        // Convert UI page (1-based) to API page (0-based)
+        const apiPage = currentPage - 1;
+        const response = await flashcardService.getAllFlashcards(
+          apiPage,
+          currentSize,
+        );
+        setFlashcardSets(response.data);
 
-      const calculatedStats = flashcardService.calculateStats(response.data);
-      setStats(calculatedStats);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [accessToken]);
+        // Convert API pagination (0-based) to UI pagination (1-based)
+        const uiPagination = {
+          ...response.pagination,
+          currentPage: response.pagination.currentPage + 1,
+        };
+        setPagination(uiPagination);
 
+        // Only calculate stats on initial load
+        if (isFirstLoad.current) {
+          const calculatedStats = flashcardService.calculateStats(
+            response.data,
+            response.pagination,
+          );
+          setStats(calculatedStats);
+          isFirstLoad.current = false;
+          setIsInitialLoad(false);
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "An error occurred");
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [accessToken, page, size],
+  );
+
+  // Load flashcards on mount and when page changes
   useEffect(() => {
     fetchFlashcards();
   }, [fetchFlashcards]);
 
   return {
     flashcardSets,
+    pagination,
     stats,
     isLoading,
+    isInitialLoad,
     error,
     refetch: fetchFlashcards,
   };

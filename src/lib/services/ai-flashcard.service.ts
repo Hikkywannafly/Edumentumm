@@ -7,15 +7,12 @@ const inFlight = new Map<string, Promise<FlashcardAIResponse>>();
 
 // Strong hash key generation using crypto-like approach
 function makeRequestKey(
-  content: string | undefined,
+  content: string,
   model: string,
   settings?: any,
 ): string {
-  // Ensure content is a string and provide fallback
-  const safeContent = typeof content === "string" ? content : "";
-
   const raw = JSON.stringify({
-    content: safeContent.slice(0, 2000),
+    content: content.slice(0, 2000),
     model,
     settings,
     timestamp: Math.floor(Date.now() / 60000), // 1-minute cache window
@@ -28,19 +25,41 @@ function makeRequestKey(
     hash = (hash * 16777619) >>> 0;
   }
 
-  hash ^= safeContent.length;
+  hash ^= content.length;
   hash ^= model.length << 8;
 
   return `${hash.toString(36)}-${Date.now().toString(36)}`;
 }
 
+// Utility function to safely truncate text fields
+function truncateText(text: string, maxLength: number): string {
+  if (text.length <= maxLength) return text;
+  // Find the last space before the limit to avoid cutting words
+  const truncated = text.substring(0, maxLength);
+  const lastSpace = truncated.lastIndexOf(" ");
+  if (lastSpace > maxLength * 0.8) {
+    return `${truncated.substring(0, lastSpace)}...`;
+  }
+  return `${truncated.substring(0, maxLength - 3)}...`;
+}
+
 // Zod schemas for validation
 const FlashcardSchema = z.object({
   id: z.union([z.string(), z.number()]).transform(String),
-  question: z.string().min(1),
-  choices: z.array(z.string()).min(2).max(6),
+  question: z
+    .string()
+    .min(1)
+    .transform((text) => truncateText(text, 250)),
+  choices: z
+    .array(z.string())
+    .min(2)
+    .max(6)
+    .transform((choices) => choices.map((choice) => truncateText(choice, 200))),
   correctAnswer: z.number().int().min(0),
-  explanation: z.string().default(""),
+  explanation: z
+    .string()
+    .default("")
+    .transform((text) => truncateText(text, 250)),
   difficulty: z.enum(["EASY", "MEDIUM", "HARD"]).default("EASY"),
   tags: z.array(z.string()).default([]),
   sourceFile: z.string().optional(),
@@ -145,10 +164,6 @@ function parseFlashcardAIResponse(aiResponse: string): {
     .replace(/```\s*([\s\S]*?)\s*```/i, "$1")
     .trim();
 
-  if (process.env.NODE_ENV === "development") {
-    console.log("🔍 Parsing Flashcard AI response:", content.substring(0, 500));
-  }
-
   // Try direct JSON parse with Zod validation
   try {
     const parsed = JSON.parse(content);
@@ -166,7 +181,6 @@ function parseFlashcardAIResponse(aiResponse: string): {
         tags: fc.tags,
       }));
 
-      console.log(`✅ Zod validation success: ${flashcards.length} flashcards`);
       return {
         flashcards,
         title: data.title,
@@ -214,9 +228,6 @@ function parseFlashcardAIResponse(aiResponse: string): {
           }
 
           if (validFlashcards.length > 0) {
-            console.log(
-              `✅ Fallback parsing success: ${validFlashcards.length} flashcards`,
-            );
             return {
               flashcards: validFlashcards,
               title: "AI Generated Flashcards",
@@ -230,7 +241,6 @@ function parseFlashcardAIResponse(aiResponse: string): {
     console.warn("⚠️ Fallback parsing failed:", error);
   }
 
-  console.error("❌ Failed to parse flashcard AI response");
   return {
     flashcards: [],
     title: "AI Generated Flashcards",
@@ -248,6 +258,7 @@ export async function generateFlashcardTitleDescription(params: {
   category?: string;
   tags?: string[];
   modelName?: string;
+  apiKey: string;
 }): Promise<{
   success: boolean;
   title?: string;
@@ -263,6 +274,7 @@ export async function generateFlashcardTitleDescription(params: {
     category,
     tags,
     modelName = DEFAULT_MODEL,
+    apiKey,
   } = params;
 
   try {
@@ -279,6 +291,7 @@ export async function generateFlashcardTitleDescription(params: {
       category,
       tags,
       modelName,
+      apiKey,
     });
 
     if (!result.success || !result.title || !result.description) {
@@ -291,7 +304,6 @@ export async function generateFlashcardTitleDescription(params: {
       description: result.description,
     };
   } catch (error) {
-    console.warn("AI flashcard title/description generation failed:", error);
     return {
       success: false,
       error: error instanceof Error ? error.message : "Unknown error",
@@ -310,7 +322,7 @@ export async function generateFlashcards(
     settings?: {
       visibility?: string;
       language?: string;
-      numberOfCards?: string;
+      numberOfCards?: number;
       difficulty?: string;
       generationMode?: "GENERATE" | "EXTRACT";
       fileProcessing?: string;
@@ -340,7 +352,7 @@ export async function generateFlashcards(
 
   const promise = (async (): Promise<FlashcardAIResponse> => {
     try {
-      const numberOfCards = settings.numberOfCards || "5-10";
+      const numberOfCards = Number(settings.numberOfCards) || 5;
 
       // Get available categories for AI selection if enabled
       let availableCategories = "";
@@ -404,7 +416,7 @@ export async function generateFlashcardsFromFile(params: {
   settings?: {
     visibility?: string;
     language?: string;
-    numberOfCards?: string;
+    numberOfCards?: number;
     difficulty?: string;
     generationMode?: "GENERATE" | "EXTRACT";
     fileProcessing?: string;
@@ -454,9 +466,6 @@ export async function generateFlashcardsFromFile(params: {
 
     const parsed = parseFlashcardAIResponse(JSON.stringify(result));
 
-    console.log(
-      `✅ Successfully generated ${parsed.flashcards.length} flashcards from file`,
-    );
     return {
       success: true,
       flashcards: parsed.flashcards,
@@ -466,7 +475,6 @@ export async function generateFlashcardsFromFile(params: {
       selectedCategory: parsed.selectedCategory,
     };
   } catch (error) {
-    console.error("❌ Flashcard generation from file failed:", error);
     return {
       success: false,
       error: error instanceof Error ? error.message : String(error),
@@ -484,7 +492,7 @@ export async function extractFlashcardsWithAI(params: {
   settings?: {
     visibility?: string;
     language?: string;
-    numberOfCards?: string;
+    numberOfCards?: number;
     difficulty?: string;
     generationMode?: "GENERATE" | "EXTRACT";
     fileProcessing?: string;
@@ -534,9 +542,6 @@ export async function extractFlashcardsWithAI(params: {
 
     const parsed = parseFlashcardAIResponse(JSON.stringify(result));
 
-    console.log(
-      `✅ Successfully extracted ${parsed.flashcards.length} flashcards`,
-    );
     return {
       success: true,
       flashcards: parsed.flashcards,
@@ -546,7 +551,6 @@ export async function extractFlashcardsWithAI(params: {
       selectedCategory: parsed.selectedCategory,
     };
   } catch (error) {
-    console.error("❌ Flashcard extraction failed:", error);
     return {
       success: false,
       error: error instanceof Error ? error.message : String(error),

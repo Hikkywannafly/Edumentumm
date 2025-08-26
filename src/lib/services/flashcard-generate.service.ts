@@ -7,11 +7,6 @@ import {
 import { fileToAIService } from "@/lib/services/file-to-ai.service";
 import type { FlashcardData } from "@/types/flashcard";
 
-// Utility function to determine useMultiAgent based on parsingMode
-// function shouldUseMultiAgent(parsingMode?: string): boolean {
-//   return parsingMode === "THOROUGH";
-// }
-
 // Orchestration function for flashcard title/description generation
 export const generateFlashcardTitleDescription = async (
   content: string,
@@ -25,6 +20,11 @@ export const generateFlashcardTitleDescription = async (
   },
 ): Promise<{ title: string; description: string } | null> => {
   try {
+    const apiKey = process.env.NEXT_PUBLIC_OPENROUTER_API_KEY;
+    if (!apiKey) {
+      throw new Error("OpenRouter API key not configured");
+    }
+
     const result = await generateTitleDescriptionService({
       content,
       flashcards,
@@ -33,6 +33,7 @@ export const generateFlashcardTitleDescription = async (
       filename: options?.filename,
       category: options?.category,
       tags: options?.tags,
+      apiKey,
     });
 
     if (result.success && result.title && result.description) {
@@ -56,7 +57,7 @@ export const generateFlashcardsWithAI = async (
     fileProcessingMode?: "PARSE_THEN_SEND" | "SEND_DIRECT";
     visibility?: string;
     language?: string;
-    numberOfCards?: string;
+    numberOfCards?: number;
     difficulty?: string;
     generationMode?: "GENERATE" | "EXTRACT";
     fileProcessing?: string;
@@ -113,13 +114,13 @@ export const generateFlashcardsWithAI = async (
     if (useDirectMode && actualFile) {
       const fileForAI = await fileToAIService.convertFileToAI(actualFile);
       result = await generateFlashcardsFromFile({
-        title: "AI Generated Flashcards",
-        description: "Flashcards generated from the provided file.",
+        title: "Generated Flashcards",
+        description: "Generated new Flashcards from the provided file.",
         apiKey,
         file: fileForAI,
         settings: {
           ...settings,
-          numberOfCards: settings?.numberOfCards || "5",
+          numberOfCards: Number(settings?.numberOfCards) || 5,
           includeCategories: true,
         },
       });
@@ -131,7 +132,7 @@ export const generateFlashcardsWithAI = async (
         fileContent: safeContent,
         settings: {
           ...settings,
-          numberOfCards: settings?.numberOfCards || "5",
+          numberOfCards: Number(settings?.numberOfCards) || 5,
           includeCategories: true,
         },
       });
@@ -155,9 +156,7 @@ export const generateFlashcardsWithAI = async (
       throw new Error("Generated flashcards are invalid or empty");
     }
 
-    const expectedCount = Number.parseInt(
-      settings?.numberOfCards?.split("-")[1] || "5",
-    );
+    const expectedCount = settings?.numberOfCards || 5;
     if (validFlashcards.length < expectedCount) {
       console.warn(
         `⚠️ Got ${validFlashcards.length}/${expectedCount} flashcards. Returning partial results.`,
@@ -188,7 +187,7 @@ export const extractFlashcardsWithAIHandler = async (
     fileProcessingMode?: "PARSE_THEN_SEND" | "SEND_DIRECT";
     visibility?: string;
     language?: string;
-    numberOfCards?: string;
+    numberOfCards?: number;
     difficulty?: string;
     generationMode?: "GENERATE" | "EXTRACT";
     fileProcessing?: string;

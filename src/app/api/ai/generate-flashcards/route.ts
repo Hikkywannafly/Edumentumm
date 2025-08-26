@@ -8,13 +8,13 @@ const GenerateFlashcardsRequestSchema = z.object({
   description: z.string(),
   apiKey: z.string(),
   fileContent: z.string().optional(),
-  modelName: z.string().default("openai/gpt-oss-20b:free"),
+  modelName: z.string().default("google/gemini-2.0-flash-exp:free"),
   availableCategories: z.string().optional(),
   settings: z
     .object({
       visibility: z.string().optional(),
       language: z.string().optional(),
-      numberOfCards: z.string().optional(),
+      numberOfCards: z.number().int().min(1).max(10).optional(),
       difficulty: z.string().optional(),
       generationMode: z.enum(["GENERATE", "EXTRACT"]).optional(),
       fileProcessing: z.string().optional(),
@@ -69,9 +69,7 @@ export async function POST(request: NextRequest) {
     );
 
     // Parse number of cards from settings
-    const numberOfCardsRange = settings.numberOfCards || "5-10";
-    const numberOfCards =
-      Number.parseInt(numberOfCardsRange.split("-")[1]) || 5;
+    const numberOfCards = settings.numberOfCards || 5;
     const generationMode = settings.generationMode || "GENERATE";
     // const isExtractMode = generationMode === "EXTRACT";
 

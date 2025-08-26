@@ -38,6 +38,13 @@ export function useLocalizedNavigation() {
   };
 
   /**
+   * Navigate to home group
+   */
+  const goGroup = () => {
+    navigate("/group");
+  };
+
+  /**
    * Navigate to dashboard
    */
   const goDashboard = () => {
@@ -96,6 +103,7 @@ export function useLocalizedNavigation() {
     navigateAbsolute,
     goBack,
     goHome,
+    goGroup,
     goDashboard,
     goQuizzes,
     goLogin,
