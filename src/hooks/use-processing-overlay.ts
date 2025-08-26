@@ -34,8 +34,8 @@ export function useProcessingOverlay() {
       hasError: !success,
     }));
 
-    setTimeout(
-      () => {
+    if (!success) {
+      setTimeout(() => {
         setState({
           isVisible: false,
           fileName: "",
@@ -43,9 +43,8 @@ export function useProcessingOverlay() {
           isDone: false,
           hasError: false,
         });
-      },
-      success ? 1500 : 2000,
-    );
+      }, 3000);
+    }
   }, []);
 
   const hideProcessing = useCallback(() => {
@@ -58,10 +57,18 @@ export function useProcessingOverlay() {
     });
   }, []);
 
+  const updateProcessingState = useCallback(
+    (updates: Partial<ProcessingState>) => {
+      setState((prev) => ({ ...prev, ...updates }));
+    },
+    [],
+  );
+
   return {
     ...state,
     startProcessing,
     finishProcessing,
     hideProcessing,
+    updateProcessingState,
   };
 }

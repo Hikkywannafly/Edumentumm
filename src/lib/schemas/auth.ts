@@ -3,11 +3,9 @@ import { z } from "zod";
 
 // Login schema
 export const loginSchema = z.object({
-  email: z
-    .string()
-    .regex(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/, {
-      message: "Invalid email address",
-    }),
+  email: z.string().regex(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/, {
+    message: "Invalid email address",
+  }),
   password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
@@ -53,14 +51,11 @@ export const roleSchema = z.object({
 export const userSchema = z.object({
   userId: z.number(),
   username: z.string(),
-  email: z
-    .string()
-    .regex(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/, {
-      message: "Invalid email address",
-    }),
+  email: z.string().regex(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/, {
+    message: "Invalid email address",
+  }),
   roles: z.array(roleSchema),
   isActive: z.boolean(),
-  imageUrl: z.string().nullable(),
 });
 
 export const authResponseSchema = z.object({

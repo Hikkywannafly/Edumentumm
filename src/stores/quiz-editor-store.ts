@@ -42,6 +42,7 @@ interface QuizEditorState {
   setLoading: (loading: boolean) => void;
   setAutoSaving: (saving: boolean) => void;
   reset: () => void;
+  forceReset: () => void; // Force clear localStorage and reset state
 }
 
 export const useQuizEditorStore = create<QuizEditorState>()(
@@ -140,6 +141,21 @@ export const useQuizEditorStore = create<QuizEditorState>()(
           isLoading: false,
           isAutoSaving: false,
         }),
+
+      forceReset: () => {
+        // Clear localStorage immediately
+        if (typeof window !== "undefined") {
+          localStorage.removeItem("quiz-editor-storage");
+        }
+        // Reset state
+        set({
+          quizData: null,
+          savedQuiz: null,
+          isEditing: false,
+          isLoading: false,
+          isAutoSaving: false,
+        });
+      },
     }),
     {
       name: "quiz-editor-storage",

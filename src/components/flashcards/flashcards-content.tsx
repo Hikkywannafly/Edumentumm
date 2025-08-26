@@ -3,36 +3,77 @@ import { LocalizedLink } from "@/components/localized-link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useFlashcards } from "@/hooks/use-flashcards";
-import { AlertCircle, Filter, Loader2, Plus, Search } from "lucide-react";
+import { AlertCircle, Filter, Plus, Search } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import ThinLayout from "../layout/thin-layout";
 import { FlashcardGrid } from "./flashcard-grid";
 import FlashcardPagination from "./flashcard-pagination";
+import { FlashcardSkeletonGrid } from "./flashcard-skeleton";
 
 export function FlashcardsContent() {
   const t = useTranslations("Flashcards");
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 6;
 
-  const { flashcardSets, pagination, stats, isLoading, error, refetch } =
-    useFlashcards(currentPage, pageSize);
+  const {
+    flashcardSets,
+    pagination,
+    stats,
+    isLoading,
+    isInitialLoad,
+    error,
+    refetch,
+  } = useFlashcards(currentPage, pageSize);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
     refetch(page, pageSize);
   };
 
-  if (isLoading) {
+  if (isInitialLoad) {
     return (
       <ThinLayout classNames="flex-1 space-y-6 p-6">
-        <div className="flex items-center justify-center py-12">
-          <div className="flex items-center gap-2">
-            <Loader2 className="h-6 w-6 animate-spin" />
-            <span>Loading flashcards...</span>
+        {/* Search and Filters Skeleton */}
+        <div className="flex gap-4">
+          <div className="max-w-md flex-1">
+            <div className="relative">
+              <Search className="absolute top-2.5 left-2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder={t("searchPlaceholder")}
+                className="pl-8"
+                disabled
+              />
+            </div>
           </div>
+          <Button
+            variant="outline"
+            className="flex items-center gap-2 bg-transparent"
+            disabled
+          >
+            <Filter className="h-4 w-4" />
+            {t("filters")}
+          </Button>
         </div>
+
+        {/* Stats Skeleton */}
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <Card key={index}>
+              <CardContent className="p-4">
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-20" />
+                  <Skeleton className="h-8 w-12" />
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {/* Flashcard Grid Skeleton */}
+        <FlashcardSkeletonGrid count={6} />
       </ThinLayout>
     );
   }
@@ -118,11 +159,29 @@ export function FlashcardsContent() {
       </div>
 
       {/* Flashcard Grid or Create CTA */}
-      {flashcardSets.length > 0 ? (
+      {isLoading ? (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="font-semibold text-xl">{t("yourFlashcards")}</h2>
           </div>
+          {/* Pagination - Show even during loading */}
+          <FlashcardPagination
+            pagination={pagination}
+            onPageChange={handlePageChange}
+          />
+          {/* Show skeleton only for flashcard grid */}
+          <FlashcardSkeletonGrid count={6} />
+        </div>
+      ) : flashcardSets.length > 0 ? (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="font-semibold text-xl">{t("yourFlashcards")}</h2>
+          </div>
+          {/* Pagination */}
+          <FlashcardPagination
+            pagination={pagination}
+            onPageChange={handlePageChange}
+          />
           <FlashcardGrid flashcardSets={flashcardSets} />
         </div>
       ) : (
@@ -145,13 +204,6 @@ export function FlashcardsContent() {
             </div>
           </CardContent>
         </Card>
-      )}
-      {/* Pagination */}
-      {flashcardSets.length > 0 && (
-        <FlashcardPagination
-          pagination={pagination}
-          onPageChange={handlePageChange}
-        />
       )}
     </ThinLayout>
   );

@@ -13,7 +13,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { categoriesService } from "@/lib/services/categories.service";
-import { useQuizEditorStore } from "@/stores/quiz-editor-store";
 import { Bot, Plus, Tag, X } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -39,7 +38,6 @@ export function QuizTagsCategoriesEditor({
   const [newTag, setNewTag] = useState("");
   const [availableCategories, setAvailableCategories] = useState<string[]>([]);
   const [isLoadingCategories, setIsLoadingCategories] = useState(true);
-  const { quizData } = useQuizEditorStore();
 
   // Load categories from API/localStorage on mount
   useEffect(() => {
@@ -88,48 +86,6 @@ export function QuizTagsCategoriesEditor({
       onTagsChange(aiGeneratedTags);
     }
   }, [aiGeneratedTags, tags, onTagsChange, showAISelections]);
-
-  // Auto-sync with quiz data from store (when quiz is generated)
-  useEffect(() => {
-    if (quizData && !showAISelections) {
-      // Auto-apply category from quiz data if not already set
-      if (quizData.metadata?.category && !category) {
-        onCategoryChange(quizData.metadata.category);
-      }
-
-      // Auto-apply tags from quiz data if not already set
-      if (tags.length === 0) {
-        let tagsToApply: string[] = [];
-
-        // First try to get tags from metadata
-        if (quizData.metadata?.tags && quizData.metadata.tags.length > 0) {
-          tagsToApply = quizData.metadata.tags;
-        }
-        // If metadata tags are empty, extract unique tags from all questions
-        else if (quizData.questions && quizData.questions.length > 0) {
-          const allQuestionTags = quizData.questions
-            .flatMap((q) => q.tags || [])
-            .filter((tag) => tag && tag.trim()) // Remove empty tags
-            .filter((tag, index, arr) => arr.indexOf(tag) === index); // Remove duplicates
-
-          if (allQuestionTags.length > 0) {
-            tagsToApply = allQuestionTags;
-          }
-        }
-
-        if (tagsToApply.length > 0) {
-          onTagsChange(tagsToApply);
-        }
-      }
-    }
-  }, [
-    quizData,
-    category,
-    tags,
-    onCategoryChange,
-    onTagsChange,
-    showAISelections,
-  ]);
 
   const handleAddTag = () => {
     if (newTag.trim() && !tags.includes(newTag.trim())) {
@@ -357,7 +313,7 @@ export function QuizTagsCategoriesEditor({
         </div>
 
         {/* Debug Info */}
-        {process.env.NODE_ENV === "development" && (
+        {/* {process.env.NODE_ENV === "development" && (
           <div className="mt-4 rounded bg-gray-100 p-2 text-gray-600 text-xs">
             <strong>Debug:</strong>
             <br />
@@ -381,7 +337,7 @@ export function QuizTagsCategoriesEditor({
             <br />
             Show AI: {showAISelections ? "Yes" : "No"}
           </div>
-        )}
+        )} */}
       </CardContent>
     </Card>
   );

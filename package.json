@@ -136,8 +136,7 @@
     "typescript": "^5.8.3"
   },
   "lint-staged": {
-    "*.{ts,tsx,js,jsx}": ["biome check --apply"],
-    "*.{json,css,html,md}": ["biome format --write"]
+    "*.{ts,tsx,js,jsx,json,css,html,md}": ["biome check --apply ."]
   },
   "config": {
     "commitizen": {
