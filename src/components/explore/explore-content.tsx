@@ -2,6 +2,7 @@
 
 import { usePublicFlashcards } from "@/hooks/use-public-flashcards";
 import { useState } from "react";
+import { FlashcardSkeletonGrid } from "../flashcards/flashcard-skeleton";
 import ThinLayout from "../layout/thin-layout";
 import { Card } from "../ui";
 import ExploreCard from "./explore-card";
@@ -53,11 +54,7 @@ export default function ExploreContent() {
   const renderContent = () => {
     if (activeTab === "flashcards") {
       if (isLoading) {
-        return (
-          <Card className="flex items-center justify-center border-none py-12">
-            <p className="text-muted-foreground">Loading flashcards...</p>
-          </Card>
-        );
+        return <FlashcardSkeletonGrid count={6} />;
       }
 
       if (error) {
@@ -102,12 +99,12 @@ export default function ExploreContent() {
     <ThinLayout>
       <ExploreTitle />
       <ExploreFilter tab={activeTab} onTabChange={setActiveTab} />
-      {renderContent()}
       <ExplorePaging
         pagination={pagination}
         onPageChange={handlePageChange}
         show={activeTab === "flashcards"}
       />
+      {renderContent()}
     </ThinLayout>
   );
 }
