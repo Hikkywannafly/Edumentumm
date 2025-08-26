@@ -5,9 +5,6 @@ import type {
   FlashcardStats,
 } from "@/types/flashcard";
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_URL_LOCAL;
-
 export interface CreateFlashcardSetRequest {
   title: string;
   description: string;
@@ -38,7 +35,8 @@ class FlashcardService {
     endpoint: string,
     options: RequestInit = {},
   ): Promise<T> {
-    const url = `${API_BASE_URL}${endpoint}`;
+    // Use Next.js API routes instead of direct external API calls
+    const url = `/api${endpoint}`;
 
     const accessToken = localStorage.getItem("accessToken");
 
@@ -58,7 +56,9 @@ class FlashcardService {
         const errorData = await response.json().catch(() => ({}));
         console.log("❌ API Error data:", errorData);
         throw new Error(
-          errorData.message || `HTTP error! status: ${response.status}`,
+          errorData.error ||
+            errorData.message ||
+            `HTTP error! status: ${response.status}`,
         );
       }
 
@@ -75,7 +75,7 @@ class FlashcardService {
   async getAllFlashcards(page = 0, size = 6): Promise<FlashcardApiResponse> {
     try {
       const response = await this.request<FlashcardApiResponse>(
-        `/student/flashcards?page=${page}&size=${size}`,
+        `/flashcards?page=${page}&size=${size}`,
       );
       return response;
     } catch (error) {
@@ -86,9 +86,8 @@ class FlashcardService {
 
   async getPublicFlashcards(page = 0, size = 6): Promise<FlashcardApiResponse> {
     try {
-      // Try the current endpoint first
       const response = await this.request<FlashcardApiResponse>(
-        `/student/flashcards/public?page=${page}&size=${size}`,
+        `/flashcards/public?page=${page}&size=${size}`,
       );
       return response;
     } catch (error) {
@@ -96,23 +95,6 @@ class FlashcardService {
         "❌ FlashcardService: Error fetching public flashcards:",
         error,
       );
-
-      // If 403, try a different approach - maybe all flashcards with filtering
-      if (error instanceof Error && error.message.includes("403")) {
-        try {
-          const allFlashcards = await this.getAllFlashcards(page, size);
-          // Filter only public flashcards
-          const publicFlashcards = {
-            ...allFlashcards,
-            data: allFlashcards.data.filter((flashcard) => flashcard.isPublic),
-          };
-          return publicFlashcards;
-        } catch (fallbackError) {
-          console.error("❌ Fallback also failed:", fallbackError);
-          throw error; // Throw original error
-        }
-      }
-
       throw error;
     }
   }
@@ -120,7 +102,7 @@ class FlashcardService {
   async getFlashcardById(id: number): Promise<FlashcardSet> {
     try {
       const response = await this.request<FlashcardSetApiResponse>(
-        `/student/flashcards/${id}`,
+        `/flashcards/${id}`,
       );
       return response.data;
     } catch (error) {
@@ -189,7 +171,7 @@ class FlashcardService {
       const validatedData = this.validateFlashcardData(flashcardSetData);
 
       const response = await this.request<FlashcardSetApiResponse>(
-        "/student/flashcards",
+        "/flashcards",
         {
           method: "POST",
           body: JSON.stringify(validatedData),
@@ -214,7 +196,7 @@ class FlashcardService {
       const validatedData = this.validateUpdateFlashcardData(flashcardSetData);
 
       const response = await this.request<FlashcardSetApiResponse>(
-        `/student/flashcards/${id}`,
+        `/flashcards/${id}`,
         {
           method: "PATCH",
           body: JSON.stringify(validatedData),
@@ -232,7 +214,7 @@ class FlashcardService {
 
   async deleteFlashcardSet(id: number): Promise<void> {
     try {
-      await this.request(`/student/flashcards/${id}`, {
+      await this.request(`/flashcards/${id}`, {
         method: "DELETE",
       });
     } catch (error) {
