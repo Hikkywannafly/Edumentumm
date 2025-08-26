@@ -74,7 +74,7 @@ export function AchievementCard({
         <span
           className={cn(
             "inline-flex w-fit cursor-pointer items-center rounded-full px-2.5 py-0.5 font-medium text-xs transition hover:brightness-95",
-            rarityColorClass[rarity]
+            rarityColorClass[rarity],
           )}
         >
           {rarity.charAt(0) + rarity.slice(1).toLowerCase()}

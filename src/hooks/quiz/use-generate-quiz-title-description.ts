@@ -1,11 +1,11 @@
-import { quizQueryKeys } from "@/hooks/quiz-query-keys";
-import { generateQuizTitleDescription } from "@/lib/services/quiz-generate.service";
-import { useQuizEditorStore } from "@/stores/quiz-editor-store";
-import type { QuestionData } from "@/types/quiz";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
+import { generateQuizTitleDescription } from "../../lib/services/quiz-generate.service";
+import { useQuizEditorStore } from "../../stores/quiz-editor-store";
+import type { QuestionData } from "../../types/quiz";
+import { quizQueryKeys } from "../quiz-query-keys";
 
-interface GenerateTitleParams {
+interface GenerateQuizTitleParams {
   content: string;
   questions: QuestionData[];
   options?: {
@@ -17,12 +17,12 @@ interface GenerateTitleParams {
   };
 }
 
-export function useGenerateTitleDescription() {
+export function useGenerateQuizTitleDescription() {
   const queryClient = useQueryClient();
   const { updateQuizData } = useQuizEditorStore();
 
   const generateTitleMutation = useMutation({
-    mutationFn: async (params: GenerateTitleParams) => {
+    mutationFn: async (params: GenerateQuizTitleParams) => {
       const result = await generateQuizTitleDescription(
         params.content,
         params.questions,
@@ -36,26 +36,24 @@ export function useGenerateTitleDescription() {
       return result;
     },
     onSuccess: (data, variables) => {
-      // Update quiz data with new title and description
       updateQuizData({
         title: data.title,
         description: data.description,
       });
 
-      // Cache the result
       queryClient.setQueryData(
-        quizQueryKeys.generateTitle(
+        quizQueryKeys.titleDescription(
           variables.content,
-          variables.questions.length,
+          variables.questions,
           variables.options,
         ),
         data,
       );
 
-      console.log(`✅ Generated title: ${data.title}`);
+      console.log(" Generated quiz title and description:", data);
     },
     onError: (error) => {
-      console.error("❌ Generate title failed:", error);
+      console.error("Failed to generate quiz title:", error);
     },
   });
 
@@ -63,15 +61,13 @@ export function useGenerateTitleDescription() {
     async (
       content: string,
       questions: QuestionData[],
-      options?: {
-        isExtractMode?: boolean;
-        targetLanguage?: string;
-        filename?: string;
-        category?: string;
-        tags?: string[];
-      },
+      options?: GenerateQuizTitleParams["options"],
     ) => {
-      return generateTitleMutation.mutateAsync({ content, questions, options });
+      return generateTitleMutation.mutateAsync({
+        content,
+        questions,
+        options,
+      });
     },
     [generateTitleMutation],
   );

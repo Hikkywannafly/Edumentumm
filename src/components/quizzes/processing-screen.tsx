@@ -32,16 +32,13 @@ export function ProcessingScreen({
       return;
     }
 
-    // Show result immediately
     setShowResult(true);
 
     if (!hasError && autoNavigate) {
-      // Show navigation state after showing success
       const navigateTimer = setTimeout(() => {
         setIsNavigating(true);
-      }, 1500);
+      }, 1200);
 
-      // Call onComplete after showing navigation state
       const completeTimer = setTimeout(() => {
         if (onComplete) {
           onComplete();
@@ -78,13 +75,13 @@ export function ProcessingScreen({
   const getDescription = () => {
     if (!isDone) return label || "Please wait a moment";
     if (hasError) return "Please try again";
-    if (isNavigating) return "Taking you to the quiz editor...";
-    return "Your quiz has been created successfully";
+    if (isNavigating) return "Opening quiz editor...";
+    return "Your quiz has been created successfully!";
   };
 
   return (
     <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-background/80 backdrop-blur-sm">
-      <div className="w-full max-w-sm rounded-lg bg-card p-8 text-center shadow-lg">
+      <div className="w-full max-w-sm p-8 text-center">
         <div className="mb-6 flex justify-center">
           <div
             className={`rounded-full p-3 transition-all duration-300 ${
@@ -93,7 +90,7 @@ export function ProcessingScreen({
                 : isNavigating
                   ? "bg-blue-50"
                   : showResult
-                    ? "bg-green-50"
+                    ? ""
                     : "bg-blue-50"
             }`}
           >
@@ -111,22 +108,21 @@ export function ProcessingScreen({
 
         <p className="truncate text-muted-foreground text-xs">{fileName}</p>
 
-        {/* Progress indicator for loading state */}
         {!isDone && (
           <div className="mt-4 h-1 w-full overflow-hidden rounded-full bg-gray-200">
             <div className="h-full w-full animate-pulse bg-blue-600" />
           </div>
         )}
 
-        {/* Success progress bar */}
         {isDone && !hasError && (
           <div className="mt-4 h-1 w-full overflow-hidden rounded-full bg-gray-200">
             <div
-              className={`h-full transition-all duration-1000 ease-out ${
+              className={`h-full transition-all duration-1500 ease-out ${
                 isNavigating ? "bg-blue-600" : "bg-green-600"
               }`}
               style={{
-                width: isNavigating ? "100%" : "70%",
+                width: showResult ? (isNavigating ? "100%" : "85%") : "0%",
+                transitionDelay: showResult ? "0ms" : "200ms",
               }}
             />
           </div>

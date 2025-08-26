@@ -5,57 +5,44 @@ import { PageHeaderClient } from "@/components/layout/page-header-client";
 import { LocalizedLink } from "@/components/localized-link";
 import { QuizEditorContent } from "@/components/quizzes/edit";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/contexts/auth-context";
-import { loadQuizSafely } from "@/lib/utils/quiz-sync";
-import { useQuizEditorStore } from "@/stores/quiz-editor-store";
-import { ArrowLeft } from "lucide-react";
+import { useQuizEditor } from "@/hooks/quiz/use-quiz-editor";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+// import { toast } from "sonner";
 
 export default function QuizEditorPage() {
   const params = useParams();
-  const quizId = params.id as string;
-  const { setQuizData, forceReset } = useQuizEditorStore();
-  const { accessToken } = useAuth();
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
+  const quizId = Number.parseInt(params.id as string);
   const t = useTranslations("Quizzes");
 
-  useEffect(() => {
-    if (quizId) {
-      forceReset();
-      loadQuiz(Number.parseInt(quizId));
-    }
-  }, [quizId, forceReset]);
+  const {
+    quiz,
+    isLoading,
+    // isSaving,
+    isError,
+    error,
+    // saveQuiz,
+    // hasUnsavedChanges,
+    // isValid,
+  } = useQuizEditor(quizId);
 
-  const loadQuiz = async (id: number) => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const result = await loadQuizSafely(id, accessToken || "");
-      if (result.success && result.quiz) {
-        setQuizData(result.quiz);
-      } else {
-        throw new Error(result.error || "Failed to load quiz");
-      }
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Unknown error";
-      setError(errorMessage);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  // const handleSave = async () => {
+  //   try {
+  //     await saveQuiz();
+  //     toast.success("Quiz saved successfully!");
+  //   } catch (error) {
+  //     toast.error("Failed to save quiz");
+  //     console.error("Save error:", error);
+  //   }
+  // };
 
   if (isLoading) {
     return (
       <DashboardLayout>
         <div className="flex min-h-screen items-center justify-center">
           <div className="text-center">
-            <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-primary border-b-2" />
+            <Loader2 className="mx-auto mb-4 h-8 w-8 animate-spin" />
             <p>Loading quiz...</p>
           </div>
         </div>
@@ -63,12 +50,24 @@ export default function QuizEditorPage() {
     );
   }
 
-  if (error) {
+  if (isError || error) {
     return (
       <DashboardLayout>
         <div className="flex min-h-screen items-center justify-center">
           <div className="text-center text-red-600">
-            <p>Error loading quiz: {error}</p>
+            <p>Error loading quiz: {error?.message || "Unknown error"}</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (!quiz) {
+    return (
+      <DashboardLayout>
+        <div className="flex min-h-screen items-center justify-center">
+          <div className="text-center">
+            <p>Quiz not found</p>
           </div>
         </div>
       </DashboardLayout>
@@ -88,6 +87,23 @@ export default function QuizEditorPage() {
                   {t("edit.backToQuizzes")}
                 </Button>
               </LocalizedLink>
+              {/* <Button
+                onClick={handleSave}
+                disabled={!hasUnsavedChanges || !isValid || isSaving}
+                size="sm"
+              >
+                {isSaving ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="mr-2 h-4 w-4" />
+                    Save Changes
+                  </>
+                )}
+              </Button> */}
             </div>
           }
           showThemeToggle={true}

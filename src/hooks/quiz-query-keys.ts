@@ -12,6 +12,14 @@ export const quizQueryKeys = {
   generateTitle: (content: string, questionCount: number, options?: any) =>
     ["generateTitle", hashContent(content), questionCount, options] as const,
 
+  titleDescription: (content: string, questions: any[], options?: any) =>
+    [
+      "quiz-title-description",
+      hashContent(content),
+      questions.length,
+      options,
+    ] as const,
+
   // File operations
   fileProcessing: (fileId: string) => ["fileProcessing", fileId] as const,
   fileContent: (fileId: string) => ["fileContent", fileId] as const,

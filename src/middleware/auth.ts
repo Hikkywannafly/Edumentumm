@@ -3,8 +3,10 @@ import { NextResponse } from "next/server";
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const isAuthPage = pathname.includes("/login") || pathname.includes("/register");
-  const isDashboardPage = pathname.includes("/dashboard") || pathname.includes("/quizzes");
+  const isAuthPage =
+    pathname.includes("/login") || pathname.includes("/register");
+  const isDashboardPage =
+    pathname.includes("/dashboard") || pathname.includes("/quizzes");
 
   // Get auth tokens from cookies or headers
   const accessToken = request.cookies.get("accessToken")?.value;

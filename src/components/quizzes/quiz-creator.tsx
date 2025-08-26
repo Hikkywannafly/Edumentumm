@@ -8,7 +8,6 @@ import { FileText, Sparkles, Type } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { AIGeneratedUploader } from "./ai-generated-uploader";
-import { FileWithAnswersUploader } from "./file-with-answers-uploader";
 import { ProcessingScreen } from "./processing-screen";
 import { TextContentUploader } from "./text-content-uploader";
 export function QuizCreator() {
@@ -41,15 +40,13 @@ export function QuizCreator() {
     startProcessing(fileName, label || "Processing...");
   };
 
-  const handleProcessingUpdate = (label: string) => {
-    updateProcessingState({ label });
-  };
-
   const handleProcessingDone = (success: boolean) => {
     if (success) {
-      handleProcessingUpdate("Quiz created successfully!");
+      updateProcessingState({ label: "Quiz created successfully!" });
     }
-    finishProcessing(success);
+    setTimeout(() => {
+      finishProcessing(success);
+    }, 300);
   };
 
   return (
@@ -70,7 +67,7 @@ export function QuizCreator() {
               isDone={processingDone}
               hasError={processingError}
               onComplete={hideProcessing}
-              showSuccessFor={2500}
+              showSuccessFor={2500} // Match the uploader timeout for smooth transition
               autoNavigate={!processingError}
             />
           </div>
@@ -119,7 +116,7 @@ export function QuizCreator() {
                   onProcessingDone={handleProcessingDone}
                 />
               </TabsContent>
-              <TabsContent
+              {/* <TabsContent
                 value="file-with-answers"
                 className="mt-6 border-none"
               >
@@ -127,7 +124,7 @@ export function QuizCreator() {
                   onProcessingStart={handleProcessingStart}
                   onProcessingDone={handleProcessingDone}
                 />
-              </TabsContent>
+              </TabsContent> */}
               <TabsContent value="text-content" className="mt-6 border-none">
                 <TextContentUploader
                   onProcessingStart={handleProcessingStart}
