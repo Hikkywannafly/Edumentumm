@@ -52,11 +52,21 @@ export function FolderItem({ folder, viewMode, onClick }: FolderItemProps) {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-36">
-            <DropdownMenuItem className="flex items-center gap-2">
+            <DropdownMenuItem
+              onClick={(e) => {
+                e.stopPropagation();
+              }}
+              className="flex items-center gap-2"
+            >
               <Edit className="h-4 w-4" />
               Chỉnh sửa
             </DropdownMenuItem>
-            <DropdownMenuItem className="flex items-center gap-2 text-red-600">
+            <DropdownMenuItem
+              onClick={(e) => {
+                e.stopPropagation();
+              }}
+              className="flex items-center gap-2 text-red-600"
+            >
               <Trash2 className="h-4 w-4" />
               Xóa
             </DropdownMenuItem>
