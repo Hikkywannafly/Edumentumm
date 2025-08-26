@@ -5,10 +5,11 @@ import type {
   FlashcardStats,
   PaginationInfo,
 } from "@/types/flashcard";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 export function useFlashcards(page = 1, size = 6) {
   const { accessToken } = useAuth();
+  const isFirstLoad = useRef(true);
   const [flashcardSets, setFlashcardSets] = useState<FlashcardSet[]>([]);
   const [pagination, setPagination] = useState<PaginationInfo>({
     currentPage: 1,
@@ -24,13 +25,15 @@ export function useFlashcards(page = 1, size = 6) {
     averageScore: 0,
     studyTime: "0h",
   });
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchFlashcards = useCallback(
     async (currentPage = page, currentSize = size) => {
       if (!accessToken) {
         setIsLoading(false);
+        setIsInitialLoad(false);
         setError("No access token available");
         return;
       }
@@ -54,11 +57,16 @@ export function useFlashcards(page = 1, size = 6) {
         };
         setPagination(uiPagination);
 
-        const calculatedStats = flashcardService.calculateStats(
-          response.data,
-          uiPagination,
-        );
-        setStats(calculatedStats);
+        // Only calculate stats on initial load
+        if (isFirstLoad.current) {
+          const calculatedStats = flashcardService.calculateStats(
+            response.data,
+            response.pagination,
+          );
+          setStats(calculatedStats);
+          isFirstLoad.current = false;
+          setIsInitialLoad(false);
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : "An error occurred");
       } finally {
@@ -68,6 +76,7 @@ export function useFlashcards(page = 1, size = 6) {
     [accessToken, page, size],
   );
 
+  // Load flashcards on mount and when page changes
   useEffect(() => {
     fetchFlashcards();
   }, [fetchFlashcards]);
@@ -77,6 +86,7 @@ export function useFlashcards(page = 1, size = 6) {
     pagination,
     stats,
     isLoading,
+    isInitialLoad,
     error,
     refetch: fetchFlashcards,
   };
