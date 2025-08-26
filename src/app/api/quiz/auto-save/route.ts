@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
       passingScore: payload.passingScore || 70,
     };
 
-    console.log("Creating quiz with payload:", backendPayload);
+    console.log("Creating quiz with payload:", payload.tags);
 
     const response = await apiClient.post("/student/quizzes", backendPayload, {
       headers: {

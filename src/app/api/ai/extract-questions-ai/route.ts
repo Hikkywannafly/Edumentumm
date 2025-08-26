@@ -84,6 +84,9 @@ CRITICAL RULES:
 4. Generate relevant tags based on the extracted content (3-5 tags per question)
 5. Response MUST be a valid JSON object with format {"questions": [...], "selectedCategory": "..."}
 6. If no existing questions found, return {"questions": [], "selectedCategory": null}
+7. ESCAPE ALL QUOTES AND SPECIAL CHARACTERS PROPERLY IN JSON
+8. DO NOT include any markdown formatting or code blocks
+9. RETURN ONLY THE JSON OBJECT, NO OTHER TEXT
 
 FORMAT:
 {
@@ -107,7 +110,7 @@ FORMAT:
   ]
 }
 
-ONLY EXTRACT existing questions. If no quiz format found, return {"questions": [], "selectedCategory": null}.`.trim();
+IMPORTANT: ONLY EXTRACT existing questions. If no quiz format found, return {"questions": [], "selectedCategory": null}. Return ONLY the JSON object, no additional text.`.trim();
 
     let finalPrompt = prompt;
     const messageContent: any[] = [{ type: "text", text: prompt }];
@@ -135,7 +138,7 @@ ONLY EXTRACT existing questions. If no quiz format found, return {"questions": [
           file?.type === "image"
             ? [{ role: "user", content: messageContent }]
             : [{ role: "user", content: finalPrompt }],
-        temperature: 0.1,
+        temperature: 0.1, // Low temperature for consistent JSON extraction
         max_tokens: 4000,
         response_format: { type: "json_object" },
       },
@@ -155,8 +158,52 @@ ONLY EXTRACT existing questions. If no quiz format found, return {"questions": [
       throw new Error("No content returned from AI");
     }
 
-    // Parse and validate response
-    const parsed = JSON.parse(aiResponse);
+    // Clean and parse AI response with robust error handling
+    let parsed: any;
+    try {
+      // Clean the response by removing any potential markdown formatting
+      let cleanedResponse = aiResponse.trim();
+
+      // Remove markdown code blocks if present
+      if (cleanedResponse.startsWith("```json")) {
+        cleanedResponse = cleanedResponse
+          .replace(/^```json\s*/, "")
+          .replace(/\s*```$/, "");
+      } else if (cleanedResponse.startsWith("```")) {
+        cleanedResponse = cleanedResponse
+          .replace(/^```\s*/, "")
+          .replace(/\s*```$/, "");
+      }
+
+      // Try to find JSON object boundaries
+      const jsonStart = cleanedResponse.indexOf("{");
+      const jsonEnd = cleanedResponse.lastIndexOf("}");
+
+      if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
+        cleanedResponse = cleanedResponse.slice(jsonStart, jsonEnd + 1);
+      }
+
+      // Attempt to parse the cleaned JSON
+      parsed = JSON.parse(cleanedResponse);
+    } catch (parseError) {
+      console.error("JSON Parse Error:", parseError);
+      console.error("Raw AI Response:", aiResponse);
+
+      // Try to extract JSON from the response using regex as fallback
+      try {
+        const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          parsed = JSON.parse(jsonMatch[0]);
+        } else {
+          throw new Error("No valid JSON found in AI response");
+        }
+      } catch (fallbackError) {
+        console.error("Fallback JSON Parse Error:", fallbackError);
+        throw new Error(
+          `Invalid JSON response from AI: ${parseError instanceof Error ? parseError.message : "Unknown parsing error"}`,
+        );
+      }
+    }
     if (!parsed.questions || !Array.isArray(parsed.questions)) {
       return NextResponse.json({
         success: true,

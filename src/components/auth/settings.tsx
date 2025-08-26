@@ -1,36 +1,42 @@
-"use client"
+"use client";
 
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
-import { getLocaleFromPathname } from "@/lib/utils"
-import { motion } from "framer-motion"
-import { Globe, Moon, Settings as SettingsIcon, Sun } from "lucide-react"
-import { useTranslations } from "next-intl"
-import { useTheme } from "next-themes"
-import { usePathname, useRouter } from "next/navigation"
-import { useState } from "react"
-import { toast } from "sonner"
+import { getLocaleFromPathname } from "@/lib/utils";
+import { motion } from "framer-motion";
+import { Globe, Moon, Settings as SettingsIcon, Sun } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { useTheme } from "next-themes";
+import { usePathname, useRouter } from "next/navigation";
+import { useState } from "react";
+import { toast } from "sonner";
 
 interface SettingsOption {
-  id: string
-  title: string
-  description: string
-  icon: React.ElementType
+  id: string;
+  title: string;
+  description: string;
+  icon: React.ElementType;
   options: Array<{
-    value: string
-    label: string
-  }>
+    value: string;
+    label: string;
+  }>;
 }
 
 export function Settings() {
-  const t = useTranslations("Settings")
-  const router = useRouter()
-  const pathname = usePathname()
-  const { theme, setTheme } = useTheme()
+  const t = useTranslations("Settings");
+  const router = useRouter();
+  const pathname = usePathname();
+  const { theme, setTheme } = useTheme();
 
-  const [selectedLanguage, setSelectedLanguage] = useState("en")
-  const [selectedTheme, setSelectedTheme] = useState(theme || "system")
+  const [selectedLanguage, setSelectedLanguage] = useState("en");
+  const [selectedTheme, setSelectedTheme] = useState(theme || "system");
 
   const settingsOptions: SettingsOption[] = [
     {
@@ -54,25 +60,24 @@ export function Settings() {
         { value: "system", label: t("theme.system") },
       ],
     },
-  ]
+  ];
 
   const handleSaveSettings = () => {
     try {
-
-      localStorage.setItem("language", selectedLanguage)
-      localStorage.setItem("theme", selectedTheme)
+      localStorage.setItem("language", selectedLanguage);
+      localStorage.setItem("theme", selectedTheme);
 
       // Apply theme
-      setTheme(selectedTheme)
+      setTheme(selectedTheme);
 
-      toast.success("Settings saved successfully!")
+      toast.success("Settings saved successfully!");
 
-      const locale = getLocaleFromPathname(pathname)
-      router.push(`/${locale}/dashboard`)
+      const locale = getLocaleFromPathname(pathname);
+      router.push(`/${locale}/dashboard`);
     } catch (_error) {
-      toast.error("Failed to save settings")
+      toast.error("Failed to save settings");
     }
-  }
+  };
 
   return (
     <motion.div
@@ -92,7 +97,7 @@ export function Settings() {
         <CardContent className="space-y-8 p-8">
           <div className="grid grid-cols-1 gap-6">
             {settingsOptions.map((option, index) => {
-              const Icon = option.icon
+              const Icon = option.icon;
               return (
                 <motion.div
                   key={option.id}
@@ -106,8 +111,12 @@ export function Settings() {
                       <Icon className="h-6 w-6 text-primary" />
                     </div>
                     <div>
-                      <h3 className="font-bold text-foreground text-lg">{option.title}</h3>
-                      <p className="text-muted-foreground text-sm">{option.description}</p>
+                      <h3 className="font-bold text-foreground text-lg">
+                        {option.title}
+                      </h3>
+                      <p className="text-muted-foreground text-sm">
+                        {option.description}
+                      </p>
                     </div>
                   </div>
                   <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
@@ -115,7 +124,7 @@ export function Settings() {
                       const isSelected =
                         option.id === "language"
                           ? selectedLanguage === opt.value
-                          : selectedTheme === opt.value
+                          : selectedTheme === opt.value;
 
                       return (
                         <button
@@ -123,28 +132,32 @@ export function Settings() {
                           key={opt.value}
                           onClick={() => {
                             if (option.id === "language") {
-                              setSelectedLanguage(opt.value)
+                              setSelectedLanguage(opt.value);
                             } else {
-                              setSelectedTheme(opt.value)
+                              setSelectedTheme(opt.value);
                             }
                           }}
-                          className={`group cursor-pointer rounded-lg border-2 p-4 transition-all duration-300 hover:scale-105 ${isSelected
-                            ? "border-primary bg-primary/10 shadow-lg shadow-primary/20"
-                            : "border-border bg-card hover:border-primary/50 hover:shadow-md"
-                            }`}
+                          className={`group cursor-pointer rounded-lg border-2 p-4 transition-all duration-300 hover:scale-105 ${
+                            isSelected
+                              ? "border-primary bg-primary/10 shadow-lg shadow-primary/20"
+                              : "border-border bg-card hover:border-primary/50 hover:shadow-md"
+                          }`}
                         >
                           <div className="text-center">
-                            <div className={`font-semibold transition-colors ${isSelected ? "text-primary" : "text-foreground"
-                              }`}>
+                            <div
+                              className={`font-semibold transition-colors ${
+                                isSelected ? "text-primary" : "text-foreground"
+                              }`}
+                            >
                               {opt.label}
                             </div>
                           </div>
                         </button>
-                      )
+                      );
                     })}
                   </div>
                 </motion.div>
-              )
+              );
             })}
           </div>
 
@@ -157,8 +170,8 @@ export function Settings() {
             <Button
               variant="outline"
               onClick={() => {
-                const locale = getLocaleFromPathname(pathname)
-                router.push(`/${locale}/dashboard`)
+                const locale = getLocaleFromPathname(pathname);
+                router.push(`/${locale}/dashboard`);
               }}
               className="flex-1"
             >
@@ -174,5 +187,5 @@ export function Settings() {
         </CardContent>
       </Card>
     </motion.div>
-  )
+  );
 }

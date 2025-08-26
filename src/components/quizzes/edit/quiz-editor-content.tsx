@@ -1,10 +1,9 @@
 "use client";
 
 import ThinLayout from "@/components/layout/thin-layout";
-import { useCreateQuiz } from "@/hooks/quiz";
-import { useQuizEditorSync } from "@/hooks/use-quiz-editor-sync";
-import { useQuizEditorStore } from "@/stores/quiz-editor-store";
-import { useRouter } from "next/navigation";
+import { useGenerateQuizTitleDescription } from "@/hooks/quiz/use-generate-quiz-title-description";
+import { useQuizEditor } from "@/hooks/quiz/use-quiz-editor";
+import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { QuizDescriptionEditor } from "./quiz-description-editor";
 import { QuizEditorHeader } from "./quiz-editor-header";
@@ -14,72 +13,81 @@ import { QuizTitleEditor } from "./quiz-title-editor";
 
 export function QuizEditorContent() {
   const router = useRouter();
+  const params = useParams();
+  const quizId = Number.parseInt(params.id as string);
   const [isValidForCreation, setIsValidForCreation] = useState(false);
 
   const {
-    quizData,
+    quiz,
+    isLoading,
+    isError,
+    error,
+    updateQuiz,
     addQuestion,
-    addQuestionAfter,
     updateQuestion,
     deleteQuestion,
     moveQuestion,
-    updateQuizData,
-  } = useQuizEditorStore();
+    hasUnsavedChanges,
+  } = useQuizEditor(quizId);
 
-  const { title, description, updateTitle, updateDescription } =
-    useQuizEditorSync();
+  const titleDescriptionGenerator = useGenerateQuizTitleDescription();
 
-  // React Query mutation for creating quiz
-  const createQuizMutation = useCreateQuiz({
-    onSuccess: (data) => {
-      alert(`Quiz created successfully! Quiz ID: ${data.id}`);
-      // // Redirect to quiz list or view page
-      // router.push(`/quizzes/${data.id}`);
-    },
-    onError: (error) => {
-      alert(`Error creating quiz: ${error.message}`);
-    },
-    redirectToEdit: false, // We handle redirect manually
-  });
+  const currentTitle = quiz?.title || "";
+  const currentDescription = quiz?.description || "";
 
-  const currentTitle = title || quizData?.title || "";
-  const currentDescription = description || quizData?.description || "";
-
-  // Validate quiz data for creation
   const validateQuizForCreation = useCallback(() => {
     if (!currentTitle.trim()) return false;
-    if (!quizData?.questions?.length) return false;
+    if (!quiz?.questions?.length) return false;
 
-    // Check if all questions have at least one correct answer
-    const hasValidQuestions = quizData.questions.every((question) => {
+    const hasValidQuestions = quiz.questions.every((question) => {
       if (
         question.type === "MULTIPLE_CHOICE" ||
         question.type === "TRUE_FALSE"
       ) {
         return question.answers.some((answer) => answer.isCorrect);
       }
-      return true; // For other question types
+      return true;
     });
 
     return hasValidQuestions;
-  }, [currentTitle, quizData]);
+  }, [currentTitle, quiz]);
 
-  // Update validation state when data changes
   useEffect(() => {
     setIsValidForCreation(validateQuizForCreation());
   }, [validateQuizForCreation]);
 
-  // Handle navigation back
   const handleNavigateAway = () => {
-    const confirmed = window.confirm(
-      "Are you sure you want to leave? Your quiz data will be lost.",
-    );
-    if (confirmed) {
-      router.back();
+    if (hasUnsavedChanges) {
+      const confirmed = window.confirm(
+        "Are you sure you want to leave? You have unsaved changes.",
+      );
+      if (!confirmed) return;
     }
+    router.back();
   };
 
-  if (!quizData) {
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-lg">Loading quiz...</div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (isError || error) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-center text-red-600">
+          <p>Error loading quiz: {error?.message || "Unknown error"}</p>
+        </div>
+      </div>
+    );
+  }
+
+  // No quiz found
+  if (!quiz) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-lg">
@@ -89,21 +97,74 @@ export function QuizEditorContent() {
     );
   }
 
+  const handleUpdateTitle = (newTitle: string) => {
+    updateQuiz({ title: newTitle });
+  };
+
+  const handleUpdateDescription = (newDescription: string) => {
+    updateQuiz({ description: newDescription });
+  };
+
+  // AI generation functions
+  const handleGenerateAITitle = useCallback(async () => {
+    if (!quiz?.questions?.length) {
+      console.warn("No questions available for title generation");
+      return;
+    }
+
+    try {
+      const content = quiz.questions.map((q) => q.question).join("\n");
+      await titleDescriptionGenerator.generateTitleDescription(
+        content,
+        quiz.questions,
+        {
+          targetLanguage: "auto",
+          category: quiz.metadata?.category,
+          tags: quiz.metadata?.tags,
+        },
+      );
+    } catch (error) {
+      console.error("Failed to generate AI title:", error);
+    }
+  }, [quiz, titleDescriptionGenerator]);
+
+  const handleGenerateAIDescription = useCallback(async () => {
+    if (!quiz?.questions?.length) {
+      console.warn("No questions available for description generation");
+      return;
+    }
+
+    try {
+      const content = quiz.questions.map((q) => q.question).join("\n");
+      await titleDescriptionGenerator.generateTitleDescription(
+        content,
+        quiz.questions,
+        {
+          targetLanguage: "auto",
+          category: quiz.metadata?.category,
+          tags: quiz.metadata?.tags,
+        },
+      );
+    } catch (error) {
+      console.error("Failed to generate AI description:", error);
+    }
+  }, [quiz, titleDescriptionGenerator]);
+
   const handleUpdateQuestion = (updatedQuestion: any) => {
     updateQuestion(updatedQuestion.id, updatedQuestion);
     setIsValidForCreation(validateQuizForCreation());
   };
 
   const handleMoveQuestionUp = (id: string) => {
-    const index = quizData.questions.findIndex((q) => q.id === id);
+    const index = quiz.questions.findIndex((q) => q.id === id);
     if (index > 0) {
       moveQuestion(index, index - 1);
     }
   };
 
   const handleMoveQuestionDown = (id: string) => {
-    const index = quizData.questions.findIndex((q) => q.id === id);
-    if (index < quizData.questions.length - 1) {
+    const index = quiz.questions.findIndex((q) => q.id === id);
+    if (index < quiz.questions.length - 1) {
       moveQuestion(index, index + 1);
     }
   };
@@ -133,7 +194,7 @@ export function QuizEditorContent() {
       ],
     };
 
-    addQuestionAfter(afterIndex, newQuestion);
+    addQuestion(newQuestion);
     setIsValidForCreation(validateQuizForCreation());
   };
 
@@ -143,18 +204,18 @@ export function QuizEditorContent() {
   };
 
   const handleCategoryChange = (category: string) => {
-    if (quizData) {
-      const currentMetadata = quizData.metadata || {
-        total_questions: quizData.questions.length,
-        total_points: quizData.questions.reduce(
+    if (quiz) {
+      const currentMetadata = quiz.metadata || {
+        total_questions: quiz.questions.length,
+        total_points: quiz.questions.reduce(
           (sum, q) => sum + (q.points || 1),
           0,
         ),
-        estimated_time: Math.ceil(quizData.questions.length * 1.5),
+        estimated_time: Math.ceil(quiz.questions.length * 1.5),
         tags: [],
       };
 
-      updateQuizData({
+      updateQuiz({
         metadata: {
           ...currentMetadata,
           category,
@@ -164,17 +225,17 @@ export function QuizEditorContent() {
   };
 
   const handleTagsChange = (tags: string[]) => {
-    if (quizData) {
-      const currentMetadata = quizData.metadata || {
-        total_questions: quizData.questions.length,
-        total_points: quizData.questions.reduce(
+    if (quiz) {
+      const currentMetadata = quiz.metadata || {
+        total_questions: quiz.questions.length,
+        total_points: quiz.questions.reduce(
           (sum, q) => sum + (q.points || 1),
           0,
         ),
-        estimated_time: Math.ceil(quizData.questions.length * 1.5),
+        estimated_time: Math.ceil(quiz.questions.length * 1.5),
         tags: [],
       };
-      updateQuizData({
+      updateQuiz({
         metadata: {
           ...currentMetadata,
           tags,
@@ -189,8 +250,8 @@ export function QuizEditorContent() {
         <QuizEditorHeader
           onCreateQuiz={() => {}}
           onBack={handleNavigateAway}
-          canCreate={isValidForCreation && !createQuizMutation.isPending}
-          isCreating={createQuizMutation.isPending}
+          canCreate={isValidForCreation}
+          isCreating={false}
         />
 
         {/* Validation Status */}
@@ -198,12 +259,12 @@ export function QuizEditorContent() {
           {!currentTitle.trim() && (
             <div className="text-red-500 text-sm">⚠️ Title is required</div>
           )}
-          {!quizData.questions.length && (
+          {!quiz.questions.length && (
             <div className="text-red-500 text-sm">
               ⚠️ At least one question is required
             </div>
           )}
-          {quizData.questions.some(
+          {quiz.questions.some(
             (q) =>
               (q.type === "MULTIPLE_CHOICE" || q.type === "TRUE_FALSE") &&
               !q.answers.some((a) => a.isCorrect),
@@ -214,20 +275,27 @@ export function QuizEditorContent() {
           )}
         </div>
 
-        <QuizTitleEditor title={currentTitle} onTitleChange={updateTitle} />
+        <QuizTitleEditor
+          title={currentTitle}
+          onTitleChange={handleUpdateTitle}
+          onGenerateAITitle={handleGenerateAITitle}
+          isGenerating={titleDescriptionGenerator.isGenerating}
+        />
         <QuizDescriptionEditor
           description={currentDescription}
-          onDescriptionChange={updateDescription}
+          onDescriptionChange={handleUpdateDescription}
+          onGenerateAIDescription={handleGenerateAIDescription}
+          isGenerating={titleDescriptionGenerator.isGenerating}
         />
         <QuizTagsCategoriesEditor
-          category={quizData.metadata?.category || ""}
+          category={quiz.metadata?.category || ""}
           onCategoryChange={handleCategoryChange}
-          tags={quizData.metadata?.tags || []}
+          tags={quiz.metadata?.tags || []}
           onTagsChange={handleTagsChange}
         />
         <QuizQuestionsEditor
-          questions={quizData.questions}
-          onAddQuestion={addQuestion}
+          questions={quiz.questions}
+          onAddQuestion={(question) => addQuestion(question)}
           onAddQuestionAfter={handleAddQuestionAfter}
           onUpdateQuestion={handleUpdateQuestion}
           onDeleteQuestion={handleDeleteQuestion}

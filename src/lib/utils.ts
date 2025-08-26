@@ -11,6 +11,6 @@ export function cn(...inputs: ClassValue[]) {
  * @returns The locale string (e.g., "vi", "en")
  */
 export function getLocaleFromPathname(pathname: string): string {
-  const segments = pathname.split('/');
-  return segments[1] || 'en';
+  const segments = pathname.split("/");
+  return segments[1] || "en";
 }

@@ -16,8 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useAutoSaveQuiz } from "@/hooks/quiz/use-auto-save-quiz";
-import { useQuizProcessor } from "@/hooks/use-quiz-processor";
+import { useQuizCreator } from "@/hooks/quiz/use-quiz-creator";
 import {
   FILE_UPLOAD_LIMITS,
   getAcceptedFileTypes,
@@ -34,12 +33,10 @@ import type {
 } from "@/types/quiz";
 import { Brain, Loader2, Settings, Sparkles } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { FileList } from "./file-list";
 import { FileUploadArea } from "./file-upload-area";
-
-type InputMode = "FILE" | "TEXT";
 
 interface AIGeneratedUploaderProps {
   onProcessingStart?: (fileName: string, label?: string) => void;
@@ -52,10 +49,20 @@ export function AIGeneratedUploader({
 }: AIGeneratedUploaderProps) {
   const t = useTranslations("Quizzes");
   const { goQuizEdit } = useLocalizedNavigation();
-  const [isInitialMount, setIsInitialMount] = useState(true);
-  const [isGenerating, setIsGenerating] = useState(false);
 
-  const [inputMode, setInputMode] = useState<InputMode>("FILE");
+  const {
+    uploadedFiles,
+    addFiles,
+    removeFile,
+    generateQuiz,
+    extractQuiz,
+    saveQuiz,
+    isGenerating,
+    isSaving,
+    isProcessingFiles,
+    hasFiles,
+    reset,
+  } = useQuizCreator();
 
   const [generationMode, setGenerationMode] = useState<"GENERATE" | "EXTRACT">(
     "GENERATE",
@@ -74,28 +81,6 @@ export function AIGeneratedUploader({
   const [task, setTask] = useState<Task>("GENERATE_QUIZ");
   const [parsingMode, setParsingMode] = useState<ParsingMode>("BALANCED");
 
-  const {
-    uploadedFiles,
-    addFiles,
-    removeFile,
-    generateFromFiles,
-    extractFromFilesAI,
-    isProcessing,
-    hasFiles,
-  } = useQuizProcessor();
-
-  const { autoSaveQuiz, isAutoSaving } = useAutoSaveQuiz({
-    userId: 1,
-    enabled: true,
-    sourceType: inputMode === "FILE" ? "FILE" : "AI_GENERATED",
-    onSaveSuccess: (quizId: number) => {
-      setTimeout(() => {
-        onProcessingDone?.(true);
-        goQuizEdit(quizId);
-      }, 1000);
-    },
-  });
-
   const { isDragActive } = useDropzone({
     onDrop: addFiles,
     accept: getAcceptedFileTypes(),
@@ -103,53 +88,46 @@ export function AIGeneratedUploader({
     maxSize: FILE_UPLOAD_LIMITS.maxSize,
   });
 
-  useEffect(() => {
-    if (isInitialMount) {
-      setIsInitialMount(false);
-    }
-  }, [isInitialMount]);
-
-  useEffect(() => {
-    if (hasFiles) {
-      setInputMode("FILE");
-    } else {
-      setInputMode("FILE");
-    }
-  }, [hasFiles]);
-
   const handleGenerateQuiz = async () => {
-    setIsGenerating(true);
+    if (!hasFiles) return;
+
+    const settings = {
+      generationMode,
+      fileProcessingMode,
+      visibility,
+      language,
+      questionType: questionType === "MIXED" ? "MIXED" : questionType,
+      numberOfQuestions,
+      mode,
+      difficulty,
+      task,
+      parsingMode,
+    };
+
     onProcessingStart?.(
       uploadedFiles[0]?.name || "File",
       generationMode === "GENERATE"
         ? t("create.aiGenerated.aiGenerating")
         : t("create.fileWithAnswers.processing"),
     );
+
     try {
-      const settings = {
-        generationMode,
-        fileProcessingMode,
-        visibility,
-        language,
-        questionType: questionType === "MIXED" ? "MIXED" : questionType,
-        numberOfQuestions,
-        mode,
-        difficulty,
-        task,
-        parsingMode,
-      };
-      if (inputMode === "FILE") {
-        if (generationMode === "GENERATE") {
-          await generateFromFiles(settings);
-        } else {
-          await extractFromFilesAI(settings);
-        }
-        await autoSaveQuiz(settings);
-      }
-      setIsGenerating(false);
+      const quiz =
+        generationMode === "GENERATE"
+          ? await generateQuiz(settings)
+          : await extractQuiz(settings);
+
+      const result = await saveQuiz(quiz, settings);
+
+      onProcessingDone?.(true);
+
+      // Schedule navigation with proper timing to ensure processing screen completes
+      setTimeout(() => {
+        reset();
+        goQuizEdit(result.id);
+      }, 2600); // Slightly longer than processing screen duration for smooth transition
     } catch (error) {
-      console.error("Error generating quiz:", error);
-      setIsGenerating(false);
+      console.error("Error processing quiz:", error);
       onProcessingDone?.(false);
     }
   };
@@ -167,25 +145,26 @@ export function AIGeneratedUploader({
           />
           <FileList files={uploadedFiles} onRemoveFile={removeFile} />
 
-          {/* Action */}
           <div className="flex items-center justify-between">
-            <p className="text-muted-foreground text-sm">
-              {generationMode === "GENERATE"
-                ? t("create.aiGenerated.aiDescription")
-                : t("create.fileWithAnswers.description")}
-            </p>
+            <div className="space-y-1">
+              <p className="text-muted-foreground text-sm">
+                {generationMode === "GENERATE"
+                  ? t("create.aiGenerated.aiDescription")
+                  : t("create.fileWithAnswers.description")}
+              </p>
+            </div>
             <div className="flex gap-2">
               <Button
                 disabled={
-                  !hasFiles || isProcessing || isGenerating || isAutoSaving
+                  !hasFiles || isProcessingFiles || isGenerating || isSaving
                 }
                 onClick={handleGenerateQuiz}
                 className="flex items-center gap-2"
               >
-                {isGenerating || isAutoSaving ? (
+                {isGenerating || isSaving ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    {isAutoSaving
+                    {isSaving
                       ? "Saving quiz..."
                       : generationMode === "GENERATE"
                         ? t("create.aiGenerated.aiGenerating")

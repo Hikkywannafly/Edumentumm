@@ -106,10 +106,7 @@ export function MobileNav() {
               </Button>
             </>
           ) : (
-            <Button
-              onClick={handleLogin}
-              className="w-full"
-            >
+            <Button onClick={handleLogin} className="w-full">
               {t("login")}
             </Button>
           )}

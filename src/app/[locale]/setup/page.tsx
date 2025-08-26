@@ -1,6 +1,6 @@
-import { Setup } from "@/components/auth/setup"
-import { BaseLayout } from "@/components/layout"
-import { setRequestLocale } from "next-intl/server"
+import { Setup } from "@/components/auth/setup";
+import { BaseLayout } from "@/components/layout";
+import { setRequestLocale } from "next-intl/server";
 
 export default async function SetupPage({
   params,

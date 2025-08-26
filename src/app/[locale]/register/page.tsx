@@ -21,13 +21,9 @@ export default async function RegisterPage({
             <div className="max-w-lg">
               <h1 className="mb-8 font-bold text-4xl leading-tight">
                 {t("title")} <br />
-                <span className="text-blue-600 ">
-                  Edumentum
-                </span>
+                <span className="text-blue-600 ">Edumentum</span>
               </h1>
-              <p className="text-muted-foreground">
-                {t("subtitle")}
-              </p>
+              <p className="text-muted-foreground">{t("subtitle")}</p>
             </div>
           </div>
 
