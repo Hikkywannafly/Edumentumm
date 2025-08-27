@@ -1,12 +1,7 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { convertBackendToFrontend } from "./quiz-data-converter";
-import type {
-  BackendQuizEntity,
-  GeneratedQuiz,
-  UseQuizSaverReturn,
-} from "./quiz-editor-types";
+import type { GeneratedQuiz, UseQuizSaverReturn } from "./quiz-editor-types";
 
 export function useQuizSaverEditor(
   quizId: number,
@@ -16,7 +11,7 @@ export function useQuizSaverEditor(
 
   // Save quiz mutation
   const saveMutation = useMutation({
-    mutationFn: async (): Promise<BackendQuizEntity> => {
+    mutationFn: async (): Promise<any> => {
       if (!quiz) throw new Error("No quiz to save");
 
       const accessToken = localStorage.getItem("accessToken");
@@ -34,11 +29,8 @@ export function useQuizSaverEditor(
         body: JSON.stringify({
           title: quiz.title,
           description: quiz.description,
-          quiz_data: {
-            questions: quiz.questions,
-            settings: quiz.settings || {},
-            metadata: quiz.metadata || {},
-          },
+          questions: quiz.questions,
+          metadata: quiz.metadata || {},
         }),
       });
 
@@ -48,15 +40,8 @@ export function useQuizSaverEditor(
 
       return response.json();
     },
-    onSuccess: (savedQuiz) => {
-      // Update both caches
-      queryClient.setQueryData(["quiz", quizId], savedQuiz);
-      queryClient.setQueryData(
-        ["quiz-editing", quizId],
-        convertBackendToFrontend(savedQuiz),
-      );
-
-      // Invalidate quiz list
+    onSuccess: () => {
+      // IneryClient.invalidateQueries({ queryKey: ["quiz", quizId] });
       queryClient.invalidateQueries({ queryKey: ["quizzes"] });
     },
   });

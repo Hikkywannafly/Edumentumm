@@ -67,7 +67,13 @@ export function QuizEditorContent() {
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <div className="text-lg">Loading quiz...</div>
+        <div className="space-y-4 text-center">
+          <div className="mx-auto h-8 w-8 animate-spin rounded-full border-blue-500 border-b-2" />
+          <div className="text-lg">Loading quiz...</div>
+          <div className="text-muted-foreground text-sm">
+            This may take a moment if the quiz was just created.
+          </div>
+        </div>
       </div>
     );
   }
@@ -83,12 +89,22 @@ export function QuizEditorContent() {
     );
   }
 
-  // No quiz found
   if (!quiz) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <div className="text-lg">
-          No quiz data found. Please go back and upload files first.
+        <div className="space-y-4 text-center">
+          <div className="text-lg">No quiz data found.</div>
+          <div className="text-muted-foreground text-sm">
+            If you just created this quiz, it might still be processing. Please
+            wait a moment and refresh the page.
+          </div>
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            className="rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
+          >
+            Refresh Page
+          </button>
         </div>
       </div>
     );

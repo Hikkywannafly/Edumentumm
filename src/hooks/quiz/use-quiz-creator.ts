@@ -8,7 +8,7 @@ import { useQuizSaver } from "./use-quiz-saver";
 export function useQuizCreator(): UseQuizCreatorReturn {
   const fileProcessor = useFileProcessor();
   const quizGenerator = useQuizGenerator(fileProcessor.uploadedFiles);
-  const quizSaver = useQuizSaver(quizGenerator.currentQuiz);
+  const quizSaver = useQuizSaver();
 
   const reset = () => {
     fileProcessor.reset();

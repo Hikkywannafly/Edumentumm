@@ -6,11 +6,10 @@ import { z } from "zod";
 const UpdateQuizSchema = z.object({
   title: z.string().optional(),
   description: z.string().optional(),
-  quiz_data: z
+  questions: z.array(z.any()).optional(),
+  metadata: z
     .object({
-      questions: z.array(z.any()).optional(),
-      settings: z.object({}).optional(),
-      metadata: z.object({}).optional(),
+      tags: z.array(z.string()).optional(),
     })
     .optional(),
 });
@@ -137,11 +136,57 @@ export async function PUT(
 
     const authHeader = request.headers.get("authorization");
 
+    const updatePayload: any = {};
+
+    if (validated.data.title) {
+      updatePayload.title = validated.data.title;
+    }
+
+    if (validated.data.description !== undefined) {
+      updatePayload.description = validated.data.description;
+    }
+
+    if (validated.data.questions) {
+      const backendQuestions = validated.data.questions.map((q: any) => ({
+        id: q.id,
+        text: q.question, // Frontend uses 'question', backend uses 'text'
+        type: q.type,
+        points: q.points || 1,
+        explanation: q.explanation,
+        options: q.answers.map((answer: any) => ({
+          id: answer.id,
+          text: answer.text,
+        })),
+        correctAnswer: q.answers.find((answer: any) => answer.isCorrect)?.id,
+      }));
+
+      updatePayload.quizData = {
+        questions: backendQuestions,
+        instructions:
+          "Please read each question carefully and select the best answer.",
+      };
+    }
+
+    if (validated.data.metadata) {
+      // Update other metadata fields as needed
+      if (validated.data.metadata.tags) {
+        // Convert frontend tags (strings) to backend tags (objects)
+        updatePayload.tags = validated.data.metadata.tags.map(
+          (tag: string) => ({
+            name: tag,
+            description: `Auto-generated tag for ${tag}`,
+            icon: "",
+            color: "",
+          }),
+        );
+      }
+    }
+
     try {
       // Update quiz in real backend
       const response = await apiClient.put(
         `/student/quizzes/${quizId}`,
-        validated.data,
+        updatePayload,
         {
           headers: authHeader
             ? {

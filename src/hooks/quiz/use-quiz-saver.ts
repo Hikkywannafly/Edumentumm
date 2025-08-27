@@ -9,9 +9,7 @@ import type {
   UseQuizSaverReturn,
 } from "./quiz-creator-types";
 
-export function useQuizSaver(
-  currentQuiz: GeneratedQuiz | null,
-): UseQuizSaverReturn {
+export function useQuizSaver(): UseQuizSaverReturn {
   const queryClient = useQueryClient();
 
   // Quiz saving mutation
@@ -92,8 +90,10 @@ export function useQuizSaver(
     onSuccess: (result) => {
       // Invalidate quiz list cache
       queryClient.invalidateQueries({ queryKey: ["quizzes"] });
-      // Cache the saved quiz
-      queryClient.setQueryData(["quiz", result.id], currentQuiz);
+      // Invalidate the specific quiz cache to ensure fresh data is loaded
+      queryClient.invalidateQueries({ queryKey: ["quiz", result.id] });
+      // Also invalidate the quiz editing cache
+      queryClient.invalidateQueries({ queryKey: ["quiz-editing", result.id] });
     },
   });
 

@@ -1,9 +1,7 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { convertBackendToFrontend } from "./quiz-data-converter";
 import type {
-  BackendQuizEntity,
   GeneratedQuiz,
   UpdateQuizData,
   UseQuizStateManagerReturn,
@@ -11,14 +9,14 @@ import type {
 
 export function useQuizStateManager(
   quizId: number,
-  originalQuiz: BackendQuizEntity | null,
+  originalQuiz: GeneratedQuiz | null,
 ): UseQuizStateManagerReturn {
   const queryClient = useQueryClient();
 
   // Get current quiz state from cache or original
   const quiz =
     queryClient.getQueryData<GeneratedQuiz>(["quiz-editing", quizId]) ||
-    (originalQuiz ? convertBackendToFrontend(originalQuiz) : null);
+    originalQuiz;
 
   // Update quiz mutation
   const updateMutation = useMutation({
@@ -36,10 +34,7 @@ export function useQuizStateManager(
     onError: () => {
       // Revert on error
       if (originalQuiz) {
-        queryClient.setQueryData(
-          ["quiz-editing", quizId],
-          convertBackendToFrontend(originalQuiz),
-        );
+        queryClient.setQueryData(["quiz-editing", quizId], originalQuiz);
       }
     },
   });
@@ -50,10 +45,7 @@ export function useQuizStateManager(
 
   const reset = () => {
     if (originalQuiz) {
-      queryClient.setQueryData(
-        ["quiz-editing", quizId],
-        convertBackendToFrontend(originalQuiz),
-      );
+      queryClient.setQueryData(["quiz-editing", quizId], originalQuiz);
     }
     updateMutation.reset();
   };
@@ -61,8 +53,7 @@ export function useQuizStateManager(
   // Calculate derived state
   const hasUnsavedChanges =
     quiz && originalQuiz
-      ? JSON.stringify(quiz) !==
-        JSON.stringify(convertBackendToFrontend(originalQuiz))
+      ? JSON.stringify(quiz) !== JSON.stringify(originalQuiz)
       : false;
 
   const isValid = quiz

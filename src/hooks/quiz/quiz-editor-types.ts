@@ -1,4 +1,5 @@
 import type {
+  BackendQuestion,
   BackendQuizEntity,
   GeneratedQuiz,
   QuestionData,
@@ -12,7 +13,7 @@ export interface UpdateQuizData {
 }
 
 export interface UseQuizLoaderReturn {
-  originalQuiz: BackendQuizEntity | null;
+  originalQuiz: GeneratedQuiz | null;
   isLoading: boolean;
   isError: boolean;
   error: Error | null;
@@ -52,4 +53,4 @@ export interface QuizConverterUtils {
   convertBackendToFrontend: (quiz: any) => GeneratedQuiz;
 }
 
-export type { BackendQuizEntity, GeneratedQuiz, QuestionData };
+export type { BackendQuizEntity, GeneratedQuiz, QuestionData, BackendQuestion };

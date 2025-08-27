@@ -13,6 +13,3 @@ export * from "./use-quiz-saver-editor";
 export * from "./use-question-manager";
 
 export * from "./quiz-data-converter";
-
-// Quiz Management Hooks
-export * from "./use-quiz";
