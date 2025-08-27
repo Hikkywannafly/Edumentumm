@@ -1,26 +1,22 @@
 "use client";
 
 import type { UseQuizCreatorReturn } from "./quiz-creator-types";
-import { useFileProcessor } from "./use-file-processor";
 import { useQuizGenerator } from "./use-quiz-generator";
+import { useFileProcessor } from "./use-quiz-processor";
 import { useQuizSaver } from "./use-quiz-saver";
 
 export function useQuizCreator(): UseQuizCreatorReturn {
-  // Use specialized hooks
   const fileProcessor = useFileProcessor();
   const quizGenerator = useQuizGenerator(fileProcessor.uploadedFiles);
   const quizSaver = useQuizSaver(quizGenerator.currentQuiz);
 
-  // Combined reset function
   const reset = () => {
     fileProcessor.reset();
     quizGenerator.reset();
     quizSaver.reset();
   };
 
-  // Return composed functionality
   return {
-    // File management
     uploadedFiles: fileProcessor.uploadedFiles,
     addFiles: fileProcessor.addFiles,
     removeFile: fileProcessor.removeFile,

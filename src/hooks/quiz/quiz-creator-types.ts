@@ -1,9 +1,11 @@
 import type {
   CreateQuizPayload,
   GeneratedQuiz,
+  ParsingMode,
   UploadedFile,
 } from "@/types/quiz";
 
+import type { BackendTag, QuizPayload } from "@/types/quizPlayload";
 export interface QuizCreatorSettings {
   generationMode: "GENERATE" | "EXTRACT";
   fileProcessingMode: "PARSE_THEN_SEND" | "SEND_DIRECT";
@@ -19,7 +21,7 @@ export interface QuizCreatorSettings {
 
 export interface UseFileProcessorReturn {
   uploadedFiles: UploadedFile[];
-  addFiles: (files: File[]) => Promise<void>;
+  addFiles: (files: File[], parsingMode?: ParsingMode) => Promise<void>;
   removeFile: (fileId: string) => void;
   clearFiles: () => void;
   isProcessingFiles: boolean;
@@ -53,4 +55,10 @@ export interface UseQuizCreatorReturn
   // Combined interface for the main hook
 }
 
-export type { CreateQuizPayload, GeneratedQuiz, UploadedFile };
+export type {
+  CreateQuizPayload,
+  GeneratedQuiz,
+  UploadedFile,
+  QuizPayload,
+  BackendTag,
+};

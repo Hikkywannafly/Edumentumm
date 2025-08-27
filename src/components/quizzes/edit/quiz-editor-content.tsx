@@ -8,7 +8,7 @@ import { useCallback, useEffect, useState } from "react";
 import { QuizDescriptionEditor } from "./quiz-description-editor";
 import { QuizEditorHeader } from "./quiz-editor-header";
 import { QuizQuestionsEditor } from "./quiz-questions-editor";
-import { QuizTagsCategoriesEditor } from "./quiz-tags-categories-editor";
+import { QuizTagsEditor } from "./quiz-tags-categories-editor";
 import { QuizTitleEditor } from "./quiz-title-editor";
 
 export function QuizEditorContent() {
@@ -203,27 +203,6 @@ export function QuizEditorContent() {
     setIsValidForCreation(validateQuizForCreation());
   };
 
-  const handleCategoryChange = (category: string) => {
-    if (quiz) {
-      const currentMetadata = quiz.metadata || {
-        total_questions: quiz.questions.length,
-        total_points: quiz.questions.reduce(
-          (sum, q) => sum + (q.points || 1),
-          0,
-        ),
-        estimated_time: Math.ceil(quiz.questions.length * 1.5),
-        tags: [],
-      };
-
-      updateQuiz({
-        metadata: {
-          ...currentMetadata,
-          category,
-        },
-      });
-    }
-  };
-
   const handleTagsChange = (tags: string[]) => {
     if (quiz) {
       const currentMetadata = quiz.metadata || {
@@ -287,9 +266,7 @@ export function QuizEditorContent() {
           onGenerateAIDescription={handleGenerateAIDescription}
           isGenerating={titleDescriptionGenerator.isGenerating}
         />
-        <QuizTagsCategoriesEditor
-          category={quiz.metadata?.category || ""}
-          onCategoryChange={handleCategoryChange}
+        <QuizTagsEditor
           tags={quiz.metadata?.tags || []}
           onTagsChange={handleTagsChange}
         />

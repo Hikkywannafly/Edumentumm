@@ -2,9 +2,10 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type {
-  CreateQuizPayload,
+  BackendTag,
   GeneratedQuiz,
   QuizCreatorSettings,
+  QuizPayload,
   UseQuizSaverReturn,
 } from "./quiz-creator-types";
 
@@ -22,50 +23,54 @@ export function useQuizSaver(
       quiz: GeneratedQuiz;
       settings: QuizCreatorSettings;
     }): Promise<{ id: number }> => {
-      const payload: CreateQuizPayload = {
+      // Transform tags to new backend format
+      const transformedTags: BackendTag[] = (quiz.metadata?.tags || []).map(
+        (tagName: string) => ({
+          name: tagName,
+          description: `Auto-generated tag for ${tagName}`,
+          icon: "tag",
+          color: "#4285F4", // Default blue color
+        }),
+      );
+
+      const payload: QuizPayload = {
         title: quiz.title,
-        description: quiz.description,
-        userId: 1, // Get from auth context
-        visibility: settings.visibility as any,
-        language: settings.language as any,
-        questionType: settings.questionType as any,
-        numberOfQuestions: settings.numberOfQuestions,
-        mode: settings.mode as any,
+        description: quiz.description || "",
+        thumbnailUrl: undefined, // Could be enhanced later
         difficulty: settings.difficulty as any,
-        task: settings.task as any,
-        parsingMode: settings.parsingMode as any,
-        sourceType: "FILE",
+        estimatedTime: quiz.metadata?.estimated_time || 30,
+        passingScore: 70,
+        maxAttempts: 3,
         isAiGenerated: settings.generationMode === "GENERATE",
-        generationMode: settings.generationMode,
-        fileProcessingMode: settings.fileProcessingMode,
+        aiModel: settings.generationMode === "GENERATE" ? "GPT-4" : undefined,
+        sourceType: "FILE", // Could be dynamic based on settings.sourceType
+        metaTitle: quiz.title,
+        metaDescription: quiz.description || "",
+        canonicalUrl: undefined,
+        keywords: quiz.metadata?.tags || [],
+        visibility: settings.visibility as any,
+        isPremium: false,
         quizData: {
+          introduction: `Quiz about ${quiz.title}`,
+          instructions:
+            "Please read each question carefully and select the best answer.",
           questions: quiz.questions.map((q) => ({
             id: q.id,
             text: q.question,
             type: q.type,
-            difficulty: q.difficulty,
-            points: q.points,
-            explanation: q.explanation,
-            tags: q.tags,
+            points: q.points || 1,
             options:
               q.answers?.map((a) => ({
                 id: a.id,
                 text: a.text,
-                isCorrect: a.isCorrect,
               })) || [],
+            correctAnswer: q.answers?.find((a) => a.isCorrect)?.id || "",
+            explanation: q.explanation || "",
           })),
-          settings: {
-            randomizeQuestions: false,
-            showExplanations: true,
-            timeLimit: null,
-            passingScore: 70,
-          },
+          summary: "Thank you for completing the quiz!",
         },
-        tags: quiz.metadata?.tags || [],
-        estimatedTime: quiz.metadata?.estimated_time || 15,
-        passingScore: 70,
+        tags: transformedTags,
       };
-
       const response = await fetch("/api/quiz/create", {
         method: "POST",
         headers: {
@@ -76,7 +81,10 @@ export function useQuizSaver(
       });
 
       if (!response.ok) {
-        throw new Error("Failed to save quiz");
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(
+          errorData.error || `Failed to save quiz: ${response.status}`,
+        );
       }
 
       return response.json();

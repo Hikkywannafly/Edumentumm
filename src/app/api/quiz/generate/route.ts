@@ -125,7 +125,6 @@ export async function POST(request: NextRequest) {
             ? "auto"
             : settings.language.toLowerCase(),
         filename: files[0]?.name,
-        category: undefined,
         tags: result.questions
           .flatMap((q: any) => q.tags || [])
           .filter(
@@ -177,7 +176,7 @@ export async function POST(request: NextRequest) {
     };
 
     console.log(
-      "✅ Quiz generated successfully with AI:",
+      "Quiz generated successfully with AI:",
       quiz.questions.length,
       "questions",
     );

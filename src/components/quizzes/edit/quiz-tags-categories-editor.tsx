@@ -5,81 +5,52 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { categoriesService } from "@/lib/services/categories.service";
-import { Bot, Plus, Tag, X } from "lucide-react";
+import type { Tag } from "@/types/quiz";
+import { Bot, Plus, Tag as TagIcon, X } from "lucide-react";
 import { useEffect, useState } from "react";
 
-interface QuizTagsCategoriesEditorProps {
-  category?: string;
-  onCategoryChange: (category: string) => void;
-  tags?: string[];
+// Helper function to extract tag name from either string or TagObject
+const getTagName = (tag: Tag): string => {
+  return typeof tag === "string" ? tag : tag.name;
+};
+
+// Helper function to check if tags array includes a tag
+const includesTag = (tags: Tag[], tagName: string): boolean => {
+  return tags.some((tag) => getTagName(tag) === tagName);
+};
+
+// Helper function to convert TagObject array to string array
+const tagsToStringArray = (tags: Tag[]): string[] => {
+  return tags.map(getTagName);
+};
+
+// Helper function to add a string tag to existing tags array
+const addStringTag = (tags: Tag[], newTag: string): Tag[] => {
+  if (!includesTag(tags, newTag)) {
+    return [...tags, newTag];
+  }
+  return tags;
+};
+
+// Helper function to remove a tag by name
+const removeTag = (tags: Tag[], tagName: string): Tag[] => {
+  return tags.filter((tag) => getTagName(tag) !== tagName);
+};
+
+interface QuizTagsEditorProps {
+  tags?: Tag[];
   onTagsChange: (tags: string[]) => void;
-  aiSelectedCategory?: string;
   aiGeneratedTags?: string[];
   showAISelections?: boolean;
 }
 
-export function QuizTagsCategoriesEditor({
-  category = "",
-  onCategoryChange,
+export function QuizTagsEditor({
   tags = [],
   onTagsChange,
-  aiSelectedCategory,
   aiGeneratedTags = [],
   showAISelections = false,
-}: QuizTagsCategoriesEditorProps) {
+}: QuizTagsEditorProps) {
   const [newTag, setNewTag] = useState("");
-  const [availableCategories, setAvailableCategories] = useState<string[]>([]);
-  const [isLoadingCategories, setIsLoadingCategories] = useState(true);
-
-  // Load categories from API/localStorage on mount
-  useEffect(() => {
-    const loadCategories = async () => {
-      try {
-        setIsLoadingCategories(true);
-        const categories = await categoriesService.getCategories();
-        setAvailableCategories(categories);
-      } catch (error) {
-        console.error("Failed to load categories:", error);
-        // Fallback to static categories
-        setAvailableCategories([
-          "Mathematics",
-          "Science",
-          "History",
-          "Literature",
-          "Technology",
-          "Business",
-          "Art",
-          "Music",
-          "Sports",
-          "General Knowledge",
-          "Language Learning",
-          "Programming",
-          "Medicine",
-          "Engineering",
-          "Psychology",
-        ]);
-      } finally {
-        setIsLoadingCategories(false);
-      }
-    };
-
-    loadCategories();
-  }, []);
-
-  // Auto-apply AI selections when they become available
-  useEffect(() => {
-    if (showAISelections && aiSelectedCategory && !category) {
-      onCategoryChange(aiSelectedCategory);
-    }
-  }, [aiSelectedCategory, category, onCategoryChange, showAISelections]);
 
   useEffect(() => {
     if (showAISelections && aiGeneratedTags.length > 0 && tags.length === 0) {
@@ -88,30 +59,29 @@ export function QuizTagsCategoriesEditor({
   }, [aiGeneratedTags, tags, onTagsChange, showAISelections]);
 
   const handleAddTag = () => {
-    if (newTag.trim() && !tags.includes(newTag.trim())) {
-      const updatedTags = [...tags, newTag.trim()];
-      onTagsChange(updatedTags);
+    if (newTag.trim() && !includesTag(tags, newTag.trim())) {
+      const updatedTags = addStringTag(tags, newTag.trim());
+      onTagsChange(tagsToStringArray(updatedTags));
       setNewTag("");
-    }
-  };
-
-  const handleApplyAICategory = () => {
-    if (aiSelectedCategory) {
-      onCategoryChange(aiSelectedCategory);
     }
   };
 
   const handleApplyAITags = () => {
     if (aiGeneratedTags.length > 0) {
       // Merge AI tags with existing tags, avoiding duplicates
-      const mergedTags = [...new Set([...tags, ...aiGeneratedTags])];
-      onTagsChange(mergedTags);
+      let mergedTags = [...tags];
+      for (const tag of aiGeneratedTags) {
+        if (!includesTag(mergedTags, tag)) {
+          mergedTags = addStringTag(mergedTags, tag);
+        }
+      }
+      onTagsChange(tagsToStringArray(mergedTags));
     }
   };
 
   const handleRemoveTag = (tagToRemove: string) => {
-    const updatedTags = tags.filter((tag) => tag !== tagToRemove);
-    onTagsChange(updatedTags);
+    const updatedTags = removeTag(tags, tagToRemove);
+    onTagsChange(tagsToStringArray(updatedTags));
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -125,60 +95,11 @@ export function QuizTagsCategoriesEditor({
     <Card className="border-none">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Tag className="h-5 w-5" />
-          Quiz Tags & Category
+          <TagIcon className="h-5 w-5" />
+          Quiz Tags
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Category Selection */}
-        <div className="space-y-2">
-          <Label className="font-medium text-sm">Category</Label>
-
-          {/* AI Suggestion Banner */}
-          {showAISelections &&
-            aiSelectedCategory &&
-            aiSelectedCategory !== category && (
-              <div className="flex items-center gap-2 rounded-md border border-blue-200 bg-blue-50 p-3">
-                <Bot className="h-4 w-4 text-blue-600" />
-                <span className="text-blue-800 text-sm">
-                  AI suggests: <strong>{aiSelectedCategory}</strong>
-                </span>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={handleApplyAICategory}
-                  className="ml-auto h-7 px-2 text-xs"
-                >
-                  Apply
-                </Button>
-              </div>
-            )}
-
-          <Select
-            value={category}
-            onValueChange={onCategoryChange}
-            disabled={isLoadingCategories}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue
-                placeholder={
-                  isLoadingCategories
-                    ? "Loading categories..."
-                    : "Select a category for this quiz"
-                }
-              />
-            </SelectTrigger>
-            <SelectContent>
-              {availableCategories.map((cat) => (
-                <SelectItem key={cat} value={cat}>
-                  {cat}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
         {/* Tags Management */}
         <div className="space-y-2">
           <Label className="font-medium text-sm">Tags</Label>
@@ -208,15 +129,16 @@ export function QuizTagsCategoriesEditor({
                 {aiGeneratedTags.map((tag) => (
                   <Badge
                     key={tag}
-                    variant={tags.includes(tag) ? "default" : "secondary"}
+                    variant={includesTag(tags, tag) ? "default" : "secondary"}
                     className="text-xs"
                   >
                     {tag}
-                    {!tags.includes(tag) && (
+                    {!includesTag(tags, tag) && (
                       <button
                         onClick={() => {
-                          if (!tags.includes(tag)) {
-                            onTagsChange([...tags, tag]);
+                          if (!includesTag(tags, tag)) {
+                            const updatedTags = addStringTag(tags, tag);
+                            onTagsChange(tagsToStringArray(updatedTags));
                           }
                         }}
                         className="ml-1 hover:text-green-700"
@@ -235,23 +157,37 @@ export function QuizTagsCategoriesEditor({
           {/* Display existing tags */}
           {tags.length > 0 && (
             <div className="mb-3 flex flex-wrap gap-2">
-              {tags.map((tag) => (
-                <Badge
-                  key={tag}
-                  variant="secondary"
-                  className="flex items-center gap-1"
-                >
-                  {tag}
-                  <button
-                    onClick={() => handleRemoveTag(tag)}
-                    className="ml-1 hover:text-red-500"
-                    type="button"
-                    aria-label={`Remove tag ${tag}`}
+              {tags.map((tag, index) => {
+                const tagName = getTagName(tag);
+                const tagColor =
+                  typeof tag === "object" && tag.color ? tag.color : undefined;
+                return (
+                  <Badge
+                    key={`${tagName}-${index}`}
+                    variant="secondary"
+                    className="flex items-center gap-1"
+                    style={
+                      tagColor
+                        ? {
+                            backgroundColor: `${tagColor}20`,
+                            borderColor: tagColor,
+                            color: tagColor,
+                          }
+                        : {}
+                    }
                   >
-                    <X className="h-3 w-3" />
-                  </button>
-                </Badge>
-              ))}
+                    {tagName}
+                    <button
+                      onClick={() => handleRemoveTag(tagName)}
+                      className="ml-1 hover:text-red-500"
+                      type="button"
+                      aria-label={`Remove tag ${tagName}`}
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                );
+              })}
             </div>
           )}
 
@@ -300,44 +236,18 @@ export function QuizTagsCategoriesEditor({
                 size="sm"
                 className="h-6 px-2 text-xs"
                 onClick={() => {
-                  if (!tags.includes(suggestedTag)) {
-                    onTagsChange([...tags, suggestedTag]);
+                  if (!includesTag(tags, suggestedTag)) {
+                    const updatedTags = addStringTag(tags, suggestedTag);
+                    onTagsChange(tagsToStringArray(updatedTags));
                   }
                 }}
-                disabled={tags.includes(suggestedTag)}
+                disabled={includesTag(tags, suggestedTag)}
               >
                 {suggestedTag}
               </Button>
             ))}
           </div>
         </div>
-
-        {/* Debug Info */}
-        {/* {process.env.NODE_ENV === "development" && (
-          <div className="mt-4 rounded bg-gray-100 p-2 text-gray-600 text-xs">
-            <strong>Debug:</strong>
-            <br />
-            AI Category: {aiSelectedCategory || "None"}
-            <br />
-            AI Tags: [{aiGeneratedTags.join(", ")}]
-            <br />
-            Quiz Category: {quizData?.metadata?.category || "None"}
-            <br />
-            Quiz Metadata Tags: [
-            {quizData?.metadata?.tags?.join(", ") || "None"}]
-            <br />
-            Question Tags: [
-            {quizData?.questions
-              ?.flatMap((q) => q.tags || [])
-              .filter((tag, index, arr) => arr.indexOf(tag) === index)
-              .join(", ") || "None"}
-            ]
-            <br />
-            Current Tags: [{tags.join(", ") || "None"}]
-            <br />
-            Show AI: {showAISelections ? "Yes" : "No"}
-          </div>
-        )} */}
       </CardContent>
     </Card>
   );

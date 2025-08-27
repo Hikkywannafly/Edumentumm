@@ -319,7 +319,11 @@
         "fast": "Nhanh",
         "balanced": "Cân bằng",
         "thorough": "Kỹ lưỡng",
+        "fastModeDescription": "Xử lý nhanh, bỏ qua hình ảnh và bảng phức tạp",
+        "balancedModeDescription": "Cân bằng tốt giữa tốc độ và độ chính xác",
+        "thoroughModeDescription": "Xử lý hoàn chỉnh, bao gồm tất cả nội dung",
         "fastModeWarning": "Chế độ nhanh bỏ qua hình ảnh và bảng. Sử dụng chế độ cân bằng nếu tài liệu có chúng, nhưng xử lý sẽ mất nhiều thời gian hơn.",
+        "thoroughModeInfo": "Chế độ kỹ lưỡng xử lý tất cả nội dung bao gồm bảng và hình ảnh. Chất lượng tốt nhất nhưng mất nhiều thời gian hơn.",
         "generationMode": "Chế độ tạo",
         "modeGenerate": "Tạo mới",
         "modeExtract": "Trích xuất",
@@ -564,6 +568,9 @@
         "fast": "Nhanh",
         "balanced": "Cân bằng",
         "thorough": "Kỹ lưỡng",
+        "fastModeDescription": "Xử lý nhanh, bỏ qua hình ảnh và bảng phức tạp",
+        "balancedModeDescription": "Cân bằng tốt giữa tốc độ và độ chính xác",
+        "thoroughModeDescription": "Xử lý hoàn chỉnh, bao gồm tất cả nội dung",
         "fastModeWarning": "Chế độ nhanh bỏ qua hình ảnh và bảng. Sử dụng chế độ cân bằng nếu tài liệu có chúng, nhưng xử lý sẽ mất nhiều thời gian hơn."
       },
       "supportedFormats": {

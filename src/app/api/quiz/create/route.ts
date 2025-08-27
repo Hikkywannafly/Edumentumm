@@ -5,58 +5,60 @@ import axios from "axios";
 import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
-const CreateQuizSchema = z.object({
+// Update schema to match new backend format
+const NewBackendQuizSchema = z.object({
   title: z.string().min(1),
   description: z.string().optional(),
-  userId: z.number(),
-  categoryId: z.number().optional(),
-  visibility: z.string(),
-  language: z.string(),
-  questionType: z.string(),
-  numberOfQuestions: z.number(),
-  mode: z.string(),
-  difficulty: z.string(),
-  task: z.string(),
-  parsingMode: z.string(),
-  sourceType: z.string(),
+  thumbnailUrl: z.string().optional(),
+  difficulty: z.enum(["EASY", "MEDIUM", "HARD"]),
+  estimatedTime: z.number(),
+  passingScore: z.number(),
+  maxAttempts: z.number().optional(),
   isAiGenerated: z.boolean(),
-  generationMode: z.string().optional(),
-  fileProcessingMode: z.string().optional(),
+  aiModel: z.string().optional(),
+  sourceType: z.string(),
+  metaTitle: z.string().optional(),
+  metaDescription: z.string().optional(),
+  // canonicalUrl: z.string().optional(),
+  keywords: z.array(z.string()).optional(),
+  visibility: z.enum(["PUBLIC", "PRIVATE", "UNLISTED", "PREMIUM"]),
+  isPremium: z.boolean().optional(),
   quizData: z.object({
+    introduction: z.string().optional(),
+    instructions: z.string().optional(),
     questions: z.array(
       z.object({
-        id: z.string(),
+        id: z.union([z.string(), z.number()]),
         text: z.string(),
         type: z.string(),
-        difficulty: z.string().optional(),
-        points: z.number().optional(),
-        explanation: z.string().optional(),
-        tags: z.array(z.string()).optional(),
+        points: z.number(),
         options: z.array(
           z.object({
             id: z.string(),
             text: z.string(),
-            isCorrect: z.boolean(),
           }),
         ),
+        correctAnswer: z.string(),
+        explanation: z.string().optional(),
       }),
     ),
-    settings: z.object({
-      randomizeQuestions: z.boolean().optional(),
-      showExplanations: z.boolean().optional(),
-      timeLimit: z.number().nullable().optional(),
-      passingScore: z.number().optional(),
-    }),
+    summary: z.string().optional(),
   }),
-  tags: z.array(z.string()).optional(),
-  estimatedTime: z.number().optional(),
-  passingScore: z.number(),
+  tags: z.array(
+    z.object({
+      id: z.number().optional(),
+      name: z.string(),
+      description: z.string().optional(),
+      icon: z.string().optional(),
+      color: z.string().optional(),
+    }),
+  ),
 });
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const validated = CreateQuizSchema.safeParse(body);
+    const validated = NewBackendQuizSchema.safeParse(body);
 
     if (!validated.success) {
       return NextResponse.json(
@@ -89,17 +91,17 @@ export async function POST(request: NextRequest) {
           .join("\n");
 
         const questionsForAI = data.quizData.questions.map((q) => ({
-          id: q.id,
+          id: String(q.id),
           question: q.text,
           type: q.type as QuestionType,
-          difficulty: q.difficulty as Difficulty | undefined,
+          difficulty: "MEDIUM" as Difficulty,
           points: q.points || 1,
           explanation: q.explanation || "",
-          tags: q.tags || [],
+          tags: [],
           answers: q.options.map((option, index) => ({
             id: option.id,
             text: option.text,
-            isCorrect: option.isCorrect,
+            isCorrect: option.id === q.correctAnswer,
             order_index: index,
             explanation: "",
           })),
@@ -109,12 +111,10 @@ export async function POST(request: NextRequest) {
         const titleDescResult = await generateQuizTitleDescription({
           content: questionsContent,
           questions: questionsForAI,
-          isExtractMode: data.generationMode === "EXTRACT",
-          targetLanguage:
-            data.language === "AUTO" ? "auto" : data.language.toLowerCase(),
-          filename: undefined, // No filename for create route
-          category: undefined, // Can be enhanced to use categoryId if needed
-          tags: data.tags || [],
+          isExtractMode: false, // Always false for create route
+          targetLanguage: "auto",
+          filename: undefined,
+          tags: data.tags.map((t) => t.name),
         });
 
         if (
@@ -124,14 +124,6 @@ export async function POST(request: NextRequest) {
         ) {
           finalTitle = titleDescResult.title;
           finalDescription = titleDescResult.description;
-          console.log("✅ AI-generated title and description:", {
-            title: finalTitle,
-            description: finalDescription,
-          });
-        } else {
-          console.warn(
-            "⚠️ Failed to generate AI title/description, using provided values",
-          );
         }
       } catch (titleError) {
         console.warn(
@@ -141,64 +133,33 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Transform the validated data to match the backend API format
-    // Using the exact same format as the working auto-save route
+    // Send directly to new backend format
     const backendPayload = {
       title: finalTitle,
       description: finalDescription,
-      user_id: data.userId || 1, // Note: user_id not userId
-      categoryId: data.categoryId || 1,
-      visibility: data.visibility,
-      language: data.language,
-      questionType: data.questionType,
-      numberOfQuestions: data.numberOfQuestions,
-      mode: data.mode,
+      thumbnailUrl: data.thumbnailUrl,
       difficulty: data.difficulty,
-      task: data.task,
-      parsingMode: data.parsingMode,
-      sourceType: data.sourceType,
+      estimatedTime: data.estimatedTime,
+      passingScore: data.passingScore,
+      maxAttempts: data.maxAttempts || 3,
       isAiGenerated: data.isAiGenerated,
-      aiModel: null, // Add missing field from auto-save
-      generationMode: data.generationMode,
-      fileProcessingMode: data.fileProcessingMode,
-      quizData: {
-        questions: data.quizData.questions.map((q) => ({
-          id: q.id,
-          question: q.text, // Map 'text' to 'question'
-          type: q.type,
-          difficulty: q.difficulty,
-          points: q.points || 1,
-          explanation: q.explanation || "",
-          tags: q.tags || [],
-          answers: q.options.map((option, index) => ({
-            id: option.id,
-            text: option.text,
-            isCorrect: option.isCorrect,
-            order_index: index,
-          })),
-        })),
-        settings: data.quizData.settings || {},
-        metadata: {
-          total_questions: data.quizData.questions.length,
-          total_points: data.quizData.questions.reduce(
-            (sum, q) => sum + (q.points || 1),
-            0,
-          ),
-          estimated_time: data.estimatedTime || 15,
-          tags: data.tags || [],
-        },
-      },
-      tags: data.tags || [],
-      estimatedTime: data.estimatedTime || 10, // Match auto-save default
-      passingScore: data.passingScore || 70, // Match auto-save default
+      aiModel: data.aiModel,
+      sourceType: data.sourceType,
+      metaTitle: data.metaTitle || finalTitle,
+      metaDescription: data.metaDescription || finalDescription,
+      // canonicalUrl: data.canonicalUrl,
+      keywords: data.keywords || [],
+      visibility: data.visibility,
+      isPremium: data.isPremium || false,
+      quizData: data.quizData,
+      tags: data.tags,
     };
 
     console.log(
-      "Creating quiz with payload:",
+      "🚀 Sending to new backend API:",
       JSON.stringify(backendPayload, null, 2),
     );
 
-    // Call the backend API directly using apiClient like the auto-save route
     const response = await apiClient.post("/student/quizzes", backendPayload, {
       headers: {
         Authorization: authHeader,
@@ -206,8 +167,6 @@ export async function POST(request: NextRequest) {
     });
 
     const savedQuiz = response.data;
-
-    console.log("✅ Quiz created successfully:", savedQuiz.id);
 
     return NextResponse.json({
       success: true,

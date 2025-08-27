@@ -9,7 +9,6 @@ import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { AIGeneratedUploader } from "./ai-generated-uploader";
 import { ProcessingScreen } from "./processing-screen";
-import { TextContentUploader } from "./text-content-uploader";
 export function QuizCreator() {
   const t = useTranslations("Quizzes");
   const [activeTab, setActiveTab] = useState("ai-generated");
@@ -67,7 +66,7 @@ export function QuizCreator() {
               isDone={processingDone}
               hasError={processingError}
               onComplete={hideProcessing}
-              showSuccessFor={2500} // Match the uploader timeout for smooth transition
+              showSuccessFor={2500}
               autoNavigate={!processingError}
             />
           </div>
@@ -126,10 +125,10 @@ export function QuizCreator() {
                 />
               </TabsContent> */}
               <TabsContent value="text-content" className="mt-6 border-none">
-                <TextContentUploader
+                {/* <TextContentUploader
                   onProcessingStart={handleProcessingStart}
                   onProcessingDone={handleProcessingDone}
-                />
+                /> */}
               </TabsContent>
             </Tabs>
           </div>

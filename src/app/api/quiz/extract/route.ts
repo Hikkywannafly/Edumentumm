@@ -119,7 +119,6 @@ export async function POST(request: NextRequest) {
             ? "auto"
             : settings.language.toLowerCase(),
         filename: files[0]?.name,
-        category: undefined, // Can be added if available in settings
         tags: result.questions
           .flatMap((q: any) => q.tags || [])
           .filter(

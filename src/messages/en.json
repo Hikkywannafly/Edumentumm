@@ -259,7 +259,11 @@
         "fast": "Fast",
         "balanced": "Balanced",
         "thorough": "Thorough",
+        "fastModeDescription": "Quick processing, skips images and complex tables",
+        "balancedModeDescription": "Good balance of speed and accuracy",
+        "thoroughModeDescription": "Complete processing, includes all content",
         "fastModeWarning": "Fast mode skips images and tables. Use Balanced mode if material has them, but processing will take longer.",
+        "thoroughModeInfo": "Thorough mode processes all content including tables and images. This provides the best quality but takes longer.",
         "generationMode": "Generation Mode",
         "modeGenerate": "Generate",
         "modeExtract": "Extract",
@@ -564,6 +568,9 @@
         "fast": "Fast",
         "balanced": "Balanced",
         "thorough": "Thorough",
+        "fastModeDescription": "Quick processing, skips images and complex tables",
+        "balancedModeDescription": "Good balance of speed and accuracy",
+        "thoroughModeDescription": "Complete processing, includes all content",
         "fastModeWarning": "Fast mode skips images and tables. Use Balanced mode if material has them, but processing will take longer."
       },
       "supportedFormats": {

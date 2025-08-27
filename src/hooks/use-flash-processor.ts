@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useState } from "react";
-import { FileParserService } from "../lib/services/file-parser.service";
+import { FileParserService } from "../lib/services/file-parser-old.service";
 import {
   type GeneratedFlashcardSet,
   type UploadedFile,

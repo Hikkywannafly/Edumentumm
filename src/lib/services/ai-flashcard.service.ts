@@ -18,7 +18,6 @@ function makeRequestKey(
     timestamp: Math.floor(Date.now() / 60000), // 1-minute cache window
   });
 
-  // FNV-1a hash with better distribution
   let hash = 2166136261;
   for (let i = 0; i < raw.length; i++) {
     hash ^= raw.charCodeAt(i);

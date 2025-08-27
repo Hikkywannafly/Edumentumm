@@ -5,7 +5,6 @@ import type { FileForAI } from "./file-to-ai.service";
 
 const inFlight = new Map<string, Promise<AIResponse>>();
 
-// Strong hash key generation using crypto-like approach
 function makeRequestKey(
   content: string,
   model: string,
@@ -25,7 +24,6 @@ function makeRequestKey(
     hash = (hash * 16777619) >>> 0; // Use prime multiplier
   }
 
-  // Add content length and model as additional entropy
   hash ^= content.length;
   hash ^= model.length << 8;
 
@@ -269,6 +267,22 @@ async function callServerAPI(
         return await generateQuestionsServerSide(payload);
       }
 
+      if (endpoint === "extract-questions-ai") {
+        const { POST } = await import(
+          "@/app/api/ai/extract-questions-ai/route"
+        );
+        const request = new Request(
+          "http://localhost:3000/api/ai/extract-questions-ai",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          },
+        );
+        const response = await POST(request as any);
+        return await response.json();
+      }
+
       // For other endpoints, return mock data for now
       console.warn(
         `⚠️ Server-side AI call not implemented for endpoint: ${endpoint}`,
@@ -440,7 +454,6 @@ export async function generateQuizTitleDescription(params: {
   isExtractMode?: boolean;
   targetLanguage?: string;
   filename?: string;
-  category?: string;
   tags?: string[];
   modelName?: string;
 }): Promise<{
@@ -455,7 +468,6 @@ export async function generateQuizTitleDescription(params: {
     isExtractMode,
     targetLanguage = "auto",
     filename,
-    category,
     tags,
     modelName = DEFAULT_MODEL,
   } = params;
@@ -479,7 +491,7 @@ export async function generateQuizTitleDescription(params: {
       `Questions: ${questions.length}`,
       `Source: ${isExtractMode ? "Extracted from document" : "AI Generated"}`,
       filename ? `File: ${filename.replace(/\.[^/.]+$/, "")}` : "",
-      category ? `Topic: ${category}` : "",
+      // category ? `Topic: ${category}` : "",
       tags && tags.length ? `Tags: ${tags.join(", ")}` : "",
     ]
       .filter(Boolean)
@@ -887,17 +899,7 @@ async function processQuestionsWithAI(
           ? "exact"
           : "max";
 
-      // Get available categories for AI selection if enabled
       const availableCategories = "";
-      // Temporarily disabled due to server-side URL issues
-      // if (settings.includeCategories !== false) {
-      //   try {
-      //     availableCategories = await categoriesService.getCategoriesForAI();
-      //   } catch (error) {
-      //     console.warn("Failed to fetch categories for AI:", error);
-      //     availableCategories = "No categories available";
-      //   }
-      // }
 
       const normalizedSettings = {
         ...settings,

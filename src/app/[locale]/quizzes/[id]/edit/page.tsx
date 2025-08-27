@@ -16,26 +16,7 @@ export default function QuizEditorPage() {
   const quizId = Number.parseInt(params.id as string);
   const t = useTranslations("Quizzes");
 
-  const {
-    quiz,
-    isLoading,
-    // isSaving,
-    isError,
-    error,
-    // saveQuiz,
-    // hasUnsavedChanges,
-    // isValid,
-  } = useQuizEditor(quizId);
-
-  // const handleSave = async () => {
-  //   try {
-  //     await saveQuiz();
-  //     toast.success("Quiz saved successfully!");
-  //   } catch (error) {
-  //     toast.error("Failed to save quiz");
-  //     console.error("Save error:", error);
-  //   }
-  // };
+  const { quiz, isLoading, isError, error } = useQuizEditor(quizId);
 
   if (isLoading) {
     return (
@@ -87,23 +68,6 @@ export default function QuizEditorPage() {
                   {t("edit.backToQuizzes")}
                 </Button>
               </LocalizedLink>
-              {/* <Button
-                onClick={handleSave}
-                disabled={!hasUnsavedChanges || !isValid || isSaving}
-                size="sm"
-              >
-                {isSaving ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    <Save className="mr-2 h-4 w-4" />
-                    Save Changes
-                  </>
-                )}
-              </Button> */}
             </div>
           }
           showThemeToggle={true}
