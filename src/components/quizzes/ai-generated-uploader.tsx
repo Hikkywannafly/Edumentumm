@@ -169,7 +169,7 @@ export function AIGeneratedUploader({
       setTimeout(() => {
         reset();
         goQuizEdit(result.id);
-      }, 2600);
+      }, 3000); // Increased delay to ensure backend processing is complete
     } catch (error) {
       console.error("Error processing quiz:", error);
       onProcessingDone?.(false);

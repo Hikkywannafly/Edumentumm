@@ -61,32 +61,6 @@ export type QuizCreationType =
 
 export type QuizStatus = "DRAFT" | "PUBLISHED" | "ARCHIVED";
 
-// ===== ENUM CONSTANTS (optional, for better IntelliSense) =====
-export const VISIBILITY = {
-  PRIVATE: "PRIVATE",
-  PUBLIC: "PUBLIC",
-  UNLISTED: "UNLISTED",
-} as const;
-
-export const DIFFICULTY = {
-  EASY: "EASY",
-  MEDIUM: "MEDIUM",
-  HARD: "HARD",
-} as const;
-
-export const QUESTION_TYPE = {
-  MULTIPLE_CHOICE: "MULTIPLE_CHOICE",
-  TRUE_FALSE: "TRUE_FALSE",
-  FILL_BLANK: "FILL_BLANK",
-  FREE_RESPONSE: "FREE_RESPONSE",
-} as const;
-
-export const QUIZ_MODE = {
-  QUIZ: "QUIZ",
-  FLASHCARD: "FLASHCARD",
-  STUDY_GUIDE: "STUDY_GUIDE",
-} as const;
-
 // ===== CORE INTERFACES =====
 export interface Answer {
   id: string;
@@ -183,36 +157,6 @@ export interface QuizData {
   metadata: QuizMetadata;
 }
 
-// ===== API PAYLOAD INTERFACES (for database) =====
-export interface QuizPayloadOption {
-  id: string | number;
-  text: string;
-  isCorrect: boolean;
-}
-
-export interface QuizPayloadQuestion {
-  id: string | number;
-  text: string; // Different from internal 'question' field
-  type: QuestionType;
-  difficulty?: Difficulty;
-  points?: number;
-  explanation?: string;
-  tags?: string[];
-  options: QuizPayloadOption[]; // Different from internal 'answers' field
-}
-
-export interface QuizPayloadSettings {
-  randomizeQuestions?: boolean;
-  showExplanations?: boolean;
-  timeLimit?: number | null;
-  passingScore?: number;
-}
-
-export interface QuizPayloadData {
-  questions: QuizPayloadQuestion[];
-  settings: QuizPayloadSettings;
-}
-
 // ===== CREATE QUIZ PAYLOAD (for API) =====
 export interface CreateQuizPayload {
   title: string;
@@ -233,54 +177,42 @@ export interface CreateQuizPayload {
   aiModel?: AIModel;
   generationMode?: GenerationMode;
   fileProcessingMode?: FileProcessingMode;
-  quizData: QuizPayloadData;
+  quizData: {
+    questions: QuestionData[];
+    settings?: any;
+    metadata?: any;
+  };
   tags?: string[];
   estimatedTime?: number;
   passingScore?: number;
 }
 
 // ===== API REQUEST/RESPONSE =====
-export interface CreateQuizRequest {
-  title: string;
-  description?: string;
-  category_id?: number;
-  quiz_data: QuizData;
-}
+// export interface CreateQuizRequest {
+//   title: string;
+//   description?: string;
+//   category_id?: number;
+//   quiz_data: QuizData;
+// }
 
-export interface UpdateQuizRequest {
-  id: number;
-  title?: string;
-  description?: string;
-  category_id?: number;
-  quiz_data?: Partial<QuizData>;
-}
+// export interface UpdateQuizRequest {
+//   id: number;
+//   title?: string;
+//   description?: string;
+//   category_id?: number;
+//   quiz_data?: Partial<QuizData>;
+// }
 
-export interface QuizResponse {
-  id: number;
-  title: string;
-  description?: string;
-  user_id: number;
-  category_id?: number;
-  quiz_data: QuizData;
-  created_at: string;
-  updated_at: string;
-}
-
-// ===== OPTIONS INTERFACES =====
-export interface QuizSettingsOptions {
-  isAiGenerated?: boolean;
-  generationMode?: GenerationMode;
-  fileProcessingMode?: FileProcessingMode;
-  visibility?: Visibility;
-  language?: Language;
-  questionType?: QuestionType | "MIXED";
-  mode?: QuizMode;
-  difficulty?: Difficulty;
-  sourceType?: SourceType;
-  sourceContent?: string;
-  aiModel?: AIModel;
-  userId: number;
-}
+// export interface QuizResponse {
+//   id: number;
+//   title: string;
+//   description?: string;
+//   user_id: number;
+//   category_id?: number;
+//   quiz_data: QuizData;
+//   created_at: string;
+//   updated_at: string;
+// }
 
 // ===== LEGACY INTERFACES (for backward compatibility) =====
 export interface QuestionData {
@@ -296,63 +228,77 @@ export interface QuestionData {
 }
 
 // ===== BACKEND COMPATIBLE TYPES =====
-export interface BackendQuizEntity {
-  id?: number;
-  title: string;
-  description?: string;
-  userId?: number;
-  categoryId?: number;
-  visibility: Visibility;
-  language: Language;
-  questionType: QuestionType | "MIXED";
-  numberOfQuestions: number;
-  mode: QuizMode;
-  difficulty: Difficulty;
-  task: string;
-  parsingMode: ParsingMode;
-  sourceType?: SourceType;
-  sourceContent?: string;
-  isAiGenerated: boolean;
-  aiModel?: string;
-  generationMode?: GenerationMode;
-  fileProcessingMode?: FileProcessingMode;
-  quizData: Map<string, any>; // JSONB field
-  tags?: string[];
-  estimatedTime?: number;
-  passingScore: number;
-  totalQuestions?: number;
-  totalPoints?: number;
-  createdAt?: string;
-  updatedAt?: string;
+export interface BackendQuestionOption {
+  id: string;
+  text: string;
 }
 
-export interface AutoSaveQuizPayload {
+export interface BackendQuestion {
+  id: string;
+  text: string;
+  type: QuestionType;
+  points: number;
+  options?: BackendQuestionOption[]; // Make optional to handle missing data
+  explanation?: string;
+  correctAnswer?: string; // ID of the correct option, also make optional
+}
+
+export interface BackendQuizData {
+  summary?: string;
+  questions?: BackendQuestion[]; // Make optional to handle missing data
+  instructions?: string;
+  introduction?: string;
+}
+
+export interface BackendUser {
+  userId: number;
+  username: string;
+  email: string;
+  roles: Array<{ id: number; name: string }>;
+  isActive: boolean;
+  imageUrl?: string | null;
+}
+
+export interface BackendQuizEntity {
+  id: number;
   title: string;
+  slug: string;
   description?: string;
-  userId?: number;
-  categoryId?: number;
-  visibility: Visibility;
-  language: Language;
-  questionType: QuestionType | "MIXED";
-  numberOfQuestions: number;
-  mode: QuizMode;
+  thumbnailUrl?: string | null;
+  user: BackendUser;
+  originalQuizId?: number | null;
+  quizData?: BackendQuizData; // Make optional to handle missing data
   difficulty: Difficulty;
-  task: string;
-  parsingMode: ParsingMode;
-  sourceType: SourceType;
-  sourceContent?: string;
+  estimatedTime: number;
+  totalQuestions: number;
+  totalPoints: number;
+  passingScore: number;
+  maxAttempts: number;
   isAiGenerated: boolean;
   aiModel?: string;
-  generationMode: GenerationMode;
-  fileProcessingMode: FileProcessingMode;
-  quizData: {
-    questions: QuestionData[];
-    settings: any;
-    metadata: any;
-  };
-  tags: string[];
-  estimatedTime: number;
-  passingScore: number;
+  sourceType?: SourceType;
+  generationPrompt?: string | null;
+  metaTitle?: string;
+  metaDescription?: string;
+  canonicalUrl?: string | null;
+  keywords: string[];
+  viewCount?: number | null;
+  attemptCount?: number | null;
+  completionCount?: number | null;
+  avgScore?: number | null;
+  avgCompletionTime?: number | null;
+  bookmarkCount?: number | null;
+  shareCount?: number | null;
+  visibility: Visibility;
+  status: QuizStatus;
+  isFeatured?: boolean | null;
+  isTrending?: boolean | null;
+  isPremium: boolean;
+  tags?: (string | TagObject)[] | null; // Can be array of strings or TagObjects
+  publishedAt?: string | null;
+  archivedAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface GeneratedQuiz {
@@ -369,7 +315,6 @@ export interface GeneratedQuiz {
     subject?: string;
     grade_level?: string;
   };
-  // Add backend compatibility
   savedQuizId?: number;
   isAutoSaved?: boolean;
   lastSavedAt?: string;

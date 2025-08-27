@@ -1,7 +1,6 @@
 "use client";
 
 import ThinLayout from "@/components/layout/thin-layout";
-import { useGenerateQuizTitleDescription } from "@/hooks/quiz/use-generate-quiz-title-description";
 import { useQuizEditor } from "@/hooks/quiz/use-quiz-editor";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
@@ -29,8 +28,6 @@ export function QuizEditorContent() {
     moveQuestion,
     hasUnsavedChanges,
   } = useQuizEditor(quizId);
-
-  const titleDescriptionGenerator = useGenerateQuizTitleDescription();
 
   const currentTitle = quiz?.title || "";
   const currentDescription = quiz?.description || "";
@@ -70,7 +67,13 @@ export function QuizEditorContent() {
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <div className="text-lg">Loading quiz...</div>
+        <div className="space-y-4 text-center">
+          <div className="mx-auto h-8 w-8 animate-spin rounded-full border-blue-500 border-b-2" />
+          <div className="text-lg">Loading quiz...</div>
+          <div className="text-muted-foreground text-sm">
+            This may take a moment if the quiz was just created.
+          </div>
+        </div>
       </div>
     );
   }
@@ -86,12 +89,22 @@ export function QuizEditorContent() {
     );
   }
 
-  // No quiz found
   if (!quiz) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <div className="text-lg">
-          No quiz data found. Please go back and upload files first.
+        <div className="space-y-4 text-center">
+          <div className="text-lg">No quiz data found.</div>
+          <div className="text-muted-foreground text-sm">
+            If you just created this quiz, it might still be processing. Please
+            wait a moment and refresh the page.
+          </div>
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            className="rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
+          >
+            Refresh Page
+          </button>
         </div>
       </div>
     );
@@ -104,51 +117,6 @@ export function QuizEditorContent() {
   const handleUpdateDescription = (newDescription: string) => {
     updateQuiz({ description: newDescription });
   };
-
-  // AI generation functions
-  const handleGenerateAITitle = useCallback(async () => {
-    if (!quiz?.questions?.length) {
-      console.warn("No questions available for title generation");
-      return;
-    }
-
-    try {
-      const content = quiz.questions.map((q) => q.question).join("\n");
-      await titleDescriptionGenerator.generateTitleDescription(
-        content,
-        quiz.questions,
-        {
-          targetLanguage: "auto",
-          category: quiz.metadata?.category,
-          tags: quiz.metadata?.tags,
-        },
-      );
-    } catch (error) {
-      console.error("Failed to generate AI title:", error);
-    }
-  }, [quiz, titleDescriptionGenerator]);
-
-  const handleGenerateAIDescription = useCallback(async () => {
-    if (!quiz?.questions?.length) {
-      console.warn("No questions available for description generation");
-      return;
-    }
-
-    try {
-      const content = quiz.questions.map((q) => q.question).join("\n");
-      await titleDescriptionGenerator.generateTitleDescription(
-        content,
-        quiz.questions,
-        {
-          targetLanguage: "auto",
-          category: quiz.metadata?.category,
-          tags: quiz.metadata?.tags,
-        },
-      );
-    } catch (error) {
-      console.error("Failed to generate AI description:", error);
-    }
-  }, [quiz, titleDescriptionGenerator]);
 
   const handleUpdateQuestion = (updatedQuestion: any) => {
     updateQuestion(updatedQuestion.id, updatedQuestion);
@@ -257,14 +225,10 @@ export function QuizEditorContent() {
         <QuizTitleEditor
           title={currentTitle}
           onTitleChange={handleUpdateTitle}
-          onGenerateAITitle={handleGenerateAITitle}
-          isGenerating={titleDescriptionGenerator.isGenerating}
         />
         <QuizDescriptionEditor
           description={currentDescription}
           onDescriptionChange={handleUpdateDescription}
-          onGenerateAIDescription={handleGenerateAIDescription}
-          isGenerating={titleDescriptionGenerator.isGenerating}
         />
         <QuizTagsEditor
           tags={quiz.metadata?.tags || []}
