@@ -137,7 +137,6 @@ export const generateQuizTitleDescription = async (
       isExtractMode: options?.isExtractMode ?? false,
       targetLanguage: options?.targetLanguage || "auto",
       filename: options?.filename,
-      category: options?.category,
       tags: options?.tags,
     });
 
