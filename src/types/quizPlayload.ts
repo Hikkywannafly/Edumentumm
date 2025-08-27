@@ -1,4 +1,14 @@
-import type { Difficulty, QuestionType, SourceType, Visibility } from "./quiz";
+import type {
+  Difficulty,
+  FileProcessingMode,
+  GenerationMode,
+  Language,
+  ParsingMode,
+  QuestionType,
+  QuizMode,
+  SourceType,
+  Visibility,
+} from "./quiz";
 export interface BackendTag {
   id?: number;
   name: string;
@@ -62,4 +72,34 @@ export interface BackendQuizResponse {
     icon?: string;
     color?: string;
   }>;
+}
+
+export interface BackendQuizEntity {
+  id?: number;
+  title: string;
+  description?: string;
+  userId?: number;
+  categoryId?: number;
+  visibility: Visibility;
+  language: Language;
+  questionType: QuestionType | "MIXED";
+  numberOfQuestions: number;
+  mode: QuizMode;
+  difficulty: Difficulty;
+  task: string;
+  parsingMode: ParsingMode;
+  sourceType?: SourceType;
+  sourceContent?: string;
+  isAiGenerated: boolean;
+  aiModel?: string;
+  generationMode?: GenerationMode;
+  fileProcessingMode?: FileProcessingMode;
+  quizData: Map<string, any>; // JSONB field
+  tags?: string[];
+  estimatedTime?: number;
+  passingScore: number;
+  totalQuestions?: number;
+  totalPoints?: number;
+  createdAt?: string;
+  updatedAt?: string;
 }

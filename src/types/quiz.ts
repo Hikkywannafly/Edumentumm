@@ -5,6 +5,17 @@ export type QuestionType =
   | "FILL_BLANK"
   | "FREE_RESPONSE";
 
+// Tag interface for complex tag objects from backend
+export interface TagObject {
+  name: string;
+  description?: string;
+  icon?: string;
+  color?: string;
+}
+
+// Tag type that can be either string or complex object
+export type Tag = string | TagObject;
+
 export type Difficulty = "EASY" | "MEDIUM" | "HARD";
 
 export type BloomLevel =
@@ -157,7 +168,7 @@ export interface QuizMetadata {
   total_questions: number;
   total_points: number;
   estimated_time: number; // minutes
-  tags: string[];
+  tags: Tag[]; // Support both string and TagObject
   category?: string;
   subject?: string;
   grade_level?: string;
