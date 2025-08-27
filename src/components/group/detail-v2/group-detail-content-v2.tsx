@@ -327,7 +327,7 @@ export default function GroupDetailContentV2({ id }: { id: string }) {
             </TabsContent>
 
             <TabsContent value="members" className="space-y-4">
-              <MembersTab members={STATIC_MEMBERS} />
+              <MembersTab members={groupDetail?.userGroupResponseList} />
             </TabsContent>
 
             <TabsContent value="plans" className="space-y-4">

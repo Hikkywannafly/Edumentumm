@@ -18,7 +18,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Save, Trash2, X } from "lucide-react";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { useUpdateGroup } from "../../../hooks/group/user-group-update";
+import { useUpdateGroup } from "../../../hooks/group/use-update-group";
 import { updateStudyGroupSchema } from "../../../lib/schemas/group";
 import type { UpdateStudyGroupFormData } from "../../../lib/schemas/group";
 
@@ -47,12 +47,23 @@ export default function GroupSettingsDialog({
     defaultValues: group,
   });
 
-  const { confirmDelete, setConfirmDelete, handleUpdate, handleDelete } =
+  const { confirmDelete, setConfirmDelete, updateMutation, deleteMutation } =
     useUpdateGroup({
+      id: group.id,
       onClose,
       onGroupUpdate,
       onGroupDelete,
     });
+
+  const handleUpdate = (data: UpdateStudyGroupFormData) => {
+    updateMutation.mutate(data);
+  };
+
+  const handleDelete = (confirm: boolean) => {
+    if (confirm) {
+      deleteMutation.mutate(group.id);
+    }
+  };
 
   useEffect(() => {
     if (open) {
@@ -173,7 +184,7 @@ export default function GroupSettingsDialog({
                   type="button"
                   variant="outline"
                   className="flex-1"
-                  onClick={() => setConfirmDelete(false)}
+                  onClick={() => handleDelete(false)}
                 >
                   Hủy
                 </Button>
@@ -181,7 +192,7 @@ export default function GroupSettingsDialog({
                   type="button"
                   variant="destructive"
                   className="flex-1"
-                  onClick={() => handleDelete(group.id)}
+                  onClick={() => handleDelete(true)}
                 >
                   Xác nhận xóa
                 </Button>
