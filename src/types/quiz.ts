@@ -15,7 +15,7 @@ export type BloomLevel =
   | "EVALUATE"
   | "CREATE";
 
-export type Visibility = "PRIVATE" | "PUBLIC" | "UNLISTED";
+export type Visibility = "PRIVATE" | "PUBLIC" | "UNLISTED" | "PREMIUM";
 
 export type Language = "AUTO" | "EN" | "VI" | "ZH" | "JA" | "KO";
 

@@ -177,7 +177,7 @@ export async function POST(request: NextRequest) {
     };
 
     console.log(
-      "✅ Quiz generated successfully with AI:",
+      "Quiz generated successfully with AI:",
       quiz.questions.length,
       "questions",
     );

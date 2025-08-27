@@ -5,6 +5,7 @@ import type {
   UploadedFile,
 } from "@/types/quiz";
 
+import type { BackendTag, QuizPayload } from "@/types/quizPlayload";
 export interface QuizCreatorSettings {
   generationMode: "GENERATE" | "EXTRACT";
   fileProcessingMode: "PARSE_THEN_SEND" | "SEND_DIRECT";
@@ -54,4 +55,10 @@ export interface UseQuizCreatorReturn
   // Combined interface for the main hook
 }
 
-export type { CreateQuizPayload, GeneratedQuiz, UploadedFile };
+export type {
+  CreateQuizPayload,
+  GeneratedQuiz,
+  UploadedFile,
+  QuizPayload,
+  BackendTag,
+};

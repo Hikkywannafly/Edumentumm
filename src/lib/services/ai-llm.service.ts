@@ -454,7 +454,6 @@ export async function generateQuizTitleDescription(params: {
   isExtractMode?: boolean;
   targetLanguage?: string;
   filename?: string;
-  category?: string;
   tags?: string[];
   modelName?: string;
 }): Promise<{
@@ -469,7 +468,6 @@ export async function generateQuizTitleDescription(params: {
     isExtractMode,
     targetLanguage = "auto",
     filename,
-    category,
     tags,
     modelName = DEFAULT_MODEL,
   } = params;
@@ -493,7 +491,7 @@ export async function generateQuizTitleDescription(params: {
       `Questions: ${questions.length}`,
       `Source: ${isExtractMode ? "Extracted from document" : "AI Generated"}`,
       filename ? `File: ${filename.replace(/\.[^/.]+$/, "")}` : "",
-      category ? `Topic: ${category}` : "",
+      // category ? `Topic: ${category}` : "",
       tags && tags.length ? `Tags: ${tags.join(", ")}` : "",
     ]
       .filter(Boolean)
