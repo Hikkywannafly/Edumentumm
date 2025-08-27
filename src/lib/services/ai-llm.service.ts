@@ -24,7 +24,6 @@ function makeRequestKey(
     hash = (hash * 16777619) >>> 0; // Use prime multiplier
   }
 
-  // Add content length and model as additional entropy
   hash ^= content.length;
   hash ^= model.length << 8;
 

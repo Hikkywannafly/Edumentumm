@@ -66,7 +66,7 @@ export function QuizCreator() {
               isDone={processingDone}
               hasError={processingError}
               onComplete={hideProcessing}
-              showSuccessFor={2500} // Match the uploader timeout for smooth transition
+              showSuccessFor={2500}
               autoNavigate={!processingError}
             />
           </div>

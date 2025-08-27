@@ -116,7 +116,6 @@ export interface QuizSettings {
   allow_retry: boolean;
   time_limit_per_question?: number | null; // seconds
   passing_score: number; // percentage
-  // New properties for quiz generation flow
   generationMode?: GenerationMode;
   fileProcessingMode?: FileProcessingMode;
   useAI?: boolean;
@@ -171,18 +170,6 @@ export interface QuizData {
   source_info: SourceInfo;
   ai_info: AIInfo;
   metadata: QuizMetadata;
-}
-
-// ===== DATABASE ENTITY =====
-export interface QuizEntity {
-  id: number;
-  title: string;
-  description?: string;
-  user_id: number;
-  category_id?: number;
-  quiz_data: QuizData;
-  created_at: string;
-  updated_at: string;
 }
 
 // ===== API PAYLOAD INTERFACES (for database) =====

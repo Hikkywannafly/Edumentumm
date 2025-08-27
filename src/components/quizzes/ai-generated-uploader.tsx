@@ -1,6 +1,5 @@
 "use client";
 
-import {} from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -116,7 +115,6 @@ export function AIGeneratedUploader({
           warning:
             t("create.settings.thoroughModeInfo") ||
             "May take longer but captures all content",
-          icon: "🔍",
           color: "text-green-600",
         };
       default:
@@ -478,7 +476,7 @@ export function AIGeneratedUploader({
                       <SelectContent>
                         <SelectItem value="FAST" className="flex items-center">
                           <div className="flex items-center gap-2">
-                            ⚡ {t("create.settings.fast")}
+                            {t("create.settings.fast")}
                           </div>
                         </SelectItem>
                         <SelectItem
@@ -486,7 +484,7 @@ export function AIGeneratedUploader({
                           className="flex items-center"
                         >
                           <div className="flex items-center gap-2">
-                            ⚖️ {t("create.settings.balanced")}
+                            {t("create.settings.balanced")}
                           </div>
                         </SelectItem>
                         <SelectItem
@@ -494,7 +492,7 @@ export function AIGeneratedUploader({
                           className="flex items-center"
                         >
                           <div className="flex items-center gap-2">
-                            🔍 {t("create.settings.thorough")}
+                            {t("create.settings.thorough")}
                           </div>
                         </SelectItem>
                       </SelectContent>
@@ -503,7 +501,7 @@ export function AIGeneratedUploader({
                     {/* Mode-specific descriptions */}
                     <div className="space-y-1 text-muted-foreground text-xs">
                       <p className={currentModeInfo.color}>
-                        {currentModeInfo.icon} {currentModeInfo.description}
+                        {currentModeInfo.description}
                       </p>
                       {currentModeInfo.warning && (
                         <p className="flex items-center gap-1 text-orange-600">

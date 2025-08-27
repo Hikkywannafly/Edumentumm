@@ -1,6 +1,6 @@
 // Quiz Creator Hooks (Modular)
 export * from "./use-quiz-creator";
-export * from "./use-file-processor";
+export * from "./use-quiz-processor";
 export * from "./use-quiz-generator";
 export * from "./use-quiz-saver";
 export * from "./quiz-creator-types";

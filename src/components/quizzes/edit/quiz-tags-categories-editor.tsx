@@ -39,7 +39,6 @@ export function QuizTagsCategoriesEditor({
   const [availableCategories, setAvailableCategories] = useState<string[]>([]);
   const [isLoadingCategories, setIsLoadingCategories] = useState(true);
 
-  // Load categories from API/localStorage on mount
   useEffect(() => {
     const loadCategories = async () => {
       try {

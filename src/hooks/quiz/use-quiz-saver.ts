@@ -65,7 +65,7 @@ export function useQuizSaver(
         estimatedTime: quiz.metadata?.estimated_time || 15,
         passingScore: 70,
       };
-
+      console.log("`data`", quiz.metadata);
       const response = await fetch("/api/quiz/create", {
         method: "POST",
         headers: {
