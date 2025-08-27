@@ -16,4 +16,3 @@ export * from "./quiz-data-converter";
 
 // Quiz Management Hooks
 export * from "./use-quiz";
-export * from "./use-generate-quiz-title-description";

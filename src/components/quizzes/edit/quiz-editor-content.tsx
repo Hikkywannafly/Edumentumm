@@ -1,7 +1,6 @@
 "use client";
 
 import ThinLayout from "@/components/layout/thin-layout";
-import { useGenerateQuizTitleDescription } from "@/hooks/quiz/use-generate-quiz-title-description";
 import { useQuizEditor } from "@/hooks/quiz/use-quiz-editor";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
@@ -29,8 +28,6 @@ export function QuizEditorContent() {
     moveQuestion,
     hasUnsavedChanges,
   } = useQuizEditor(quizId);
-
-  const titleDescriptionGenerator = useGenerateQuizTitleDescription();
 
   const currentTitle = quiz?.title || "";
   const currentDescription = quiz?.description || "";
@@ -104,51 +101,6 @@ export function QuizEditorContent() {
   const handleUpdateDescription = (newDescription: string) => {
     updateQuiz({ description: newDescription });
   };
-
-  // AI generation functions
-  const handleGenerateAITitle = useCallback(async () => {
-    if (!quiz?.questions?.length) {
-      console.warn("No questions available for title generation");
-      return;
-    }
-
-    try {
-      const content = quiz.questions.map((q) => q.question).join("\n");
-      await titleDescriptionGenerator.generateTitleDescription(
-        content,
-        quiz.questions,
-        {
-          targetLanguage: "auto",
-          category: quiz.metadata?.category,
-          tags: quiz.metadata?.tags,
-        },
-      );
-    } catch (error) {
-      console.error("Failed to generate AI title:", error);
-    }
-  }, [quiz, titleDescriptionGenerator]);
-
-  const handleGenerateAIDescription = useCallback(async () => {
-    if (!quiz?.questions?.length) {
-      console.warn("No questions available for description generation");
-      return;
-    }
-
-    try {
-      const content = quiz.questions.map((q) => q.question).join("\n");
-      await titleDescriptionGenerator.generateTitleDescription(
-        content,
-        quiz.questions,
-        {
-          targetLanguage: "auto",
-          category: quiz.metadata?.category,
-          tags: quiz.metadata?.tags,
-        },
-      );
-    } catch (error) {
-      console.error("Failed to generate AI description:", error);
-    }
-  }, [quiz, titleDescriptionGenerator]);
 
   const handleUpdateQuestion = (updatedQuestion: any) => {
     updateQuestion(updatedQuestion.id, updatedQuestion);
@@ -257,14 +209,10 @@ export function QuizEditorContent() {
         <QuizTitleEditor
           title={currentTitle}
           onTitleChange={handleUpdateTitle}
-          onGenerateAITitle={handleGenerateAITitle}
-          isGenerating={titleDescriptionGenerator.isGenerating}
         />
         <QuizDescriptionEditor
           description={currentDescription}
           onDescriptionChange={handleUpdateDescription}
-          onGenerateAIDescription={handleGenerateAIDescription}
-          isGenerating={titleDescriptionGenerator.isGenerating}
         />
         <QuizTagsEditor
           tags={quiz.metadata?.tags || []}
