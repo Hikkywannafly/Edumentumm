@@ -7,28 +7,22 @@ import DashboardLayout from "@/components/layout/dashboard-layout";
 import { PageHeaderClient } from "@/components/layout/page-header-client";
 import { LocalizedLink } from "@/components/localized-link";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
-import { flashcardService } from "@/lib/api/flashcard";
-import type { CreateFlashcardSetRequest } from "@/lib/api/flashcard";
-import { useLocalizedNavigation } from "@/lib/utils/navigation";
+import { useFlashcardEditor } from "@/hooks/flashcard/use-flashcard-editor";
 import { useFlashcardEditorStore } from "@/stores/flashcard-editor-store";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
 
 export default function FlashcardEditorPage() {
-  const { goFlashcards } = useLocalizedNavigation();
-  const { toast } = useToast();
-  const [isSaving, setIsSaving] = useState(false);
+  const { flashcardData, isSaving, saveFlashcard } = useFlashcardEditor();
+
   const {
-    flashcardData,
-    setEditing,
     updateFlashcardData,
-    updateFlashcard,
+    updateFlashcard: updateFlashcardInStore,
     deleteFlashcard,
     moveFlashcard,
     addFlashcard,
   } = useFlashcardEditorStore();
+
   const t = useTranslations("Flashcards");
 
   const handleAddFlashcard = () => {
@@ -55,155 +49,8 @@ export default function FlashcardEditorPage() {
     addFlashcardAfter(afterIndex, newFlashcard);
   };
 
-  const handleCreateFlashcard = async () => {
-    if (!flashcardData) return;
-
-    setIsSaving(true);
-
-    try {
-      // Validate required fields
-      if (!flashcardData.title.trim()) {
-        toast({
-          title: "Validation Error",
-          description: "Please enter a title for your flashcard set",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      if (flashcardData.flashcards.length === 0) {
-        toast({
-          title: "Validation Error",
-          description: "Please add at least one flashcard",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Validate each flashcard
-      for (let i = 0; i < flashcardData.flashcards.length; i++) {
-        const flashcard = flashcardData.flashcards[i];
-        if (!flashcard.question.trim()) {
-          toast({
-            title: "Validation Error",
-            description: `Please enter a question for flashcard ${i + 1}`,
-            variant: "destructive",
-          });
-          return;
-        }
-        if (flashcard.choices.some((choice) => !choice.trim())) {
-          toast({
-            title: "Validation Error",
-            description: `Please fill in all choices for flashcard ${i + 1}`,
-            variant: "destructive",
-          });
-          return;
-        }
-      }
-
-      const isUpdate = !!flashcardData.id;
-
-      if (isUpdate) {
-        // Update existing flashcard set
-        const updateRequest = {
-          title: flashcardData.title.trim(),
-          description: flashcardData.description.trim(),
-          isPublic: false, // Can be made configurable later
-          flashcards: flashcardData.flashcards.map((flashcard) => ({
-            id: flashcard.id as number,
-            question: flashcard.question.trim(),
-            choices: flashcard.choices.map((choice) => choice.trim()),
-            correctAnswer: flashcard.correctAnswer,
-            explanation: flashcard.explanation?.trim() || "",
-          })),
-        };
-
-        const updatedFlashcardSet = await flashcardService.updateFlashcardSet(
-          flashcardData.id as number,
-          updateRequest,
-        );
-
-        console.log(
-          "✅ Flashcard set updated successfully:",
-          updatedFlashcardSet,
-        );
-
-        toast({
-          title: "Success!",
-          description: "Your flashcard set has been updated successfully",
-        });
-      } else {
-        // Create new flashcard set
-        const createRequest: CreateFlashcardSetRequest = {
-          title: flashcardData.title.trim(),
-          description: flashcardData.description.trim(),
-          isPublic: false, // Default to private, can be made configurable later
-          flashcards: flashcardData.flashcards.map((flashcard) => ({
-            question: flashcard.question.trim(),
-            choices: flashcard.choices.map((choice) => choice.trim()),
-            correctAnswer: flashcard.correctAnswer,
-            explanation: flashcard.explanation?.trim() || "",
-          })),
-        };
-
-        const createdFlashcardSet =
-          await flashcardService.createFlashcardSet(createRequest);
-
-        console.log(
-          "✅ Flashcard set created successfully:",
-          createdFlashcardSet,
-        );
-
-        toast({
-          title: "Success!",
-          description: "Your flashcard set has been created successfully",
-        });
-      }
-
-      // Clear editor state and navigate back
-      setEditing(false);
-      goFlashcards();
-    } catch (error) {
-      console.error("❌ Error saving flashcard set:", error);
-
-      let errorMessage = "Failed to save flashcard set";
-
-      // Handle different types of errors
-      if (error instanceof Error) {
-        if (
-          error.message.includes("network") ||
-          error.message.includes("fetch")
-        ) {
-          errorMessage =
-            "Network error. Please check your connection and try again.";
-        } else if (
-          error.message.includes("401") ||
-          error.message.includes("unauthorized")
-        ) {
-          errorMessage = "You need to be logged in to save flashcards.";
-        } else if (
-          error.message.includes("403") ||
-          error.message.includes("forbidden")
-        ) {
-          errorMessage = "You don't have permission to perform this action.";
-        } else if (
-          error.message.includes("400") ||
-          error.message.includes("validation")
-        ) {
-          errorMessage = "Invalid data. Please check your flashcard content.";
-        } else {
-          errorMessage = error.message;
-        }
-      }
-
-      toast({
-        title: "Save Error",
-        description: errorMessage,
-        variant: "destructive",
-      });
-    } finally {
-      setIsSaving(false);
-    }
+  const handleCreateFlashcard = () => {
+    saveFlashcard();
   };
 
   if (!flashcardData) {
@@ -272,7 +119,7 @@ export default function FlashcardEditorPage() {
               <FlashcardCardsEditor
                 flashcards={flashcardData.flashcards}
                 onUpdateFlashcard={(_index, flashcard) =>
-                  updateFlashcard(flashcard.id, flashcard)
+                  updateFlashcardInStore(flashcard.id, flashcard)
                 }
                 onDeleteFlashcard={(index) => {
                   const flashcardToDelete = flashcardData.flashcards[index];

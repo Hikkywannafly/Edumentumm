@@ -1,9 +1,9 @@
-import { FlashcardStudyView } from "@/components/flashcards/flashcard-study-view";
+import { FlashcardStudyView } from "@/components/flashcards/study-view/flashcard-study-view";
 import DashboardLayout from "@/components/layout/dashboard-layout";
 import { PageHeaderClient } from "@/components/layout/page-header-client";
 import { LocalizedLink } from "@/components/localized-link";
 import { Button } from "@/components/ui";
-import { Home } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 interface FlashcardDetailPageProps {
@@ -29,9 +29,9 @@ export default async function FlashcardDetailPage({
         <PageHeaderClient
           title={t("title")}
           action={
-            <LocalizedLink href="/flashcards">
-              <Button size="sm">
-                <Home className="h-4 w-4" />
+            <LocalizedLink href="flashcards">
+              <Button variant="outline" size="sm">
+                <ArrowLeft className="mr-2 h-4 w-4" />
                 {t("create.backToFlashcards")}
               </Button>
             </LocalizedLink>

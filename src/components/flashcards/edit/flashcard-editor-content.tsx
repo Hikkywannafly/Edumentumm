@@ -11,10 +11,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useAuth } from "@/contexts/auth-context";
-import { flashcardService } from "@/lib/api/flashcard";
-import { useLocalizedNavigation } from "@/lib/utils/navigation";
-import type { FlashcardData, FlashcardSet } from "@/types/flashcard";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useFlashcardEdit } from "@/hooks/flashcard/use-flashcard-edit";
+import type { FlashcardData } from "@/types/flashcard";
+import { AlertCircle, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { FlashcardCardsEditor } from "./flashcard-cards-editor";
 import { FlashcardDescriptionEditor } from "./flashcard-description-editor";
@@ -28,50 +28,40 @@ interface FlashcardEditorContentProps {
 export function FlashcardEditorContent({
   flashcardSetId,
 }: FlashcardEditorContentProps) {
-  const { accessToken } = useAuth();
-  const [flashcardSet, setFlashcardSet] = useState<FlashcardSet | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const { goFlashcards } = useLocalizedNavigation();
+  const flashcardSetIdNumber = Number.parseInt(flashcardSetId, 10);
+
+  // Use React Query hook for edit operations
+  const {
+    flashcardSet,
+    isLoading,
+    error,
+    saveFlashcard,
+    publishFlashcard,
+    deleteFlashcardSet,
+    isSaving,
+    isDeleting,
+  } = useFlashcardEdit(flashcardSetIdNumber);
 
   // Local state for editing
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [flashcards, setFlashcards] = useState<FlashcardData[]>([]);
   const [isPublic, setIsPublic] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
+  // Initialize form data when flashcard set loads
   useEffect(() => {
-    const fetchFlashcardSet = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-
-        const data = await flashcardService.getFlashcardById(
-          Number.parseInt(flashcardSetId, 10),
-        );
-
-        setFlashcardSet(data);
-        setTitle(data.title);
-        setDescription(data.description);
-        setFlashcards(data.flashcards);
-        setIsPublic(data.isPublic);
-      } catch (err) {
-        setError(
-          err instanceof Error ? err.message : "Failed to load flashcard set",
-        );
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchFlashcardSet();
-  }, [flashcardSetId]);
+    if (flashcardSet) {
+      setTitle(flashcardSet.title);
+      setDescription(flashcardSet.description);
+      setFlashcards(flashcardSet.flashcards);
+      setIsPublic(flashcardSet.isPublic);
+    }
+  }, [flashcardSet]);
 
   const addFlashcard = () => {
     const newFlashcard: FlashcardData = {
-      id: Date.now(), // Temporary ID
+      id: Date.now(),
       question: "",
       choices: ["", "", "", ""],
       correctAnswer: 0,
@@ -98,65 +88,30 @@ export function FlashcardEditorContent({
   };
 
   const handleSave = async () => {
-    if (!flashcardSet || !accessToken) return;
+    if (!flashcardSet) return;
 
     try {
-      setIsSaving(true);
-
-      const updatedFlashcardSet = {
+      const result = await saveFlashcard(
         title,
         description,
         flashcards,
         isPublic,
-      };
-
-      const result = await flashcardService.updateFlashcardSet(
-        flashcardSet.id,
-        updatedFlashcardSet,
       );
-
-      // Update the local state with the result
-      setFlashcardSet(result);
-      console.log("✅ Flashcard set saved successfully");
+      console.log("✅ Flashcard set saved successfully", result);
     } catch (err) {
       console.error("❌ Error saving flashcard set:", err);
-      setError(
-        err instanceof Error ? err.message : "Failed to save flashcard set",
-      );
-    } finally {
-      setIsSaving(false);
     }
   };
 
   const handlePublish = async () => {
-    if (!flashcardSet || !accessToken) return;
+    if (!flashcardSet) return;
 
     try {
-      setIsSaving(true);
-
-      const updatedFlashcardSet = {
-        title,
-        description,
-        flashcards,
-        isPublic: true, // Force public when publishing
-      };
-
-      const result = await flashcardService.updateFlashcardSet(
-        flashcardSet.id,
-        updatedFlashcardSet,
-      );
-
-      // Update the local state with the result
-      setFlashcardSet(result);
-      setIsPublic(true);
-      console.log("✅ Flashcard set published successfully");
+      const result = await publishFlashcard(title, description, flashcards);
+      setIsPublic(true); // Update local state
+      console.log("✅ Flashcard set published successfully", result);
     } catch (err) {
       console.error("❌ Error publishing flashcard set:", err);
-      setError(
-        err instanceof Error ? err.message : "Failed to publish flashcard set",
-      );
-    } finally {
-      setIsSaving(false);
     }
   };
 
@@ -165,41 +120,74 @@ export function FlashcardEditorContent({
   };
 
   const confirmDelete = async () => {
-    if (!flashcardSet || !accessToken) return;
+    if (!flashcardSet) return;
 
     try {
-      setIsSaving(true);
       setShowDeleteDialog(false);
-
-      await flashcardService.deleteFlashcardSet(flashcardSet.id);
-
-      // Redirect to flashcards page after successful deletion
-      goFlashcards();
+      await deleteFlashcardSet();
+      // Navigation is handled in the hook
     } catch (err) {
       console.error("❌ Error deleting flashcard set:", err);
-      setError(
-        err instanceof Error ? err.message : "Failed to delete flashcard set",
-      );
-    } finally {
-      setIsSaving(false);
     }
   };
 
+  // Enhanced loading state with skeleton
   if (isLoading) {
     return (
       <ThinLayout>
-        <div className="flex min-h-screen items-center justify-center">
-          <div className="text-lg">Loading flashcard set...</div>
+        <div className="space-y-6">
+          {/* Header skeleton */}
+          <div className="flex items-center justify-between">
+            <div className="space-y-2">
+              <Skeleton className="h-8 w-64" />
+              <Skeleton className="h-4 w-96" />
+            </div>
+            <div className="flex gap-2">
+              <Skeleton className="h-10 w-20" />
+              <Skeleton className="h-10 w-20" />
+              <Skeleton className="h-10 w-20" />
+            </div>
+          </div>
+
+          {/* Form skeletons */}
+          <div className="space-y-4">
+            <Skeleton className="h-12 w-full" />
+            <Skeleton className="h-24 w-full" />
+          </div>
+
+          {/* Cards skeleton */}
+          <div className="space-y-4">
+            {Array.from({ length: 3 }).map((_, index) => (
+              <div key={index} className="space-y-4 rounded-lg border p-4">
+                <Skeleton className="h-8 w-full" />
+                <div className="grid grid-cols-2 gap-2">
+                  <Skeleton className="h-6 w-full" />
+                  <Skeleton className="h-6 w-full" />
+                  <Skeleton className="h-6 w-full" />
+                  <Skeleton className="h-6 w-full" />
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </ThinLayout>
     );
   }
 
+  // Enhanced error state with retry
   if (error) {
     return (
       <ThinLayout>
         <div className="flex min-h-screen items-center justify-center">
-          <div className="text-lg text-red-600">{error}</div>
+          <div className="flex flex-col items-center space-y-4">
+            <AlertCircle className="h-12 w-12 text-red-500" />
+            <div className="text-center">
+              <h3 className="font-semibold text-lg">
+                Error loading flashcard set
+              </h3>
+              <p className="text-red-600">{error.message}</p>
+            </div>
+          </div>
         </div>
       </ThinLayout>
     );
@@ -226,7 +214,7 @@ export function FlashcardEditorContent({
           description={description}
           flashcards={flashcards}
           isPublic={isPublic}
-          isSaving={isSaving}
+          isSaving={isSaving || isDeleting}
           onAddFlashcard={addFlashcard}
           onSave={handleSave}
           onPublish={handlePublish}
@@ -268,9 +256,17 @@ export function FlashcardEditorContent({
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDelete}
+              disabled={isDeleting}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Delete
+              {isDeleting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                "Delete"
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -17,19 +17,22 @@ function getAuthHeaders(request: NextRequest) {
   return headers;
 }
 
-// GET /api/flashcards/[id] - Get flashcard by ID
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
+// GET /api/flashcards - Get all flashcards with pagination
+export async function GET(request: NextRequest) {
   try {
-    const { id } = await params;
+    const { searchParams } = new URL(request.url);
+    const page = searchParams.get("page") || "0";
+    const size = searchParams.get("size") || "6";
+
     const headers = getAuthHeaders(request);
 
-    const response = await fetch(`${API_BASE_URL}/student/flashcards/${id}`, {
-      method: "GET",
-      headers,
-    });
+    const response = await fetch(
+      `${API_BASE_URL}/student/flashcards?page=${page}&size=${size}`,
+      {
+        method: "GET",
+        headers,
+      },
+    );
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
@@ -46,24 +49,20 @@ export async function GET(
   } catch (error) {
     console.error("API Route Error:", error);
     return NextResponse.json(
-      { error: "Failed to fetch flashcard" },
+      { error: "Failed to fetch flashcards" },
       { status: 500 },
     );
   }
 }
 
-// PATCH /api/flashcards/[id] - Update flashcard
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
+// POST /api/flashcards - Create new flashcard set
+export async function POST(request: NextRequest) {
   try {
-    const { id } = await params;
     const body = await request.json();
     const headers = getAuthHeaders(request);
 
-    const response = await fetch(`${API_BASE_URL}/student/flashcards/${id}`, {
-      method: "PATCH",
+    const response = await fetch(`${API_BASE_URL}/student/flashcards`, {
+      method: "POST",
       headers,
       body: JSON.stringify(body),
     });
@@ -83,41 +82,7 @@ export async function PATCH(
   } catch (error) {
     console.error("API Route Error:", error);
     return NextResponse.json(
-      { error: "Failed to update flashcard" },
-      { status: 500 },
-    );
-  }
-}
-
-// DELETE /api/flashcards/[id] - Delete flashcard
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  try {
-    const { id } = await params;
-    const headers = getAuthHeaders(request);
-
-    const response = await fetch(`${API_BASE_URL}/student/flashcards/${id}`, {
-      method: "DELETE",
-      headers,
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      return NextResponse.json(
-        {
-          error: errorData.message || `HTTP error! status: ${response.status}`,
-        },
-        { status: response.status },
-      );
-    }
-
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error("API Route Error:", error);
-    return NextResponse.json(
-      { error: "Failed to delete flashcard" },
+      { error: "Failed to create flashcard set" },
       { status: 500 },
     );
   }
