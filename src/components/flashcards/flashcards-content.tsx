@@ -4,10 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useFlashcards } from "@/hooks/use-flashcards";
-import { AlertCircle, Filter, Plus, Search } from "lucide-react";
+import { useFlashcardTotalStats } from "@/hooks/flashcard/use-flashcard-total-stats";
+import { useFlashcardsQuery } from "@/hooks/flashcard/use-flashcards-query";
+import { AlertCircle, Filter, Plus, RefreshCw, Search } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import ThinLayout from "../layout/thin-layout";
 import { FlashcardGrid } from "./flashcard-grid";
 import FlashcardPagination from "./flashcard-pagination";
@@ -18,20 +19,58 @@ export function FlashcardsContent() {
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 6;
 
+  // Convert UI page (1-based) to API page (0-based)
+  const apiPage = currentPage - 1;
+
+  // Use React Query hooks
   const {
-    flashcardSets,
-    pagination,
-    stats,
+    data: flashcardsResponse,
     isLoading,
-    isInitialLoad,
     error,
     refetch,
-  } = useFlashcards(currentPage, pageSize);
+    isFetching,
+  } = useFlashcardsQuery(apiPage, pageSize);
+
+  // Get total stats across all flashcards
+  const { data: totalStats } = useFlashcardTotalStats();
+
+  // Extract data with fallbacks
+  const flashcardSets = flashcardsResponse?.data || [];
+  const apiPagination = flashcardsResponse?.pagination;
+
+  // Convert API pagination (0-based) to UI pagination (1-based)
+  const pagination = useMemo(() => {
+    if (!apiPagination) {
+      return {
+        currentPage: 1,
+        pageSize: pageSize,
+        totalElements: 0,
+        totalPages: 0,
+        hasNext: false,
+        hasPrevious: false,
+      };
+    }
+
+    return {
+      ...apiPagination,
+      currentPage: apiPagination.currentPage + 1,
+    };
+  }, [apiPagination]);
+
+  // Calculate stats - use total stats for accurate counts across all pages
+  const stats = {
+    totalFlashcards: totalStats?.totalFlashcards || 0,
+    totalDecks: totalStats?.totalDecks || 0,
+    averageScore: totalStats?.averageScore || 0,
+    studyTime: totalStats?.studyTime || "0h",
+  };
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
-    refetch(page, pageSize);
   };
+
+  // Show loading skeleton on initial load
+  const isInitialLoad = isLoading && !flashcardsResponse;
 
   if (isInitialLoad) {
     return (
@@ -86,10 +125,8 @@ export function FlashcardsContent() {
           <h3 className="mb-2 font-semibold text-lg">
             Error loading flashcards
           </h3>
-          <p className="mb-4 text-muted-foreground">{error}</p>
-          <Button onClick={() => refetch(currentPage, pageSize)}>
-            Try again
-          </Button>
+          <p className="mb-4 text-muted-foreground">{error.message}</p>
+          <Button onClick={() => refetch()}>Try again</Button>
         </div>
       </ThinLayout>
     );
@@ -112,6 +149,13 @@ export function FlashcardsContent() {
           <Filter className="h-4 w-4" />
           {t("filters")}
         </Button>
+        {/* Background refresh indicator */}
+        {isFetching && !isLoading && (
+          <div className="flex items-center gap-2 text-muted-foreground text-sm">
+            <RefreshCw className="h-4 w-4 animate-spin" />
+            Updating...
+          </div>
+        )}
       </div>
 
       {/* Stats */}

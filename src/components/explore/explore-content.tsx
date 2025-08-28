@@ -1,6 +1,6 @@
 "use client";
 
-import { usePublicFlashcards } from "@/hooks/use-public-flashcards";
+import { usePublicFlashcards } from "@/hooks/flashcard/use-flashcards-query";
 import { useState } from "react";
 import { FlashcardSkeletonGrid } from "../flashcards/flashcard-skeleton";
 import ThinLayout from "../layout/thin-layout";
@@ -16,13 +16,43 @@ export default function ExploreContent() {
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 6;
 
-  const { flashcardSets, pagination, isLoading, error, refetch } =
-    usePublicFlashcards(activeTab === "flashcards" ? currentPage : 1, pageSize);
+  // Convert UI page (1-based) to API page (0-based)
+  const apiPage = currentPage - 1;
+
+  const {
+    data: flashcardsResponse,
+    isLoading,
+    error,
+  } = usePublicFlashcards(activeTab === "flashcards" ? apiPage : 0, pageSize);
+
+  // Extract data with fallbacks
+  const flashcardSets = flashcardsResponse?.data || [];
+  const apiPagination = flashcardsResponse?.pagination;
+
+  // Convert API pagination (0-based) to UI pagination (1-based)
+  const pagination = apiPagination
+    ? {
+        currentPage: apiPagination.currentPage + 1,
+        pageSize: apiPagination.pageSize,
+        totalElements: apiPagination.totalElements,
+        totalPages: apiPagination.totalPages,
+        hasNext: apiPagination.hasNext,
+        hasPrevious: apiPagination.hasPrevious,
+      }
+    : {
+        currentPage: 1,
+        pageSize: pageSize,
+        totalElements: 0,
+        totalPages: 0,
+        hasNext: false,
+        hasPrevious: false,
+      };
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
     if (activeTab === "flashcards") {
-      refetch(page, pageSize);
+      // React Query will automatically refetch when dependencies change
+      // No need to manually call refetch with parameters
     }
   };
 
@@ -60,7 +90,9 @@ export default function ExploreContent() {
       if (error) {
         return (
           <Card className="flex items-center justify-center border-none py-12">
-            <p className="text-red-500">Error loading flashcards: {error}</p>
+            <p className="text-red-500">
+              Error loading flashcards: {error?.message}
+            </p>
           </Card>
         );
       }
