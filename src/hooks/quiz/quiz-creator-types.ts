@@ -42,7 +42,7 @@ export interface UseQuizSaverReturn {
   saveQuiz: (
     quiz: GeneratedQuiz,
     settings: QuizCreatorSettings,
-  ) => Promise<{ id: number }>;
+  ) => Promise<{ id: number; slug?: string; title?: string }>;
   isSaving: boolean;
   error: Error | null;
   reset: () => void;
@@ -51,9 +51,7 @@ export interface UseQuizSaverReturn {
 export interface UseQuizCreatorReturn
   extends UseFileProcessorReturn,
     UseQuizGeneratorReturn,
-    UseQuizSaverReturn {
-  // Combined interface for the main hook
-}
+    UseQuizSaverReturn {}
 
 export type {
   CreateQuizPayload,

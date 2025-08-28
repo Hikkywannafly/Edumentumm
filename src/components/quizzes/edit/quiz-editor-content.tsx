@@ -2,6 +2,7 @@
 
 import ThinLayout from "@/components/layout/thin-layout";
 import { useQuizEditor } from "@/hooks/quiz/use-quiz-editor";
+import { extractIdFromSlug } from "@/utils/index";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { QuizDescriptionEditor } from "./quiz-description-editor";
@@ -13,7 +14,7 @@ import { QuizTitleEditor } from "./quiz-title-editor";
 export function QuizEditorContent() {
   const router = useRouter();
   const params = useParams();
-  const quizId = Number.parseInt(params.id as string);
+  const quizId = params.slug as string;
   const [isValidForCreation, setIsValidForCreation] = useState(false);
 
   const {
@@ -27,7 +28,7 @@ export function QuizEditorContent() {
     deleteQuestion,
     moveQuestion,
     hasUnsavedChanges,
-  } = useQuizEditor(quizId);
+  } = useQuizEditor(extractIdFromSlug(quizId));
 
   const currentTitle = quiz?.title || "";
   const currentDescription = quiz?.description || "";

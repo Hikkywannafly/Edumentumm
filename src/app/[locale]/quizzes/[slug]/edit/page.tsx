@@ -6,6 +6,7 @@ import { LocalizedLink } from "@/components/localized-link";
 import { QuizEditorContent } from "@/components/quizzes/edit";
 import { Button } from "@/components/ui/button";
 import { useQuizEditor } from "@/hooks/quiz/use-quiz-editor";
+import { extractIdFromSlug } from "@/utils/index";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useParams } from "next/navigation";
@@ -13,11 +14,12 @@ import { useParams } from "next/navigation";
 
 export default function QuizEditorPage() {
   const params = useParams();
-  const quizId = Number.parseInt(params.id as string);
+  const quizId = params.slug as string;
   const t = useTranslations("Quizzes");
-
-  const { quiz, isLoading, isError, error } = useQuizEditor(quizId);
-
+  console.log("test", extractIdFromSlug(quizId));
+  const { quiz, isLoading, isError, error } = useQuizEditor(
+    extractIdFromSlug(quizId),
+  );
   if (isLoading) {
     return (
       <DashboardLayout>

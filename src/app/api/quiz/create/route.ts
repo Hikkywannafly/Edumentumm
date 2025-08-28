@@ -132,8 +132,6 @@ export async function POST(request: NextRequest) {
         );
       }
     }
-
-    // Send directly to new backend format
     const backendPayload = {
       title: finalTitle,
       description: finalDescription,
@@ -155,22 +153,18 @@ export async function POST(request: NextRequest) {
       tags: data.tags,
     };
 
-    console.log(
-      "🚀 Sending to new backend API:",
-      JSON.stringify(backendPayload, null, 2),
-    );
-
     const response = await apiClient.post("/student/quizzes", backendPayload, {
       headers: {
         Authorization: authHeader,
       },
     });
-
     const savedQuiz = response.data;
 
     return NextResponse.json({
       success: true,
       id: savedQuiz.id,
+      slug: savedQuiz.slug,
+      title: savedQuiz.title || finalTitle,
       quiz: savedQuiz,
     });
   } catch (error) {

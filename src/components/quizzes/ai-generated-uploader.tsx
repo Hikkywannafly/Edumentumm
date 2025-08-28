@@ -164,12 +164,11 @@ export function AIGeneratedUploader({
           : await extractQuiz(settings);
 
       const result = await saveQuiz(quiz, settings);
-
       onProcessingDone?.(true);
       setTimeout(() => {
         reset();
-        goQuizEdit(result.id);
-      }, 3000); // Increased delay to ensure backend processing is complete
+        goQuizEdit(result.id, result.slug);
+      }, 3000);
     } catch (error) {
       console.error("Error processing quiz:", error);
       onProcessingDone?.(false);
