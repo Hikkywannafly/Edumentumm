@@ -33,6 +33,9 @@ export interface QuizFiltersProps {
   onFilter?: () => void;
   searchPlaceholder?: string;
   filtersLabel?: string;
+  viewMode?: "grid" | "table";
+  onViewModeChange?: (mode: "grid" | "table") => void;
+  onSortChange?: (sortBy: string) => void;
 }
 
 export interface EmptyStateProps {
