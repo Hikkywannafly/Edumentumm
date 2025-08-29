@@ -6,7 +6,7 @@ import { useQuizLoader } from "./use-quiz-loader";
 import { useQuizSaverEditor } from "./use-quiz-saver-editor";
 import { useQuizStateManager } from "./use-quiz-state-manager";
 
-export function useQuizEditor(quizId: number): UseQuizEditorReturn {
+export function useQuizEditor(quizId: string): UseQuizEditorReturn {
   // Use specialized hooks
   const quizLoader = useQuizLoader(quizId);
   const quizStateManager = useQuizStateManager(quizId, quizLoader.originalQuiz);

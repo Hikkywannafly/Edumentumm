@@ -68,9 +68,9 @@ export function useLocalizedNavigation() {
   /**
    * Navigate to quiz edit page
    */
-  const goQuizEdit = (quizId?: number | string) => {
-    if (quizId) {
-      const path = `/quizzes/${quizId}/edit`;
+  const goQuizEdit = (quizId?: string | number, slug?: string) => {
+    if (quizId && slug) {
+      const path = `/quizzes/${slug}-${quizId}/edit`;
       navigate(path);
     } else {
       navigate("/quizzes/edit");

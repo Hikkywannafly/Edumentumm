@@ -20,8 +20,7 @@ export function useQuizSaver(): UseQuizSaverReturn {
     }: {
       quiz: GeneratedQuiz;
       settings: QuizCreatorSettings;
-    }): Promise<{ id: number }> => {
-      // Transform tags to new backend format
+    }): Promise<{ id: number; slug?: string; title?: string }> => {
       const transformedTags: BackendTag[] = (quiz.metadata?.tags || []).map(
         (tagName: string) => ({
           name: tagName,
@@ -85,7 +84,13 @@ export function useQuizSaver(): UseQuizSaverReturn {
         );
       }
 
-      return response.json();
+      const result = await response.json();
+
+      return {
+        id: result.id,
+        slug: result.slug,
+        title: result.title,
+      };
     },
     onSuccess: (result) => {
       // Invalidate quiz list cache

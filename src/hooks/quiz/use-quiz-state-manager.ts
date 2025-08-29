@@ -8,7 +8,7 @@ import type {
 } from "./quiz-editor-types";
 
 export function useQuizStateManager(
-  quizId: number,
+  quizId: string,
   originalQuiz: GeneratedQuiz | null,
 ): UseQuizStateManagerReturn {
   const queryClient = useQueryClient();

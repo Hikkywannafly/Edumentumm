@@ -21,3 +21,13 @@ export const createLocalizedUrl = (path: string) => {
   }
   return `/${path}`;
 };
+
+export function extractIdFromSlug(slug: string): string {
+  const clean = decodeURIComponent(slug).split(/[?#]/)[0].replace(/\/+$/, "");
+
+  let m = clean.match(/-(\d+)$/);
+  if (!m) {
+    m = clean.match(/(\d+)$/);
+  }
+  return m ? `${Number(m[1])}` : "error";
+}

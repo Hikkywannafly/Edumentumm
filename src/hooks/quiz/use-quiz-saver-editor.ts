@@ -4,7 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { GeneratedQuiz, UseQuizSaverReturn } from "./quiz-editor-types";
 
 export function useQuizSaverEditor(
-  quizId: number,
+  quizId: string,
   quiz: GeneratedQuiz | null,
 ): UseQuizSaverReturn {
   const queryClient = useQueryClient();

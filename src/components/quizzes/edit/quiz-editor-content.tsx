@@ -2,10 +2,12 @@
 
 import ThinLayout from "@/components/layout/thin-layout";
 import { useQuizEditor } from "@/hooks/quiz/use-quiz-editor";
+import { extractIdFromSlug } from "@/utils/index";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { QuizDescriptionEditor } from "./quiz-description-editor";
 import { QuizEditorHeader } from "./quiz-editor-header";
+import { QuizEditorSkeleton } from "./quiz-editor-skeleton";
 import { QuizQuestionsEditor } from "./quiz-questions-editor";
 import { QuizTagsEditor } from "./quiz-tags-categories-editor";
 import { QuizTitleEditor } from "./quiz-title-editor";
@@ -13,7 +15,7 @@ import { QuizTitleEditor } from "./quiz-title-editor";
 export function QuizEditorContent() {
   const router = useRouter();
   const params = useParams();
-  const quizId = Number.parseInt(params.id as string);
+  const quizId = params.slug as string;
   const [isValidForCreation, setIsValidForCreation] = useState(false);
 
   const {
@@ -27,7 +29,7 @@ export function QuizEditorContent() {
     deleteQuestion,
     moveQuestion,
     hasUnsavedChanges,
-  } = useQuizEditor(quizId);
+  } = useQuizEditor(extractIdFromSlug(quizId));
 
   const currentTitle = quiz?.title || "";
   const currentDescription = quiz?.description || "";
@@ -65,17 +67,7 @@ export function QuizEditorContent() {
 
   // Loading state
   if (isLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="space-y-4 text-center">
-          <div className="mx-auto h-8 w-8 animate-spin rounded-full border-blue-500 border-b-2" />
-          <div className="text-lg">Loading quiz...</div>
-          <div className="text-muted-foreground text-sm">
-            This may take a moment if the quiz was just created.
-          </div>
-        </div>
-      </div>
-    );
+    return <QuizEditorSkeleton />;
   }
 
   // Error state

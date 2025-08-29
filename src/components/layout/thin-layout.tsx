@@ -30,7 +30,7 @@ const ThinLayout = React.forwardRef<HTMLDivElement, ThinLayoutProps>(
     return (
       <section
         ref={ref}
-        className={`container mx-auto ${maxWidthClasses[maxWidth]} ${classNames || ""} ${padding ? "px-4 py-8" : ""}`}
+        className={`container mx-auto max-w-7xl ${maxWidthClasses[maxWidth]} ${classNames || ""} ${padding ? "px-4 py-8" : ""}`}
       >
         {title && (
           <h1 className="mb-6 text-center font-bold text-2xl">{title}</h1>

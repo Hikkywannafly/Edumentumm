@@ -28,8 +28,8 @@ import { CheckCircle, Loader2, Settings } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { useDropzone } from "react-dropzone";
-import { FileList } from "../quizzes/file-list";
-import { FileUploadArea } from "../quizzes/file-upload-area";
+import { FileList } from "../quizzes/create/file-list";
+import { FileUploadArea } from "../quizzes/create/file-upload-area";
 
 interface FileWithAnswersUploaderProps {
   onProcessingStart?: (fileName: string, label?: string) => void;

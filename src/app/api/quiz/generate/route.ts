@@ -141,10 +141,10 @@ export async function POST(request: NextRequest) {
       ) {
         title = titleDescResult.title;
         description = titleDescResult.description;
-        console.log("✅ AI-generated title and description:", {
-          title,
-          description,
-        });
+        // console.log("✅ AI-generated title and description:", {
+        //   title,
+        //   description,
+        // });
       } else {
         console.warn(
           "⚠️ Failed to generate AI title/description, using fallback",

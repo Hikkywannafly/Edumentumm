@@ -15,15 +15,15 @@ function convertBackendQuestion(backendQ: BackendQuestion): QuestionData {
 
   return {
     id: backendQ.id,
-    question: backendQ.text, // Backend uses 'text', frontend uses 'question'
+    question: backendQ.text,
     type: backendQ.type,
-    difficulty: "MEDIUM", // Default since not provided in backend
+    difficulty: "MEDIUM",
     points: backendQ.points || 1,
     explanation: backendQ.explanation,
     answers: options.map((option, index) => ({
       id: option.id,
       text: option.text,
-      isCorrect: option.id === backendQ.correctAnswer, // Check if this option is the correct answer
+      isCorrect: option.id === backendQ.correctAnswer,
       order_index: index + 1,
     })),
     tags: [],
@@ -33,7 +33,6 @@ function convertBackendQuestion(backendQ: BackendQuestion): QuestionData {
 function convertBackendQuiz(backendQuiz: BackendQuizEntity): GeneratedQuiz {
   const questions = backendQuiz.quizData?.questions || [];
 
-  // Handle tags conversion - backend might have tag objects or strings
   const convertTags = (tags: any[]): string[] => {
     if (!Array.isArray(tags)) return [];
     const converted = tags.map((tag) => {
@@ -41,7 +40,6 @@ function convertBackendQuiz(backendQuiz: BackendQuizEntity): GeneratedQuiz {
       if (typeof tag === "object" && tag.name) return tag.name;
       return String(tag);
     });
-    console.log("🏷️ Converting tags:", { original: tags, converted });
     return converted;
   };
 
@@ -75,7 +73,7 @@ function convertBackendQuiz(backendQuiz: BackendQuizEntity): GeneratedQuiz {
   };
 }
 
-export function useQuizLoader(quizId: number): UseQuizLoaderReturn {
+export function useQuizLoader(quizId: string): UseQuizLoaderReturn {
   // Fetch quiz data
   const {
     data: backendQuiz,
@@ -109,7 +107,6 @@ export function useQuizLoader(quizId: number): UseQuizLoaderReturn {
         throw new Error("Invalid quiz data received from server");
       }
 
-      // Add additional validation for the expected structure
       if (!data.quizData) {
         console.warn("Quiz data missing quizData field", data);
         // Create a minimal structure if missing
@@ -120,18 +117,6 @@ export function useQuizLoader(quizId: number): UseQuizLoaderReturn {
         console.warn("Quiz data missing questions array", data.quizData);
         data.quizData.questions = [];
       }
-
-      console.log("✅ Quiz data loaded:", {
-        id: data.id,
-        title: data.title,
-        questionsCount: data.quizData?.questions?.length || 0,
-        hasQuizData: !!data.quizData,
-        tagsType: data.tags ? typeof data.tags[0] : "no-tags",
-        tagsCount: Array.isArray(data.tags) ? data.tags.length : 0,
-      });
-
-      console.log("🏷️ Tags structure:", data.tags);
-
       return data as BackendQuizEntity;
     },
     enabled: !!quizId,

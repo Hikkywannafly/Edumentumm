@@ -1,9 +1,6 @@
 import DashboardLayout from "@/components/layout/dashboard-layout";
 import { PageHeaderClient } from "@/components/layout/page-header-client";
-import { LocalizedLink } from "@/components/localized-link";
 import { QuizzesContent } from "@/components/quizzes/quizzes-content";
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { setRequestLocale } from "next-intl/server";
 
@@ -23,18 +20,9 @@ export default async function QuizzesPage({
         {/* Header */}
         <PageHeaderClient
           title={t("title")}
-          action={
-            <LocalizedLink href="quizzes/create">
-              <Button size="sm">
-                <Plus className="mr-2 h-4 w-4" />
-                {t("createQuiz")}
-              </Button>
-            </LocalizedLink>
-          }
           showThemeToggle={true}
           showLanguageSwitcher={true}
         />
-
         {/* Main Content */}
         <QuizzesContent />
       </div>

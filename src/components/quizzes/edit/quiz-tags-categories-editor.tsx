@@ -9,22 +9,18 @@ import type { Tag } from "@/types/quiz";
 import { Bot, Plus, Tag as TagIcon, X } from "lucide-react";
 import { useEffect, useState } from "react";
 
-// Helper function to extract tag name from either string or TagObject
 const getTagName = (tag: Tag): string => {
   return typeof tag === "string" ? tag : tag.name;
 };
 
-// Helper function to check if tags array includes a tag
 const includesTag = (tags: Tag[], tagName: string): boolean => {
   return tags.some((tag) => getTagName(tag) === tagName);
 };
 
-// Helper function to convert TagObject array to string array
 const tagsToStringArray = (tags: Tag[]): string[] => {
   return tags.map(getTagName);
 };
 
-// Helper function to add a string tag to existing tags array
 const addStringTag = (tags: Tag[], newTag: string): Tag[] => {
   if (!includesTag(tags, newTag)) {
     return [...tags, newTag];
@@ -32,7 +28,6 @@ const addStringTag = (tags: Tag[], newTag: string): Tag[] => {
   return tags;
 };
 
-// Helper function to remove a tag by name
 const removeTag = (tags: Tag[], tagName: string): Tag[] => {
   return tags.filter((tag) => getTagName(tag) !== tagName);
 };

@@ -40,11 +40,7 @@ export async function GET(
         }
       }
     }
-
-    console.log("🔐 Auth header:", authHeader ? "Present" : "Missing");
-
     try {
-      // Fetch quiz from real backend
       const requestHeaders: any = {};
 
       if (authHeader) {
@@ -52,23 +48,12 @@ export async function GET(
       } else {
         console.warn("⚠️ No authentication token available for backend request");
       }
-
       const response = await apiClient.get(`/student/quizzes/${quizId}`, {
         headers: requestHeaders,
       });
-
       const quiz = response.data;
-      console.log("✅ Quiz fetched successfully:", quizId);
-      console.log(
-        "🔍 Backend quiz data structure:",
-        JSON.stringify(quiz, null, 2),
-      );
-      console.log("📋 QuizData field:", quiz.quizData);
-      console.log(
-        "📋 Questions in quizData:",
-        quiz.quizData?.questions?.length || 0,
-      );
 
+      console.log("✅ Quiz created:", quiz);
       return NextResponse.json(quiz);
     } catch (apiError) {
       if (axios.isAxiosError(apiError)) {
@@ -197,7 +182,6 @@ export async function PUT(
       );
 
       const updatedQuiz = response.data;
-      console.log("✅ Quiz updated successfully:", quizId);
 
       return NextResponse.json({
         success: true,
