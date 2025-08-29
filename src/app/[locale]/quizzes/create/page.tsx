@@ -1,7 +1,7 @@
 import DashboardLayout from "@/components/layout/dashboard-layout";
 import { PageHeaderClient } from "@/components/layout/page-header-client";
 import { LocalizedLink } from "@/components/localized-link";
-import { QuizCreator } from "@/components/quizzes/quiz-creator";
+import { QuizCreator } from "@/components/quizzes/create/quiz-creator";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { getTranslations } from "next-intl/server";

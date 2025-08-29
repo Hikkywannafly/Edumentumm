@@ -21,7 +21,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { folderAPI } from "../../../../lib/api/folder";
 import type { FileResponse, FolderResponse } from "../../../../types/folder";
-import { FileUploadArea } from "../../../quizzes/file-upload-area";
+import { FileUploadArea } from "../../../quizzes/create/file-upload-area";
 
 interface UploadFileDialogProps {
   open: boolean;
