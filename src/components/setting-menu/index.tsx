@@ -73,9 +73,12 @@ export function SettingMenu() {
           variant="ghost"
           className="relative h-10 w-10 rounded-full ring-2 ring-indigo-500/70 transition hover:ring-indigo-600"
         >
-          <Avatar className="h-10 w-10">
-            <AvatarImage src={user.imageUrl || undefined} alt={displayName} />
-            <AvatarFallback className="font-semibold text-base">
+          <Avatar className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border-4 border-background">
+            <AvatarImage
+              src={user?.imageUrl || "/placeholder.svg"}
+              className="h-full w-full object-cover"
+            />
+            <AvatarFallback className="flex h-full w-full items-center justify-center bg-muted font-bold text-4xl">
               {initials}
             </AvatarFallback>
           </Avatar>
@@ -88,9 +91,12 @@ export function SettingMenu() {
       >
         <DropdownMenuLabel className="border-zinc-100 border-b p-4 pb-2 font-normal dark:border-zinc-800">
           <div className="flex items-center gap-3">
-            <Avatar className="h-12 w-12 ring-2 ring-indigo-500/70">
-              <AvatarImage src={user.imageUrl || undefined} alt={displayName} />
-              <AvatarFallback className="font-semibold text-lg">
+            <Avatar className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border-4 border-background">
+              <AvatarImage
+                src={user?.imageUrl || "/placeholder.svg"}
+                className="h-full w-full object-cover"
+              />
+              <AvatarFallback className="flex h-full w-full items-center justify-center bg-muted font-bold text-4xl">
                 {initials}
               </AvatarFallback>
             </Avatar>

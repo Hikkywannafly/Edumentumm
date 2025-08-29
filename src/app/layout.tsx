@@ -13,6 +13,8 @@ import { Toaster } from "sonner";
 import { OpenGraph } from "@/lib/og";
 import "./globals.css";
 import { GoogleOAuthProvider } from "@react-oauth/google";
+import { AttendanceProvider } from "../contexts/attendance-context";
+import { PingProvider } from "../contexts/study-time-context";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -45,9 +47,13 @@ export default function RootLayout({
                 <AuthProvider>
                   <PomodoroProvider>
                     <AuthGuard>
-                      <PomodoroAppWrapper>
-                        <main className="mx-auto ">{children}</main>
-                      </PomodoroAppWrapper>
+                      <PingProvider>
+                        <AttendanceProvider>
+                          <PomodoroAppWrapper>
+                            <main className="mx-auto ">{children}</main>
+                          </PomodoroAppWrapper>
+                        </AttendanceProvider>
+                      </PingProvider>
                     </AuthGuard>
                   </PomodoroProvider>
                 </AuthProvider>
