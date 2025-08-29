@@ -147,24 +147,24 @@ export function QuizCard({ quiz, onDelete, onEdit, onView }: QuizCardProps) {
         {/* Action Buttons */}
         <div className="flex gap-2">
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
-            className="flex-1 justify-between font-medium hover:bg-muted"
+            className="flex-1 justify-center gap-2 font-medium hover:bg-muted"
             asChild
           >
             <LocalizedLink href={`quizzes/${quiz.slug}/edit`}>
-              Edit
               <Edit className="h-4 w-4" />
+              Edit
             </LocalizedLink>
           </Button>
           <Button
             size="sm"
-            className="flex-1 justify-between font-medium"
+            className="flex-1 transform justify-center gap-2 bg-blue-600 font-medium text-white duration-200 hover:bg-blue-700 active:scale-95"
             asChild
           >
             <LocalizedLink href={`quizzes/${quiz.slug}`}>
-              Open
               <ArrowRight className="h-4 w-4" />
+              Take Quiz
             </LocalizedLink>
           </Button>
         </div>

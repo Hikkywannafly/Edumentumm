@@ -71,9 +71,10 @@ export function useLocalizedNavigation() {
   const goQuizEdit = (quizId?: string | number, slug?: string) => {
     if (quizId && slug) {
       const path = `/quizzes/${slug}-${quizId}/edit`;
-      navigate(path);
+      // Use replace to prevent back navigation to create page
+      router.replace(`/${locale}${path}`);
     } else {
-      navigate("/quizzes/edit");
+      router.replace(`/${locale}/quizzes/edit`);
     }
   };
 

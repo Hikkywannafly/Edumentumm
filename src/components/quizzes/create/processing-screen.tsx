@@ -19,26 +19,40 @@ export function ProcessingScreen({
   isDone = false,
   hasError = false,
   onComplete,
-  showSuccessFor = 2500,
+  showSuccessFor = 4000,
   autoNavigate = true,
 }: ProcessingScreenProps) {
   const [showResult, setShowResult] = useState(false);
   const [isNavigating, setIsNavigating] = useState(false);
+  const [currentStep, setCurrentStep] = useState<
+    "processing" | "saving" | "complete"
+  >("processing");
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
   useEffect(() => {
     if (!isDone) {
       setShowResult(false);
       setIsNavigating(false);
+      setIsTransitioning(false);
+
+      // Detect if we're in saving phase by checking the label
+      if (label?.toLowerCase().includes("saving")) {
+        setCurrentStep("saving");
+      } else {
+        setCurrentStep("processing");
+      }
       return;
     }
 
     setShowResult(true);
+    setCurrentStep("complete");
 
     if (!hasError && autoNavigate) {
-      const navigateTimer = setTimeout(() => {
-        setIsNavigating(true);
-      }, 1200);
+      // Start navigation phase immediately
+      setIsNavigating(true);
+      setIsTransitioning(true);
 
+      // Complete after longer delay to ensure navigation finishes
       const completeTimer = setTimeout(() => {
         if (onComplete) {
           onComplete();
@@ -46,11 +60,10 @@ export function ProcessingScreen({
       }, showSuccessFor);
 
       return () => {
-        clearTimeout(navigateTimer);
         clearTimeout(completeTimer);
       };
     }
-  }, [isDone, hasError, onComplete, showSuccessFor, autoNavigate]);
+  }, [isDone, hasError, onComplete, showSuccessFor, autoNavigate, label]);
 
   const getIcon = () => {
     if (!isDone) {
@@ -66,17 +79,41 @@ export function ProcessingScreen({
   };
 
   const getTitle = () => {
-    if (!isDone) return "Preparing your quiz";
+    if (!isDone) {
+      if (currentStep === "saving") {
+        return "Saving your quiz";
+      }
+      return "Preparing your quiz";
+    }
     if (hasError) return "Something went wrong";
     if (isNavigating) return "Redirecting...";
     return "Quiz Ready!";
   };
 
   const getDescription = () => {
-    if (!isDone) return label || "Please wait a moment";
+    if (!isDone) {
+      if (currentStep === "saving") {
+        return "Saving to database...";
+      }
+      return label || "Please wait a moment";
+    }
     if (hasError) return "Please try again";
     if (isNavigating) return "Opening quiz editor...";
     return "Your quiz has been created successfully!";
+  };
+
+  const getProgressWidth = () => {
+    if (!isDone) {
+      if (currentStep === "saving") {
+        return "85%";
+      }
+      return "45%";
+    }
+    // When done, show near complete but not 100% until navigation starts
+    if (isTransitioning) {
+      return "100%";
+    }
+    return "95%";
   };
 
   return (
@@ -110,7 +147,10 @@ export function ProcessingScreen({
 
         {!isDone && (
           <div className="mt-4 h-1 w-full overflow-hidden rounded-full bg-gray-200">
-            <div className="h-full w-full animate-pulse bg-blue-600" />
+            <div
+              className="h-full bg-blue-600 transition-all duration-500 ease-out"
+              style={{ width: getProgressWidth() }}
+            />
           </div>
         )}
 
@@ -121,7 +161,7 @@ export function ProcessingScreen({
                 isNavigating ? "bg-blue-600" : "bg-green-600"
               }`}
               style={{
-                width: showResult ? (isNavigating ? "100%" : "85%") : "0%",
+                width: getProgressWidth(),
                 transitionDelay: showResult ? "0ms" : "200ms",
               }}
             />
