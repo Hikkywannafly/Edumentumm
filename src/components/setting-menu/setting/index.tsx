@@ -1,7 +1,5 @@
 "use client";
 
-import type React from "react";
-
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,12 +15,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
-import { useToast } from "@/hooks/use-toast";
-import { Camera, Globe, Trash2 } from "lucide-react";
+import { Camera } from "lucide-react";
+import type React from "react";
 import { useRef, useState } from "react";
+import { toast } from "sonner";
 import { useAuth } from "../../../contexts/auth-context";
+import { profileAPI } from "../../../lib/api/profile";
 
 export default function UserSetting() {
   const { user } = useAuth();
@@ -30,103 +29,85 @@ export default function UserSetting() {
     user?.username || user?.email || "User",
   );
   const [isPublic, setIsPublic] = useState(true);
-  const [profilePicture, setProfilePicture] = useState<string | null>(null);
-  const [bannerImage, setBannerImage] = useState<string | null>(null);
-  const { toast } = useToast();
+  const [profilePicture, setProfilePicture] = useState<File | null>(null);
+  const [bannerImage, setBannerImage] = useState<File | null>(null);
 
   const profileInputRef = useRef<HTMLInputElement>(null);
   const bannerInputRef = useRef<HTMLInputElement>(null);
 
-  // Mock data
-  const profileUrl =
-    "https://studyon.app/dashboard/user/cmdrednmb028zomun2ec7rreu";
-  const defaultBannerImage =
-    "https://t3.ftcdn.net/jpg/04/12/12/98/360_F_412129819_HaLS1MLvkJBPaBPMagPUOYm1SfAcaT7h.jpg";
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleProfilePictureUpload = (
     event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const file = event.target.files?.[0];
     if (!file) return;
-
-    // Validate file size (5MB max)
-    if (file.size > 5 * 1024 * 1024) {
-      toast({
-        title: "File too large",
-        description: "Please select an image smaller than 5MB.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Validate file type
-    if (!file.type.startsWith("image/")) {
-      toast({
-        title: "Invalid file type",
-        description: "Please select a valid image file (JPG, PNG, WebP).",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const result = e.target?.result as string;
-      setProfilePicture(result);
-      toast({
-        title: "Profile picture updated",
-        description: "Your profile picture has been updated successfully.",
-      });
-    };
-    reader.readAsDataURL(file);
+    setProfilePicture(file);
   };
 
   const handleBannerUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-
-    // Validate file size (10MB max)
-    if (file.size > 10 * 1024 * 1024) {
-      toast({
-        title: "File too large",
-        description: "Please select an image smaller than 10MB.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Validate file type
-    if (!file.type.startsWith("image/")) {
-      toast({
-        title: "Invalid file type",
-        description: "Please select a valid image file (JPG, PNG, WebP).",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const result = e.target?.result as string;
-      setBannerImage(result);
-      toast({
-        title: "Banner updated",
-        description: "Your profile banner has been updated successfully.",
-      });
-    };
-    reader.readAsDataURL(file);
+    setBannerImage(file);
   };
 
-  const handleSaveChanges = () => {
-    // Handle save logic here
-    toast({
-      title: "Changes saved",
-      description: "Your profile changes have been saved successfully.",
-    });
+  const handleSaveChanges = async () => {
+    try {
+      setIsLoading(true);
+
+      // Kiểm tra không có gì thay đổi
+      const unchangedName =
+        displayName === (user?.username || user?.email || "User");
+      const unchangedProfile =
+        !profilePicture &&
+        (!user?.imageUrl || user?.imageUrl === "/placeholder.svg");
+      const unchangedBanner =
+        !bannerImage &&
+        (!user?.bannerUrl || user?.bannerUrl === "/placeholder.svg");
+
+      if (unchangedName && unchangedProfile && unchangedBanner) {
+        toast.info("No changes to save");
+        setIsLoading(false);
+        return;
+      }
+
+      if (!displayName) {
+        toast.error("Please enter your display name before saving.");
+        setIsLoading(false);
+        return;
+      }
+
+      if (!profilePicture && !bannerImage && unchangedName) {
+        toast.error(
+          "Please upload a profile picture, banner or change username to save.",
+        );
+        setIsLoading(false);
+        return;
+      }
+
+      const res = await profileAPI.updateProfile(
+        profilePicture as File,
+        bannerImage as File,
+        displayName,
+      );
+
+      if (res) {
+        if (user) {
+          user.imageUrl = res.data.imageUrl;
+          user.bannerUrl = res.data.bannerUrl;
+          user.username = res.data.username;
+        }
+        localStorage.setItem("user", JSON.stringify(user));
+      }
+      toast.success("Profile updated successfully.");
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleDeleteAccount = () => {
-    // Handle account deletion logic here
     console.log("Deleting account...");
   };
 
@@ -161,30 +142,29 @@ export default function UserSetting() {
           <Card>
             <CardHeader>
               <CardTitle>Profile Picture</CardTitle>
-              <p className="text-muted-foreground text-sm">
-                Upload a profile picture to personalize your account.
-              </p>
             </CardHeader>
             <CardContent>
               <div className="flex items-center gap-6">
-                <Avatar className="h-20 w-20">
-                  <AvatarImage src={profilePicture || "/placeholder.svg"} />
-                  <AvatarFallback className="text-2xl">
+                <Avatar className="flex h-32 w-32 items-center justify-center overflow-hidden rounded-full border-4 border-background">
+                  <AvatarImage
+                    src={
+                      profilePicture
+                        ? URL.createObjectURL(profilePicture)
+                        : user?.imageUrl || "/placeholder.svg"
+                    }
+                    className="h-full w-full object-cover"
+                  />
+                  <AvatarFallback className="flex h-full w-full items-center justify-center bg-muted font-bold text-4xl">
                     {displayName.charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
-                <div className="space-y-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => profileInputRef.current?.click()}
-                  >
-                    <Camera className="mr-2 h-4 w-4" />
-                    Choose Image
-                  </Button>
-                  <p className="text-muted-foreground text-xs">
-                    Maximum file size: 5MB. Supported formats: JPG, PNG, WebP
-                  </p>
-                </div>
+                <Button
+                  variant="outline"
+                  onClick={() => profileInputRef.current?.click()}
+                >
+                  <Camera className="mr-2 h-4 w-4" />
+                  Choose Image
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -193,35 +173,27 @@ export default function UserSetting() {
           <Card>
             <CardHeader>
               <CardTitle>Profile Banner</CardTitle>
-              <p className="text-muted-foreground text-sm">
-                Upload a banner image for your profile page. Recommended size:
-                1200x300px.
-              </p>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 <div className="relative h-32 overflow-hidden rounded-lg bg-muted">
                   <img
                     src={
-                      bannerImage || defaultBannerImage || "/placeholder.svg"
+                      bannerImage
+                        ? URL.createObjectURL(bannerImage)
+                        : user?.bannerUrl || "/placeholder.svg"
                     }
                     alt="Profile banner"
                     className="h-full w-full object-cover"
                   />
                 </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => bannerInputRef.current?.click()}
-                  >
-                    <Camera className="mr-2 h-4 w-4" />
-                    Choose Banner
-                  </Button>
-                  <Button variant="outline">View Profile</Button>
-                </div>
-                <p className="text-muted-foreground text-xs">
-                  Maximum file size: 10MB. Supported formats: JPG, PNG, WebP
-                </p>
+                <Button
+                  variant="outline"
+                  onClick={() => bannerInputRef.current?.click()}
+                >
+                  <Camera className="mr-2 h-4 w-4" />
+                  Choose Banner
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -230,26 +202,13 @@ export default function UserSetting() {
           <Card>
             <CardHeader>
               <CardTitle>Your Name</CardTitle>
-              <p className="text-muted-foreground text-sm">
-                Please enter a display name you are comfortable with.
-              </p>
             </CardHeader>
             <CardContent>
-              <div className="items-left flex flex-col gap-2">
-                <div className="flex flex-1">
-                  <Input
-                    className="mr-2"
-                    value={displayName}
-                    onChange={(e) => setDisplayName(e.target.value)}
-                    placeholder="Enter your display name"
-                    maxLength={32}
-                  />
-                  <Button onClick={handleSaveChanges}>Save Changes</Button>
-                </div>
-                <p className="mt-1 text-muted-foreground text-xs">
-                  Max 32 characters
-                </p>
-              </div>
+              <Input
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                maxLength={32}
+              />
             </CardContent>
           </Card>
 
@@ -257,69 +216,50 @@ export default function UserSetting() {
           <Card>
             <CardHeader>
               <CardTitle>Profile Privacy</CardTitle>
-              <p className="text-muted-foreground text-sm">
-                Control who can view your profile and statistics.
-              </p>
             </CardHeader>
             <CardContent>
               <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <Globe className="h-4 w-4" />
-                    <span className="font-medium">Public</span>
-                  </div>
-                  <p className="text-muted-foreground text-sm">
-                    Anyone can view your profile and all learning statistics
-                  </p>
-                </div>
+                <span>Public</span>
                 <Switch checked={isPublic} onCheckedChange={setIsPublic} />
               </div>
-
-              {isPublic && (
-                <div className="mt-4 rounded-lg bg-muted p-3">
-                  <p className="text-muted-foreground text-sm">
-                    Your profile URL:{" "}
-                    <span className="text-blue-600">{profileUrl}</span>
-                  </p>
-                </div>
-              )}
             </CardContent>
           </Card>
 
-          <Separator />
+          {/* Save button */}
+          <div className="flex justify-end">
+            <Button size="lg" onClick={handleSaveChanges} disabled={isLoading}>
+              {isLoading ? (
+                <>
+                  <span className="mr-2 inline-block h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  Saving...
+                </>
+              ) : (
+                "Save All Changes"
+              )}
+            </Button>
+          </div>
 
           {/* Delete Account */}
           <Card className="border-destructive/20">
             <CardHeader>
               <CardTitle className="text-destructive">Delete Account</CardTitle>
-              <p className="text-muted-foreground text-sm">
-                This is a danger zone - Be careful!
-              </p>
             </CardHeader>
             <CardContent>
               <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <Button variant="destructive" className="w-full sm:w-auto">
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    Delete Account
-                  </Button>
+                  <Button variant="destructive">Delete Account</Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
                     <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                     <AlertDialogDescription>
-                      Permanently delete your StudyOn account. This action
-                      cannot be undone and will remove all your data, progress,
-                      and learning materials.
+                      This will permanently delete your account.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={handleDeleteAccount}
-                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                    >
-                      Delete Account
+                    <AlertDialogAction onClick={handleDeleteAccount}>
+                      Delete
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>

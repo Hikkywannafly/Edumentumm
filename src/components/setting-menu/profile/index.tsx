@@ -1,281 +1,197 @@
 "use client";
 
-import type React from "react";
-
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
 import {
   Award,
   BarChart3,
   BookOpen,
-  Camera,
+  ChevronLeft,
+  ChevronRight,
   Clock,
   Eye,
-  Target,
   Trophy,
-  Upload,
   Zap,
 } from "lucide-react";
-import { useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "../../../contexts/auth-context";
+import { profileAPI } from "../../../lib/api/profile";
+import { LevelBadge } from "../level-badge";
+
+const weekDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const getDaysInMonth = (y: number, m: number) =>
+  new Date(y, m + 1, 0).getDate();
+const getFirstDayOfWeek = (y: number, m: number) => {
+  const d = new Date(y, m, 1).getDay();
+  return d === 0 ? 6 : d - 1;
+};
 
 export default function UserProfile() {
   const { user } = useAuth();
-  const { toast } = useToast();
-  const [avatarImage, setAvatarImage] = useState<string | null>(null);
-  const [bannerImage, setBannerImage] = useState<string | null>(null);
-  const [isHoveringAvatar, setIsHoveringAvatar] = useState(false);
-  const avatarInputRef = useRef<HTMLInputElement>(null);
-  const bannerInputRef = useRef<HTMLInputElement>(null);
-
   const displayName = user?.username || user?.email || "User";
+  const [userData, setUserData] = useState<any>(null);
+  const [attendanceDates, setAttendanceDates] = useState<string[]>([]);
+  const today = new Date();
+  const [calendar, setCalendar] = useState({
+    year: today.getFullYear(),
+    month: today.getMonth(),
+  });
+  const { year, month } = calendar;
+  const daysInMonth = getDaysInMonth(year, month);
+  const firstDayOfWeek = getFirstDayOfWeek(year, month);
+  const daysArray = [
+    ...Array(firstDayOfWeek).fill(null),
+    ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
+  ];
 
-  // Mock user data
-  const userData = {
-    level: 1,
-    xp: 0,
-    maxXp: 100,
-    streak: 0,
-    joinDate: "July 2025",
-    profileViews: 1,
-    avatar: avatarImage,
-    bannerImage:
-      bannerImage ||
-      "https://t3.ftcdn.net/jpg/04/12/12/98/360_F_412129819_HaLS1MLvkJBPaBPMagPUOYm1SfAcaT7h.jpg",
-  };
-
-  const handleAvatarUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    // Validate file size (5MB max)
-    if (file.size > 5 * 1024 * 1024) {
-      toast({
-        title: "File too large",
-        description: "Please select an image smaller than 5MB.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Validate file type
-    if (!file.type.startsWith("image/")) {
-      toast({
-        title: "Invalid file type",
-        description: "Please select a valid image file (JPG, PNG, WebP).",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const result = e.target?.result as string;
-      setAvatarImage(result);
-      toast({
-        title: "Avatar updated",
-        description: "Your profile picture has been updated successfully.",
-      });
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const handleBannerUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    // Validate file size (10MB max)
-    if (file.size > 10 * 1024 * 1024) {
-      toast({
-        title: "File too large",
-        description: "Please select an image smaller than 10MB.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Validate file type
-    if (!file.type.startsWith("image/")) {
-      toast({
-        title: "Invalid file type",
-        description: "Please select a valid image file (JPG, PNG, WebP).",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const result = e.target?.result as string;
-      setBannerImage(result);
-      toast({
-        title: "Banner updated",
-        description: "Your profile banner has been updated successfully.",
-      });
-    };
-    reader.readAsDataURL(file);
-  };
+  useEffect(() => {
+    profileAPI.getProfile().then((res) =>
+      setUserData({
+        level: res.data.levelProgress?.replace("LEVEL_", "") || "1",
+        xp: res.data.totalStudyTimeToday ?? 0,
+        streak: res.data.streak ?? 0,
+        createdAt: res.data.createdAt,
+        totalStudyTimeToday: res.data.totalStudyTimeToday ?? 0,
+        profileViews: 1,
+        quizzesCreated: res.data.totalQuizzesCreated ?? 0,
+        quizzesCompleted: res.data.totalQuizzesCompleted ?? 0,
+        flashcardsCreated: res.data.totalFlashCardCreated ?? 0,
+        flashcardsCompleted: res.data.totalFlashCardCompleted ?? 0,
+        totalAttendance: res.data.totalAttendance ?? 0,
+      }),
+    );
+    profileAPI
+      .getAttendance()
+      .then((res) =>
+        setAttendanceDates(
+          Array.isArray(res.data) ? res.data.map((i: any) => i.localDate) : [],
+        ),
+      );
+  }, []);
 
   const stats = [
     {
       title: "Study Streak",
-      value: "0",
+      value: userData?.streak ?? 0,
       subtitle: "Longest: 0 days",
       icon: Trophy,
       color: "text-orange-500",
     },
     {
       title: "Total Focus Time",
-      value: "0h 0m",
+      value: `${Math.floor((userData?.xp ?? 0) / 60)}h ${
+        (userData?.xp ?? 0) % 60
+      }m`,
       subtitle: "Time spent studying",
       icon: Clock,
       color: "text-blue-500",
     },
     {
       title: "Level Progress",
-      value: "Level 1",
-      subtitle: "0/100 XP",
+      value: `Level ${userData?.level ?? 1}`,
+      subtitle: `${userData?.xp ?? 0}/100 XP`,
       icon: Zap,
       color: "text-yellow-500",
     },
     {
-      title: "Session Quality",
-      value: "0%",
-      subtitle: "Average focus quality",
-      icon: Target,
+      title: "Attendance",
+      value: userData?.totalAttendance ?? 0,
+      subtitle: "Total attendance days",
+      icon: Award,
       color: "text-green-500",
     },
     {
-      title: "Quizzes Completed",
-      value: "0",
-      subtitle: "0% avg score",
-      icon: Award,
-      color: "text-purple-500",
-    },
-    {
-      title: "Flashcards Mastered",
-      value: "0",
-      subtitle: "From 0 sets",
+      title: "Quizzes Created",
+      value: userData?.quizzesCreated ?? 0,
+      subtitle: "Total quizzes created",
       icon: BookOpen,
       color: "text-blue-600",
     },
     {
-      title: "Content Created",
-      value: "0",
-      subtitle: "Total learning materials",
+      title: "Quizzes Completed",
+      value: userData?.quizzesCompleted ?? 0,
+      subtitle: "Total quizzes completed",
       icon: BookOpen,
       color: "text-pink-500",
     },
     {
-      title: "Productivity Score",
-      value: "0%",
-      subtitle: "Overall performance",
+      title: "Flashcards Created",
+      value: userData?.flashcardsCreated ?? 0,
+      subtitle: "Total flashcards created",
       icon: BarChart3,
       color: "text-emerald-500",
     },
+    {
+      title: "Flashcards Mastered",
+      value: userData?.flashcardsCompleted ?? 0,
+      subtitle: "Total flashcards mastered",
+      icon: BarChart3,
+      color: "text-purple-500",
+    },
   ];
-
-  const productivityInsights = {
-    avgDailyTime: "0h 0m",
-    focusQuality: "0%",
-    quizzesDone: 0,
-  };
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Hidden file inputs */}
-      <input
-        ref={avatarInputRef}
-        type="file"
-        accept="image/*"
-        onChange={handleAvatarUpload}
-        className="hidden"
-      />
-      <input
-        ref={bannerInputRef}
-        type="file"
-        accept="image/*"
-        onChange={handleBannerUpload}
-        className="hidden"
-      />
-
-      {/* Header with Banner */}
+      {/* Banner */}
       <div className="relative h-48 overflow-hidden bg-gradient-to-r from-purple-600 via-pink-600 to-orange-500">
         <img
-          src={userData.bannerImage || "/placeholder.svg"}
+          src={
+            user?.bannerUrl ||
+            "https://t3.ftcdn.net/jpg/04/12/12/98/360_F_412129819_HaLS1MLvkJBPaBPMagPUOYm1SfAcaT7h.jpg"
+          }
           alt="Profile banner"
           className="h-full w-full object-cover"
         />
-        <div className="absolute top-4 right-4">
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => bannerInputRef.current?.click()}
-          >
-            <Camera className="mr-2 h-4 w-4" />
-            Change Banner
-          </Button>
-        </div>
       </div>
-
       {/* Profile Info */}
       <div className="-mt-16 container relative z-10 mx-auto px-4">
         <div className="mb-8 flex flex-col items-start text-start">
-          <div
-            className="relative mb-6"
-            onMouseEnter={() => setIsHoveringAvatar(true)}
-            onMouseLeave={() => setIsHoveringAvatar(false)}
-          >
-            <Avatar className="h-32 w-32 border-4 border-background">
-              <AvatarImage src={userData.avatar || "/placeholder.svg"} />
-              <AvatarFallback className="bg-muted font-bold text-4xl">
+          <div className="relative mb-6">
+            <Avatar className="flex h-32 w-32 items-center justify-center overflow-hidden rounded-full border-4 border-background">
+              <AvatarImage
+                src={user?.imageUrl || "/placeholder.svg"}
+                className="h-full w-full object-cover"
+              />
+              <AvatarFallback className="flex h-full w-full items-center justify-center bg-muted font-bold text-4xl">
                 {displayName.charAt(0).toUpperCase()}
               </AvatarFallback>
             </Avatar>
-
-            {/* Hover overlay with change button */}
-            {isHoveringAvatar && (
-              <div className="absolute inset-0 flex cursor-pointer items-center justify-center rounded-full bg-black/50 transition-opacity">
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => avatarInputRef.current?.click()}
-                  className="bg-white/90 text-black hover:bg-white"
-                >
-                  <Upload className="mr-2 h-4 w-4" />
-                  Change
-                </Button>
-              </div>
-            )}
           </div>
-
           <div>
-            <h1 className="mb-4 font-bold text-4xl">{displayName}</h1>
-            <div className="mb-2 flex items-center justify-center gap-4 text-muted-foreground">
-              <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                Level {userData.level}
-              </Badge>
-              <span>{userData.xp} XP</span>
-              <span className="flex items-center gap-1">
-                <Trophy className="h-4 w-4" />
-                {userData.streak} days streak
+            {/* Tên user */}
+            <h1 className="mb-3 font-bold text-4xl">{displayName}</h1>
+
+            {/* Badge + XP + Streak */}
+            <div className="mb-3 flex flex-wrap items-center gap-6 text-muted-foreground">
+              <div className="flex items-center gap-2">
+                <LevelBadge level={userData?.level} />
+              </div>
+              <span className="font-medium text-base">{userData?.xp} XP</span>
+              <span className="flex items-center gap-2">
+                <Trophy className="h-4 w-4 text-yellow-500" />
+                <span>{userData?.streak} days streak</span>
               </span>
             </div>
-            <div className="flex flex-row items-center text-muted-foreground text-sm">
-              Joined {userData.joinDate}
-              <Eye className="mr-1 ml-5 w-3" />
-              {userData.profileViews} views
+
+            {/* Created date + views */}
+            <div className="flex flex-wrap items-center gap-6 text-muted-foreground text-sm">
+              <span>
+                Created at{" "}
+                {userData?.createdAt
+                  ? new Date(userData.createdAt).toLocaleDateString()
+                  : ""}
+              </span>
+              <span className="flex items-center gap-2">
+                <Eye className="h-4 w-4" />
+                {userData?.profileViews} views
+              </span>
             </div>
           </div>
         </div>
-
-        {/* Stats Grid */}
+        {/* Stats */}
         <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-          {stats.map((stat, index) => (
-            <Card key={index}>
+          {stats.map((stat, i) => (
+            <Card key={i}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="font-medium text-sm">
                   {stat.title}
@@ -289,39 +205,74 @@ export default function UserProfile() {
             </Card>
           ))}
         </div>
-
-        {/* Calendar and Productivity Insights */}
+        {/* Calendar & Productivity */}
         <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
-          {/* Calendar */}
           <Card>
-            <CardHeader>
-              <CardTitle>August 2025</CardTitle>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <button
+                type="button"
+                className="rounded-full p-2 hover:bg-muted"
+                onClick={() =>
+                  setCalendar((prev) =>
+                    prev.month === 0
+                      ? { year: prev.year - 1, month: 11 }
+                      : { ...prev, month: prev.month - 1 },
+                  )
+                }
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+              <CardTitle>
+                {new Date(year, month).toLocaleString("default", {
+                  month: "long",
+                  year: "numeric",
+                })}
+              </CardTitle>
+              <button
+                type="button"
+                className="rounded-full p-2 hover:bg-muted"
+                onClick={() =>
+                  setCalendar((prev) =>
+                    prev.month === 11
+                      ? { year: prev.year + 1, month: 0 }
+                      : { ...prev, month: prev.month + 1 },
+                  )
+                }
+              >
+                <ChevronRight className="h-5 w-5" />
+              </button>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-7 gap-2 text-center text-sm">
-                {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(
-                  (day) => (
+                {weekDays.map((day) => (
+                  <div
+                    key={day}
+                    className="p-2 font-medium text-muted-foreground"
+                  >
+                    {day}
+                  </div>
+                ))}
+                {daysArray.map((day, idx) => {
+                  if (day === null) return <div key={`empty-${idx}`} />;
+                  const dateStr = `${year}-${String(month + 1).padStart(
+                    2,
+                    "0",
+                  )}-${String(day).padStart(2, "0")}`;
+                  const isAttended = attendanceDates.includes(dateStr);
+                  return (
                     <div
                       key={day}
-                      className="p-2 font-medium text-muted-foreground"
+                      className={`cursor-pointer rounded-md p-2 hover:bg-muted ${
+                        isAttended ? "bg-blue-800 font-bold text-white" : ""
+                      }`}
                     >
                       {day}
                     </div>
-                  ),
-                )}
-                {Array.from({ length: 31 }, (_, i) => (
-                  <div
-                    key={i + 1}
-                    className="cursor-pointer rounded-md p-2 hover:bg-muted"
-                  >
-                    {i + 1}
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </CardContent>
           </Card>
-
-          {/* Productivity Insights */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="flex items-center gap-2">
@@ -332,25 +283,19 @@ export default function UserProfile() {
             <CardContent>
               <div className="grid grid-cols-3 gap-4 text-center">
                 <div>
-                  <div className="font-bold text-2xl">
-                    {productivityInsights.avgDailyTime}
-                  </div>
+                  <div className="font-bold text-2xl">0h 0m</div>
                   <div className="text-muted-foreground text-xs">
                     Avg daily time
                   </div>
                 </div>
                 <div>
-                  <div className="font-bold text-2xl">
-                    {productivityInsights.focusQuality}
-                  </div>
+                  <div className="font-bold text-2xl">0%</div>
                   <div className="text-muted-foreground text-xs">
                     Focus quality
                   </div>
                 </div>
                 <div>
-                  <div className="font-bold text-2xl">
-                    {productivityInsights.quizzesDone}
-                  </div>
+                  <div className="font-bold text-2xl">0</div>
                   <div className="text-muted-foreground text-xs">
                     Quizzes done
                   </div>
