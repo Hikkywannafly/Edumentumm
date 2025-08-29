@@ -14,6 +14,60 @@ const UpdateQuizSchema = z.object({
     .optional(),
 });
 
+// Helper function to extract auth token from request
+function getAuthToken(request: NextRequest): string | null {
+  let authHeader = request.headers.get("authorization");
+
+  if (!authHeader) {
+    const cookies = request.headers.get("cookie");
+    if (cookies) {
+      const match = cookies.match(/accessToken=([^;]+)/);
+      if (match) {
+        authHeader = `Bearer ${match[1]}`;
+      }
+    }
+  }
+
+  return authHeader;
+}
+
+// Helper function to handle API errors consistently
+function handleApiError(error: unknown) {
+  if (axios.isAxiosError(error)) {
+    console.error("API Error:", {
+      status: error.response?.status,
+      data: error.response?.data,
+      message: error.message,
+    });
+
+    return NextResponse.json(
+      {
+        success: false,
+        error:
+          error.response?.data?.message ||
+          error.message ||
+          "API request failed",
+      },
+      { status: error.response?.status || 500 },
+    );
+  }
+
+  console.error("Unexpected error:", error);
+  return NextResponse.json(
+    {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+    },
+    { status: 500 },
+  );
+}
+
+// Helper function to validate quiz ID
+function validateQuizId(id: string): number | null {
+  const quizId = Number.parseInt(id);
+  return Number.isNaN(quizId) ? null : quizId;
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
@@ -21,71 +75,29 @@ export async function GET(
   try {
     const resolvedParams = await params;
     const { id } = resolvedParams;
-    const quizId = Number.parseInt(id);
+    const quizId = validateQuizId(id);
 
-    if (Number.isNaN(quizId)) {
+    if (!quizId) {
       return NextResponse.json(
         { success: false, error: "Invalid quiz ID" },
         { status: 400 },
       );
     }
-    let authHeader = request.headers.get("authorization");
 
-    if (!authHeader) {
-      const cookies = request.headers.get("cookie");
-      if (cookies) {
-        const match = cookies.match(/accessToken=([^;]+)/);
-        if (match) {
-          authHeader = `Bearer ${match[1]}`;
-        }
-      }
+    const authToken = getAuthToken(request);
+    const headers = authToken ? { Authorization: authToken } : {};
+
+    if (!authToken) {
+      console.warn("No authentication token available for backend request");
     }
-    try {
-      const requestHeaders: any = {};
 
-      if (authHeader) {
-        requestHeaders.Authorization = authHeader;
-      } else {
-        console.warn("⚠️ No authentication token available for backend request");
-      }
-      const response = await apiClient.get(`/student/quizzes/${quizId}`, {
-        headers: requestHeaders,
-      });
-      const quiz = response.data;
+    const response = await apiClient.get(`/student/quizzes/${quizId}`, {
+      headers,
+    });
 
-      console.log("✅ Quiz created:", quiz);
-      return NextResponse.json(quiz);
-    } catch (apiError) {
-      if (axios.isAxiosError(apiError)) {
-        console.error("❌ API Error fetching quiz:", {
-          status: apiError.response?.status,
-          data: apiError.response?.data,
-          message: apiError.message,
-        });
-
-        return NextResponse.json(
-          {
-            success: false,
-            error:
-              apiError.response?.data?.message ||
-              apiError.message ||
-              "Failed to fetch quiz",
-          },
-          { status: apiError.response?.status || 500 },
-        );
-      }
-      throw apiError;
-    }
+    return NextResponse.json(response.data);
   } catch (error) {
-    console.error("❌ Failed to fetch quiz:", error);
-
-    return NextResponse.json(
-      {
-        success: false,
-        error: error instanceof Error ? error.message : "Unknown error",
-      },
-      { status: 500 },
-    );
+    return handleApiError(error);
   }
 }
 
@@ -96,9 +108,9 @@ export async function PUT(
   try {
     const resolvedParams = await params;
     const { id } = resolvedParams;
-    const quizId = Number.parseInt(id);
+    const quizId = validateQuizId(id);
 
-    if (Number.isNaN(quizId)) {
+    if (!quizId) {
       return NextResponse.json(
         { success: false, error: "Invalid quiz ID" },
         { status: 400 },
@@ -119,8 +131,10 @@ export async function PUT(
       );
     }
 
-    const authHeader = request.headers.get("authorization");
+    const authToken = getAuthToken(request);
+    const headers = authToken ? { Authorization: authToken } : {};
 
+    // Build update payload
     const updatePayload: any = {};
 
     if (validated.data.title) {
@@ -152,72 +166,28 @@ export async function PUT(
       };
     }
 
-    if (validated.data.metadata) {
-      // Update other metadata fields as needed
-      if (validated.data.metadata.tags) {
-        // Convert frontend tags (strings) to backend tags (objects)
-        updatePayload.tags = validated.data.metadata.tags.map(
-          (tag: string) => ({
-            name: tag,
-            description: `Auto-generated tag for ${tag}`,
-            icon: "",
-            color: "",
-          }),
-        );
-      }
+    // Transform tags from frontend to backend format
+    if (validated.data.metadata?.tags) {
+      updatePayload.tags = validated.data.metadata.tags.map((tag: string) => ({
+        name: tag,
+        description: `Auto-generated tag for ${tag}`,
+        icon: "",
+        color: "",
+      }));
     }
 
-    try {
-      // Update quiz in real backend
-      const response = await apiClient.put(
-        `/student/quizzes/${quizId}`,
-        updatePayload,
-        {
-          headers: authHeader
-            ? {
-                Authorization: authHeader,
-              }
-            : {},
-        },
-      );
-
-      const updatedQuiz = response.data;
-
-      return NextResponse.json({
-        success: true,
-        quiz: updatedQuiz,
-      });
-    } catch (apiError) {
-      if (axios.isAxiosError(apiError)) {
-        console.error("❌ API Error updating quiz:", {
-          status: apiError.response?.status,
-          data: apiError.response?.data,
-          message: apiError.message,
-        });
-
-        return NextResponse.json(
-          {
-            success: false,
-            error:
-              apiError.response?.data?.message ||
-              apiError.message ||
-              "Failed to update quiz",
-          },
-          { status: apiError.response?.status || 500 },
-        );
-      }
-      throw apiError;
-    }
-  } catch (error) {
-    console.error("❌ Failed to update quiz:", error);
-
-    return NextResponse.json(
-      {
-        success: false,
-        error: error instanceof Error ? error.message : "Unknown error",
-      },
-      { status: 500 },
+    const response = await apiClient.put(
+      `/student/quizzes/${quizId}`,
+      updatePayload,
+      { headers },
     );
+
+    return NextResponse.json({
+      success: true,
+      quiz: response.data,
+    });
+  } catch (error) {
+    return handleApiError(error);
   }
 }
 
@@ -228,59 +198,25 @@ export async function DELETE(
   try {
     const resolvedParams = await params;
     const { id } = resolvedParams;
-    const quizId = Number.parseInt(id);
+    const quizId = validateQuizId(id);
 
-    if (Number.isNaN(quizId)) {
+    if (!quizId) {
       return NextResponse.json(
         { success: false, error: "Invalid quiz ID" },
         { status: 400 },
       );
     }
 
-    const authHeader = request.headers.get("authorization");
+    const authToken = getAuthToken(request);
+    const headers = authToken ? { Authorization: authToken } : {};
 
-    try {
-      await apiClient.delete(`/student/quizzes/${quizId}`, {
-        headers: authHeader
-          ? {
-              Authorization: authHeader,
-            }
-          : {},
-      });
-      return NextResponse.json({
-        success: true,
-        message: "Quiz deleted successfully",
-      });
-    } catch (apiError) {
-      if (axios.isAxiosError(apiError)) {
-        console.error("❌ API Error deleting quiz:", {
-          status: apiError.response?.status,
-          data: apiError.response?.data,
-          message: apiError.message,
-        });
+    await apiClient.delete(`/student/quizzes/${quizId}`, { headers });
 
-        return NextResponse.json(
-          {
-            success: false,
-            error:
-              apiError.response?.data?.message ||
-              apiError.message ||
-              "Failed to delete quiz",
-          },
-          { status: apiError.response?.status || 500 },
-        );
-      }
-      throw apiError;
-    }
+    return NextResponse.json({
+      success: true,
+      message: "Quiz deleted successfully",
+    });
   } catch (error) {
-    console.error("❌ Failed to delete quiz:", error);
-
-    return NextResponse.json(
-      {
-        success: false,
-        error: error instanceof Error ? error.message : "Unknown error",
-      },
-      { status: 500 },
-    );
+    return handleApiError(error);
   }
 }

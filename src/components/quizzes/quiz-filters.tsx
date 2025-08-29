@@ -11,8 +11,9 @@ import {
 } from "@/components/ui/select";
 import type { QuizFiltersProps } from "@/types/quiz-display";
 import { Grid3X3, List, Search } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useState } from "react";
-
+import { LocalizedLink } from "../localized-link";
 interface ExtendedQuizFiltersProps extends QuizFiltersProps {
   viewMode?: "grid" | "table";
   onViewModeChange?: (mode: "grid" | "table") => void;
@@ -91,6 +92,12 @@ export function QuizFilters({
           <List className="h-4 w-4" />
         </Button>
       </div>
+      <LocalizedLink href="/quizzes/create">
+        <Button className="flex items-center gap-2">
+          <Plus className="h-4 w-4" />
+          Add Quiz
+        </Button>
+      </LocalizedLink>
     </div>
   );
 }

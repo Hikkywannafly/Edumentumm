@@ -47,11 +47,13 @@ import { FileUploadArea } from "./file-upload-area";
 interface AIGeneratedUploaderProps {
   onProcessingStart?: (fileName: string, label?: string) => void;
   onProcessingDone?: (done: boolean) => void;
+  onProcessingUpdate?: (updates: { label?: string }) => void;
 }
 
 export function AIGeneratedUploader({
   onProcessingStart,
   onProcessingDone,
+  onProcessingUpdate,
 }: AIGeneratedUploaderProps) {
   const t = useTranslations("Quizzes");
   const { goQuizEdit } = useLocalizedNavigation();
@@ -150,25 +152,37 @@ export function AIGeneratedUploader({
       parsingMode,
     };
 
-    onProcessingStart?.(
-      uploadedFiles[0]?.name || "File",
-      generationMode === "GENERATE"
-        ? t("create.aiGenerated.aiGenerating")
-        : t("create.fileWithAnswers.processing"),
-    );
-
     try {
+      // Phase 1: Start processing (AI generation/extraction)
+      onProcessingStart?.(
+        uploadedFiles[0]?.name || "File",
+        generationMode === "GENERATE"
+          ? t("create.aiGenerated.aiGenerating")
+          : t("create.fileWithAnswers.processing"),
+      );
+
+      // Phase 2: Generate or extract quiz
       const quiz =
         generationMode === "GENERATE"
           ? await generateQuiz(settings)
           : await extractQuiz(settings);
 
+      // Phase 3: Update processing state to show saving
+      if (onProcessingUpdate) {
+        onProcessingUpdate({ label: "Saving quiz..." });
+      }
+
+      // Phase 4: Save quiz to backend
       const result = await saveQuiz(quiz, settings);
+
+      // Phase 5: Mark as done
       onProcessingDone?.(true);
+
+      // Phase 6: Navigate after longer delay to ensure processing screen covers transition
       setTimeout(() => {
         reset();
         goQuizEdit(result.id, result.slug);
-      }, 3000);
+      }, 4000); // Increased to 4 seconds to ensure smooth transition
     } catch (error) {
       console.error("Error processing quiz:", error);
       onProcessingDone?.(false);

@@ -66,7 +66,7 @@ export function QuizCreator() {
               isDone={processingDone}
               hasError={processingError}
               onComplete={hideProcessing}
-              showSuccessFor={2500}
+              showSuccessFor={4000}
               autoNavigate={!processingError}
             />
           </div>
@@ -113,6 +113,7 @@ export function QuizCreator() {
                 <AIGeneratedUploader
                   onProcessingStart={handleProcessingStart}
                   onProcessingDone={handleProcessingDone}
+                  onProcessingUpdate={updateProcessingState}
                 />
               </TabsContent>
               {/* <TabsContent
