@@ -154,7 +154,24 @@ export function QuizEditorContent() {
       ],
     };
 
-    addQuestion(newQuestion);
+    // Insert the new question at the correct position
+    if (!quiz) return;
+
+    const updatedQuestions = [...quiz.questions];
+    updatedQuestions.splice(afterIndex + 1, 0, newQuestion);
+
+    updateQuiz({
+      questions: updatedQuestions,
+      metadata: {
+        ...quiz.metadata,
+        total_questions: updatedQuestions.length,
+        total_points: updatedQuestions.reduce(
+          (sum, q) => sum + (q.points || 1),
+          0,
+        ),
+      },
+    });
+
     setIsValidForCreation(validateQuizForCreation());
   };
 

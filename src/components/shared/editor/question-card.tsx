@@ -123,7 +123,7 @@ export default function QuestionCard({
 
   return (
     <div>
-      <Card className="mb-6 border">
+      <Card className="mb-6 border-border/50 bg-card/50 backdrop-blur-sm transition-all duration-300 hover:bg-card hover:shadow-black/5 hover:shadow-md dark:hover:shadow-black/20">
         <CardContent className="p-6">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-2">
@@ -236,10 +236,10 @@ export default function QuestionCard({
                   return (
                     <div
                       key={answer.id}
-                      className={`flex items-start gap-2 rounded-md border p-3 transition-all duration-200 ${
+                      className={`flex items-start gap-2 rounded-md border p-3 transition-all duration-300 ${
                         isCorrect
-                          ? "border-green-500 bg-green-100 shadow-sm dark:border-green-400 dark:bg-green-900/20"
-                          : "border-gray-200 hover:border-gray-300 dark:border-gray-700 dark:hover:border-gray-600"
+                          ? "border-emerald-300 bg-emerald-50 shadow-sm dark:border-emerald-600 dark:bg-emerald-900/20"
+                          : "border-border/50 hover:border-border hover:bg-muted/50 dark:hover:border-border"
                       }`}
                     >
                       <RadioGroupItem
@@ -256,11 +256,11 @@ export default function QuestionCard({
                             }
                             placeholder={`Answer ${index + 1}`}
                             showToolbar={true}
-                            className={`w-full ${isCorrect ? "border-none bg-green-100 dark:bg-green-900/20" : ""}`}
+                            className={`w-full ${isCorrect ? "border-none bg-emerald-50/50 dark:bg-emerald-900/10" : ""}`}
                           />
                         </div>
                         {isCorrect && (
-                          <div className="-right-1 absolute flex h-6 w-6 items-center justify-center rounded-full bg-green-500 text-white shadow-sm dark:bg-green-400 dark:text-gray-900">
+                          <div className="-right-1 absolute flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-white shadow-sm transition-all duration-200 dark:bg-emerald-400 dark:text-gray-900">
                             <svg
                               className="h-4 w-4"
                               fill="currentColor"
@@ -302,10 +302,10 @@ export default function QuestionCard({
                 return (
                   <div
                     key={answer.id}
-                    className={`flex items-start gap-2 rounded-md border p-3 transition-all duration-200 ${
+                    className={`flex items-start gap-2 rounded-md border p-3 transition-all duration-300 ${
                       isCorrect
-                        ? "border-green-500 bg-green-100 shadow-sm dark:border-green-400 dark:bg-green-900/20"
-                        : "border-gray-200 hover:border-gray-300 dark:border-gray-700 dark:hover:border-gray-600"
+                        ? "border-emerald-300 bg-emerald-50 shadow-sm dark:border-emerald-600 dark:bg-emerald-900/20"
+                        : "border-border/50 hover:border-border hover:bg-muted/50 dark:hover:border-border"
                     }`}
                   >
                     <RadioGroupItem
@@ -324,11 +324,11 @@ export default function QuestionCard({
                             answer.text === "True" ? "True" : "False"
                           }
                           showToolbar={true}
-                          className={`w-full ${isCorrect ? "border-none bg-green-100 dark:bg-green-900/20" : ""}`}
+                          className={`w-full ${isCorrect ? "border-none bg-emerald-50/50 dark:bg-emerald-900/10" : ""}`}
                         />
                       </div>
                       {isCorrect && (
-                        <div className="-right-1 absolute flex h-6 w-6 items-center justify-center rounded-full bg-green-500 text-white shadow-sm dark:bg-green-400 dark:text-gray-900">
+                        <div className="-right-1 absolute flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-white shadow-sm transition-all duration-200 dark:bg-emerald-400 dark:text-gray-900">
                           <svg
                             className="h-4 w-4"
                             fill="currentColor"
@@ -420,17 +420,17 @@ export default function QuestionCard({
         </CardContent>
       </Card>
       {onAddQuestion && (
-        <div className="group relative my-4">
-          <div className="absolute top-1/2 w-full border-gray-100 border-t dark:border-gray-700" />
+        <div className="group relative my-6">
+          <div className="absolute top-1/2 w-full border-border/50 border-t transition-colors duration-300 group-hover:border-border/80" />
 
-          <div className="flex justify-center opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+          <div className="flex justify-center opacity-0 transition-all duration-300 ease-out group-hover:translate-y-0.5 group-hover:opacity-100">
             <Button
               variant="outline"
               size="sm"
               onClick={() => onAddQuestion(questionIndex)}
-              className="relative z-10 bg-white px-3 shadow-sm transition-all duration-200 hover:shadow-md dark:bg-gray-900"
+              className="relative z-10 transform border-border/50 bg-card/80 px-4 shadow-sm backdrop-blur-sm transition-all duration-300 hover:border-blue-300 hover:bg-card hover:text-blue-600 hover:shadow-md active:scale-95 dark:hover:border-blue-600 dark:hover:text-blue-400"
             >
-              <Plus className="mr-1 h-4 w-4" />
+              <Plus className="mr-2 h-4 w-4" />
               Add Question
             </Button>
           </div>
