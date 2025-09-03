@@ -5,6 +5,7 @@ import { useQuizEditor } from "@/hooks/quiz/use-quiz-editor";
 import { extractIdFromSlug } from "@/utils/index";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
 import { QuizDescriptionEditor } from "./quiz-description-editor";
 import { QuizEditorHeader } from "./quiz-editor-header";
 import { QuizEditorSkeleton } from "./quiz-editor-skeleton";
@@ -28,7 +29,10 @@ export function QuizEditorContent() {
     updateQuestion,
     deleteQuestion,
     moveQuestion,
+    saveQuiz,
+    isSaving,
     hasUnsavedChanges,
+    changedFields,
   } = useQuizEditor(extractIdFromSlug(quizId));
 
   const currentTitle = quiz?.title || "";
@@ -51,6 +55,41 @@ export function QuizEditorContent() {
     return hasValidQuestions;
   }, [currentTitle, quiz]);
 
+  const handleSaveQuiz = async () => {
+    try {
+      if (Object.keys(changedFields).length === 0) {
+        toast.info("No changes to save");
+        return;
+      }
+
+      console.log("Saving changed fields:", changedFields);
+      await saveQuiz();
+
+      toast.success("Quiz saved successfully!");
+      console.log("Quiz saved successfully");
+    } catch (error) {
+      console.error("Failed to save quiz:", error);
+
+      const errorMessage = "Failed to save quiz. Please try again.";
+
+      // if (error instanceof Error) {
+      //   if (error.message.includes("network") || error.message.includes("fetch")) {
+      //     errorMessage = "Network error. Please check your connection and try again.";
+      //   } else if (error.message.includes("401") || error.message.includes("unauthorized")) {
+      //     errorMessage = "You need to be logged in to save quizzes.";
+      //   } else if (error.message.includes("403") || error.message.includes("forbidden")) {
+      //     errorMessage = "You don't have permission to save this quiz.";
+      //   } else if (error.message.includes("400") || error.message.includes("validation")) {
+      //     errorMessage = "Invalid quiz data. Please check your quiz content.";
+      //   } else if (error.message !== "Unknown error") {
+      //     errorMessage = error.message;
+      //   }
+      // }
+
+      toast.error(errorMessage);
+    }
+  };
+
   useEffect(() => {
     setIsValidForCreation(validateQuizForCreation());
   }, [validateQuizForCreation]);
@@ -60,7 +99,11 @@ export function QuizEditorContent() {
       const confirmed = window.confirm(
         "Are you sure you want to leave? You have unsaved changes.",
       );
-      if (!confirmed) return;
+      if (!confirmed) {
+        toast.warning("Please save your changes before leaving.");
+        return;
+      }
+      toast.info("Unsaved changes will be lost.");
     }
     router.back();
   };
@@ -154,13 +197,32 @@ export function QuizEditorContent() {
       ],
     };
 
-    addQuestion(newQuestion);
+    // Insert the new question at the correct position
+    if (!quiz) return;
+
+    const updatedQuestions = [...quiz.questions];
+    updatedQuestions.splice(afterIndex + 1, 0, newQuestion);
+
+    updateQuiz({
+      questions: updatedQuestions,
+      metadata: {
+        ...quiz.metadata,
+        total_questions: updatedQuestions.length,
+        total_points: updatedQuestions.reduce(
+          (sum, q) => sum + (q.points || 1),
+          0,
+        ),
+      },
+    });
+
     setIsValidForCreation(validateQuizForCreation());
+    toast.success("Question added successfully!");
   };
 
   const handleDeleteQuestion = (id: string) => {
     deleteQuestion(id);
     setIsValidForCreation(validateQuizForCreation());
+    toast.success("Question deleted successfully!");
   };
 
   const handleTagsChange = (tags: string[]) => {
@@ -180,6 +242,7 @@ export function QuizEditorContent() {
           tags,
         },
       });
+      toast.success("Tags updated successfully!");
     }
   };
 
@@ -187,10 +250,12 @@ export function QuizEditorContent() {
     <ThinLayout>
       <div className="space-y-1">
         <QuizEditorHeader
-          onCreateQuiz={() => {}}
+          onSaveQuiz={handleSaveQuiz}
           onBack={handleNavigateAway}
           canCreate={isValidForCreation}
+          canSave={!!quiz && hasUnsavedChanges}
           isCreating={false}
+          isSaving={isSaving}
         />
 
         {/* Validation Status */}

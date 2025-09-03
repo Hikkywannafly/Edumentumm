@@ -16,13 +16,13 @@ import {
   Save,
   Settings,
   Trash2,
-  Upload,
+  // Upload,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 
 interface QuizEditorHeaderProps {
-  onCreateQuiz: () => void;
+  // onCreateQuiz: () => void;
   onSaveQuiz?: () => void;
   onDeleteQuiz?: () => void;
   onShowSettings?: () => void;
@@ -36,15 +36,15 @@ interface QuizEditorHeaderProps {
 }
 
 export function QuizEditorHeader({
-  onCreateQuiz,
+  // onCreateQuiz,
   onSaveQuiz,
   onDeleteQuiz,
   onShowSettings,
   onShowInfo,
   onBack,
-  canCreate,
+  // canCreate,
   canSave = false,
-  isCreating = false,
+  // isCreating = false,
   isSaving = false,
 }: QuizEditorHeaderProps) {
   const t = useTranslations("Quizzes");
@@ -114,18 +114,6 @@ export function QuizEditorHeader({
               >
                 <Save className="h-4 w-4" />
                 {isSaving ? t("editor.saving") : t("editor.save")}
-              </Button>
-            )}
-
-            {/* Create button (if new quiz) */}
-            {!canSave && (
-              <Button
-                onClick={onCreateQuiz}
-                disabled={!canCreate || isCreating}
-                className="flex items-center gap-2"
-              >
-                <Upload className="h-4 w-4" />
-                {isCreating ? t("editor.creating") : t("editor.createQuiz")}
               </Button>
             )}
 

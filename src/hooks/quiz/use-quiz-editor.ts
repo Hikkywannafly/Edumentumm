@@ -10,7 +10,11 @@ export function useQuizEditor(quizId: string): UseQuizEditorReturn {
   // Use specialized hooks
   const quizLoader = useQuizLoader(quizId);
   const quizStateManager = useQuizStateManager(quizId, quizLoader.originalQuiz);
-  const quizSaver = useQuizSaverEditor(quizId, quizStateManager.quiz);
+  const quizSaver = useQuizSaverEditor(
+    quizId,
+    quizStateManager.quiz,
+    quizStateManager.changedFields,
+  );
   const questionManager = useQuestionManager(
     quizStateManager.quiz,
     quizStateManager.updateQuiz,
@@ -33,6 +37,7 @@ export function useQuizEditor(quizId: string): UseQuizEditorReturn {
     quiz: quizStateManager.quiz,
     updateQuiz: quizStateManager.updateQuiz,
     hasUnsavedChanges: quizStateManager.hasUnsavedChanges,
+    changedFields: quizStateManager.changedFields,
     isValid: quizStateManager.isValid,
 
     // Quiz saving

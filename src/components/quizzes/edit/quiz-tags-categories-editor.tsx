@@ -91,7 +91,7 @@ export function QuizTagsEditor({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <TagIcon className="h-5 w-5" />
-          Quiz Tags
+          Tags
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
