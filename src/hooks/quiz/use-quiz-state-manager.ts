@@ -1,6 +1,7 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMemo } from "react";
 import type {
   GeneratedQuiz,
   UpdateQuizData,
@@ -13,10 +14,37 @@ export function useQuizStateManager(
 ): UseQuizStateManagerReturn {
   const queryClient = useQueryClient();
 
-  // Get current quiz state from cache or original
   const quiz =
     queryClient.getQueryData<GeneratedQuiz>(["quiz-editing", quizId]) ||
     originalQuiz;
+
+  const changedFields = useMemo(() => {
+    if (!quiz || !originalQuiz) return {};
+
+    const changes: Partial<GeneratedQuiz> = {};
+
+    if (quiz.title !== originalQuiz.title) {
+      changes.title = quiz.title;
+    }
+
+    if (quiz.description !== originalQuiz.description) {
+      changes.description = quiz.description;
+    }
+
+    const questionsChanged =
+      JSON.stringify(quiz.questions) !== JSON.stringify(originalQuiz.questions);
+    if (questionsChanged) {
+      changes.questions = quiz.questions;
+    }
+
+    const metadataChanged =
+      JSON.stringify(quiz.metadata) !== JSON.stringify(originalQuiz.metadata);
+    if (metadataChanged) {
+      changes.metadata = quiz.metadata;
+    }
+
+    return changes;
+  }, [quiz, originalQuiz]);
 
   // Update quiz mutation
   const updateMutation = useMutation({
@@ -51,10 +79,7 @@ export function useQuizStateManager(
   };
 
   // Calculate derived state
-  const hasUnsavedChanges =
-    quiz && originalQuiz
-      ? JSON.stringify(quiz) !== JSON.stringify(originalQuiz)
-      : false;
+  const hasUnsavedChanges = Object.keys(changedFields).length > 0;
 
   const isValid = quiz
     ? quiz.title.trim().length > 0 && quiz.questions.length > 0
@@ -64,6 +89,7 @@ export function useQuizStateManager(
     quiz,
     updateQuiz,
     hasUnsavedChanges,
+    changedFields,
     isValid,
     reset,
   };

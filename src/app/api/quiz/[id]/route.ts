@@ -148,7 +148,7 @@ export async function PUT(
     if (validated.data.questions) {
       const backendQuestions = validated.data.questions.map((q: any) => ({
         id: q.id,
-        text: q.question, // Frontend uses 'question', backend uses 'text'
+        text: q.question,
         type: q.type,
         points: q.points || 1,
         explanation: q.explanation,
@@ -177,6 +177,97 @@ export async function PUT(
     }
 
     const response = await apiClient.put(
+      `/student/quizzes/${quizId}`,
+      updatePayload,
+      { headers },
+    );
+    return NextResponse.json({
+      success: true,
+      quiz: response.data,
+    });
+  } catch (error) {
+    return handleApiError(error);
+  }
+}
+
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  try {
+    const resolvedParams = await params;
+    const { id } = resolvedParams;
+    const quizId = validateQuizId(id);
+
+    if (!quizId) {
+      return NextResponse.json(
+        { success: false, error: "Invalid quiz ID" },
+        { status: 400 },
+      );
+    }
+
+    const body = await request.json();
+    const validated = UpdateQuizSchema.safeParse(body);
+
+    if (!validated.success) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Invalid update data",
+          details: validated.error.issues,
+        },
+        { status: 400 },
+      );
+    }
+
+    const authToken = getAuthToken(request);
+    const headers = authToken ? { Authorization: authToken } : {};
+
+    // Build update payload - only include fields that are provided
+    const updatePayload: any = {};
+
+    if (validated.data.title !== undefined) {
+      updatePayload.title = validated.data.title;
+    }
+
+    if (validated.data.description !== undefined) {
+      updatePayload.description = validated.data.description;
+    }
+
+    if (validated.data.questions !== undefined) {
+      const backendQuestions = validated.data.questions.map((q: any) => ({
+        id: q.id,
+        text: q.question, // Frontend uses 'question', backend uses 'text'
+        type: q.type,
+        points: q.points || 1,
+        explanation: q.explanation,
+        options: q.answers.map((answer: any) => ({
+          id: answer.id,
+          text: answer.text,
+        })),
+        correctAnswer: q.answers.find((answer: any) => answer.isCorrect)?.id,
+      }));
+
+      updatePayload.quizData = {
+        questions: backendQuestions,
+        instructions:
+          "Please read each question carefully and select the best answer.",
+      };
+    }
+
+    // Transform tags from frontend to backend format
+    if (validated.data.metadata?.tags !== undefined) {
+      updatePayload.tags = validated.data.metadata.tags.map((tag: string) => ({
+        name: tag,
+        description: `Auto-generated tag for ${tag}`,
+        icon: "",
+        color: "",
+      }));
+    }
+
+    console.log("PATCH Quiz update payload:", updatePayload);
+
+    const response = await apiClient.patch(
       `/student/quizzes/${quizId}`,
       updatePayload,
       { headers },

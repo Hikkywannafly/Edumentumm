@@ -24,6 +24,7 @@ export interface UseQuizStateManagerReturn {
   quiz: GeneratedQuiz | null;
   updateQuiz: (updates: UpdateQuizData) => Promise<void>;
   hasUnsavedChanges: boolean;
+  changedFields: Partial<GeneratedQuiz>;
   isValid: boolean;
   reset: () => void;
 }
