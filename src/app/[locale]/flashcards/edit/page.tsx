@@ -1,6 +1,7 @@
 "use client";
 
 import { FlashcardCardsEditor } from "@/components/flashcards/edit/flashcard-cards-editor";
+import { FlashcardCategoryEditor } from "@/components/flashcards/edit/flashcard-category-editor";
 import { FlashcardDescriptionEditor } from "@/components/flashcards/edit/flashcard-description-editor";
 import { FlashcardTitleEditor } from "@/components/flashcards/edit/flashcard-title-editor";
 import DashboardLayout from "@/components/layout/dashboard-layout";
@@ -114,6 +115,18 @@ export default function FlashcardEditorPage() {
                 description={flashcardData.description}
                 onDescriptionChange={(description) =>
                   updateFlashcardData({ description })
+                }
+              />
+              <FlashcardCategoryEditor
+                categoryId={flashcardData.metadata?.categoryId}
+                onCategoryChange={(categoryId) =>
+                  updateFlashcardData({
+                    metadata: {
+                      total_cards: flashcardData.flashcards.length,
+                      ...flashcardData.metadata,
+                      categoryId,
+                    },
+                  })
                 }
               />
               <FlashcardCardsEditor

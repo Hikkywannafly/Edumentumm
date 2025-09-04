@@ -24,7 +24,8 @@ export interface GeneratedFlashcardSet {
     difficulty?: string;
     estimated_study_time?: number; // minutes
     tags?: string[];
-    category?: string;
+    categoryId?: number;
+    flashcardType?: "QUESTIONS" | "VOCABULARY";
     subject?: string;
     grade_level?: string;
   };

@@ -8,25 +8,39 @@ import type {
 export interface CreateFlashcardSetRequest {
   title: string;
   description: string;
+  categoryId?: number;
+  flashcardType?: "QUESTIONS" | "VOCABULARY";
   isPublic: boolean;
   flashcards: Array<{
-    question: string;
-    choices: string[];
-    correctAnswer: number;
+    // For questions type
+    question?: string;
+    choices?: string[];
+    correctAnswer?: number;
     explanation?: string;
+    // For vocabulary type
+    vocabulary?: string;
+    meaning?: string;
+    example?: string;
   }>;
 }
 
 export interface UpdateFlashcardSetRequest {
   title?: string;
   description?: string;
+  categoryId?: number;
+  flashcardType?: "QUESTIONS" | "VOCABULARY";
   isPublic?: boolean;
   flashcards?: Array<{
     id?: number;
-    question: string;
-    choices: string[];
-    correctAnswer: number;
+    // For questions type
+    question?: string;
+    choices?: string[];
+    correctAnswer?: number;
     explanation?: string;
+    // For vocabulary type
+    vocabulary?: string;
+    meaning?: string;
+    example?: string;
   }>;
 }
 
@@ -131,14 +145,28 @@ class FlashcardService {
       ...data,
       title: this.truncateText(data.title, 255),
       description: this.truncateText(data.description, 500),
-      flashcards: data.flashcards.map((flashcard) => ({
-        ...flashcard,
-        question: this.truncateText(flashcard.question, 250),
-        choices: flashcard.choices.map((choice) =>
-          this.truncateText(choice, 200),
-        ),
-        explanation: this.truncateText(flashcard.explanation || "", 250),
-      })),
+      categoryId: data.categoryId,
+      flashcards: data.flashcards.map((flashcard) => {
+        if (flashcard.vocabulary) {
+          // Vocabulary type flashcard
+          return {
+            vocabulary: this.truncateText(flashcard.vocabulary, 200),
+            meaning: this.truncateText(flashcard.meaning || "", 250),
+            example: this.truncateText(flashcard.example || "", 300),
+            explanation: this.truncateText(flashcard.explanation || "", 250),
+          };
+        }
+
+        // Question type flashcard
+        return {
+          question: this.truncateText(flashcard.question || "", 250),
+          choices: (flashcard.choices || []).map((choice) =>
+            this.truncateText(choice, 200),
+          ),
+          correctAnswer: flashcard.correctAnswer || 0,
+          explanation: this.truncateText(flashcard.explanation || "", 250),
+        };
+      }),
     };
   }
 
@@ -152,14 +180,30 @@ class FlashcardService {
       description: data.description
         ? this.truncateText(data.description, 500)
         : data.description,
-      flashcards: data.flashcards?.map((flashcard) => ({
-        ...flashcard,
-        question: this.truncateText(flashcard.question, 250),
-        choices: flashcard.choices.map((choice) =>
-          this.truncateText(choice, 200),
-        ),
-        explanation: this.truncateText(flashcard.explanation || "", 250),
-      })),
+      categoryId: data.categoryId,
+      flashcards: data.flashcards?.map((flashcard) => {
+        if (flashcard.vocabulary) {
+          // Vocabulary type flashcard
+          return {
+            ...flashcard,
+            vocabulary: this.truncateText(flashcard.vocabulary, 200),
+            meaning: this.truncateText(flashcard.meaning || "", 250),
+            example: this.truncateText(flashcard.example || "", 300),
+            explanation: this.truncateText(flashcard.explanation || "", 250),
+          };
+        }
+
+        // Question type flashcard
+        return {
+          ...flashcard,
+          question: this.truncateText(flashcard.question || "", 250),
+          choices: (flashcard.choices || []).map((choice) =>
+            this.truncateText(choice, 200),
+          ),
+          correctAnswer: flashcard.correctAnswer || 0,
+          explanation: this.truncateText(flashcard.explanation || "", 250),
+        };
+      }),
     };
   }
 

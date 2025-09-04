@@ -60,6 +60,8 @@ export const generateFlashcardsWithAI = async (
     numberOfCards?: number;
     difficulty?: string;
     generationMode?: "GENERATE" | "EXTRACT";
+    flashcardType?: "QUESTIONS" | "VOCABULARY";
+    categoryId?: number;
     fileProcessing?: string;
     parsingMode?: string;
     includeCategories?: boolean;
@@ -88,6 +90,64 @@ export const generateFlashcardsWithAI = async (
     );
   }
 
+  // Check if this is vocabulary flashcard generation
+  if (settings?.flashcardType === "VOCABULARY") {
+    const response = await fetch("/api/ai/generate-vocabulary-flashcards", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        title: "Generated Vocabulary Flashcards",
+        description: "AI-generated vocabulary flashcards from your content",
+        categoryId: settings.categoryId,
+        apiKey: apiKey,
+        fileContent: safeContent,
+        modelName: "google/gemini-2.0-flash-exp:free",
+        settings: {
+          language: settings.language || "auto",
+          numberOfCards: Number(settings.numberOfCards) || 10,
+          difficulty: settings.difficulty || "EASY",
+          generationMode: settings.generationMode || "GENERATE",
+        },
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(
+        errorData.error || "Failed to generate vocabulary flashcards",
+      );
+    }
+
+    const vocabularyResult = await response.json();
+
+    // The API now returns flashcards directly with title/description included
+    const flashcards = (
+      vocabularyResult.flashcards ||
+      vocabularyResult.vocabulary ||
+      []
+    ).map((item: any, index: number) => ({
+      id: `vocab-${Date.now()}-${index}`,
+      vocabulary: item.vocabulary,
+      meaning: item.meaning,
+      example: item.example,
+      explanation: item.explanation,
+    }));
+
+    return {
+      id: crypto.randomUUID(),
+      title: vocabularyResult.title || "Vocabulary Flashcards",
+      description:
+        vocabularyResult.description ||
+        `Generated ${flashcards.length} vocabulary flashcards`,
+      flashcards,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+  }
+
+  // Continue with existing logic for QUESTIONS type
   // Determine processing mode
   const isDirectMode =
     settings?.fileProcessingMode === "SEND_DIRECT" && actualFile;
@@ -146,11 +206,15 @@ export const generateFlashcardsWithAI = async (
       throw new Error(result.error || "No flashcards could be generated");
     }
 
-    // Validate flashcard structure
-    const validFlashcards = result.flashcards.filter(
-      (fc: FlashcardData) =>
-        fc.question?.trim() && fc.choices && fc.choices.length > 0,
-    );
+    // Validate flashcard structure - support both questions and vocabulary formats
+    const validFlashcards = result.flashcards.filter((fc: FlashcardData) => {
+      // Check if it's a vocabulary flashcard
+      if (fc.vocabulary) {
+        return fc.vocabulary.trim() && fc.meaning?.trim();
+      }
+      // Check if it's a questions flashcard
+      return fc.question?.trim() && fc.choices && fc.choices.length > 0;
+    });
 
     if (validFlashcards.length === 0) {
       throw new Error("Generated flashcards are invalid or empty");
@@ -190,6 +254,8 @@ export const extractFlashcardsWithAIHandler = async (
     numberOfCards?: number;
     difficulty?: string;
     generationMode?: "GENERATE" | "EXTRACT";
+    flashcardType?: "QUESTIONS" | "VOCABULARY";
+    categoryId?: number;
     fileProcessing?: string;
     parsingMode?: string;
     includeCategories?: boolean;
@@ -207,6 +273,61 @@ export const extractFlashcardsWithAIHandler = async (
     throw new Error("OpenRouter API key is not configured");
   }
 
+  // Check if this is vocabulary flashcard extraction
+  if (settings?.flashcardType === "VOCABULARY") {
+    const response = await fetch("/api/ai/generate-vocabulary-flashcards", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        title: "Extracted Vocabulary Flashcards",
+        description: "AI-extracted vocabulary flashcards from your content",
+        categoryId: settings.categoryId,
+        apiKey: apiKey,
+        fileContent: content,
+        modelName: "google/gemini-2.0-flash-exp:free",
+        settings: {
+          language: settings.language || "auto",
+          numberOfCards: Number(settings.numberOfCards) || 10,
+          difficulty: settings.difficulty || "EASY",
+          generationMode: "EXTRACT",
+        },
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(
+        errorData.error || "Failed to extract vocabulary flashcards",
+      );
+    }
+
+    const vocabularyResult = await response.json();
+
+    // The API now returns flashcards directly with title/description included
+    const flashcards = (
+      vocabularyResult.flashcards ||
+      vocabularyResult.vocabulary ||
+      []
+    ).map((item: any, index: number) => ({
+      id: `vocab-ext-${Date.now()}-${index}`,
+      vocabulary: item.vocabulary,
+      meaning: item.meaning,
+      example: item.example,
+      explanation: item.explanation,
+    }));
+
+    return {
+      flashcards,
+      title: vocabularyResult.title || "Extracted Vocabulary Flashcards",
+      description:
+        vocabularyResult.description ||
+        `Extracted ${flashcards.length} vocabulary flashcards`,
+    };
+  }
+
+  // Continue with existing logic for QUESTIONS type
   // Determine processing mode
   const isDirectMode =
     settings?.fileProcessingMode === "SEND_DIRECT" && actualFile;
@@ -265,11 +386,15 @@ export const extractFlashcardsWithAIHandler = async (
       throw new Error(result.error || "No flashcards could be extracted");
     }
 
-    // Validate flashcard structure
-    const validFlashcards = result.flashcards.filter(
-      (fc: FlashcardData) =>
-        fc.question?.trim() && fc.choices && fc.choices.length > 0,
-    );
+    // Validate flashcard structure - support both questions and vocabulary formats
+    const validFlashcards = result.flashcards.filter((fc: FlashcardData) => {
+      // Check if it's a vocabulary flashcard
+      if (fc.vocabulary) {
+        return fc.vocabulary.trim() && fc.meaning?.trim();
+      }
+      // Check if it's a questions flashcard
+      return fc.question?.trim() && fc.choices && fc.choices.length > 0;
+    });
 
     if (validFlashcards.length === 0) {
       throw new Error("Extracted flashcards are invalid or empty");

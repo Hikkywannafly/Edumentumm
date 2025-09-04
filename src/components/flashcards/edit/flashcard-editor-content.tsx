@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useFlashcardEdit } from "@/hooks/flashcard/use-flashcard-edit";
+import { useFlashcardEditorStore } from "@/stores/flashcard-editor-store";
 import type { FlashcardData } from "@/types/flashcard";
 import { AlertCircle, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -41,6 +42,9 @@ export function FlashcardEditorContent({
     isSaving,
     isDeleting,
   } = useFlashcardEdit(flashcardSetIdNumber);
+
+  // Get metadata from store
+  const { flashcardData } = useFlashcardEditorStore();
 
   // Local state for editing
   const [title, setTitle] = useState("");
@@ -96,6 +100,8 @@ export function FlashcardEditorContent({
         description,
         flashcards,
         isPublic,
+        flashcardData?.metadata?.categoryId || flashcardSet.categoryId,
+        flashcardData?.metadata?.flashcardType,
       );
       console.log("✅ Flashcard set saved successfully", result);
     } catch (err) {
@@ -107,7 +113,13 @@ export function FlashcardEditorContent({
     if (!flashcardSet) return;
 
     try {
-      const result = await publishFlashcard(title, description, flashcards);
+      const result = await publishFlashcard(
+        title,
+        description,
+        flashcards,
+        flashcardData?.metadata?.categoryId || flashcardSet.categoryId,
+        flashcardData?.metadata?.flashcardType,
+      );
       setIsPublic(true); // Update local state
       console.log("✅ Flashcard set published successfully", result);
     } catch (err) {

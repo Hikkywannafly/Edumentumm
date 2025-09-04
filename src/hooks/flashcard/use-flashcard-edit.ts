@@ -51,11 +51,31 @@ export function useFlashcardEdit(flashcardSetId: number) {
     description: string,
     flashcards: FlashcardData[],
     isPublic: boolean,
+    categoryId?: number,
+    flashcardType?: "QUESTIONS" | "VOCABULARY",
   ) => {
     return updateFlashcardSet({
       title,
       description,
-      flashcards: flashcards.map(({ id, ...rest }) => rest), // Remove temporary IDs
+      categoryId,
+      flashcardType,
+      flashcards: flashcards.map((flashcard) => {
+        if (flashcardType === "VOCABULARY") {
+          return {
+            vocabulary: flashcard.vocabulary || "",
+            meaning: flashcard.meaning || "",
+            example: flashcard.example || "",
+            explanation: flashcard.explanation || "",
+          };
+        }
+
+        return {
+          question: flashcard.question || "",
+          choices: flashcard.choices || [],
+          correctAnswer: flashcard.correctAnswer || 0,
+          explanation: flashcard.explanation || "",
+        };
+      }),
       isPublic,
     });
   };
@@ -65,11 +85,31 @@ export function useFlashcardEdit(flashcardSetId: number) {
     title: string,
     description: string,
     flashcards: FlashcardData[],
+    categoryId?: number,
+    flashcardType?: "QUESTIONS" | "VOCABULARY",
   ) => {
     return updateFlashcardSet({
       title,
       description,
-      flashcards: flashcards.map(({ id, ...rest }) => rest),
+      categoryId,
+      flashcardType,
+      flashcards: flashcards.map((flashcard) => {
+        if (flashcardType === "VOCABULARY") {
+          return {
+            vocabulary: flashcard.vocabulary || "",
+            meaning: flashcard.meaning || "",
+            example: flashcard.example || "",
+            explanation: flashcard.explanation || "",
+          };
+        }
+
+        return {
+          question: flashcard.question || "",
+          choices: flashcard.choices || [],
+          correctAnswer: flashcard.correctAnswer || 0,
+          explanation: flashcard.explanation || "",
+        };
+      }),
       isPublic: true,
     });
   };
