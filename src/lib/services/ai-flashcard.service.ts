@@ -280,9 +280,15 @@ export async function generateFlashcardTitleDescription(params: {
     const result = await callServerAPI("generate-flashcard-title-description", {
       content,
       flashcards: flashcards.map((fc) => ({
+        // For questions type
         question: fc.question,
         choices: fc.choices,
         correctAnswer: fc.correctAnswer,
+        // For vocabulary type
+        vocabulary: fc.vocabulary,
+        meaning: fc.meaning,
+        example: fc.example,
+        explanation: fc.explanation,
       })),
       isExtractMode,
       targetLanguage,

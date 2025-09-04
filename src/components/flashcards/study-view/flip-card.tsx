@@ -76,8 +76,12 @@ export function FlipCard({ flashcard, onNext, onPrevious }: FlipCardProps) {
 
   const getChoiceLetter = (index: number) => String.fromCharCode(65 + index);
 
+  // Determine flashcard type
+  const isVocabularyType = !!(flashcard.vocabulary && flashcard.meaning);
+  const isQuestionType = !!(flashcard.question && flashcard.choices);
+
   if (isFlipped) {
-    // Back Side - Correct Answer & Explanation
+    // Back Side - Different content based on type
     return (
       <div ref={cardRef} className="perspective-1000 h-auto w-full max-w-5xl">
         <Card
@@ -89,45 +93,110 @@ export function FlipCard({ flashcard, onNext, onPrevious }: FlipCardProps) {
         >
           <CardContent className="flex h-full min-h-[400px] flex-col justify-between p-4">
             <div className="space-y-6">
-              <div className="text-center">
-                <p className="mb-2 text-muted-foreground text-sm">Question:</p>
-                <h3 className="font-medium text-lg leading-relaxed">
-                  {htmlToText(flashcard.question)}
-                </h3>
-              </div>
-
-              <div className="space-y-4">
-                {/* Correct Answer */}
-                <div className="rounded-lg border border-green-200 p-4">
-                  <div className="mb-3 flex items-center gap-2">
-                    <CheckCircle className="h-5 w-5 text-green-600" />
-                    <span className="font-semibold text-green-800">
-                      Correct Answer
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Badge
-                      variant="default"
-                      className="h-8 w-8 rounded-full bg-green-600 p-0 font-bold text-sm"
-                    >
-                      {getChoiceLetter(flashcard.correctAnswer)}
-                    </Badge>
-                    <span className="font-medium text-green-600 text-lg">
-                      {htmlToText(flashcard.choices[flashcard.correctAnswer])}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Explanation */}
-                {flashcard.explanation && (
-                  <div className="rounded-lg border border-blue-200 p-4">
-                    <h4 className="mb-2 font-semibold">Explanation</h4>
-                    <p className="leading-relaxed">
-                      {htmlToText(flashcard.explanation)}
+              {isVocabularyType ? (
+                // Vocabulary Type Back Side
+                <>
+                  <div className="text-center">
+                    <p className="mb-2 text-muted-foreground text-sm">
+                      Vocabulary:
                     </p>
+                    <h3 className="font-medium text-lg leading-relaxed">
+                      {htmlToText(flashcard.vocabulary || "")}
+                    </h3>
                   </div>
-                )}
-              </div>
+
+                  <div className="space-y-4">
+                    {/* Meaning */}
+                    <div className="rounded-lg border border-blue-200 p-4">
+                      <h4 className="mb-2 font-semibold text-blue-800">
+                        Meaning
+                      </h4>
+                      <p className="text-blue-600 leading-relaxed">
+                        {htmlToText(flashcard.meaning || "")}
+                      </p>
+                    </div>
+
+                    {/* Example */}
+                    {flashcard.example && (
+                      <div className="rounded-lg border border-green-200 p-4">
+                        <h4 className="mb-2 font-semibold text-green-800">
+                          Example
+                        </h4>
+                        <p className="text-green-600 leading-relaxed">
+                          {htmlToText(flashcard.example)}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Explanation */}
+                    {flashcard.explanation && (
+                      <div className="rounded-lg border border-purple-200 p-4">
+                        <h4 className="mb-2 font-semibold text-purple-800">
+                          Explanation
+                        </h4>
+                        <p className="text-purple-600 leading-relaxed">
+                          {htmlToText(flashcard.explanation)}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </>
+              ) : isQuestionType ? (
+                // Question Type Back Side
+                <>
+                  <div className="text-center">
+                    <p className="mb-2 text-muted-foreground text-sm">
+                      Question:
+                    </p>
+                    <h3 className="font-medium text-lg leading-relaxed">
+                      {htmlToText(flashcard.question || "")}
+                    </h3>
+                  </div>
+
+                  <div className="space-y-4">
+                    {/* Correct Answer */}
+                    <div className="rounded-lg border border-green-200 p-4">
+                      <div className="mb-3 flex items-center gap-2">
+                        <CheckCircle className="h-5 w-5 text-green-600" />
+                        <span className="font-semibold text-green-800">
+                          Correct Answer
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Badge
+                          variant="default"
+                          className="h-8 w-8 rounded-full bg-green-600 p-0 font-bold text-sm"
+                        >
+                          {getChoiceLetter(flashcard.correctAnswer || 0)}
+                        </Badge>
+                        <span className="font-medium text-green-600 text-lg">
+                          {htmlToText(
+                            flashcard.choices?.[flashcard.correctAnswer || 0] ||
+                              "",
+                          )}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Explanation */}
+                    {flashcard.explanation && (
+                      <div className="rounded-lg border border-blue-200 p-4">
+                        <h4 className="mb-2 font-semibold">Explanation</h4>
+                        <p className="leading-relaxed">
+                          {htmlToText(flashcard.explanation)}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </>
+              ) : (
+                // Fallback for unknown type
+                <div className="text-center">
+                  <p className="text-muted-foreground">
+                    Unknown flashcard type
+                  </p>
+                </div>
+              )}
             </div>
 
             <div className="flex items-center justify-center">
@@ -141,7 +210,7 @@ export function FlipCard({ flashcard, onNext, onPrevious }: FlipCardProps) {
     );
   }
 
-  // Front Side - Question & Choices
+  // Front Side - Different content based on type
   return (
     <div ref={cardRef} className="perspective-1000 h-auto w-full max-w-5xl">
       <Card
@@ -153,31 +222,56 @@ export function FlipCard({ flashcard, onNext, onPrevious }: FlipCardProps) {
       >
         <CardContent className="flex h-full min-h-[400px] flex-col justify-between p-4">
           <div className="space-y-6">
-            <div className="text-center">
-              <p className="mb-2 text-muted-foreground text-sm">Question:</p>
-              <h3 className="font-semibold text-xl leading-relaxed">
-                {htmlToText(flashcard.question)}
-              </h3>
-            </div>
-
-            <div className="space-y-4">
-              {flashcard.choices.map((choice, index) => (
-                <div
-                  key={index}
-                  className="flex items-center gap-3 rounded-lg p-4"
-                >
-                  <Badge
-                    variant="outline"
-                    className="h-8 w-8 rounded-full p-0 font-bold text-sm"
-                  >
-                    {getChoiceLetter(index)}
-                  </Badge>
-                  <span className="font-medium text-lg">
-                    {htmlToText(choice)}
-                  </span>
+            {isVocabularyType ? (
+              // Vocabulary Type Front Side
+              <div className="text-center">
+                <p className="mb-2 text-muted-foreground text-sm">
+                  Vocabulary:
+                </p>
+                <h3 className="font-semibold text-xl leading-relaxed">
+                  {htmlToText(flashcard.vocabulary || "")}
+                </h3>
+                <p className="mt-4 text-muted-foreground text-sm">
+                  What does this word mean?
+                </p>
+              </div>
+            ) : isQuestionType ? (
+              // Question Type Front Side
+              <>
+                <div className="text-center">
+                  <p className="mb-2 text-muted-foreground text-sm">
+                    Question:
+                  </p>
+                  <h3 className="font-semibold text-xl leading-relaxed">
+                    {htmlToText(flashcard.question || "")}
+                  </h3>
                 </div>
-              ))}
-            </div>
+
+                <div className="space-y-4">
+                  {(flashcard.choices || []).map((choice, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center gap-3 rounded-lg p-4"
+                    >
+                      <Badge
+                        variant="outline"
+                        className="h-8 w-8 rounded-full p-0 font-bold text-sm"
+                      >
+                        {getChoiceLetter(index)}
+                      </Badge>
+                      <span className="font-medium text-lg">
+                        {htmlToText(choice)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            ) : (
+              // Fallback for unknown type
+              <div className="text-center">
+                <p className="text-muted-foreground">Unknown flashcard type</p>
+              </div>
+            )}
           </div>
 
           <div className="flex items-center justify-center">

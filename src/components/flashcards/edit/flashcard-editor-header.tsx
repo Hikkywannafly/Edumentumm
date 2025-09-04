@@ -52,14 +52,38 @@ export function FlashcardEditorHeader({
       const original = flashcardSet.flashcards[index];
       if (!original) return true;
 
+      // Check if it's vocabulary type flashcard
+      if (flashcard.vocabulary && flashcard.meaning) {
+        return (
+          flashcard.vocabulary !== original.vocabulary ||
+          flashcard.meaning !== original.meaning ||
+          flashcard.example !== original.example ||
+          flashcard.explanation !== original.explanation
+        );
+      }
+
+      // Check if it's question type flashcard
+      if (flashcard.question && flashcard.choices) {
+        return (
+          flashcard.question !== original.question ||
+          flashcard.explanation !== original.explanation ||
+          flashcard.correctAnswer !== original.correctAnswer ||
+          (flashcard.choices?.length || 0) !==
+            (original.choices?.length || 0) ||
+          flashcard.choices?.some(
+            (choice, choiceIndex) => choice !== original.choices?.[choiceIndex],
+          )
+        );
+      }
+
+      // Fallback comparison for any other type
       return (
         flashcard.question !== original.question ||
+        flashcard.vocabulary !== original.vocabulary ||
+        flashcard.meaning !== original.meaning ||
+        flashcard.example !== original.example ||
         flashcard.explanation !== original.explanation ||
-        flashcard.correctAnswer !== original.correctAnswer ||
-        flashcard.choices.length !== original.choices.length ||
-        flashcard.choices.some(
-          (choice, choiceIndex) => choice !== original.choices[choiceIndex],
-        )
+        flashcard.correctAnswer !== original.correctAnswer
       );
     });
   };

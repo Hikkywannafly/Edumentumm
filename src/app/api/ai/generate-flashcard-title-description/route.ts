@@ -6,9 +6,15 @@ const GenerateFlashcardTitleDescriptionRequestSchema = z.object({
   content: z.string(),
   flashcards: z.array(
     z.object({
-      question: z.string(),
+      // For questions type
+      question: z.string().optional(),
       choices: z.array(z.string()).optional(),
       correctAnswer: z.number().optional(),
+      // For vocabulary type
+      vocabulary: z.string().optional(),
+      meaning: z.string().optional(),
+      example: z.string().optional(),
+      explanation: z.string().optional(),
     }),
   ),
   isExtractMode: z.boolean(),
@@ -58,20 +64,39 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Extract sample questions for context
-    const sampleFlashcards = flashcards.slice(0, 3).map((fc) => fc.question);
+    // Extract sample flashcards for context based on type
+    const sampleFlashcards = flashcards
+      .slice(0, 3)
+      .map((fc) => {
+        // Check if it's vocabulary type
+        if (fc.vocabulary && fc.meaning) {
+          return `${fc.vocabulary}: ${fc.meaning}`;
+        }
+        // Default to question type
+        return fc.question || "";
+      })
+      .filter(Boolean);
+
     const flashcardTopics = tags || [];
+
+    // Determine flashcard type for context
+    const isVocabularyType =
+      flashcards.length > 0 &&
+      flashcards[0].vocabulary &&
+      flashcards[0].meaning;
+    const flashcardTypeContext = isVocabularyType ? "vocabulary" : "question";
 
     const modeContext = isExtractMode
       ? "extracted from existing content"
       : "generated based on content analysis";
 
     const prompt = `
-You are an expert educational content curator. Generate an engaging and descriptive title and description for a flashcard set that was ${modeContext}.
+You are an expert educational content curator. Generate an engaging and descriptive title and description for a ${flashcardTypeContext} flashcard set that was ${modeContext}.
 
 CONTEXT:
 - Source content length: ${content.length} characters
 - Number of flashcards: ${flashcards.length}
+- Flashcard type: ${flashcardTypeContext.toUpperCase()}
 - Mode: ${isExtractMode ? "Extract" : "Generate"}
 - Target language: ${targetLanguage}
 ${filename ? `- Source file: ${filename}` : ""}
@@ -87,8 +112,8 @@ ${content.slice(0, 1000)}...
 REQUIREMENTS:
 1. Create a concise, engaging title (max 50 characters)
 2. Write a clear, informative description (30-80 words)
-3. Title should reflect the main topic/subject matter
-4. Description should explain what learners will gain from these flashcards
+3. Title should reflect the main topic/subject matter and flashcard type
+4. Description should explain what learners will gain from these ${flashcardTypeContext} flashcards
 5. Use ${targetLanguage === "auto" ? "the same language as the content" : targetLanguage}
 6. Make it appealing for students and educators
 7. Include the scope and learning objectives
@@ -96,15 +121,16 @@ REQUIREMENTS:
 RESPONSE FORMAT (JSON):
 {
   "title": "Engaging flashcard set title",
-  "description": "Comprehensive description explaining what learners will gain from this flashcard set, including key topics covered and learning benefits. Should be educational and motivating."
+  "description": "Comprehensive description explaining what learners will gain from this ${flashcardTypeContext} flashcard set, including key topics covered and learning benefits. Should be educational and motivating."
 }
 
 TITLE GUIDELINES:
-- Be specific about the subject matter
+- Be specific about the subject matter and flashcard type (${flashcardTypeContext})
 - Use clear, academic language
 - Avoid generic phrases like "Study Cards" or "Review Set"
 - Include key topics when possible
 - Make it searchable and descriptive
+${isVocabularyType ? "- For vocabulary sets, emphasize language learning and word mastery" : "- For question sets, emphasize knowledge testing and concept mastery"}
 
 DESCRIPTION GUIDELINES:
 - Explain the learning value and scope
@@ -113,8 +139,9 @@ DESCRIPTION GUIDELINES:
 - Use encouraging, academic tone
 - Include information about difficulty level if apparent
 - Mention the source context if relevant
+${isVocabularyType ? "- For vocabulary: focus on language acquisition, word usage, and comprehension skills" : "- For questions: focus on knowledge retention, concept understanding, and assessment preparation"}
 
-Generate a title and description that will help students understand the value and scope of this flashcard set.`.trim();
+Generate a title and description that will help students understand the value and scope of this ${flashcardTypeContext} flashcard set.`.trim();
 
     try {
       const response = await fetch(`${OPENROUTER_API_BASE}/chat/completions`, {

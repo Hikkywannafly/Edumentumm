@@ -37,20 +37,44 @@ export function useFlashcardEditor() {
       return { isValid: false, error: "Please add at least one flashcard" };
     }
 
-    // Validate each flashcard
+    // Get flashcard type from metadata
+    const flashcardType = flashcardData.metadata?.flashcardType;
+
+    // Validate each flashcard based on type
     for (let i = 0; i < flashcardData.flashcards.length; i++) {
       const flashcard = flashcardData.flashcards[i];
-      if (!flashcard.question.trim()) {
-        return {
-          isValid: false,
-          error: `Please enter a question for flashcard ${i + 1}`,
-        };
-      }
-      if (flashcard.choices.some((choice) => !choice.trim())) {
-        return {
-          isValid: false,
-          error: `Please fill in all choices for flashcard ${i + 1}`,
-        };
+
+      if (flashcardType === "VOCABULARY") {
+        // Validate vocabulary flashcards
+        if (!flashcard.vocabulary?.trim()) {
+          return {
+            isValid: false,
+            error: `Please enter vocabulary for flashcard ${i + 1}`,
+          };
+        }
+        if (!flashcard.meaning?.trim()) {
+          return {
+            isValid: false,
+            error: `Please enter meaning for flashcard ${i + 1}`,
+          };
+        }
+      } else {
+        // Validate question flashcards
+        if (!flashcard.question?.trim()) {
+          return {
+            isValid: false,
+            error: `Please enter a question for flashcard ${i + 1}`,
+          };
+        }
+        if (
+          !flashcard.choices ||
+          flashcard.choices.some((choice) => !choice.trim())
+        ) {
+          return {
+            isValid: false,
+            error: `Please fill in all choices for flashcard ${i + 1}`,
+          };
+        }
       }
     }
 
@@ -125,14 +149,30 @@ export function useFlashcardEditor() {
       const updateRequest = {
         title: flashcardData.title.trim(),
         description: flashcardData.description.trim(),
+        categoryId: flashcardData.metadata?.categoryId,
+        flashcardType: flashcardData.metadata?.flashcardType,
         isPublic: false, // Can be made configurable later
-        flashcards: flashcardData.flashcards.map((flashcard) => ({
-          id: flashcard.id as number,
-          question: flashcard.question.trim(),
-          choices: flashcard.choices.map((choice) => choice.trim()),
-          correctAnswer: flashcard.correctAnswer,
-          explanation: flashcard.explanation?.trim() || "",
-        })),
+        flashcards: flashcardData.flashcards.map((flashcard) => {
+          const flashcardType = flashcardData.metadata?.flashcardType;
+
+          if (flashcardType === "VOCABULARY") {
+            return {
+              id: flashcard.id as number,
+              vocabulary: flashcard.vocabulary?.trim() || "",
+              meaning: flashcard.meaning?.trim() || "",
+              example: flashcard.example?.trim() || "",
+              explanation: flashcard.explanation?.trim() || "",
+            };
+          }
+
+          return {
+            id: flashcard.id as number,
+            question: flashcard.question?.trim() || "",
+            choices: flashcard.choices?.map((choice) => choice.trim()) || [],
+            correctAnswer: flashcard.correctAnswer || 0,
+            explanation: flashcard.explanation?.trim() || "",
+          };
+        }),
       };
 
       updateFlashcardMutation.mutate(
@@ -150,13 +190,28 @@ export function useFlashcardEditor() {
       const createRequest: CreateFlashcardSetRequest = {
         title: flashcardData.title.trim(),
         description: flashcardData.description.trim(),
+        categoryId: flashcardData.metadata?.categoryId,
+        flashcardType: flashcardData.metadata?.flashcardType,
         isPublic: false, // Default to private, can be made configurable later
-        flashcards: flashcardData.flashcards.map((flashcard) => ({
-          question: flashcard.question.trim(),
-          choices: flashcard.choices.map((choice) => choice.trim()),
-          correctAnswer: flashcard.correctAnswer,
-          explanation: flashcard.explanation?.trim() || "",
-        })),
+        flashcards: flashcardData.flashcards.map((flashcard) => {
+          const flashcardType = flashcardData.metadata?.flashcardType;
+
+          if (flashcardType === "VOCABULARY") {
+            return {
+              vocabulary: flashcard.vocabulary?.trim() || "",
+              meaning: flashcard.meaning?.trim() || "",
+              example: flashcard.example?.trim() || "",
+              explanation: flashcard.explanation?.trim() || "",
+            };
+          }
+
+          return {
+            question: flashcard.question?.trim() || "",
+            choices: flashcard.choices?.map((choice) => choice.trim()) || [],
+            correctAnswer: flashcard.correctAnswer || 0,
+            explanation: flashcard.explanation?.trim() || "",
+          };
+        }),
       };
 
       createFlashcardMutation.mutate(createRequest, {
