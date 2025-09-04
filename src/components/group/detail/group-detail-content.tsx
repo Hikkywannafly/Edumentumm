@@ -183,73 +183,74 @@ export default function GroupDetailContent({ id }: { id: string }) {
                   </Tabs>
                 </div>
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between rounded-lg bg-gray-50 p-3 dark:bg-gray-800">
-                    <div className="flex items-center gap-3">
-                      <Trophy className="h-5 w-5 text-yellow-500" />
-                      <Avatar className="h-9 w-9">
-                        <AvatarImage
-                          src="/placeholder.svg?height=100&width=100"
-                          alt="Avatar"
-                        />
-                        <AvatarFallback>MK</AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="font-medium">Md Kaiyum Hossain</p>
-                        <p className="text-gray-500 text-sm dark:text-gray-400">
-                          10m
-                        </p>
+                  {/* Owner is always top 1 */}
+                  {groupDetail && (
+                    <div className="flex items-center justify-between rounded-lg bg-gray-50 p-3 dark:bg-gray-800">
+                      <div className="flex items-center gap-3">
+                        <Trophy className="h-5 w-5 text-yellow-500" />
+                        <Avatar className="h-9 w-9">
+                          <AvatarImage
+                            src={
+                              groupDetail.userGroupResponseList.find(
+                                (user) =>
+                                  user.username === groupDetail.ownerName,
+                              )?.imageUrl || "/placeholder.svg"
+                            }
+                            alt={groupDetail.ownerName}
+                          />
+                          <AvatarFallback>
+                            {groupDetail.ownerName.slice(0, 2).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="font-medium">{groupDetail.ownerName}</p>
+                          <p className="text-gray-500 text-sm dark:text-gray-400">
+                            0m
+                          </p>
+                        </div>
                       </div>
+                      <Badge className="bg-blue-500 text-white hover:bg-blue-600">
+                        <Zap className="mr-1 h-3 w-3" /> Top 1
+                      </Badge>
                     </div>
-                    <Badge className="bg-blue-500 text-white hover:bg-blue-600">
-                      <Zap className="mr-1 h-3 w-3" /> Top 1
-                    </Badge>
-                  </div>
-                  <div className="flex items-center justify-between rounded-lg p-3">
-                    <div className="flex items-center gap-3">
-                      <span className="w-5 text-center font-bold text-gray-500 text-lg dark:text-gray-400">
-                        2
-                      </span>
-                      <Avatar className="h-9 w-9">
-                        <AvatarImage
-                          src="/placeholder.svg?height=100&width=100"
-                          alt="Avatar"
-                        />
-                        <AvatarFallback>AL</AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="font-medium">alexionesc</p>
-                        <p className="text-gray-500 text-sm dark:text-gray-400">
-                          8m
-                        </p>
+                  )}
+
+                  {/* Display other members */}
+                  {groupDetail?.userGroupResponseList
+                    .filter(
+                      (member) => member.username !== groupDetail.ownerName,
+                    )
+                    .slice(0, 2) // Get next 2 members for top 2 and 3
+                    .map((member, index) => (
+                      <div
+                        key={member.id}
+                        className="flex items-center justify-between rounded-lg p-3"
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className="w-5 text-center font-bold text-gray-500 text-lg dark:text-gray-400">
+                            {index + 2}
+                          </span>
+                          <Avatar className="h-9 w-9">
+                            <AvatarImage
+                              src={member.imageUrl || "/placeholder.svg"}
+                              alt={member.username}
+                            />
+                            <AvatarFallback>
+                              {member.username.slice(0, 2).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <p className="font-medium">{member.username}</p>
+                            <p className="text-gray-500 text-sm dark:text-gray-400">
+                              0m
+                            </p>
+                          </div>
+                        </div>
+                        <Badge variant="outline">
+                          <Zap className="mr-1 h-3 w-3" /> Top {index + 2}
+                        </Badge>
                       </div>
-                    </div>
-                    <Badge variant="outline">
-                      <Zap className="mr-1 h-3 w-3" /> Top 2
-                    </Badge>
-                  </div>
-                  <div className="flex items-center justify-between rounded-lg p-3">
-                    <div className="flex items-center gap-3">
-                      <span className="w-5 text-center font-bold text-gray-500 text-lg dark:text-gray-400">
-                        3
-                      </span>
-                      <Avatar className="h-9 w-9">
-                        <AvatarImage
-                          src="/placeholder.svg?height=100&width=100"
-                          alt="Avatar"
-                        />
-                        <AvatarFallback>JS</AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="font-medium">Jane Smith</p>
-                        <p className="text-gray-500 text-sm dark:text-gray-400">
-                          5m
-                        </p>
-                      </div>
-                    </div>
-                    <Badge variant="outline">
-                      <Zap className="mr-1 h-3 w-3" /> Top 3
-                    </Badge>
-                  </div>
+                    ))}
                 </div>
               </TabsContent>
 

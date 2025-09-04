@@ -391,6 +391,31 @@
       "newAnswer": "Đáp án mới"
     }
   },
+  "Kanban": {
+    "title": "Bảng Kanban",
+    "createTask": "Tạo nhiệm vụ",
+    "addTaskTitle": "Tạo mới nhiệm vụ",
+    "addTaskDesc": "Nhập mô tả của nhiệm vụ ở đây",
+    "statusTitle": "Trạng thái",
+    "status": {
+      "todo": "Chưa hoàn thành",
+      "inProgress": "Đang hoàn thành",
+      "done": "Đã hoàn thành"
+    },
+    "noTask": "Chưa có nhiệm vụ nào",
+    "dueDate": "Ngày & giờ đến hạn ",
+    "BtnCancel": "Hủy",
+    "btnCreateTask": "Tạo Nhiệm vụ",
+    "btnSave": "Lưu",
+    "btnConfirmDelete": "Xóa",
+    "dueStatus": {
+      "overdue": "Quá hạn",
+      "dueSoon": "Sắp đến hạn"
+    },
+    "confirmDeletion": "Xác nhận xóa",
+    "confirmDeletionDescBefore": "Bạn có chắc chắn muốn xóa nhiệm vụ ",
+    "confirmDeletionDescAfter": "? không. Hành động này không thể hoàn tác."
+  },
   "RoleSelector": {
     "title": "Chọn vai trò của bạn",
     "description": "Chọn vai trò phù hợp nhất để bắt đầu",
