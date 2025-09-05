@@ -6,7 +6,7 @@ import { z } from "zod";
 const QuerySchema = z.object({
   page: z.string().optional().default("0"),
   title: z.string().optional(),
-  size: z.string().optional().default("10"),
+  size: z.string().optional().default("6"),
   search: z.string().optional(),
   difficulty: z.enum(["EASY", "MEDIUM", "HARD"]).optional(),
   status: z.enum(["DRAFT", "PUBLISHED", "ARCHIVED"]).optional(),
