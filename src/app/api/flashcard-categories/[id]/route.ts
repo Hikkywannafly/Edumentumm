@@ -20,11 +20,11 @@ function getAuthHeaders(request: NextRequest) {
 // DELETE /api/flashcard-categories/[id] - Delete a flashcard category
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const headers = getAuthHeaders(request);
-    const categoryId = params.id;
+    const { id: categoryId } = await params;
 
     // Validate category ID
     if (!categoryId || Number.isNaN(Number(categoryId))) {
