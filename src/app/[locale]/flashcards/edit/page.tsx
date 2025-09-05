@@ -28,13 +28,21 @@ export default function FlashcardEditorPage() {
 
   const handleAddFlashcard = () => {
     // Determine flashcard type from existing flashcards or metadata
-    const flashcardType =
-      flashcardData?.metadata?.flashcardType ||
-      (flashcardData?.flashcards &&
-      flashcardData.flashcards.length > 0 &&
-      flashcardData.flashcards[0].vocabulary
-        ? "VOCABULARY"
-        : "QUESTIONS");
+    let flashcardType: "VOCABULARY" | "QUESTIONS" = "QUESTIONS";
+
+    if (flashcardData?.metadata?.flashcardType) {
+      // Use metadata if available
+      flashcardType = flashcardData.metadata.flashcardType;
+    } else if (
+      flashcardData?.flashcards &&
+      flashcardData.flashcards.length > 0
+    ) {
+      // Detect type from existing flashcards by checking if any has vocabulary fields
+      const hasVocabularyFields = flashcardData.flashcards.some(
+        (card) => card.vocabulary !== undefined || card.meaning !== undefined,
+      );
+      flashcardType = hasVocabularyFields ? "VOCABULARY" : "QUESTIONS";
+    }
 
     const newFlashcard =
       flashcardType === "VOCABULARY"
@@ -57,13 +65,21 @@ export default function FlashcardEditorPage() {
 
   const handleAddFlashcardAfter = (afterIndex: number) => {
     // Determine flashcard type from existing flashcards or metadata
-    const flashcardType =
-      flashcardData?.metadata?.flashcardType ||
-      (flashcardData?.flashcards &&
-      flashcardData.flashcards.length > 0 &&
-      flashcardData.flashcards[0].vocabulary
-        ? "VOCABULARY"
-        : "QUESTIONS");
+    let flashcardType: "VOCABULARY" | "QUESTIONS" = "QUESTIONS";
+
+    if (flashcardData?.metadata?.flashcardType) {
+      // Use metadata if available
+      flashcardType = flashcardData.metadata.flashcardType;
+    } else if (
+      flashcardData?.flashcards &&
+      flashcardData.flashcards.length > 0
+    ) {
+      // Detect type from existing flashcards by checking if any has vocabulary fields
+      const hasVocabularyFields = flashcardData.flashcards.some(
+        (card) => card.vocabulary !== undefined || card.meaning !== undefined,
+      );
+      flashcardType = hasVocabularyFields ? "VOCABULARY" : "QUESTIONS";
+    }
 
     const newFlashcard =
       flashcardType === "VOCABULARY"

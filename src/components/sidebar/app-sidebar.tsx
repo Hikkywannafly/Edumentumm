@@ -208,7 +208,7 @@ export function AppSidebar() {
         isPinned ? "w-64" : isHovered ? "w-64" : "w-16"
       } ${!isPinned ? "transition-all duration-200 ease-in-out" : ""}`}
     >
-      <div className="h-full border-gray-200 border-r bg-white dark:border-gray-700 dark:bg-gray-900">
+      <div className="flex h-full flex-col border-gray-200 border-r bg-white dark:border-gray-700 dark:bg-gray-900">
         {/* Header */}
         <div className="h-16 border-gray-200 border-b dark:border-gray-700">
           <div className="flex items-center justify-between px-4 py-4">
@@ -239,7 +239,9 @@ export function AppSidebar() {
         </div>
 
         {/* Content */}
-        <div className="h-full overflow-y-hidden px-2 py-2">
+        <div
+          className={`${isExpanded ? "custom-scrollbar" : "custom-scrollbar-hidden"} flex-1 overflow-y-scroll px-2 py-2`}
+        >
           {Object.entries(menuData).map(([key, items]) => (
             <Collapsible key={key} defaultOpen className="group/collapsible">
               <div className="relative flex w-full min-w-0 flex-col p-2">
