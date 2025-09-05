@@ -63,40 +63,94 @@ export function FlashcardEditorContent({
     }
   }, [flashcardSet]);
 
-  const addFlashcard = () => {
-    // Determine flashcard type from existing flashcards or metadata
-    const flashcardType =
-      flashcardData?.metadata?.flashcardType ||
-      (flashcards.length > 0 && flashcards[0].vocabulary
-        ? "VOCABULARY"
-        : "QUESTIONS");
+  const detectFlashcardType = (): "VOCABULARY" | "QUESTIONS" => {
+    // 1. Detect from current editing flashcards first (highest priority)
+    if (flashcards.length > 0) {
+      const firstCard = flashcards[0];
+      // Check if it has vocabulary-specific fields
+      if ("vocabulary" in firstCard && "meaning" in firstCard) {
+        return "VOCABULARY";
+      }
+      // Check if it has question-specific fields
+      if ("question" in firstCard && "choices" in firstCard) {
+        return "QUESTIONS";
+      }
+    }
 
-    console.log("🔍 addFlashcard Debug:", {
-      flashcardDataMetadata: flashcardData?.metadata,
-      flashcardType: flashcardType,
-      flashcardsLength: flashcards.length,
-      firstFlashcardVocabulary:
-        flashcards.length > 0 ? flashcards[0].vocabulary : "No flashcards",
-      firstFlashcard: flashcards.length > 0 ? flashcards[0] : "No flashcards",
-    });
+    // 2. If no current flashcards, check the original flashcard set structure
+    const flashcardSetFirstCard = flashcardSet?.flashcards?.[0];
+    if (flashcardSetFirstCard) {
+      if (
+        "vocabulary" in flashcardSetFirstCard &&
+        "meaning" in flashcardSetFirstCard
+      ) {
+        return "VOCABULARY";
+      }
+      if (
+        "question" in flashcardSetFirstCard &&
+        "choices" in flashcardSetFirstCard
+      ) {
+        return "QUESTIONS";
+      }
+    }
+
+    // 3. Only use metadata as fallback for completely new flashcard sets
+    if (
+      flashcardData?.metadata?.flashcardType &&
+      flashcards.length === 0 &&
+      (!flashcardSet?.flashcards || flashcardSet.flashcards.length === 0)
+    ) {
+      return flashcardData.metadata.flashcardType;
+    }
+
+    // 4. Final fallback to QUESTIONS type
+    return "QUESTIONS";
+  };
+
+  const addFlashcard = () => {
+    const flashcardType = detectFlashcardType();
 
     const newFlashcard: FlashcardData =
       flashcardType === "VOCABULARY"
         ? {
             id: Date.now(),
-            vocabulary: "",
-            meaning: "",
-            example: "",
-            explanation: "",
+            vocabulary: "Enter vocabulary word/phrase here",
+            meaning: "Enter meaning here",
+            example: "Enter example sentence here",
+            explanation: "Enter additional explanation here",
           }
         : {
             id: Date.now(),
-            question: "",
-            choices: ["", "", "", ""],
+            question: "Enter your flashcard question here",
+            choices: ["Option A", "Option B", "Option C", "Option D"],
             correctAnswer: 0,
-            explanation: "",
+            explanation: "Enter explanation for the correct answer",
           };
     setFlashcards([...flashcards, newFlashcard]);
+  };
+
+  const addFlashcardAfter = (afterIndex: number) => {
+    const flashcardType = detectFlashcardType();
+    const newFlashcard: FlashcardData =
+      flashcardType === "VOCABULARY"
+        ? {
+            id: Date.now() + Math.random(),
+            vocabulary: "Enter vocabulary word/phrase here",
+            meaning: "Enter meaning here",
+            example: "Enter example sentence here",
+            explanation: "Enter additional explanation here",
+          }
+        : {
+            id: Date.now() + Math.random(),
+            question: "Enter your flashcard question here",
+            choices: ["Option A", "Option B", "Option C", "Option D"],
+            correctAnswer: 0,
+            explanation: "Enter explanation for the correct answer",
+          };
+
+    const newFlashcards = [...flashcards];
+    newFlashcards.splice(afterIndex + 1, 0, newFlashcard);
+    setFlashcards(newFlashcards);
   };
 
   const updateFlashcard = (index: number, updatedFlashcard: FlashcardData) => {
@@ -119,18 +173,8 @@ export function FlashcardEditorContent({
   const handleSave = async () => {
     if (!flashcardSet) return;
 
-    const flashcardType =
-      flashcardData?.metadata?.flashcardType ||
-      (flashcards.length > 0 && flashcards[0].vocabulary
-        ? "VOCABULARY"
-        : "QUESTIONS");
-
-    console.log("💾 handleSave Debug:", {
-      flashcardType: flashcardType,
-      flashcardDataMetadata: flashcardData?.metadata,
-      flashcardsToSave: flashcards,
-      firstFlashcard: flashcards[0],
-    });
+    // Use the detectFlashcardType function for consistency
+    const flashcardType = detectFlashcardType();
 
     try {
       const result = await saveFlashcard(
@@ -150,13 +194,15 @@ export function FlashcardEditorContent({
   const handlePublish = async () => {
     if (!flashcardSet) return;
 
+    const flashcardType = detectFlashcardType();
+
     try {
       const result = await publishFlashcard(
         title,
         description,
         flashcards,
         flashcardData?.metadata?.categoryId || flashcardSet.categoryId,
-        flashcardData?.metadata?.flashcardType,
+        flashcardType,
       );
       setIsPublic(true); // Update local state
       console.log("✅ Flashcard set published successfully", result);
@@ -287,6 +333,7 @@ export function FlashcardEditorContent({
           onDeleteFlashcard={deleteFlashcard}
           onMoveFlashcard={moveFlashcard}
           onAddFlashcard={addFlashcard}
+          onAddFlashcardAfter={addFlashcardAfter}
         />
       </div>
 

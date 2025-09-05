@@ -1,9 +1,10 @@
 "use client";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { htmlToText } from "@/lib/utils/text";
 import type { FlashcardData } from "@/types/flashcard";
-import { CheckCircle } from "lucide-react";
+import { CheckCircle, Volume2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 interface FlipCardProps {
@@ -16,7 +17,53 @@ interface FlipCardProps {
 export function FlipCard({ flashcard, onNext, onPrevious }: FlipCardProps) {
   const [isFlipped, setIsFlipped] = useState(false);
   const [startX, setStartX] = useState<number | null>(null);
+  const [isSpeaking, setIsSpeaking] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
+
+  // Text-to-speech function
+  const speakText = (text: string) => {
+    if ("speechSynthesis" in window) {
+      // Stop any ongoing speech
+      window.speechSynthesis.cancel();
+
+      const utterance = new SpeechSynthesisUtterance(text);
+
+      // Set voice properties
+      utterance.rate = 0.8; // Slower rate for better pronunciation
+      utterance.pitch = 1;
+      utterance.volume = 1;
+
+      // Try to use English voice
+      const voices = window.speechSynthesis.getVoices();
+      const englishVoice = voices.find(
+        (voice) => voice.lang.startsWith("en-") || voice.lang.startsWith("en_"),
+      );
+      if (englishVoice) {
+        utterance.voice = englishVoice;
+      }
+
+      // Event handlers
+      utterance.onstart = () => setIsSpeaking(true);
+      utterance.onend = () => setIsSpeaking(false);
+      utterance.onerror = () => setIsSpeaking(false);
+
+      window.speechSynthesis.speak(utterance);
+    } else {
+      alert("Text-to-speech is not supported in your browser");
+    }
+  };
+
+  const handleSpeakVocabulary = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card flip
+    const vocabularyText = htmlToText(flashcard.vocabulary || "");
+
+    // Remove text in parentheses (e.g., part of speech like "(n)", "(v)", "(adj)")
+    const cleanedText = vocabularyText.replace(/\s*\([^)]*\)/g, "").trim();
+
+    if (cleanedText) {
+      speakText(cleanedText);
+    }
+  };
 
   // Keyboard controls
   useEffect(() => {
@@ -40,6 +87,23 @@ export function FlipCard({ flashcard, onNext, onPrevious }: FlipCardProps) {
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [isFlipped, onNext, onPrevious]);
+
+  // Load speech synthesis voices
+  useEffect(() => {
+    if ("speechSynthesis" in window) {
+      // Load voices when they become available
+      const loadVoices = () => {
+        window.speechSynthesis.getVoices();
+      };
+
+      loadVoices();
+
+      // Some browsers load voices asynchronously
+      if (window.speechSynthesis.onvoiceschanged !== undefined) {
+        window.speechSynthesis.onvoiceschanged = loadVoices;
+      }
+    }
+  }, []);
 
   // Mouse swipe handlers
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -100,7 +164,7 @@ export function FlipCard({ flashcard, onNext, onPrevious }: FlipCardProps) {
                     <p className="mb-2 text-muted-foreground text-sm">
                       Vocabulary:
                     </p>
-                    <h3 className="font-medium text-lg leading-relaxed">
+                    <h3 className="font-medium text-4xl leading-relaxed">
                       {htmlToText(flashcard.vocabulary || "")}
                     </h3>
                   </div>
@@ -226,9 +290,23 @@ export function FlipCard({ flashcard, onNext, onPrevious }: FlipCardProps) {
               // Vocabulary Type Front Side
               <div className="flex flex-col items-center justify-between gap-20 text-center">
                 <p className="text-muted-foreground text-sm">Vocabulary:</p>
-                <h3 className="font-semibold text-6xl leading-relaxed">
-                  {htmlToText(flashcard.vocabulary || "")}
-                </h3>
+                <div className="flex items-center gap-4">
+                  <h3 className="font-semibold text-6xl leading-relaxed">
+                    {htmlToText(flashcard.vocabulary || "")}
+                  </h3>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleSpeakVocabulary}
+                    disabled={isSpeaking}
+                    className="flex h-16 w-16 items-center justify-center rounded-full hover:bg-blue-100"
+                    title="Listen to pronunciation"
+                  >
+                    <Volume2
+                      className={`h-16 w-16 ${isSpeaking ? "animate-pulse text-blue-600" : "text-gray-600"}`}
+                    />
+                  </Button>
+                </div>
                 <p className="text-muted-foreground text-sm">
                   What does this word mean?
                 </p>
