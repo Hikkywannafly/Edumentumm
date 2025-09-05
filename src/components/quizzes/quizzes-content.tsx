@@ -15,7 +15,7 @@ import { Skeleton } from "../ui/skeleton";
 import { EmptyState } from "./empty-state";
 import { QuizCard } from "./quiz-card";
 import { QuizFilters } from "./quiz-filters";
-import { QuizStatsDisplay } from "./quiz-stats";
+import { QuizStatsDisplay, QuizStatsDisplaySkeleton } from "./quiz-stats";
 
 interface QuizFiltersState {
   search: string;
@@ -38,7 +38,7 @@ export function QuizzesContent() {
   });
 
   const [currentPage, setCurrentPage] = useState(0);
-  const pageSize = 10;
+  const pageSize = 6;
 
   // Fetch quiz list with pagination
   const {
@@ -47,6 +47,7 @@ export function QuizzesContent() {
     isError,
     error,
     refetch,
+    isFetching,
   } = useQuizList({
     page: currentPage,
     size: pageSize,
@@ -59,7 +60,7 @@ export function QuizzesContent() {
   });
 
   // Fetch quiz stats
-  const { data: stats } = useQuizStats();
+  const { data: stats, isLoading: isStatsLoading } = useQuizStats();
 
   // Delete quiz mutation
   const deleteMutation = useDeleteQuiz();
@@ -71,7 +72,6 @@ export function QuizzesContent() {
   };
 
   const handleFilter = () => {
-    // TODO: Implement advanced filter modal
     console.log("Filter clicked");
   };
 
@@ -82,16 +82,18 @@ export function QuizzesContent() {
   };
 
   const handleQuizEdit = (quiz: QuizDisplayData) => {
-    router.push(`/quizzes/${quiz.slug}/edit`);
+    router.push(`/quizzes/${quiz.slug}-${quiz.id}/edit`);
   };
 
   const handleQuizView = (quiz: QuizDisplayData) => {
-    router.push(`/quizzes/${quiz.slug}`);
+    router.push(`/quizzes/${quiz.slug}-${quiz.id}`);
   };
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
+
+  console.log("test", quizListData);
 
   // Loading state
   if (isLoading) {
@@ -104,10 +106,33 @@ export function QuizzesContent() {
           filtersLabel={t("filters")}
         />
 
-        {/* Loading skeletons */}
+        {/* Stats Loading Skeleton */}
+        <QuizStatsDisplaySkeleton />
+
+        {/* Pagination Loading Skeleton */}
+        <div className="flex items-center justify-center gap-2 pt-6">
+          <Skeleton className="h-8 w-20" />
+          <div className="flex items-center gap-1">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Skeleton key={i} className="h-8 w-8" />
+            ))}
+          </div>
+          <Skeleton className="h-8 w-16" />
+        </div>
+
+        {/* Result summary skeleton */}
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-4 w-48" />
+          <Skeleton className="h-4 w-24" />
+        </div>
+
+        {/* Quiz Cards Loading skeletons */}
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="space-y-4 rounded-lg border p-6">
+            <div
+              key={i}
+              className="space-y-4 rounded-lg border border-border/50 bg-card/50 p-6 backdrop-blur-sm"
+            >
               <Skeleton className="h-6 w-3/4" />
               <Skeleton className="h-4 w-full" />
               <Skeleton className="h-4 w-2/3" />
@@ -157,40 +182,20 @@ export function QuizzesContent() {
       />
 
       {/* Stats Summary */}
-      {stats && <QuizStatsDisplay stats={stats} />}
+      {isStatsLoading ? (
+        <QuizStatsDisplaySkeleton />
+      ) : (
+        stats && <QuizStatsDisplay stats={stats} />
+      )}
 
       {/* Quizzes Grid */}
       {hasQuizzes ? (
         <>
-          {/* Result summary */}
-          <div className="flex items-center justify-between">
-            <p className="text-muted-foreground text-sm">
-              Showing {quizzes.length} of {totalElements} quizzes
-              {filters.search && ` for "${filters.search}"`}
-            </p>
-            <p className="text-muted-foreground text-sm">
-              Page {currentPage + 1} of {totalPages}
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {quizzes.map((quiz) => (
-              <QuizCard
-                key={quiz.id}
-                quiz={quiz}
-                onDelete={handleQuizDelete}
-                onEdit={handleQuizEdit}
-                onView={handleQuizView}
-              />
-            ))}
-          </div>
-
-          {/* Pagination */}
           {totalPages > 1 && (
             <div className="flex items-center justify-center gap-2 pt-6">
               <Button
                 onClick={() => handlePageChange(currentPage - 1)}
-                disabled={currentPage === 0}
+                disabled={currentPage === 0 || isFetching}
                 variant="outline"
                 size="sm"
               >
@@ -220,6 +225,7 @@ export function QuizzesContent() {
                       }
                       size="sm"
                       className="h-8 w-8 p-0"
+                      disabled={isFetching}
                     >
                       {pageNumber + 1}
                     </Button>
@@ -229,7 +235,7 @@ export function QuizzesContent() {
 
               <Button
                 onClick={() => handlePageChange(currentPage + 1)}
-                disabled={currentPage >= totalPages - 1}
+                disabled={currentPage >= totalPages - 1 || isFetching}
                 variant="outline"
                 size="sm"
               >
@@ -237,6 +243,44 @@ export function QuizzesContent() {
               </Button>
             </div>
           )}
+          {/* Result summary */}
+          <div className="flex items-center justify-between">
+            <p className="text-muted-foreground text-sm">
+              Showing {quizzes.length} of {totalElements} quizzes
+              {filters.search && ` for "${filters.search}"`}
+            </p>
+            <p className="text-muted-foreground text-sm">
+              Page {currentPage + 1} of {totalPages}
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {isFetching && !isLoading
+              ? // Show skeletons during pagination loading
+                Array.from({ length: pageSize }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="space-y-4 rounded-lg border border-border/50 bg-card/50 p-6 backdrop-blur-sm"
+                  >
+                    <Skeleton className="h-6 w-3/4" />
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-2/3" />
+                    <div className="flex gap-2">
+                      <Skeleton className="h-8 w-16" />
+                      <Skeleton className="h-8 w-20" />
+                    </div>
+                  </div>
+                ))
+              : quizzes.map((quiz) => (
+                  <QuizCard
+                    key={quiz.id}
+                    quiz={quiz}
+                    onDelete={handleQuizDelete}
+                    onEdit={handleQuizEdit}
+                    onView={handleQuizView}
+                  />
+                ))}
+          </div>
         </>
       ) : (
         <EmptyState

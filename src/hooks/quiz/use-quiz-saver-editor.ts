@@ -62,7 +62,6 @@ export function useQuizSaverEditor(
       return response.json();
     },
     onSuccess: () => {
-      // Update the original quiz cache to reflect saved state
       queryClient.setQueryData(["quiz", quizId], quiz);
       queryClient.invalidateQueries({ queryKey: ["quizzes"] });
     },

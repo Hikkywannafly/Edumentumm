@@ -121,7 +121,6 @@ export function QuizCard({ quiz, onDelete, onEdit, onView }: QuizCardProps) {
           </div>
         </div>
 
-        {/* Tags */}
         {quiz.tags.length > 0 && (
           <div className="mb-6 flex flex-wrap gap-1.5">
             {quiz.tags.slice(0, 2).map((tag, index) => {
@@ -159,7 +158,7 @@ export function QuizCard({ quiz, onDelete, onEdit, onView }: QuizCardProps) {
             className="flex-1 justify-center gap-2 font-medium hover:bg-muted"
             asChild
           >
-            <LocalizedLink href={`quizzes/${quiz.slug}/edit`}>
+            <LocalizedLink href={`quizzes/${quiz.slug}-${quiz.id}/edit`}>
               <Edit className="h-4 w-4" />
               Edit
             </LocalizedLink>
@@ -169,7 +168,7 @@ export function QuizCard({ quiz, onDelete, onEdit, onView }: QuizCardProps) {
             className="flex-1 transform justify-center gap-2 bg-blue-600 font-medium text-white duration-200 hover:bg-blue-700 active:scale-95"
             asChild
           >
-            <LocalizedLink href={`quizzes/${quiz.slug}`}>
+            <LocalizedLink href={`quizzes/${quiz.slug}-${quiz.id}`}>
               <ArrowRight className="h-4 w-4" />
               Take Quiz
             </LocalizedLink>
