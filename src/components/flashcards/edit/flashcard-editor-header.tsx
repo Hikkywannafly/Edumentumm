@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/select";
 import { htmlToText } from "@/lib/utils/text";
 import type { FlashcardData, FlashcardSet } from "@/types/flashcard";
-import { CheckCircle, Globe, Loader2, Lock, Save, Trash2 } from "lucide-react";
+import { CheckCircle, Globe, Loader2, Lock, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { CardHeader, CardTitle } from "../../ui";
 
@@ -35,7 +35,6 @@ export function FlashcardEditorHeader({
   flashcards,
   isPublic,
   isSaving = false,
-  onSave,
   onPublish,
   onDelete,
   onPrivacyChange,
@@ -152,19 +151,6 @@ export function FlashcardEditorHeader({
             >
               <Trash2 className="h-4 w-4" />
               {t("editPage.deleteFlashcard")}
-            </Button>
-            <Button
-              variant="outline"
-              onClick={onSave}
-              disabled={!canSave || isSaving}
-              className="flex items-center gap-2"
-            >
-              {isSaving ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Save className="h-4 w-4" />
-              )}
-              {t("editPage.saveDraft")}
             </Button>
             <Button
               onClick={onPublish}

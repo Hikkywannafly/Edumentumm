@@ -64,13 +64,38 @@ export function FlashcardEditorContent({
   }, [flashcardSet]);
 
   const addFlashcard = () => {
-    const newFlashcard: FlashcardData = {
-      id: Date.now(),
-      question: "",
-      choices: ["", "", "", ""],
-      correctAnswer: 0,
-      explanation: "",
-    };
+    // Determine flashcard type from existing flashcards or metadata
+    const flashcardType =
+      flashcardData?.metadata?.flashcardType ||
+      (flashcards.length > 0 && flashcards[0].vocabulary
+        ? "VOCABULARY"
+        : "QUESTIONS");
+
+    console.log("🔍 addFlashcard Debug:", {
+      flashcardDataMetadata: flashcardData?.metadata,
+      flashcardType: flashcardType,
+      flashcardsLength: flashcards.length,
+      firstFlashcardVocabulary:
+        flashcards.length > 0 ? flashcards[0].vocabulary : "No flashcards",
+      firstFlashcard: flashcards.length > 0 ? flashcards[0] : "No flashcards",
+    });
+
+    const newFlashcard: FlashcardData =
+      flashcardType === "VOCABULARY"
+        ? {
+            id: Date.now(),
+            vocabulary: "",
+            meaning: "",
+            example: "",
+            explanation: "",
+          }
+        : {
+            id: Date.now(),
+            question: "",
+            choices: ["", "", "", ""],
+            correctAnswer: 0,
+            explanation: "",
+          };
     setFlashcards([...flashcards, newFlashcard]);
   };
 
@@ -94,6 +119,19 @@ export function FlashcardEditorContent({
   const handleSave = async () => {
     if (!flashcardSet) return;
 
+    const flashcardType =
+      flashcardData?.metadata?.flashcardType ||
+      (flashcards.length > 0 && flashcards[0].vocabulary
+        ? "VOCABULARY"
+        : "QUESTIONS");
+
+    console.log("💾 handleSave Debug:", {
+      flashcardType: flashcardType,
+      flashcardDataMetadata: flashcardData?.metadata,
+      flashcardsToSave: flashcards,
+      firstFlashcard: flashcards[0],
+    });
+
     try {
       const result = await saveFlashcard(
         title,
@@ -101,7 +139,7 @@ export function FlashcardEditorContent({
         flashcards,
         isPublic,
         flashcardData?.metadata?.categoryId || flashcardSet.categoryId,
-        flashcardData?.metadata?.flashcardType,
+        flashcardType,
       );
       console.log("✅ Flashcard set saved successfully", result);
     } catch (err) {

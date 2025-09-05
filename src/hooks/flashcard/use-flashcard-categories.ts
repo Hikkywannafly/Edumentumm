@@ -70,6 +70,23 @@ const createFlashcardCategory = async (
   return data.data;
 };
 
+const deleteFlashcardCategory = async (
+  categoryId: number,
+  accessToken: string,
+): Promise<void> => {
+  const response = await fetch(`/api/flashcard-categories/${categoryId}`, {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to delete flashcard category");
+  }
+};
+
 // React Query hooks
 export function useFlashcardCategories() {
   const { accessToken } = useAuth();
@@ -102,6 +119,29 @@ export function useCreateFlashcardCategory() {
     },
     onError: (error) => {
       console.error("Error creating flashcard category:", error);
+    },
+  });
+}
+
+export function useDeleteFlashcardCategory() {
+  const { accessToken } = useAuth();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (categoryId: number) =>
+      deleteFlashcardCategory(categoryId, accessToken || ""),
+    onSuccess: (_, deletedCategoryId) => {
+      // Remove the category from cache
+      queryClient.setQueryData(
+        flashcardCategoryQueryKeys.lists(),
+        (oldCategories: FlashcardCategory[] | undefined) => {
+          if (!oldCategories) return [];
+          return oldCategories.filter((cat) => cat.id !== deletedCategoryId);
+        },
+      );
+    },
+    onError: (error) => {
+      console.error("Error deleting flashcard category:", error);
     },
   });
 }

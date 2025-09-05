@@ -54,28 +54,38 @@ export function useFlashcardEdit(flashcardSetId: number) {
     categoryId?: number,
     flashcardType?: "QUESTIONS" | "VOCABULARY",
   ) => {
+    console.log("🔧 saveFlashcard Hook Debug:", {
+      flashcardType: flashcardType,
+      flashcardsInput: flashcards,
+      isPublic: isPublic,
+    });
+
+    const transformedFlashcards = flashcards.map((flashcard) => {
+      if (flashcardType === "VOCABULARY") {
+        return {
+          vocabulary: flashcard.vocabulary || "",
+          meaning: flashcard.meaning || "",
+          example: flashcard.example || "",
+          explanation: flashcard.explanation || "",
+        };
+      }
+
+      return {
+        question: flashcard.question || "",
+        choices: flashcard.choices || [],
+        correctAnswer: flashcard.correctAnswer || 0,
+        explanation: flashcard.explanation || "",
+      };
+    });
+
+    console.log("🔧 Transformed flashcards:", transformedFlashcards);
+
     return updateFlashcardSet({
       title,
       description,
       categoryId,
       flashcardType,
-      flashcards: flashcards.map((flashcard) => {
-        if (flashcardType === "VOCABULARY") {
-          return {
-            vocabulary: flashcard.vocabulary || "",
-            meaning: flashcard.meaning || "",
-            example: flashcard.example || "",
-            explanation: flashcard.explanation || "",
-          };
-        }
-
-        return {
-          question: flashcard.question || "",
-          choices: flashcard.choices || [],
-          correctAnswer: flashcard.correctAnswer || 0,
-          explanation: flashcard.explanation || "",
-        };
-      }),
+      flashcards: transformedFlashcards,
       isPublic,
     });
   };
