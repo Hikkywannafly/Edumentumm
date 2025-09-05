@@ -284,9 +284,9 @@
       "hard": "Khó"
     },
     "createCTA": {
-      "title": "Tạo quiz đầu tiên",
-      "description": "Bắt đầu xây dựng các quiz tương tác để kiểm tra kiến thức",
-      "button": "Tạo quiz mới"
+      "title": "Chưa có quiz nào",
+      "description": "Tạo quiz đầu tiên để bắt đầu với nội dung hấp dẫn.",
+      "button": "Tạo Quiz"
     },
     "create": {
       "title": "Tạo Quiz",

@@ -1,3 +1,12 @@
+export interface TagObjectDisplay {
+  id?: number;
+  name: string;
+  slug?: string;
+  icon?: string;
+  color?: string;
+  description?: string;
+}
+
 export interface QuizDisplayData {
   id: number;
   title: string;
@@ -8,7 +17,7 @@ export interface QuizDisplayData {
   estimatedTime: number;
   status: "DRAFT" | "PUBLISHED" | "ARCHIVED";
   visibility: "PUBLIC" | "PRIVATE";
-  tags: string[];
+  tags: (string | TagObjectDisplay)[];
   createdAt: string;
   viewCount: number;
   attemptCount: number;

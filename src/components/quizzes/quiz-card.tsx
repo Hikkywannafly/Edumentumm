@@ -124,15 +124,22 @@ export function QuizCard({ quiz, onDelete, onEdit, onView }: QuizCardProps) {
         {/* Tags */}
         {quiz.tags.length > 0 && (
           <div className="mb-6 flex flex-wrap gap-1.5">
-            {quiz.tags.slice(0, 2).map((tag, index) => (
-              <Badge
-                key={index}
-                variant="secondary"
-                className="bg-muted font-normal text-muted-foreground text-xs hover:bg-muted/80"
-              >
-                {tag}
-              </Badge>
-            ))}
+            {quiz.tags.slice(0, 2).map((tag, index) => {
+              // Handle both string tags and tag objects
+              const tagName =
+                typeof tag === "string"
+                  ? tag
+                  : (tag as any)?.name || String(tag);
+              return (
+                <Badge
+                  key={index}
+                  variant="secondary"
+                  className="bg-muted font-normal text-muted-foreground text-xs hover:bg-muted/80"
+                >
+                  {String(tagName)}
+                </Badge>
+              );
+            })}
             {quiz.tags.length > 2 && (
               <Badge
                 variant="secondary"

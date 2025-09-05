@@ -1,108 +1,153 @@
 "use client";
 
+import {
+  useDeleteQuiz,
+  useQuizList,
+  useQuizStats,
+} from "@/hooks/quiz/use-quiz-list";
 import type { QuizDisplayData } from "@/types/quiz-display";
 import { useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import ThinLayout from "../layout/thin-layout";
+import { Button } from "../ui/button";
+import { Skeleton } from "../ui/skeleton";
 import { EmptyState } from "./empty-state";
 import { QuizCard } from "./quiz-card";
 import { QuizFilters } from "./quiz-filters";
+import { QuizStatsDisplay } from "./quiz-stats";
 
-// Mock data - Replace with real data from React Query hooks
-const mockQuizzes: QuizDisplayData[] = [
-  {
-    id: 1,
-    title: "Introduction to React",
-    description:
-      "Learn the basics of React including components, state, and props",
-    slug: "introduction-to-react-1",
-    difficulty: "EASY",
-    totalQuestions: 10,
-    estimatedTime: 15,
-    status: "PUBLISHED",
-    visibility: "PUBLIC",
-    tags: ["React", "JavaScript", "Frontend"],
-    createdAt: "2024-01-15",
-    viewCount: 245,
-    attemptCount: 89,
-  },
-  {
-    id: 2,
-    title: "Advanced TypeScript",
-    description:
-      "Deep dive into TypeScript generics, utility types, and advanced patterns",
-    slug: "advanced-typescript-2",
-    difficulty: "HARD",
-    totalQuestions: 15,
-    estimatedTime: 25,
-    status: "DRAFT",
-    visibility: "PRIVATE",
-    tags: ["TypeScript", "JavaScript", "Advanced"],
-    createdAt: "2024-01-20",
-    viewCount: 0,
-    attemptCount: 0,
-  },
-  {
-    id: 3,
-    title: "CSS Flexbox & Grid",
-    description: "Master modern CSS layout techniques with practical examples",
-    slug: "css-flexbox-grid-3",
-    difficulty: "MEDIUM",
-    totalQuestions: 12,
-    estimatedTime: 20,
-    status: "PUBLISHED",
-    visibility: "PUBLIC",
-    tags: ["CSS", "Layout", "Design"],
-    createdAt: "2024-01-18",
-    viewCount: 156,
-    attemptCount: 67,
-  },
-];
-
-// Helper functions for data processing
-// const calculateStats = (quizzes: QuizDisplayData[]): QuizStatsData => {
-//   return {
-//     totalQuizzes: quizzes.length,
-//     publishedQuizzes: quizzes.filter(q => q.status === 'PUBLISHED').length,
-//     draftQuizzes: quizzes.filter(q => q.status === 'DRAFT').length,
-//     totalAttempts: quizzes.reduce((sum, q) => sum + q.attemptCount, 0),
-//   };
-// };
+interface QuizFiltersState {
+  search: string;
+  difficulty?: "EASY" | "MEDIUM" | "HARD";
+  status?: "DRAFT" | "PUBLISHED" | "ARCHIVED";
+  visibility?: "PUBLIC" | "PRIVATE";
+  sortBy: string;
+  sortDirection: "asc" | "desc";
+}
 
 export function QuizzesContent() {
   const t = useTranslations("Quizzes");
+  const router = useRouter();
 
-  // TODO: Replace with real data from React Query hooks
-  const quizzes = mockQuizzes;
-  const hasQuizzes = quizzes.length > 0;
+  // Filter state
+  const [filters, setFilters] = useState<QuizFiltersState>({
+    search: "",
+    sortBy: "createdAt",
+    sortDirection: "desc",
+  });
 
-  // Event handlers - TODO: Implement with real functionality
+  const [currentPage, setCurrentPage] = useState(0);
+  const pageSize = 10;
+
+  // Fetch quiz list with pagination
+  const {
+    data: quizListData,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useQuizList({
+    page: currentPage,
+    size: pageSize,
+    search: filters.search || undefined,
+    difficulty: filters.difficulty,
+    status: filters.status,
+    visibility: filters.visibility,
+    sortBy: filters.sortBy,
+    sortDirection: filters.sortDirection,
+  });
+
+  // Fetch quiz stats
+  const { data: stats } = useQuizStats();
+
+  // Delete quiz mutation
+  const deleteMutation = useDeleteQuiz();
+
+  // Event handlers
   const handleSearch = (query: string) => {
-    console.log("Search query:", query);
-    // TODO: Implement search functionality
+    setFilters((prev) => ({ ...prev, search: query }));
+    setCurrentPage(0); // Reset to first page when searching
   };
 
   const handleFilter = () => {
+    // TODO: Implement advanced filter modal
     console.log("Filter clicked");
-    // TODO: Implement filter functionality
   };
 
   const handleQuizDelete = (id: number) => {
-    console.log("Delete quiz:", id);
-    // TODO: Implement delete functionality
+    if (window.confirm("Are you sure you want to delete this quiz?")) {
+      deleteMutation.mutate(id);
+    }
   };
 
   const handleQuizEdit = (quiz: QuizDisplayData) => {
-    console.log("Edit quiz:", quiz);
-    // TODO: Implement edit functionality
+    router.push(`/quizzes/${quiz.slug}/edit`);
   };
 
   const handleQuizView = (quiz: QuizDisplayData) => {
-    console.log("View quiz:", quiz);
-    // TODO: Implement view functionality
+    router.push(`/quizzes/${quiz.slug}`);
   };
 
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <ThinLayout classNames="flex-1 space-y-6 p-6">
+        <QuizFilters
+          onSearch={handleSearch}
+          onFilter={handleFilter}
+          searchPlaceholder={t("searchPlaceholder")}
+          filtersLabel={t("filters")}
+        />
+
+        {/* Loading skeletons */}
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="space-y-4 rounded-lg border p-6">
+              <Skeleton className="h-6 w-3/4" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-2/3" />
+              <div className="flex gap-2">
+                <Skeleton className="h-8 w-16" />
+                <Skeleton className="h-8 w-20" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </ThinLayout>
+    );
+  }
+
+  // Error state
+  if (isError) {
+    return (
+      <ThinLayout classNames="flex-1 space-y-6 p-6">
+        <div className="py-12 text-center">
+          <h3 className="font-semibold text-destructive text-lg">
+            Error loading quizzes
+          </h3>
+          <p className="mt-2 text-muted-foreground">
+            {error instanceof Error ? error.message : "Something went wrong"}
+          </p>
+          <Button onClick={() => refetch()} className="mt-4" variant="outline">
+            Try Again
+          </Button>
+        </div>
+      </ThinLayout>
+    );
+  }
+
+  const quizzes = quizListData?.content || [];
+  const hasQuizzes = quizzes.length > 0;
+  const totalPages = quizListData?.totalPages || 0;
+  const totalElements = quizListData?.totalElements || 0;
+
   return (
-    <ThinLayout classNames="flex-1 space-y-6 p-6 ">
+    <ThinLayout classNames="flex-1 space-y-6 p-6">
       {/* Search and Filters */}
       <QuizFilters
         onSearch={handleSearch}
@@ -111,22 +156,88 @@ export function QuizzesContent() {
         filtersLabel={t("filters")}
       />
 
-      {/* Stats Summary
-      {hasQuizzes && <QuizStats stats={stats} />} */}
+      {/* Stats Summary */}
+      {stats && <QuizStatsDisplay stats={stats} />}
 
       {/* Quizzes Grid */}
       {hasQuizzes ? (
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {quizzes.map((quiz) => (
-            <QuizCard
-              key={quiz.id}
-              quiz={quiz}
-              onDelete={handleQuizDelete}
-              onEdit={handleQuizEdit}
-              onView={handleQuizView}
-            />
-          ))}
-        </div>
+        <>
+          {/* Result summary */}
+          <div className="flex items-center justify-between">
+            <p className="text-muted-foreground text-sm">
+              Showing {quizzes.length} of {totalElements} quizzes
+              {filters.search && ` for "${filters.search}"`}
+            </p>
+            <p className="text-muted-foreground text-sm">
+              Page {currentPage + 1} of {totalPages}
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {quizzes.map((quiz) => (
+              <QuizCard
+                key={quiz.id}
+                quiz={quiz}
+                onDelete={handleQuizDelete}
+                onEdit={handleQuizEdit}
+                onView={handleQuizView}
+              />
+            ))}
+          </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-2 pt-6">
+              <Button
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 0}
+                variant="outline"
+                size="sm"
+              >
+                Previous
+              </Button>
+
+              {/* Page numbers */}
+              <div className="flex items-center gap-1">
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  let pageNumber: number;
+                  if (totalPages <= 5) {
+                    pageNumber = i;
+                  } else if (currentPage < 3) {
+                    pageNumber = i;
+                  } else if (currentPage >= totalPages - 3) {
+                    pageNumber = totalPages - 5 + i;
+                  } else {
+                    pageNumber = currentPage - 2 + i;
+                  }
+
+                  return (
+                    <Button
+                      key={pageNumber}
+                      onClick={() => handlePageChange(pageNumber)}
+                      variant={
+                        currentPage === pageNumber ? "default" : "outline"
+                      }
+                      size="sm"
+                      className="h-8 w-8 p-0"
+                    >
+                      {pageNumber + 1}
+                    </Button>
+                  );
+                })}
+              </div>
+
+              <Button
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage >= totalPages - 1}
+                variant="outline"
+                size="sm"
+              >
+                Next
+              </Button>
+            </div>
+          )}
+        </>
       ) : (
         <EmptyState
           title={t("createCTA.title")}

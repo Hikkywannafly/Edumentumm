@@ -224,9 +224,9 @@
       "hard": "Hard"
     },
     "createCTA": {
-      "title": "Create your first quiz",
-      "description": "Start building interactive quizzes to test your knowledge",
-      "button": "Create New Quiz"
+      "title": "No quizzes yet",
+      "description": "Create your first quiz to get started with engaging content.",
+      "button": "Create Quiz"
     },
     "create": {
       "title": "Create Quiz",
