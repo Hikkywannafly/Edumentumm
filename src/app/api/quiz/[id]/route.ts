@@ -1,5 +1,5 @@
 import { apiClient } from "@/lib/api/client";
-import axios from "axios";
+import { getAuthToken, handleApiError } from "@/lib/api/helper";
 import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -13,54 +13,6 @@ const UpdateQuizSchema = z.object({
     })
     .optional(),
 });
-
-// Helper function to extract auth token from request
-function getAuthToken(request: NextRequest): string | null {
-  let authHeader = request.headers.get("authorization");
-
-  if (!authHeader) {
-    const cookies = request.headers.get("cookie");
-    if (cookies) {
-      const match = cookies.match(/accessToken=([^;]+)/);
-      if (match) {
-        authHeader = `Bearer ${match[1]}`;
-      }
-    }
-  }
-
-  return authHeader;
-}
-
-// Helper function to handle API errors consistently
-function handleApiError(error: unknown) {
-  if (axios.isAxiosError(error)) {
-    console.error("API Error:", {
-      status: error.response?.status,
-      data: error.response?.data,
-      message: error.message,
-    });
-
-    return NextResponse.json(
-      {
-        success: false,
-        error:
-          error.response?.data?.message ||
-          error.message ||
-          "API request failed",
-      },
-      { status: error.response?.status || 500 },
-    );
-  }
-
-  console.error("Unexpected error:", error);
-  return NextResponse.json(
-    {
-      success: false,
-      error: error instanceof Error ? error.message : "Unknown error",
-    },
-    { status: 500 },
-  );
-}
 
 // Helper function to validate quiz ID
 function validateQuizId(id: string): number | null {

@@ -1,42 +1,82 @@
 "use client";
 
-import { Card, CardContent } from "@/components/ui/card";
-import type { QuizStatsData } from "@/types/quiz-display";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { BookOpen, Clock, Target, Users } from "lucide-react";
+import { useTranslations } from "next-intl";
 
-interface QuizStatsProps {
+interface QuizStatsData {
+  totalQuizzes: number;
+  publishedQuizzes: number;
+  draftQuizzes: number;
+  totalAttempts: number;
+}
+
+interface QuizStatsDisplayProps {
   stats: QuizStatsData;
 }
 
-export function QuizStats({ stats }: QuizStatsProps) {
-  const statItems = [
+export function QuizStatsDisplay({ stats }: QuizStatsDisplayProps) {
+  const t = useTranslations("Quizzes.stats");
+
+  const statsCards = [
     {
-      label: "Total Quizzes",
+      title: t("totalQuizzes"),
       value: stats.totalQuizzes,
+      icon: BookOpen,
+      description: `${stats.publishedQuizzes} published, ${stats.draftQuizzes} drafts`,
+      color: "text-blue-600 dark:text-blue-400",
     },
     {
-      label: "Published",
-      value: stats.publishedQuizzes,
-    },
-    {
-      label: "Drafts",
-      value: stats.draftQuizzes,
-    },
-    {
-      label: "Total Attempts",
+      title: t("totalAttempts"),
       value: stats.totalAttempts,
+      icon: Users,
+      description: "Total quiz attempts by users",
+      color: "text-green-600 dark:text-green-400",
+    },
+    {
+      title: "Average Score",
+      value: "N/A",
+      icon: Target,
+      description: "Coming soon",
+      color: "text-purple-600 dark:text-purple-400",
+    },
+    {
+      title: "Avg. Duration",
+      value: "N/A",
+      icon: Clock,
+      description: "Coming soon",
+      color: "text-orange-600 dark:text-orange-400",
     },
   ];
 
   return (
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-      {statItems.map((item, index) => (
-        <Card key={index}>
-          <CardContent className="p-4">
-            <div className="font-bold text-2xl">{item.value}</div>
-            <p className="text-muted-foreground text-xs">{item.label}</p>
-          </CardContent>
-        </Card>
-      ))}
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+      {statsCards.map((stat, index) => {
+        const Icon = stat.icon;
+        return (
+          <Card
+            key={index}
+            className="border-border/50 bg-card/50 backdrop-blur-sm"
+          >
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="font-medium text-muted-foreground text-sm">
+                {stat.title}
+              </CardTitle>
+              <Icon className={`h-4 w-4 ${stat.color}`} />
+            </CardHeader>
+            <CardContent>
+              <div className="font-bold text-2xl">
+                {typeof stat.value === "number"
+                  ? stat.value.toLocaleString()
+                  : stat.value}
+              </div>
+              <p className="mt-1 text-muted-foreground text-xs">
+                {stat.description}
+              </p>
+            </CardContent>
+          </Card>
+        );
+      })}
     </div>
   );
 }
