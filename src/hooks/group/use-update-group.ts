@@ -31,15 +31,15 @@ export function useUpdateGroup({
         return;
       }
       onGroupUpdate?.(updated);
-      toast.success("Cập nhật nhóm thành công.");
+      toast.success("Update group successful.");
       onClose();
     },
     onError: (err: any) => {
       console.error(err);
       toast.error(
         err instanceof Error
-          ? `Cập nhật thất bại: ${err.message}`
-          : "Cập nhật thất bại",
+          ? `Update failed: ${err.message}`
+          : "Update failed",
       );
     },
   });
@@ -47,7 +47,7 @@ export function useUpdateGroup({
   const deleteMutation = useMutation({
     mutationFn: (groupId: number) => groupAPI.deleteGroup(groupId),
     onSuccess: (_, groupId) => {
-      toast.success("Đã xóa nhóm thành công.");
+      toast.success("Group deleted successfully.");
       onGroupDelete?.(groupId);
       queryClient.invalidateQueries({ queryKey: ["myGroups"] });
       queryClient.removeQueries({ queryKey: ["groupDetail", groupId] });
@@ -57,7 +57,7 @@ export function useUpdateGroup({
     },
     onError: (err: any) => {
       console.error(err);
-      toast.error("Xóa nhóm thất bại.");
+      toast.error("Group deletion failed.");
     },
   });
 

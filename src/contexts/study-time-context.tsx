@@ -16,7 +16,7 @@ export const PingProvider: React.FC<{ children: React.ReactNode }> = ({
   const pingServer = useCallback(async () => {
     const accessToken = localStorage.getItem("accessToken");
     try {
-      await fetch(`${API_BASE_URL}/user/ping`, {
+      await fetch(`${API_BASE_URL}/user/study-time`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

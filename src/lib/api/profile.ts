@@ -3,41 +3,55 @@ import type {} from "../../types/group";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
-interface UploadResponseAPI {
+export interface GetStudyTimeAPIResponse {
+  data: GetStudyTimeResponse;
+  message: string;
+  status: string;
+}
+
+export interface GetStudyTimeResponse {
+  data: number[][];
+}
+
+export interface UploadResponseAPI {
   data: UploadResponse;
   message: string;
   status: string;
 }
 
-interface UploadResponse {
+export interface UploadResponse {
   imageUrl: string;
   bannerUrl: string;
   username: string;
 }
 
-interface GetProfileAPIResponse {
-  data: {
-    id: string;
-    username: string;
-    createdAt: string;
-    streak: string;
-    levelProgress: string;
-    totalStudyTime: string;
-    totalQuizzesCreated: string;
-    totalQuizzesCompleted: string;
-    totalFlashCardCreated: string;
-    totalFlashCardCompleted: string;
-    totalAttendance: string;
-    totalStudyTimeToday: string;
-  };
+export interface GetProfileResponse {
+  id: string;
+  username: string;
+  createdAt: string;
+  streak: number;
+  levelProgress: string;
+  totalStudyTime: number;
+  totalQuizzesCreated: number;
+  totalQuizzesCompleted: number;
+  totalFlashCardCreated: number;
+  totalFlashCardCompleted: number;
+  totalAttendance: number;
+  totalStudyTimeToday: number;
+}
+
+export interface GetProfileAPIResponse {
+  data: GetProfileResponse;
   message: string;
   status: string;
 }
 
-interface GetProfileAttendanceAPIResponse {
-  data: {
-    localDate: string[];
-  };
+export interface GetProfileAttendanceResponse {
+  localDate: string[];
+}
+
+export interface GetProfileAttendanceAPIResponse {
+  data: GetProfileAttendanceResponse;
   message: string;
   status: string;
 }
@@ -115,16 +129,22 @@ class ProfileAPI {
     }
   }
 
-  async getProfile(): Promise<GetProfileAPIResponse> {
+  async getProfile(): Promise<GetProfileResponse> {
     const response = await this.request<GetProfileAPIResponse>("/user/profile");
-    return response;
+    return response.data;
   }
 
-  async getAttendance(): Promise<GetProfileAttendanceAPIResponse> {
+  async getAttendance(): Promise<GetProfileAttendanceResponse> {
     const response = await this.request<GetProfileAttendanceAPIResponse>(
       "/user/profile/attendance",
     );
-    return response;
+    return response.data;
+  }
+
+  async getStudyTime(): Promise<GetStudyTimeResponse> {
+    const response =
+      await this.request<GetStudyTimeAPIResponse>("/user/study-time");
+    return response.data;
   }
 }
 
