@@ -85,14 +85,14 @@ export function FlipCard({ flashcard, onNext, onPrevious }: FlipCardProps) {
     return (
       <div ref={cardRef} className="perspective-1000 h-auto w-full max-w-5xl">
         <Card
-          className="h-full cursor-pointer select-none shadow-lg transition-transform duration-500"
+          className="relative h-full cursor-pointer select-none shadow-lg transition-transform duration-500"
           onClick={handleCardClick}
           onMouseDown={handleMouseDown}
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseLeave}
         >
-          <CardContent className="flex h-full min-h-[400px] flex-col justify-between p-4">
-            <div className="space-y-6">
+          <CardContent className="flex h-full min-h-[400px] flex-col p-4 pb-12">
+            <div className="flex-1 space-y-6">
               {isVocabularyType ? (
                 // Vocabulary Type Back Side
                 <>
@@ -199,7 +199,7 @@ export function FlipCard({ flashcard, onNext, onPrevious }: FlipCardProps) {
               )}
             </div>
 
-            <div className="flex items-center justify-center">
+            <div className="absolute right-0 bottom-4 left-0 flex items-center justify-center">
               <div className="mt-6 text-muted-foreground text-xs">
                 Click card to flip back
               </div>
@@ -214,24 +214,22 @@ export function FlipCard({ flashcard, onNext, onPrevious }: FlipCardProps) {
   return (
     <div ref={cardRef} className="perspective-1000 h-auto w-full max-w-5xl">
       <Card
-        className="h-full cursor-pointer select-none shadow-lg transition-transform duration-500"
+        className="relative h-full cursor-pointer select-none shadow-lg transition-transform duration-500"
         onClick={handleCardClick}
         onMouseDown={handleMouseDown}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseLeave}
       >
-        <CardContent className="flex h-full min-h-[400px] flex-col justify-between p-4">
-          <div className="space-y-6">
+        <CardContent className="flex h-full min-h-[400px] flex-col p-4 pb-12">
+          <div className="flex flex-1 flex-col justify-center">
             {isVocabularyType ? (
               // Vocabulary Type Front Side
-              <div className="text-center">
-                <p className="mb-2 text-muted-foreground text-sm">
-                  Vocabulary:
-                </p>
-                <h3 className="font-semibold text-xl leading-relaxed">
+              <div className="flex flex-col items-center justify-between gap-20 text-center">
+                <p className="text-muted-foreground text-sm">Vocabulary:</p>
+                <h3 className="font-semibold text-6xl leading-relaxed">
                   {htmlToText(flashcard.vocabulary || "")}
                 </h3>
-                <p className="mt-4 text-muted-foreground text-sm">
+                <p className="text-muted-foreground text-sm">
                   What does this word mean?
                 </p>
               </div>
@@ -274,7 +272,7 @@ export function FlipCard({ flashcard, onNext, onPrevious }: FlipCardProps) {
             )}
           </div>
 
-          <div className="flex items-center justify-center">
+          <div className="absolute right-0 bottom-4 left-0 flex items-center justify-center">
             <div className="text-muted-foreground text-xs">
               Click card to see answer
             </div>

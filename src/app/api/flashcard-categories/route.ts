@@ -21,8 +21,7 @@ export interface FlashcardCategoriesApiResponse {
   data: FlashcardCategory[];
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL_LOCAL;
-// process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/v1";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 // Helper function to get auth token from request
 function getAuthHeaders(request: NextRequest) {
@@ -84,6 +83,17 @@ export async function POST(request: NextRequest) {
         {
           status: "error",
           message: "Category name is required",
+        },
+        { status: 400 },
+      );
+    }
+
+    // Validate description if provided
+    if (body.description && typeof body.description !== "string") {
+      return NextResponse.json(
+        {
+          status: "error",
+          message: "Category description must be a string",
         },
         { status: 400 },
       );

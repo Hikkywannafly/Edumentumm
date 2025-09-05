@@ -21,10 +21,11 @@ import {
 import {
   type FlashcardCategory,
   useCreateFlashcardCategory,
+  useDeleteFlashcardCategory,
   useFlashcardCategories,
 } from "@/hooks/flashcard/use-flashcard-categories";
 import { cn } from "@/lib/utils";
-import { Check, ChevronDown, Loader2, Plus, X } from "lucide-react";
+import { Check, ChevronDown, Loader2, Plus, Trash2, X } from "lucide-react";
 import { useEffect, useState } from "react";
 
 interface FlashcardCategoryEditorProps {
@@ -45,6 +46,7 @@ export function FlashcardCategoryEditor({
 }: FlashcardCategoryEditorProps) {
   const [open, setOpen] = useState(false);
   const [customCategory, setCustomCategory] = useState("");
+  const [customDescription, setCustomDescription] = useState("");
   const [showCustomInput, setShowCustomInput] = useState(false);
 
   // React Query hooks
@@ -52,6 +54,7 @@ export function FlashcardCategoryEditor({
     useFlashcardCategories();
 
   const createCategoryMutation = useCreateFlashcardCategory();
+  const deleteCategoryMutation = useDeleteFlashcardCategory();
 
   // Find current category name from categoryId
   const currentCategory = availableCategories.find(
@@ -87,17 +90,20 @@ export function FlashcardCategoryEditor({
   const handleAddCustomCategory = async () => {
     if (customCategory.trim()) {
       const newCategoryName = customCategory.trim();
+      const newCategoryDescription =
+        customDescription.trim() || `Custom category: ${newCategoryName}`;
 
       try {
         // Create new category via API
         const newCategory = await createCategoryMutation.mutateAsync({
           name: newCategoryName,
-          description: `Custom category: ${newCategoryName}`,
+          description: newCategoryDescription,
         });
 
         // Select the newly created category
         onCategoryChange(newCategory.id, newCategory.name);
         setCustomCategory("");
+        setCustomDescription("");
         setShowCustomInput(false);
         setOpen(false);
       } catch (error) {
@@ -105,6 +111,7 @@ export function FlashcardCategoryEditor({
         // On error, still allow local selection but without ID
         onCategoryChange(undefined, newCategoryName);
         setCustomCategory("");
+        setCustomDescription("");
         setShowCustomInput(false);
         setOpen(false);
       }
@@ -113,6 +120,25 @@ export function FlashcardCategoryEditor({
 
   const handleClearCategory = () => {
     onCategoryChange(undefined, "");
+  };
+
+  const handleDeleteCategory = async (
+    categoryToDelete: FlashcardCategory,
+    e: React.MouseEvent,
+  ) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    try {
+      await deleteCategoryMutation.mutateAsync(categoryToDelete.id);
+
+      // If the deleted category was currently selected, clear the selection
+      if (categoryId === categoryToDelete.id) {
+        onCategoryChange(undefined, "");
+      }
+    } catch (error) {
+      console.error("Failed to delete category:", error);
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -181,16 +207,30 @@ export function FlashcardCategoryEditor({
                           onSelect={() =>
                             handleCategorySelect(availableCategory)
                           }
+                          className="group flex items-center justify-between"
                         >
-                          <Check
-                            className={cn(
-                              "mr-2 h-4 w-4",
-                              categoryId === availableCategory.id
-                                ? "opacity-100"
-                                : "opacity-0",
-                            )}
-                          />
-                          {availableCategory.name}
+                          <div className="flex items-center">
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                categoryId === availableCategory.id
+                                  ? "opacity-100"
+                                  : "opacity-0",
+                              )}
+                            />
+                            {availableCategory.name}
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 w-6 p-0 opacity-0 hover:bg-red-100 hover:text-red-600 group-hover:opacity-100"
+                            onClick={(e) =>
+                              handleDeleteCategory(availableCategory, e)
+                            }
+                            disabled={deleteCategoryMutation.isPending}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
                         </CommandItem>
                       ))}
                     </CommandGroup>
@@ -210,35 +250,58 @@ export function FlashcardCategoryEditor({
 
           {/* Custom Category Input */}
           {showCustomInput && (
-            <div className="flex gap-2 rounded-md border bg-muted/50 p-2">
-              <Input
-                value={customCategory}
-                onChange={(e) => setCustomCategory(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder="Enter custom category..."
-                className="flex-1"
-                autoFocus
-              />
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={handleAddCustomCategory}
-                disabled={!customCategory.trim()}
-              >
-                Add
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setShowCustomInput(false);
-                  setCustomCategory("");
-                }}
-              >
-                Cancel
-              </Button>
+            <div className="space-y-3 rounded-md border bg-muted/50 p-4">
+              <div className="space-y-2">
+                <Label htmlFor="category-name" className="font-medium text-sm">
+                  Category Name *
+                </Label>
+                <Input
+                  id="category-name"
+                  value={customCategory}
+                  onChange={(e) => setCustomCategory(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  placeholder="Enter category name..."
+                  autoFocus
+                />
+              </div>
+              <div className="space-y-2">
+                <Label
+                  htmlFor="category-description"
+                  className="font-medium text-sm"
+                >
+                  Description
+                </Label>
+                <Input
+                  id="category-description"
+                  value={customDescription}
+                  onChange={(e) => setCustomDescription(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  placeholder="Enter category description..."
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleAddCustomCategory}
+                  disabled={!customCategory.trim()}
+                >
+                  Add
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setShowCustomInput(false);
+                    setCustomCategory("");
+                    setCustomDescription("");
+                  }}
+                >
+                  Cancel
+                </Button>
+              </div>
             </div>
           )}
         </div>
@@ -256,6 +319,14 @@ export function FlashcardCategoryEditor({
           <div className="flex items-center gap-2 text-muted-foreground text-sm">
             <Loader2 className="h-4 w-4 animate-spin" />
             Creating category...
+          </div>
+        )}
+
+        {/* Deletion Loading State */}
+        {deleteCategoryMutation.isPending && (
+          <div className="flex items-center gap-2 text-muted-foreground text-sm">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Deleting category...
           </div>
         )}
       </CardContent>

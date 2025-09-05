@@ -27,24 +27,60 @@ export default function FlashcardEditorPage() {
   const t = useTranslations("Flashcards");
 
   const handleAddFlashcard = () => {
-    const newFlashcard = {
-      id: Date.now() + Math.random(), // More unique ID for new flashcard
-      question: "Enter your flashcard question here",
-      choices: ["Option A", "Option B", "Option C", "Option D"],
-      correctAnswer: 0,
-      explanation: "Enter explanation for the correct answer",
-    };
+    // Determine flashcard type from existing flashcards or metadata
+    const flashcardType =
+      flashcardData?.metadata?.flashcardType ||
+      (flashcardData?.flashcards &&
+      flashcardData.flashcards.length > 0 &&
+      flashcardData.flashcards[0].vocabulary
+        ? "VOCABULARY"
+        : "QUESTIONS");
+
+    const newFlashcard =
+      flashcardType === "VOCABULARY"
+        ? {
+            id: Date.now() + Math.random(),
+            vocabulary: "Enter vocabulary word/phrase here",
+            meaning: "Enter meaning here",
+            example: "Enter example sentence here",
+            explanation: "Enter additional explanation here",
+          }
+        : {
+            id: Date.now() + Math.random(),
+            question: "Enter your flashcard question here",
+            choices: ["Option A", "Option B", "Option C", "Option D"],
+            correctAnswer: 0,
+            explanation: "Enter explanation for the correct answer",
+          };
     addFlashcard(newFlashcard);
   };
 
   const handleAddFlashcardAfter = (afterIndex: number) => {
-    const newFlashcard = {
-      id: Date.now() + Math.random(), // More unique ID for new flashcard
-      question: "Enter your flashcard question here",
-      choices: ["Option A", "Option B", "Option C", "Option D"],
-      correctAnswer: 0,
-      explanation: "Enter explanation for the correct answer",
-    };
+    // Determine flashcard type from existing flashcards or metadata
+    const flashcardType =
+      flashcardData?.metadata?.flashcardType ||
+      (flashcardData?.flashcards &&
+      flashcardData.flashcards.length > 0 &&
+      flashcardData.flashcards[0].vocabulary
+        ? "VOCABULARY"
+        : "QUESTIONS");
+
+    const newFlashcard =
+      flashcardType === "VOCABULARY"
+        ? {
+            id: Date.now() + Math.random(),
+            vocabulary: "Enter vocabulary word/phrase here",
+            meaning: "Enter meaning here",
+            example: "Enter example sentence here",
+            explanation: "Enter additional explanation here",
+          }
+        : {
+            id: Date.now() + Math.random(),
+            question: "Enter your flashcard question here",
+            choices: ["Option A", "Option B", "Option C", "Option D"],
+            correctAnswer: 0,
+            explanation: "Enter explanation for the correct answer",
+          };
     // Use the store's addFlashcardAfter function
     const { addFlashcardAfter } = useFlashcardEditorStore.getState();
     addFlashcardAfter(afterIndex, newFlashcard);
