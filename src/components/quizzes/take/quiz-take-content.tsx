@@ -3,6 +3,7 @@
 import type { BackendQuizEntity } from "@/types/quiz";
 import type { QuizAnswer, QuizResult, QuizTakeMode } from "@/types/quiz-take";
 import { useCallback, useEffect, useState } from "react";
+import ThinLayout from "../../layout/thin-layout";
 import { QuizHeader } from "./quiz-header";
 import { QuizNavigation } from "./quiz-navigation";
 import { QuizQuestion } from "./quiz-question";
@@ -191,7 +192,7 @@ export function QuizTakeContent({ quiz, mode = "QUIZ" }: QuizTakeContentProps) {
 
   // Show quiz interface
   return (
-    <div className="flex-1 space-y-6 p-6">
+    <ThinLayout classNames="flex-1 space-y-6 p-6">
       {/* Quiz Header */}
       <QuizHeader
         title={quiz.title}
@@ -293,6 +294,6 @@ export function QuizTakeContent({ quiz, mode = "QUIZ" }: QuizTakeContentProps) {
           />
         </div>
       </div>
-    </div>
+    </ThinLayout>
   );
 }

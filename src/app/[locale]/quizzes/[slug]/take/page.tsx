@@ -2,6 +2,7 @@
 
 import DashboardLayout from "@/components/layout/dashboard-layout";
 import { PageHeaderClient } from "@/components/layout/page-header-client";
+import ThinLayout from "@/components/layout/thin-layout";
 import { LocalizedLink } from "@/components/localized-link";
 import { QuizTakeContent } from "@/components/quizzes/take";
 import { Button } from "@/components/ui/button";
@@ -78,7 +79,7 @@ export default function QuizTakePage() {
             showThemeToggle={true}
             showLanguageSwitcher={true}
           />
-          <div className="flex flex-1 items-center justify-center p-6">
+          <ThinLayout classNames="flex flex-1 items-center justify-center p-6">
             <div className="text-center">
               <h3 className="mb-2 font-semibold text-destructive text-lg">
                 Quiz not found
@@ -95,7 +96,7 @@ export default function QuizTakePage() {
                 </Button>
               </LocalizedLink>
             </div>
-          </div>
+          </ThinLayout>
         </div>
       </DashboardLayout>
     );
@@ -105,7 +106,7 @@ export default function QuizTakePage() {
     <DashboardLayout>
       <div className="flex min-h-screen flex-col">
         <PageHeaderClient
-          title={`${quiz.title} - ${mode === "QUIZ" ? "Quiz Mode" : "Exam Mode"}`}
+          title=""
           action={
             <LocalizedLink href={`quizzes/${slug}`}>
               <Button variant="outline" size="sm">

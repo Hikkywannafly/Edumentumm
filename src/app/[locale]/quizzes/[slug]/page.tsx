@@ -13,6 +13,7 @@ import { extractIdFromSlug } from "@/utils/index";
 import { ArrowLeft, Play } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useState } from "react";
+import ThinLayout from "../../../../components/layout/thin-layout";
 export default function QuizDetailPage() {
   const params = useParams();
   const { navigate } = useLocalizedNavigation();
@@ -35,7 +36,7 @@ export default function QuizDetailPage() {
   if (isLoading) {
     return (
       <DashboardLayout>
-        <div className="flex min-h-screen flex-col">
+        <div className="flex min-h-screen w-full flex-col">
           <PageHeaderClient
             title=""
             action={
@@ -49,13 +50,70 @@ export default function QuizDetailPage() {
             showThemeToggle={true}
             showLanguageSwitcher={true}
           />
-          <div className="flex-1 space-y-6 p-6">
-            <div className="mx-auto max-w-4xl space-y-6">
-              <Skeleton className="h-8 w-3/4" />
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-64 w-full" />
+
+          <ThinLayout classNames="flex flex-1 w-full items-center justify-center space-y-6 p-6">
+            <div className="mx-auto max-w-2xl space-y-6 text-center">
+              {/* Title Skeleton */}
+              <div className="space-y-4">
+                <Skeleton className="mx-auto h-9 w-3/4" />
+                <Skeleton className="mx-auto h-6 w-full" />
+              </div>
+
+              {/* Quiz Stats Skeleton */}
+              <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+                <div className="rounded-lg bg-card p-4">
+                  <Skeleton className="mb-2 h-8 w-12" />
+                  <Skeleton className="h-4 w-16" />
+                </div>
+                <div className="rounded-lg bg-card p-4">
+                  <Skeleton className="mb-2 h-8 w-12" />
+                  <Skeleton className="h-4 w-16" />
+                </div>
+                <div className="rounded-lg bg-card p-4">
+                  <Skeleton className="mb-2 h-8 w-12" />
+                  <Skeleton className="h-4 w-16" />
+                </div>
+                <div className="rounded-lg bg-card p-4">
+                  <Skeleton className="mb-2 h-8 w-12" />
+                  <Skeleton className="h-4 w-16" />
+                </div>
+              </div>
+
+              {/* Instructions Skeleton */}
+              <div className="rounded-lg bg-muted/50 p-4">
+                <Skeleton className="mb-2 h-5 w-24" />
+                <Skeleton className="h-4 w-full" />
+              </div>
+
+              {/* Mode Selection Skeleton */}
+              <div className="space-y-4">
+                <Skeleton className="mx-auto h-6 w-40" />
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <div className="rounded-lg bg-card p-4">
+                    <div className="flex items-start space-x-3">
+                      <Skeleton className="mt-1 h-4 w-4 rounded-full" />
+                      <div className="flex-1">
+                        <Skeleton className="mb-1 h-5 w-20" />
+                        <Skeleton className="h-4 w-full" />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="rounded-lg bg-card p-4">
+                    <div className="flex items-start space-x-3">
+                      <Skeleton className="mt-1 h-4 w-4 rounded-full" />
+                      <div className="flex-1">
+                        <Skeleton className="mb-1 h-5 w-20" />
+                        <Skeleton className="h-4 w-full" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Start Button Skeleton */}
+              <Skeleton className="mx-auto h-12 w-40" />
             </div>
-          </div>
+          </ThinLayout>
         </div>
       </DashboardLayout>
     );
@@ -124,13 +182,13 @@ export default function QuizDetailPage() {
                   Back to Quizzes
                 </Button>
               </LocalizedLink>
-              {quiz.status === "DRAFT" && (
+              {/* {quiz.status === "DRAFT" && (
                 <LocalizedLink href={`quizzes/${quiz.slug}-${quiz.id}/edit`}>
                   <Button variant="outline" size="sm">
                     Edit Quiz
                   </Button>
                 </LocalizedLink>
-              )}
+              )} */}
             </div>
           }
           showThemeToggle={true}
@@ -158,19 +216,19 @@ export default function QuizDetailPage() {
                 </div>
                 <div className="text-muted-foreground text-sm">Questions</div>
               </Card>
-              <Card className="rounded-lg border bg-card p-4">
+              <Card className="rounded-lg bg-card p-4">
                 <div className="font-semibold text-2xl text-foreground">
                   {quiz.estimatedTime}m
                 </div>
                 <div className="text-muted-foreground text-sm">Duration</div>
               </Card>
-              <Card className="rounded-lg border bg-card p-4">
+              <Card className="rounded-lg bg-card p-4">
                 <div className="font-semibold text-2xl text-foreground">
                   {quiz.totalPoints}
                 </div>
                 <div className="text-muted-foreground text-sm">Points</div>
               </Card>
-              <Card className="rounded-lg border bg-card p-4">
+              <Card className="rounded-lg bg-card p-4">
                 <div className="font-semibold text-2xl text-foreground">
                   {quiz.passingScore}%
                 </div>
@@ -274,7 +332,7 @@ export default function QuizDetailPage() {
             <Button
               size="lg"
               onClick={handleStartQuiz}
-              className="bg-blue-600 px-8 py-3 text-lg text-white hover:bg-blue-700"
+              className="px-8 py-3 text-lg"
             >
               <Play className="mr-2 h-5 w-5" />
               Start {selectedMode === "QUIZ" ? "Quiz" : "Exam"}
