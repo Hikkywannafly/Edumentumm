@@ -3,7 +3,6 @@
 import DashboardLayout from "@/components/layout/dashboard-layout";
 import { PageHeaderClient } from "@/components/layout/page-header-client";
 import ThinLayout from "@/components/layout/thin-layout";
-import { LocalizedLink } from "@/components/localized-link";
 import { QuizTakeContent } from "@/components/quizzes/take";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -11,11 +10,12 @@ import { useQuizDetail } from "@/hooks/quiz/use-quiz-detail";
 import type { QuizTakeMode } from "@/types/quiz-take";
 import { extractIdFromSlug } from "@/utils/index";
 import { ArrowLeft } from "lucide-react";
-import { useParams, useSearchParams } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 
 export default function QuizTakePage() {
   const params = useParams();
   const searchParams = useSearchParams();
+  const router = useRouter();
 
   const slug = params.slug as string;
   const quizId = slug ? extractIdFromSlug(slug) : "0";
@@ -31,6 +31,10 @@ export default function QuizTakePage() {
     enabled: !!quizId,
   });
 
+  const handleBack = () => {
+    router.back();
+  };
+
   // Loading state
   if (isLoading) {
     return (
@@ -39,12 +43,10 @@ export default function QuizTakePage() {
           <PageHeaderClient
             title="Loading..."
             action={
-              <LocalizedLink href={`quizzes/${slug}`}>
-                <Button variant="outline" size="sm">
-                  <ArrowLeft className="mr-2 h-4 w-4" />
-                  Back to Quiz
-                </Button>
-              </LocalizedLink>
+              <Button variant="outline" size="sm" onClick={handleBack}>
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back
+              </Button>
             }
             showThemeToggle={true}
             showLanguageSwitcher={true}
@@ -69,12 +71,10 @@ export default function QuizTakePage() {
           <PageHeaderClient
             title="Error"
             action={
-              <LocalizedLink href={`quizzes/${slug}`}>
-                <Button variant="outline" size="sm">
-                  <ArrowLeft className="mr-2 h-4 w-4" />
-                  Back to Quiz
-                </Button>
-              </LocalizedLink>
+              <Button variant="outline" size="sm" onClick={handleBack}>
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back
+              </Button>
             }
             showThemeToggle={true}
             showLanguageSwitcher={true}
@@ -89,12 +89,10 @@ export default function QuizTakePage() {
                   ? error.message
                   : "The quiz you're looking for doesn't exist."}
               </p>
-              <LocalizedLink href="quizzes">
-                <Button>
-                  <ArrowLeft className="mr-2 h-4 w-4" />
-                  Back to Quizzes
-                </Button>
-              </LocalizedLink>
+              <Button onClick={handleBack}>
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Go Back
+              </Button>
             </div>
           </ThinLayout>
         </div>
@@ -102,23 +100,21 @@ export default function QuizTakePage() {
     );
   }
 
+  // Main quiz taking interface
   return (
     <DashboardLayout>
       <div className="flex min-h-screen flex-col">
         <PageHeaderClient
           title=""
           action={
-            <LocalizedLink href={`quizzes/${slug}`}>
-              <Button variant="outline" size="sm">
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Quiz
-              </Button>
-            </LocalizedLink>
+            <Button variant="outline" size="sm" onClick={handleBack}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back
+            </Button>
           }
           showThemeToggle={true}
           showLanguageSwitcher={true}
         />
-
         <div className="flex-1">
           <QuizTakeContent quiz={quiz} mode={mode} />
         </div>

@@ -28,6 +28,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { useSidebarContext } from "@/contexts/sidebar-context";
 import { LocalizedLink } from "../localized-link";
 
 type MenuItem = {
@@ -132,17 +133,9 @@ const menuData: MenuData = {
 };
 
 export function AppSidebar() {
-  const [isPinned, setIsPinned] = React.useState(false);
-  const [isHovered, setIsHovered] = React.useState(false);
+  const { isPinned, isHovered, setIsPinned, setIsHovered, isExpanded } =
+    useSidebarContext();
   const timeoutRef = React.useRef<NodeJS.Timeout | null>(null);
-
-  // Load initial state from localStorage
-  React.useEffect(() => {
-    const savedPinnedState = localStorage.getItem("sidebar-pinned");
-    if (savedPinnedState !== null) {
-      setIsPinned(JSON.parse(savedPinnedState));
-    }
-  }, []);
 
   // Suppress ResizeObserver errors
   React.useEffect(() => {
@@ -153,6 +146,7 @@ export function AppSidebar() {
         )
       ) {
         e.stopImmediatePropagation();
+        return false;
       }
     };
 
@@ -161,13 +155,11 @@ export function AppSidebar() {
   }, []);
 
   const handlePinToggle = React.useCallback(() => {
-    setIsPinned((prev) => {
-      const newPinned = !prev;
-      // Save to localStorage
-      localStorage.setItem("sidebar-pinned", JSON.stringify(newPinned));
-      return newPinned;
-    });
-  }, []);
+    const newPinned = !isPinned;
+    setIsPinned(newPinned);
+    // Save to localStorage
+    localStorage.setItem("sidebar-pinned", JSON.stringify(newPinned));
+  }, [isPinned, setIsPinned]);
 
   const handleMouseEnter = React.useCallback(() => {
     if (!isPinned) {
@@ -176,7 +168,7 @@ export function AppSidebar() {
       }
       setIsHovered(true);
     }
-  }, [isPinned]);
+  }, [isPinned, setIsHovered]);
 
   const handleMouseLeave = React.useCallback(() => {
     if (!isPinned) {
@@ -184,7 +176,7 @@ export function AppSidebar() {
         setIsHovered(false);
       }, 100);
     }
-  }, [isPinned]);
+  }, [isPinned, setIsHovered]);
 
   // Cleanup timeout on unmount
   React.useEffect(() => {
@@ -195,7 +187,6 @@ export function AppSidebar() {
     };
   }, []);
 
-  const isExpanded = isPinned || isHovered;
   const textVisibility = isExpanded
     ? "opacity-100"
     : "opacity-0 w-0 overflow-hidden";
@@ -204,13 +195,13 @@ export function AppSidebar() {
     <div
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      className={` top-0 h-full bg-white dark:bg-gray-900 ${
+      className={`fixed top-0 left-0 z-40 h-screen bg-white dark:bg-gray-900 ${
         isPinned ? "w-64" : isHovered ? "w-64" : "w-16"
       } ${!isPinned ? "transition-all duration-200 ease-in-out" : ""}`}
     >
       <div className="flex h-full flex-col border-gray-200 border-r bg-white dark:border-gray-700 dark:bg-gray-900">
         {/* Header */}
-        <div className="h-16 border-gray-200 border-b dark:border-gray-700">
+        <div className="h-16 flex-shrink-0 border-gray-200 border-b dark:border-gray-700">
           <div className="flex items-center justify-between px-4 py-4">
             <div className="flex items-center gap-3">
               <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
@@ -240,7 +231,7 @@ export function AppSidebar() {
 
         {/* Content */}
         <div
-          className={`${isExpanded ? "custom-scrollbar" : "custom-scrollbar-hidden"} flex-1 overflow-y-scroll px-2 py-2`}
+          className={`${isExpanded ? "custom-scrollbar" : "custom-scrollbar-hidden"} flex-1 overflow-y-auto px-2 py-2`}
         >
           {Object.entries(menuData).map(([key, items]) => (
             <Collapsible key={key} defaultOpen className="group/collapsible">

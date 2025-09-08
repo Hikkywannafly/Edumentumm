@@ -68,8 +68,8 @@ export function QuizEditorHeader({
     <>
       {/* Main Header */}
       <div
-        className={`sticky top-0 z-50 w-full bg-background/95 backdrop-blur transition-all duration-200 supports-[backdrop-filter]:bg-background/60 ${
-          isScrolled ? "border-gray-200 border-b" : "border-b"
+        className={`sticky top-0 z-50 mx-2 w-full bg-background/95 backdrop-blur transition-all duration-200 supports-[backdrop-filter]:bg-background/60 ${
+          isScrolled ? "border-gray-200 border-b" : "border-gray-200 border-b"
         }`}
       >
         <div className="flex w-full items-center justify-between p-4">
@@ -89,20 +89,15 @@ export function QuizEditorHeader({
 
           {/* Right side - Action buttons */}
           <div className="flex items-center gap-2">
-            {/* Scroll to top button - only when scrolled */}
-            {isScrolled && (
-              <Button
-                onClick={scrollToTop}
-                size="sm"
-                variant="ghost"
-                className="flex items-center gap-2"
-              >
-                <ChevronUp className="h-4 w-4" />
-                <span className="hidden sm:inline">
-                  {t("editor.backToTop")}
-                </span>
-              </Button>
-            )}
+            <Button
+              onClick={scrollToTop}
+              size="sm"
+              variant="ghost"
+              className="flex items-center gap-2"
+            >
+              <ChevronUp className="h-4 w-4" />
+              <span className="hidden sm:inline">{t("editor.backToTop")}</span>
+            </Button>
 
             {/* Save button (if quiz exists) */}
             {canSave && onSaveQuiz && (
