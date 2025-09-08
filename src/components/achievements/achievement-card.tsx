@@ -55,7 +55,11 @@ export function AchievementCard({ achievement }: AchievementCardProps) {
               className="h-2 bg-zinc-300 dark:bg-zinc-700 [&>*]:bg-blue-600 dark:[&>*]:bg-blue-500"
             />
             <p className="text-gray-600 text-xs dark:text-zinc-400">
-              Progress: {achievement.currentValue}/{achievement.targetValue}
+              {achievement.currentValue === 0
+                ? "Chưa bắt đầu"
+                : achievement.targetValue === achievement.currentValue
+                  ? "Đã hoàn thành"
+                  : `Progress: ${achievement.currentValue}/${achievement.targetValue}`}
             </p>
           </div>
         )}
