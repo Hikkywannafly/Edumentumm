@@ -1,7 +1,7 @@
 # Frontend Features
 
 ## 1. Authentication & User Management
-#### Author: Quang Thang
+#### Author: Chitam
 ##### Done: 90%
 | Page / Component                  | Route / Path           | Description                        | Status   |
 |----------------------------------|------------------------|------------------------------------|----------|
