@@ -1,8 +1,8 @@
 import { getTranslations } from "next-intl/server";
 import { setRequestLocale } from "next-intl/server";
 import { AchievementsContent } from "../../../components/achievements/achievements-content";
-import { PageHeader } from "../../../components/layout";
 import DashboardLayout from "../../../components/layout/dashboard-layout";
+import { PageHeaderClient } from "../../../components/layout/page-header-client";
 
 export default async function AchievementPage({
   params,
@@ -18,7 +18,7 @@ export default async function AchievementPage({
       <DashboardLayout>
         <div className="flex min-h-screen flex-col">
           {/* Header */}
-          <PageHeader
+          <PageHeaderClient
             title={t("title")}
             showThemeToggle={true}
             showLanguageSwitcher={true}

@@ -2,32 +2,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import { Bolt } from "lucide-react";
+import type { Achievement } from "../../lib/api/achievement";
 
 interface AchievementCardProps {
-  icon: string;
-  title: string;
-  tier: string;
-  description: string;
-  xp: number;
-  progressCurrent?: number;
-  progressTotal?: number;
-  rarity: "COMMON" | "RARE" | "EPIC" | "LEGENDARY";
+  achievement: Achievement;
 }
 
-export function AchievementCard({
-  icon,
-  title,
-  tier,
-  description,
-  xp,
-  progressCurrent,
-  progressTotal,
-  rarity,
-}: AchievementCardProps) {
+export function AchievementCard({ achievement }: AchievementCardProps) {
   const showProgress =
-    progressCurrent !== undefined && progressTotal !== undefined;
+    achievement.currentValue !== undefined &&
+    achievement.targetValue !== undefined;
   const progressValue = showProgress
-    ? (progressCurrent / progressTotal) * 100
+    ? (achievement.currentValue / achievement.targetValue) * 100
     : 0;
 
   // ánh xạ màu rarity cho light và dark mode
@@ -44,21 +30,23 @@ export function AchievementCard({
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <div className="flex items-center gap-3">
           <span className="flex items-center justify-center rounded-md bg-zinc-100 p-2 text-2xl shadow-sm transition dark:bg-zinc-700">
-            {icon}
+            {achievement.icon}
           </span>
           <div>
-            <CardTitle className="font-semibold text-base">{title}</CardTitle>
-            <p className="text-gray-600 text-xs dark:text-zinc-400">{tier}</p>
+            <CardTitle className="font-semibold text-base">
+              {achievement.title}
+            </CardTitle>
+            {/* <p className="text-gray-600 text-xs dark:text-zinc-400">{tier}</p> */}
           </div>
         </div>
         <div className="flex items-center font-medium text-gray-700 text-sm dark:text-zinc-300">
           <Bolt className="mr-1 h-4 w-4 text-blue-600 dark:text-blue-400" />
-          {xp}
+          {achievement.points}
         </div>
       </CardHeader>
       <CardContent className="flex flex-grow flex-col justify-between">
         <p className="mb-4 text-gray-600 text-sm dark:text-zinc-400">
-          {description}
+          {achievement.description}
         </p>
         {showProgress && (
           <div className="mb-2 space-y-2">
@@ -67,17 +55,18 @@ export function AchievementCard({
               className="h-2 bg-zinc-300 dark:bg-zinc-700 [&>*]:bg-blue-600 dark:[&>*]:bg-blue-500"
             />
             <p className="text-gray-600 text-xs dark:text-zinc-400">
-              Progress: {progressCurrent}/{progressTotal}
+              Progress: {achievement.currentValue}/{achievement.targetValue}
             </p>
           </div>
         )}
         <span
           className={cn(
             "inline-flex w-fit cursor-pointer items-center rounded-full px-2.5 py-0.5 font-medium text-xs transition hover:brightness-95",
-            rarityColorClass[rarity],
+            rarityColorClass[achievement.rarity],
           )}
         >
-          {rarity.charAt(0) + rarity.slice(1).toLowerCase()}
+          {achievement.rarity.charAt(0) +
+            achievement.rarity.slice(1).toLowerCase()}
         </span>
       </CardContent>
     </Card>

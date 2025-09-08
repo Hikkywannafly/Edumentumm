@@ -37,6 +37,7 @@ export interface GetProfileResponse {
   totalFlashCardCreated: number;
   totalFlashCardCompleted: number;
   totalAttendance: number;
+  maxStreak: number;
   totalStudyTimeToday: number;
 }
 

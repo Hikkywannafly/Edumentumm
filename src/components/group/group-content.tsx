@@ -1,7 +1,16 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { KeyRound, Plus, Search } from "lucide-react";
+import { Grid, List } from "lucide-react";
 import { useState } from "react";
 import { useMyGroups, usePublicGroups } from "../../hooks/group";
 import type { GroupResponse } from "../../types/group";
@@ -9,11 +18,14 @@ import { LocalizedLink } from "../localized-link";
 import GroupDialog from "./group-dialog";
 import GroupPaging from "./group-paging";
 import { StudyGroupCard } from "./study-group-card";
+import { StudyGroupCardSkeleton } from "./study-group-card-skeleton";
 
 export default function GroupContent() {
   const [selectedGroup, setSelectedGroup] = useState<GroupResponse | null>(
     null,
   );
+  const [sortBy, setSortBy] = useState("name");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const pageSize = 8;
 
   const {
@@ -31,7 +43,6 @@ export default function GroupContent() {
     keyword,
     setKeyword,
     setPage,
-    isSearching,
     removeGroup,
   } = usePublicGroups(pageSize);
 
@@ -62,14 +73,13 @@ export default function GroupContent() {
         </div>
       ))
     ) : (
-      <div className="py-10 text-center text-gray-500 dark:text-gray-400">
+      <div className="col-span-full flex min-h-[220px] items-center justify-center py-10 text-gray-500 dark:text-gray-400">
         Không có dữ liệu
       </div>
     );
 
   return (
     <div className="container mx-auto px-4 py-8 md:px-6 lg:px-8">
-      {/* Header */}
       <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between md:gap-0">
         <div>
           <h1 className="font-bold text-3xl text-foreground tracking-tight">
@@ -92,7 +102,6 @@ export default function GroupContent() {
         </div>
       </div>
 
-      {/* My Groups */}
       <section className="mb-10">
         <h2 className="mb-4 font-semibold text-foreground text-xl">
           My Groups
@@ -102,40 +111,63 @@ export default function GroupContent() {
         )}
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {myGroupsLoading ? (
-            <div className="col-span-full flex justify-center py-10">
-              <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-            </div>
+            <>
+              <StudyGroupCardSkeleton />
+              <StudyGroupCardSkeleton />
+              <StudyGroupCardSkeleton />
+              <StudyGroupCardSkeleton />
+            </>
           ) : (
             renderGroupList(myGroups, true)
           )}
         </div>
       </section>
 
-      {/* Discover Groups */}
       <section>
-        <div className="mb-4 flex flex-col gap-3 sm:flex-col sm:justify-between">
-          <h2 className="font-semibold text-foreground text-xl">
-            Discover Groups
-          </h2>
-          <div className="relative w-full sm:w-180">
-            <Search
-              className={`absolute top-2.5 left-3 h-4 w-4 ${
-                isSearching ? "animate-pulse text-blue-500" : "text-gray-400"
-              }`}
-            />
-            <input
-              type="text"
-              value={keyword}
-              onChange={(e) => setKeyword(e.target.value)}
-              placeholder="Search groups..."
-              className="w-full rounded-lg border border-gray-300 bg-white py-2 pr-3 pl-9 text-sm shadow-sm focus:border-blue-500 focus:outline-none dark:border-zinc-700 dark:bg-zinc-900 dark:text-white"
-            />
-            {isSearching && (
-              <span className="absolute top-2.5 right-3 text-muted-foreground text-xs">
-                Searching...
-              </span>
-            )}
+        <h2 className="mb-4 font-semibold text-foreground text-xl">
+          Discover Groups
+        </h2>
+        <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-1 gap-4">
+            <div className="relative flex-1">
+              <Search className="-translate-y-1/2 absolute top-1/2 left-3 h-4 w-4 text-gray-400" />
+              <Input
+                placeholder="Search groups..."
+                value={keyword}
+                onChange={(e) => setKeyword(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="Sort by" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="name">Tên A-Z</SelectItem>
+                <SelectItem value="date">Ngày tạo</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
+          <div className="flex gap-1 bg-gray-200">
+            <Button
+              variant={viewMode === "grid" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setViewMode("grid")}
+            >
+              <Grid className="h-4 w-4" />
+            </Button>
+            <Button
+              variant={viewMode === "list" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setViewMode("list")}
+            >
+              <List className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+
+        <div className="mb-4 flex-shrink-0">
+          <GroupPaging pagination={paging} pageIndex={setPage} />
         </div>
 
         {groupsError && (
@@ -143,8 +175,13 @@ export default function GroupContent() {
         )}
 
         {groupsLoading ? (
-          <div className="flex justify-center py-10">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <>
+              <StudyGroupCardSkeleton />
+              <StudyGroupCardSkeleton />
+              <StudyGroupCardSkeleton />
+              <StudyGroupCardSkeleton />
+            </>
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -153,11 +190,6 @@ export default function GroupContent() {
         )}
       </section>
 
-      <div className="mt-8">
-        <GroupPaging pagination={paging} pageIndex={setPage} />
-      </div>
-
-      {/* Dialog */}
       <GroupDialog
         selectedGroup={selectedGroup}
         onClose={() => setSelectedGroup(null)}
