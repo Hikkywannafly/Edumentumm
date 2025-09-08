@@ -3,19 +3,21 @@
 import DashboardLayout from "@/components/layout/dashboard-layout";
 import { PageHeaderClient } from "@/components/layout/page-header-client";
 import { LocalizedLink } from "@/components/localized-link";
-import { QuizTakeContent } from "@/components/quizzes/take";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQuizDetail } from "@/hooks/quiz/use-quiz-detail";
+import { useLocalizedNavigation } from "@/lib/utils/navigation";
+import type { QuizTakeMode } from "@/types/quiz-take";
 import { extractIdFromSlug } from "@/utils/index";
 import { ArrowLeft, Play } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useState } from "react";
 export default function QuizDetailPage() {
   const params = useParams();
-  const [isStarted, setIsStarted] = useState(false);
+  const { navigate } = useLocalizedNavigation();
+  const [selectedMode, setSelectedMode] = useState<QuizTakeMode>("QUIZ");
 
-  // Extract quiz ID from slug (format: "title-id")
   const slug = params.slug as string;
   const quizId = slug ? extractIdFromSlug(slug) : "0";
 
@@ -35,7 +37,7 @@ export default function QuizDetailPage() {
       <DashboardLayout>
         <div className="flex min-h-screen flex-col">
           <PageHeaderClient
-            title="Loading..."
+            title=""
             action={
               <LocalizedLink href="quizzes">
                 <Button variant="outline" size="sm">
@@ -100,26 +102,20 @@ export default function QuizDetailPage() {
     );
   }
 
-  // Quiz started - show quiz taking interface
-  if (isStarted && quiz) {
-    return (
-      <DashboardLayout>
-        <QuizTakeContent quiz={quiz} />
-      </DashboardLayout>
-    );
-  }
+  const handleStartQuiz = () => {
+    const slug = params.slug as string;
+    navigate(`/quizzes/${slug}/take?mode=${selectedMode}`);
+  };
 
-  // If quiz is not loaded yet, this shouldn't happen after loading check
   if (!quiz) {
     return null;
   }
 
-  // Quiz preview/start screen
   return (
     <DashboardLayout>
       <div className="flex min-h-screen flex-col">
         <PageHeaderClient
-          title={quiz.title}
+          title=""
           action={
             <div className="flex gap-2">
               <LocalizedLink href="quizzes">
@@ -156,35 +152,35 @@ export default function QuizDetailPage() {
 
             {/* Quiz Stats */}
             <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-              <div className="rounded-lg border bg-card p-4">
+              <Card className="rounded-lg border bg-card p-4">
                 <div className="font-semibold text-2xl text-foreground">
                   {quiz.totalQuestions}
                 </div>
                 <div className="text-muted-foreground text-sm">Questions</div>
-              </div>
-              <div className="rounded-lg border bg-card p-4">
+              </Card>
+              <Card className="rounded-lg border bg-card p-4">
                 <div className="font-semibold text-2xl text-foreground">
                   {quiz.estimatedTime}m
                 </div>
                 <div className="text-muted-foreground text-sm">Duration</div>
-              </div>
-              <div className="rounded-lg border bg-card p-4">
+              </Card>
+              <Card className="rounded-lg border bg-card p-4">
                 <div className="font-semibold text-2xl text-foreground">
                   {quiz.totalPoints}
                 </div>
                 <div className="text-muted-foreground text-sm">Points</div>
-              </div>
-              <div className="rounded-lg border bg-card p-4">
+              </Card>
+              <Card className="rounded-lg border bg-card p-4">
                 <div className="font-semibold text-2xl text-foreground">
                   {quiz.passingScore}%
                 </div>
                 <div className="text-muted-foreground text-sm">To Pass</div>
-              </div>
+              </Card>
             </div>
 
             {/* Instructions */}
             {quiz.quizData?.instructions && (
-              <div className="rounded-lg border bg-muted/50 p-4">
+              <div className="rounded-lg bg-muted/50 p-4">
                 <h3 className="mb-2 font-medium text-foreground">
                   Instructions
                 </h3>
@@ -194,14 +190,94 @@ export default function QuizDetailPage() {
               </div>
             )}
 
-            {/* Start Button */}
+            {/* Mode Selection */}
+            <div className="space-y-4">
+              <h3 className="text-center font-medium text-foreground text-lg">
+                Choose Quiz Mode
+              </h3>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                {/* Quiz Mode */}
+                <Card
+                  className={`cursor-pointer transition-all hover:shadow-md ${
+                    selectedMode === "QUIZ"
+                      ? "bg-blue-50 ring-2 ring-blue-500 dark:bg-blue-900/20"
+                      : "hover:bg-muted/50"
+                  }`}
+                  onClick={() => setSelectedMode("QUIZ")}
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-start space-x-3">
+                      <div
+                        className={`mt-1 h-4 w-4 flex-shrink-0 rounded-full border-2 ${
+                          selectedMode === "QUIZ"
+                            ? "border-blue-500 bg-blue-500"
+                            : "border-gray-300"
+                        }`}
+                      >
+                        {selectedMode === "QUIZ" && (
+                          <div
+                            className="h-full w-full rounded-full bg-white"
+                            style={{ transform: "scale(0.5)" }}
+                          />
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="mb-1 font-semibold text-foreground">
+                          Quiz Mode
+                        </h4>
+                        <p className="text-muted-foreground text-sm leading-relaxed">
+                          You receive immediate feedback after each question.
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Exam Mode */}
+                <Card
+                  className={`cursor-pointer transition-all hover:shadow-md ${
+                    selectedMode === "EXAM"
+                      ? "bg-blue-50 ring-2 ring-blue-500 dark:bg-blue-900/20"
+                      : "hover:bg-muted/50"
+                  }`}
+                  onClick={() => setSelectedMode("EXAM")}
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-start space-x-3">
+                      <div
+                        className={`mt-1 h-4 w-4 flex-shrink-0 rounded-full border-2 ${
+                          selectedMode === "EXAM"
+                            ? "border-blue-500 bg-blue-500"
+                            : "border-gray-300"
+                        }`}
+                      >
+                        {selectedMode === "EXAM" && (
+                          <div
+                            className="h-full w-full rounded-full bg-white"
+                            style={{ transform: "scale(0.5)" }}
+                          />
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="mb-1 font-semibold text-foreground">
+                          Exam Mode
+                        </h4>
+                        <p className="text-muted-foreground text-sm leading-relaxed">
+                          All feedback is provided at the end of the quiz.
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
             <Button
               size="lg"
-              onClick={() => setIsStarted(true)}
+              onClick={handleStartQuiz}
               className="bg-blue-600 px-8 py-3 text-lg text-white hover:bg-blue-700"
             >
               <Play className="mr-2 h-5 w-5" />
-              Start Quiz
+              Start {selectedMode === "QUIZ" ? "Quiz" : "Exam"}
             </Button>
 
             {quiz.maxAttempts > 1 && (
