@@ -57,7 +57,6 @@ export function QuizTakeContent({ quiz, mode = "QUIZ" }: QuizTakeContentProps) {
         return [...prev, { questionId, selectedOptionId: optionId, timeSpent }];
       });
 
-      // Show immediate feedback in Quiz mode
       if (mode === "QUIZ") {
         const correctAnswer = currentQuestion.correctAnswer || "";
         const isCorrect = optionId === correctAnswer;
@@ -166,11 +165,8 @@ export function QuizTakeContent({ quiz, mode = "QUIZ" }: QuizTakeContentProps) {
     setCurrentQuestionResult(null);
   }, []);
 
-  const handleBackToQuizzes = useCallback(() => {
-    // This will be handled by the parent component or router
-  }, []);
+  const handleBackToQuizzes = useCallback(() => {}, []);
 
-  // Get current answer
   const currentAnswer = answers.find(
     (a) => a.questionId === currentQuestion?.id,
   );
@@ -191,8 +187,7 @@ export function QuizTakeContent({ quiz, mode = "QUIZ" }: QuizTakeContentProps) {
 
   // Show quiz interface
   return (
-    <div className="bg-gray-50 dark:bg-gray-900">
-      {/* Quiz Header */}
+    <div>
       <QuizHeader
         title={quiz.title}
         currentQuestion={currentQuestionIndex}
@@ -217,8 +212,6 @@ export function QuizTakeContent({ quiz, mode = "QUIZ" }: QuizTakeContentProps) {
             />
           )}
         </div>
-
-        {/* Navigation */}
         <QuizNavigation
           currentQuestion={currentQuestionIndex}
           totalQuestions={questions.length}
