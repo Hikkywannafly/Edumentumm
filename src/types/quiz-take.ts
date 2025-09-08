@@ -60,6 +60,12 @@ export interface QuizNavigationProps {
   isCompleted: boolean;
   mode?: QuizTakeMode;
   showFeedback?: boolean;
+  currentQuestionResult?: {
+    isCorrect: boolean;
+    correctAnswer: string;
+    explanation?: string;
+  } | null;
+  onRetry?: () => void;
 }
 
 export interface QuizHeaderProps {

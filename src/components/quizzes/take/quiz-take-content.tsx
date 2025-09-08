@@ -3,7 +3,6 @@
 import type { BackendQuizEntity } from "@/types/quiz";
 import type { QuizAnswer, QuizResult, QuizTakeMode } from "@/types/quiz-take";
 import { useCallback, useEffect, useState } from "react";
-import ThinLayout from "../../layout/thin-layout";
 import { QuizHeader } from "./quiz-header";
 import { QuizNavigation } from "./quiz-navigation";
 import { QuizQuestion } from "./quiz-question";
@@ -192,7 +191,7 @@ export function QuizTakeContent({ quiz, mode = "QUIZ" }: QuizTakeContentProps) {
 
   // Show quiz interface
   return (
-    <ThinLayout classNames="flex-1 space-y-6 p-6">
+    <div className="bg-gray-50 dark:bg-gray-900">
       {/* Quiz Header */}
       <QuizHeader
         title={quiz.title}
@@ -202,9 +201,10 @@ export function QuizTakeContent({ quiz, mode = "QUIZ" }: QuizTakeContentProps) {
         estimatedTime={quiz.estimatedTime}
       />
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+      {/* Main Content */}
+      <div className="mx-auto max-w-4xl px-4 py-8">
         {/* Question Area */}
-        <div className="lg:col-span-2">
+        <div className="mb-8">
           {currentQuestion && (
             <QuizQuestion
               question={currentQuestion}
@@ -216,84 +216,31 @@ export function QuizTakeContent({ quiz, mode = "QUIZ" }: QuizTakeContentProps) {
               isAnswered={!!currentAnswer}
             />
           )}
-
-          {/* Immediate Feedback Panel for Quiz Mode */}
-          {mode === "QUIZ" && showFeedback && currentQuestionResult && (
-            <div className="mt-4">
-              <div
-                className={`rounded-lg border p-4 ${
-                  currentQuestionResult.isCorrect
-                    ? "border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-900/20"
-                    : "border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20"
-                }`}
-              >
-                <div className="mb-2 flex items-center gap-2">
-                  {currentQuestionResult.isCorrect ? (
-                    <div className="flex items-center gap-2 text-green-700 dark:text-green-400">
-                      <div className="flex h-5 w-5 items-center justify-center rounded-full bg-green-600">
-                        <svg
-                          className="h-3 w-3 text-white"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M5 13l4 4L19 7"
-                          />
-                        </svg>
-                      </div>
-                      <span className="font-semibold">Correct!</span>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2 text-red-700 dark:text-red-400">
-                      <div className="flex h-5 w-5 items-center justify-center rounded-full bg-red-600">
-                        <svg
-                          className="h-3 w-3 text-white"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M6 18L18 6M6 6l12 12"
-                          />
-                        </svg>
-                      </div>
-                      <span className="font-semibold">Incorrect</span>
-                    </div>
-                  )}
-                </div>
-                {currentQuestionResult.explanation && (
-                  <p className="text-muted-foreground text-sm leading-relaxed">
-                    {currentQuestionResult.explanation}
-                  </p>
-                )}
-              </div>
-            </div>
-          )}
         </div>
 
-        {/* Navigation Sidebar */}
-        <div className="lg:col-span-1">
-          <QuizNavigation
-            currentQuestion={currentQuestionIndex}
-            totalQuestions={questions.length}
-            answers={answers}
-            onNavigateToQuestion={handleNavigateToQuestion}
-            onPrevious={handlePrevious}
-            onNext={handleNext}
-            onSubmit={handleSubmit}
-            isCompleted={isCompleted}
-            mode={mode}
-            showFeedback={showFeedback}
-          />
-        </div>
+        {/* Navigation */}
+        <QuizNavigation
+          currentQuestion={currentQuestionIndex}
+          totalQuestions={questions.length}
+          answers={answers}
+          onNavigateToQuestion={handleNavigateToQuestion}
+          onPrevious={handlePrevious}
+          onNext={handleNext}
+          onSubmit={handleSubmit}
+          isCompleted={isCompleted}
+          mode={mode}
+          showFeedback={showFeedback}
+          currentQuestionResult={currentQuestionResult}
+          onRetry={() => {
+            const questionId = currentQuestion.id;
+            setAnswers((prev) =>
+              prev.filter((a) => a.questionId !== questionId),
+            );
+            setShowFeedback(false);
+            setCurrentQuestionResult(null);
+          }}
+        />
       </div>
-    </ThinLayout>
+    </div>
   );
 }

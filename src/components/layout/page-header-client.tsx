@@ -2,8 +2,7 @@
 
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { Separator } from "@/components/ui/separator";
-// import { useAuth } from "@/contexts/auth-context";
+import { useSidebarContext } from "@/contexts/sidebar-context";
 import type React from "react";
 import { SettingMenu } from "../setting-menu";
 
@@ -24,23 +23,21 @@ export function PageHeaderClient({
   showThemeToggle = true,
   showLanguageSwitcher = true,
 }: PageHeaderClientProps) {
-  // const { logout } = useAuth();
+  const { isExpanded } = useSidebarContext();
 
   return (
-    <header className={`flex h-16 items-center gap-3 px-4 ${className}`}>
-      <Separator orientation="vertical" className="mr-2 h-4" />
-      <h1 className="font-semibold text-xl">{title}</h1>
+    <header
+      className={`fixed top-0 right-0 left-0 z-20 flex h-16 items-center gap-3 bg-background ${
+        isExpanded ? "pl-64" : "pl-16"
+      } ${className}`}
+    >
+      <div className=" mx-auto flex w-full items-center justify-between gap-2 px-4">
+        <h1 className="font-semibold text-xl">{title}</h1>
+        <div className="flex-1">{children}</div>
 
-      {/* Center: Optional children content */}
-      <div className="flex-1">{children}</div>
-
-      {/* Right side: Actions and controls */}
-      <div className="flex items-center gap-2">
-        {/* Custom action button */}
-        {action && <div>{action}</div>}
-
-        {/* Theme and Language controls */}
         <div className="flex items-center gap-2">
+          {action && <div>{action}</div>}
+
           {showThemeToggle && <ThemeToggle />}
           {showLanguageSwitcher && <LanguageSwitcher />}
           <SettingMenu />
