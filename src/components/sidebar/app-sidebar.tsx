@@ -195,7 +195,7 @@ export function AppSidebar() {
     <div
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      className={`fixed top-0 left-0 z-40 h-screen bg-white dark:bg-gray-900 ${
+      className={`fixed top-0 left-0 z-90 h-screen bg-white dark:bg-gray-900 ${
         isPinned ? "w-64" : isHovered ? "w-64" : "w-16"
       } ${!isPinned ? "transition-all duration-200 ease-in-out" : ""}`}
     >

@@ -10,7 +10,6 @@ export function QuizHeader({
   totalQuestions,
 }: QuizHeaderProps) {
   const handleCopyLink = () => {
-    // Copy link functionality
     navigator.clipboard.writeText(window.location.href);
   };
 
@@ -18,7 +17,6 @@ export function QuizHeader({
     <div className="">
       <div className="mx-auto max-w-4xl px-4 py-6">
         <div className="text-center">
-          {/* Title with progress indicator */}
           <div className="mb-4 flex items-center justify-between">
             <div className="flex-1" />
             <h1 className="font-medium text-gray-900 text-lg dark:text-white">
