@@ -51,6 +51,8 @@
 | Flashcard List (My Sets)          | `/flashcards`             | Danh sách bộ flashcard của user      | (Done)   |
 | Flashcard Detail Page             | `/flashcards/:id`         | Xem chi tiết 1 bộ flashcard          | (Done)   |
 | Public Flashcard List             | `/flashcards/public`      | Danh sách flashcard public           | (Done)   |
+| Create Flashcard Set Form         | `/flashcards/create`      | Tạo bộ flashcard theo type Question  | (Done)   |
+| Create Flashcard Set Form         | `/flashcards/create`      | Tạo bộ flashcard theo type Vocabulary (Có âm thanh)| (Done)   |
 | Create Flashcard Set Form         | `/flashcards/create`      | Tạo bộ flashcard                     | (Done)   |
 | Update Flashcard Set Form         | `/flashcards/:id/edit`    | Chỉnh sửa bộ flashcard               | (Done)   |
 | Delete Flashcard Button           | `/flashcards/:id/delete`  | Xóa bộ flashcard                     | (Done)   |
