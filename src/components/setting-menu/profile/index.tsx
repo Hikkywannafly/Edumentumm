@@ -30,9 +30,8 @@ import {} from "recharts";
 import { useAuth } from "../../../contexts/auth-context";
 import { useProfile } from "../../../hooks/profile/use-profile";
 import { useProfileAttendance } from "../../../hooks/profile/use-profile-attendance";
-import { useProfileInfo } from "../../../hooks/profile/use-profile-info";
+import { useProfileStart } from "../../../hooks/profile/use-profile-start";
 import { useProfileStudyTime } from "../../../hooks/profile/use-profile-study-time";
-import { LevelBadge } from "../level-badge";
 import { AchievementCard } from "./achievement-card";
 
 export default function UserProfile() {
@@ -41,41 +40,38 @@ export default function UserProfile() {
     daysArray,
     year,
     month,
-    stats,
     productivityData,
     weekDays,
+    dayOfTheWeek,
+    hourBlocks2h,
   } = useProfile();
 
-  const hourBlocks2h = [
-    "0-2h",
-    "2-4h",
-    "4-6h",
-    "6-8h",
-    "8-10h",
-    "10-12h",
-    "12-14h",
-    "14-16h",
-    "16-18h",
-    "18-20h",
-    "20-22h",
-    "22-24h",
-  ];
-
+  const { stats, info } = useProfileStart();
   const { studyTime } = useProfileStudyTime();
   const { user } = useAuth();
-  const { info } = useProfileInfo();
   const { attendanceDates } = useProfileAttendance();
 
   function getHeatColor(minutes: number) {
-    if (minutes === 0) return "#f3f4f6"; // gray-100
-    if (minutes < 5) return "#e0e7ff"; // indigo-100 (rất nhạt)
-    if (minutes < 10) return "#dbeafe"; // blue-100
-    if (minutes < 20) return "#93c5fd"; // blue-300
-    if (minutes < 30) return "#60a5fa"; // blue-400
-    if (minutes < 45) return "#3b82f6"; // blue-500
-    if (minutes < 60) return "#2563eb"; // blue-600
-    if (minutes < 90) return "#1d4ed8"; // blue-700
-    return "#1e40af"; // blue-800
+    if (minutes === 0 && localStorage.getItem("edumentum-theme") === "light") {
+      return "#f3f4f6";
+    }
+    if (minutes === 0 && localStorage.getItem("edumentum-theme") === "dark") {
+      return "#1e293b";
+    }
+    if (minutes < 5) return "#e0e7ff";
+    if (minutes < 10) return "#dbeafe";
+    if (minutes < 20) return "#93c5fd";
+    if (minutes < 30) return "#60a5fa";
+    if (minutes < 45) return "#3b82f6";
+    if (minutes < 60) return "#2563eb";
+    if (minutes < 90) return "#1d4ed8";
+    return "#1e40af";
+  }
+
+  function getHeatTextColor(minutes: number) {
+    if (minutes === 0) return "#64748b";
+    if (minutes < 45) return "#1e293b";
+    return "#ffffff";
   }
 
   const data = [
@@ -87,8 +83,6 @@ export default function UserProfile() {
     { name: "Sat", quizzes: 5, avgScore: 9.0 },
     { name: "Sun", quizzes: 3, avgScore: 8.3 },
   ];
-
-  const dayOfTheWeek = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
   const dataRadar = [
     {
@@ -156,20 +150,6 @@ export default function UserProfile() {
           </div>
           <div>
             <h1 className="mb-3 font-bold text-4xl">{user?.username}</h1>
-            <div className="mb-3 flex flex-wrap items-center gap-6 text-muted-foreground">
-              <div className="flex items-center gap-2">
-                <LevelBadge
-                  level={info?.levelProgress?.replace("LEVEL_", "") || "1"}
-                />
-              </div>
-              <span className="font-medium text-base">
-                {info?.totalStudyTimeToday} XP
-              </span>
-              <span className="flex items-center gap-2">
-                <Trophy className="h-4 w-4 text-yellow-500" />
-                <span>{info?.streak} days streak</span>
-              </span>
-            </div>
             <div className="flex flex-wrap items-center gap-6 text-muted-foreground text-sm">
               <span>
                 Created at{" "}
@@ -184,7 +164,7 @@ export default function UserProfile() {
             </div>
           </div>
         </div>
-        {/* Stats */}
+
         <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
           {stats.map((stat, i) => (
             <Card key={i}>
@@ -201,7 +181,7 @@ export default function UserProfile() {
             </Card>
           ))}
         </div>
-        {/* Calendar & Productivity */}
+
         <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
@@ -351,7 +331,7 @@ export default function UserProfile() {
             </CardContent>
           </Card>
         </div>
-        {/* Heatmap học tập theo block 2 tiếng */}
+
         <div className="mb-8">
           <Card>
             <CardHeader>
@@ -364,11 +344,11 @@ export default function UserProfile() {
                 <table className="w-full border-collapse">
                   <thead>
                     <tr>
-                      <th className="w-10 px-2 py-1 font-semibold text-xs text-zinc-500" />
+                      <th className="w-10 px-2 py-1 font-semibold text-xs text-zinc-500 dark:text-zinc-400" />
                       {hourBlocks2h.map((block) => (
                         <th
                           key={block}
-                          className="px-1 py-1 text-center font-semibold text-xs text-zinc-500"
+                          className="px-1 py-1 text-center font-semibold text-xs text-zinc-500 dark:text-zinc-400"
                           style={{ minWidth: 40 }}
                         >
                           {block}
@@ -380,20 +360,20 @@ export default function UserProfile() {
                     {Array.isArray(studyTime) && studyTime.length > 0 ? (
                       studyTime.map((row, dayIdx) => (
                         <tr key={dayIdx}>
-                          <td className="w-10 px-2 py-1 text-right font-semibold text-xs text-zinc-500">
+                          <td className="w-10 px-2 py-1 text-right font-semibold text-xs text-zinc-500 dark:text-zinc-400">
                             {weekDays[dayIdx] || `Day ${dayIdx + 1}`}
                           </td>
                           {row.map((minutes: number, blockIdx: number) => (
                             <td
                               key={blockIdx}
-                              className="h-7 px-0.5 py-1"
+                              className="h-7 border border-zinc-200 px-0.5 py-1 transition-colors dark:border-zinc-700"
                               style={{
                                 minWidth: 40,
                                 background: getHeatColor(minutes),
-                                border: "1px solid #e5e7eb",
+                                color: getHeatTextColor(minutes),
                               }}
                             >
-                              <p className="text-center font-bold text-blue-800 text-xs">
+                              <p className="text-center font-bold text-xs">
                                 {minutes > 0 ? minutes : ""}
                               </p>
                             </td>
@@ -404,7 +384,7 @@ export default function UserProfile() {
                       <tr>
                         <td
                           colSpan={hourBlocks2h.length + 1}
-                          className="py-4 text-center text-xs text-zinc-400"
+                          className="bg-white py-4 text-center text-xs text-zinc-400 dark:bg-zinc-900 dark:text-zinc-500"
                         >
                           Không có dữ liệu
                         </td>
@@ -485,7 +465,7 @@ export default function UserProfile() {
                   <PolarRadiusAxis />
                   <Radar
                     name="Mike"
-                    dataKey="A" // <--- Thêm dòng này, hoặc "B" nếu muốn vẽ đường B
+                    dataKey="A"
                     stroke="#8884d8"
                     fill="#8884d8"
                     fillOpacity={0.6}

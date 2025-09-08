@@ -3,6 +3,7 @@
 import {} from "@radix-ui/react-dropdown-menu";
 import {} from "lucide-react";
 import { useTranslations } from "next-intl";
+import useGetAllAchievement from "../../hooks/achievement/use-get-all-achievement";
 import { AchievementCard } from "./achievement-card";
 import AchievementFilter from "./achievement-filter";
 import AchievementPaging from "./achievement-paging";
@@ -10,98 +11,7 @@ import { StatsCard } from "./starts-card";
 
 export const AchievementsContent = () => {
   const t = useTranslations("Achievements");
-
-  const achievementsData: Array<{
-    icon: string;
-    title: string;
-    tier: string;
-    description: string;
-    xp: number;
-    progressCurrent?: number;
-    progressTotal?: number;
-    rarity: "COMMON" | "RARE" | "EPIC" | "LEGENDARY";
-  }> = [
-    {
-      icon: "🎯",
-      title: "First Steps",
-      tier: "Tier 1",
-      description: "Complete your first quiz",
-      xp: 10,
-      rarity: "COMMON",
-    },
-    {
-      icon: "🎓",
-      title: "Flashcard Scholar",
-      tier: "Tier 1",
-      description: "Study 500 flashcards",
-      xp: 75,
-      progressCurrent: 0,
-      progressTotal: 500,
-      rarity: "RARE",
-    },
-    {
-      icon: "🎓",
-      title: "Flashcard Student",
-      tier: "Tier 1",
-      description: "Study 50 flashcards",
-      xp: 20,
-      progressCurrent: 0,
-      progressTotal: 50,
-      rarity: "COMMON",
-    },
-    {
-      icon: "🎯",
-      title: "Quiz Novice",
-      tier: "Tier 1",
-      description: "Complete 10 quizzes",
-      xp: 25,
-      progressCurrent: 9,
-      progressTotal: 10,
-      rarity: "COMMON",
-    },
-    {
-      icon: "🎨",
-      title: "Card Creator",
-      tier: "Tier 1",
-      description: "Create your first flashcard set",
-      xp: 15,
-      rarity: "COMMON",
-    },
-    {
-      icon: "🎨",
-      title: "Flashcard Architect",
-      tier: "Tier 1",
-      description: "Create 25 flashcard sets",
-      xp: 60,
-      progressCurrent: 2,
-      progressTotal: 25,
-      rarity: "RARE",
-    },
-    {
-      icon: "🎯",
-      title: "Quiz Creator",
-      tier: "Tier 1",
-      description: "Create 5 quizzes",
-      xp: 50,
-      rarity: "COMMON",
-    },
-    {
-      icon: "🎯",
-      title: "Consistent Performer",
-      tier: "Tier 1",
-      description: "Achieve a 7-day streak",
-      xp: 150,
-      rarity: "EPIC",
-    },
-    {
-      icon: "🎯",
-      title: "Perfectionist",
-      tier: "Tier 1",
-      description: "Score 100% on a quiz",
-      xp: 30,
-      rarity: "RARE",
-    },
-  ];
+  const { achievements } = useGetAllAchievement();
 
   const statsData: Array<{
     title: string;
@@ -167,18 +77,8 @@ export const AchievementsContent = () => {
       <AchievementFilter />
 
       <section className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {achievementsData.map((achievement, index) => (
-          <AchievementCard
-            key={index}
-            icon={achievement.icon}
-            title={achievement.title}
-            tier={achievement.tier}
-            description={achievement.description}
-            xp={achievement.xp}
-            progressCurrent={achievement.progressCurrent}
-            progressTotal={achievement.progressTotal}
-            rarity={achievement.rarity}
-          />
+        {achievements.map((achievement, index) => (
+          <AchievementCard achievement={achievement} key={index} />
         ))}
       </section>
 
