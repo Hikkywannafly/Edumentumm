@@ -13,6 +13,8 @@ export function QuizQuestion({
   onAnswerChange,
   showResult = false,
   correctOptionId,
+  mode = "QUIZ",
+  isAnswered = false,
 }: QuizQuestionProps) {
   const getOptionStatus = (optionId: string) => {
     if (!showResult) return "default";
@@ -70,7 +72,7 @@ export function QuizQuestion({
         <RadioGroup
           value={selectedOptionId}
           onValueChange={onAnswerChange}
-          disabled={showResult}
+          disabled={showResult || (mode === "QUIZ" && isAnswered)}
           className="space-y-3"
         >
           {question.options?.map((option) => (
@@ -83,7 +85,7 @@ export function QuizQuestion({
                   value={option.id}
                   id={option.id}
                   className="flex-shrink-0"
-                  disabled={showResult}
+                  disabled={showResult || (mode === "QUIZ" && isAnswered)}
                 />
                 <Label
                   htmlFor={option.id}

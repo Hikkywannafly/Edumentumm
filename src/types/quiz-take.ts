@@ -1,5 +1,7 @@
 import type { BackendQuestion, BackendQuizEntity } from "@/types/quiz";
 
+export type QuizTakeMode = "QUIZ" | "EXAM";
+
 export interface QuizAnswer {
   questionId: string;
   selectedOptionId: string;
@@ -34,6 +36,7 @@ export interface QuizResult {
 
 export interface QuizTakeProps {
   quiz: BackendQuizEntity;
+  mode?: QuizTakeMode;
 }
 
 export interface QuizQuestionProps {
@@ -42,6 +45,8 @@ export interface QuizQuestionProps {
   onAnswerChange: (optionId: string) => void;
   showResult?: boolean;
   correctOptionId?: string;
+  mode?: QuizTakeMode;
+  isAnswered?: boolean;
 }
 
 export interface QuizNavigationProps {
@@ -53,6 +58,8 @@ export interface QuizNavigationProps {
   onNext: () => void;
   onSubmit: () => void;
   isCompleted: boolean;
+  mode?: QuizTakeMode;
+  showFeedback?: boolean;
 }
 
 export interface QuizHeaderProps {

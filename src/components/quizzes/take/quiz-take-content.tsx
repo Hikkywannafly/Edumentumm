@@ -1,9 +1,9 @@
 "use client";
 
-import WideLayout from "@/components/layout/wide-layout";
 import type { BackendQuizEntity } from "@/types/quiz";
-import type { QuizAnswer, QuizResult } from "@/types/quiz-take";
+import type { QuizAnswer, QuizResult, QuizTakeMode } from "@/types/quiz-take";
 import { useCallback, useEffect, useState } from "react";
+import ThinLayout from "../../layout/thin-layout";
 import { QuizHeader } from "./quiz-header";
 import { QuizNavigation } from "./quiz-navigation";
 import { QuizQuestion } from "./quiz-question";
@@ -11,15 +11,22 @@ import { QuizResult as QuizResultComponent } from "./quiz-result";
 
 interface QuizTakeContentProps {
   quiz: BackendQuizEntity;
+  mode?: QuizTakeMode;
 }
 
-export function QuizTakeContent({ quiz }: QuizTakeContentProps) {
+export function QuizTakeContent({ quiz, mode = "QUIZ" }: QuizTakeContentProps) {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<QuizAnswer[]>([]);
   const [startTime] = useState(Date.now());
   const [timeSpent, setTimeSpent] = useState(0);
   const [isCompleted, setIsCompleted] = useState(false);
   const [result, setResult] = useState<QuizResult | null>(null);
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [currentQuestionResult, setCurrentQuestionResult] = useState<{
+    isCorrect: boolean;
+    correctAnswer: string;
+    explanation?: string;
+  } | null>(null);
 
   // Timer effect
   useEffect(() => {
@@ -50,27 +57,59 @@ export function QuizTakeContent({ quiz }: QuizTakeContentProps) {
         }
         return [...prev, { questionId, selectedOptionId: optionId, timeSpent }];
       });
+
+      // Show immediate feedback in Quiz mode
+      if (mode === "QUIZ") {
+        const correctAnswer = currentQuestion.correctAnswer || "";
+        const isCorrect = optionId === correctAnswer;
+        setCurrentQuestionResult({
+          isCorrect,
+          correctAnswer,
+          explanation: currentQuestion.explanation,
+        });
+        setShowFeedback(true);
+      }
     },
-    [currentQuestion.id, timeSpent],
+    [
+      currentQuestion.id,
+      currentQuestion.correctAnswer,
+      currentQuestion.explanation,
+      timeSpent,
+      mode,
+    ],
   );
 
   const handleNavigateToQuestion = useCallback(
     (index: number) => {
       if (index >= 0 && index < questions.length && !isCompleted) {
         setCurrentQuestionIndex(index);
+        setShowFeedback(false);
+        setCurrentQuestionResult(null);
       }
     },
     [questions.length, isCompleted],
   );
 
   const handlePrevious = useCallback(() => {
-    setCurrentQuestionIndex((prev) => (prev > 0 ? prev - 1 : prev));
+    setCurrentQuestionIndex((prev) => {
+      if (prev > 0) {
+        setShowFeedback(false);
+        setCurrentQuestionResult(null);
+        return prev - 1;
+      }
+      return prev;
+    });
   }, []);
 
   const handleNext = useCallback(() => {
-    setCurrentQuestionIndex((prev) =>
-      prev < questions.length - 1 ? prev + 1 : prev,
-    );
+    setCurrentQuestionIndex((prev) => {
+      if (prev < questions.length - 1) {
+        setShowFeedback(false);
+        setCurrentQuestionResult(null);
+        return prev + 1;
+      }
+      return prev;
+    });
   }, [questions.length]);
 
   const calculateResult = useCallback((): QuizResult => {
@@ -124,6 +163,8 @@ export function QuizTakeContent({ quiz }: QuizTakeContentProps) {
     setTimeSpent(0);
     setIsCompleted(false);
     setResult(null);
+    setShowFeedback(false);
+    setCurrentQuestionResult(null);
   }, []);
 
   const handleBackToQuizzes = useCallback(() => {
@@ -138,20 +179,20 @@ export function QuizTakeContent({ quiz }: QuizTakeContentProps) {
   // Show result screen
   if (isCompleted && result) {
     return (
-      <WideLayout classNames="flex-1 p-6">
+      <div className="flex-1 p-6">
         <QuizResultComponent
           result={result}
           quiz={quiz}
           onRetake={handleRetake}
           onBackToQuizzes={handleBackToQuizzes}
         />
-      </WideLayout>
+      </div>
     );
   }
 
   // Show quiz interface
   return (
-    <WideLayout classNames="flex-1 space-y-6 p-6">
+    <ThinLayout classNames="flex-1 space-y-6 p-6">
       {/* Quiz Header */}
       <QuizHeader
         title={quiz.title}
@@ -169,7 +210,71 @@ export function QuizTakeContent({ quiz }: QuizTakeContentProps) {
               question={currentQuestion}
               selectedOptionId={currentAnswer?.selectedOptionId}
               onAnswerChange={handleAnswerChange}
+              showResult={mode === "QUIZ" && showFeedback}
+              correctOptionId={currentQuestionResult?.correctAnswer}
+              mode={mode}
+              isAnswered={!!currentAnswer}
             />
+          )}
+
+          {/* Immediate Feedback Panel for Quiz Mode */}
+          {mode === "QUIZ" && showFeedback && currentQuestionResult && (
+            <div className="mt-4">
+              <div
+                className={`rounded-lg border p-4 ${
+                  currentQuestionResult.isCorrect
+                    ? "border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-900/20"
+                    : "border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20"
+                }`}
+              >
+                <div className="mb-2 flex items-center gap-2">
+                  {currentQuestionResult.isCorrect ? (
+                    <div className="flex items-center gap-2 text-green-700 dark:text-green-400">
+                      <div className="flex h-5 w-5 items-center justify-center rounded-full bg-green-600">
+                        <svg
+                          className="h-3 w-3 text-white"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M5 13l4 4L19 7"
+                          />
+                        </svg>
+                      </div>
+                      <span className="font-semibold">Correct!</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 text-red-700 dark:text-red-400">
+                      <div className="flex h-5 w-5 items-center justify-center rounded-full bg-red-600">
+                        <svg
+                          className="h-3 w-3 text-white"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M6 18L18 6M6 6l12 12"
+                          />
+                        </svg>
+                      </div>
+                      <span className="font-semibold">Incorrect</span>
+                    </div>
+                  )}
+                </div>
+                {currentQuestionResult.explanation && (
+                  <p className="text-muted-foreground text-sm leading-relaxed">
+                    {currentQuestionResult.explanation}
+                  </p>
+                )}
+              </div>
+            </div>
           )}
         </div>
 
@@ -184,9 +289,11 @@ export function QuizTakeContent({ quiz }: QuizTakeContentProps) {
             onNext={handleNext}
             onSubmit={handleSubmit}
             isCompleted={isCompleted}
+            mode={mode}
+            showFeedback={showFeedback}
           />
         </div>
       </div>
-    </WideLayout>
+    </ThinLayout>
   );
 }

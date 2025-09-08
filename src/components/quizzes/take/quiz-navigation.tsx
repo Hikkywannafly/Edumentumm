@@ -14,6 +14,8 @@ export function QuizNavigation({
   onNext,
   onSubmit,
   isCompleted,
+  mode = "QUIZ",
+  showFeedback = false,
 }: QuizNavigationProps) {
   const isFirstQuestion = currentQuestion === 0;
   const isLastQuestion = currentQuestion === totalQuestions - 1;
@@ -60,19 +62,37 @@ export function QuizNavigation({
       <CardContent className="p-6">
         {/* Question Grid */}
         <div className="mb-6">
-          <h3 className="mb-3 font-medium text-foreground text-sm">
-            Questions ({answers.length}/{totalQuestions} answered)
-          </h3>
+          <div className="mb-3 flex items-center justify-between">
+            <h3 className="font-medium text-foreground text-sm">
+              Questions ({answers.length}/{totalQuestions} answered)
+            </h3>
+            <div
+              className={`rounded-full px-2 py-1 font-medium text-xs ${
+                mode === "QUIZ"
+                  ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300"
+                  : "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300"
+              }`}
+            >
+              {mode === "QUIZ" ? "Quiz Mode" : "Exam Mode"}
+            </div>
+          </div>
           <div className="grid grid-cols-5 gap-2 sm:grid-cols-8 md:grid-cols-10">
             {Array.from({ length: totalQuestions }, (_, index) => {
               const status = getQuestionStatus(index);
+              const isNavigationDisabled =
+                mode === "QUIZ" && index !== currentQuestion && showFeedback;
               return (
                 <Button
                   key={index}
                   variant={getQuestionButtonVariant(status)}
                   size="sm"
-                  className={`h-8 w-8 p-0 text-xs ${getQuestionButtonClassName(status)}`}
-                  onClick={() => onNavigateToQuestion(index)}
+                  className={`h-8 w-8 p-0 text-xs ${getQuestionButtonClassName(status)} ${
+                    isNavigationDisabled ? "cursor-not-allowed opacity-50" : ""
+                  }`}
+                  onClick={() =>
+                    !isNavigationDisabled && onNavigateToQuestion(index)
+                  }
+                  disabled={isNavigationDisabled}
                 >
                   {index + 1}
                 </Button>
@@ -95,26 +115,53 @@ export function QuizNavigation({
           </Button>
 
           <div className="flex items-center gap-2">
-            {isLastQuestion ? (
-              <Button
-                onClick={onSubmit}
-                disabled={isCompleted}
-                className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
-              >
-                <Flag className="h-4 w-4" />
-                Submit Quiz
-              </Button>
+            {/* For Quiz mode, show Next button unless it's the last question */}
+            {mode === "QUIZ" ? (
+              isLastQuestion ? (
+                <Button
+                  onClick={onSubmit}
+                  disabled={isCompleted}
+                  className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
+                >
+                  <Flag className="h-4 w-4" />
+                  Submit Quiz
+                </Button>
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onNext}
+                  disabled={isCompleted}
+                  className="flex items-center gap-2"
+                >
+                  Next
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              )
             ) : (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onNext}
-                disabled={isCompleted}
-                className="flex items-center gap-2"
-              >
-                Next
-                <ChevronRight className="h-4 w-4" />
-              </Button>
+              /* For Exam mode, show both Next and Submit buttons when appropriate */
+              <>
+                {!isLastQuestion && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={onNext}
+                    disabled={isCompleted}
+                    className="flex items-center gap-2"
+                  >
+                    Next
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                )}
+                <Button
+                  onClick={onSubmit}
+                  disabled={isCompleted}
+                  className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
+                >
+                  <Flag className="h-4 w-4" />
+                  Submit {mode === "EXAM" ? "Exam" : "Quiz"}
+                </Button>
+              </>
             )}
           </div>
         </div>

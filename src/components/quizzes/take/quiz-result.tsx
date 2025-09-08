@@ -1,6 +1,5 @@
 "use client";
 
-import { LocalizedLink } from "@/components/localized-link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -16,13 +15,10 @@ import {
   Trophy,
   XCircle,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 
-export function QuizResult({
-  result,
-  quiz,
-  onRetake,
-  onBackToQuizzes,
-}: QuizResultProps) {
+export function QuizResult({ result, quiz, onRetake }: QuizResultProps) {
+  const router = useRouter();
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
@@ -175,15 +171,12 @@ export function QuizResult({
 
         <Button
           variant="outline"
-          onClick={onBackToQuizzes}
+          onClick={() => router.push("/quizzes")}
           className="flex items-center gap-2"
           size="lg"
-          asChild
         >
-          <LocalizedLink href="/quizzes">
-            <ArrowLeft className="h-4 w-4" />
-            Back to Quizzes
-          </LocalizedLink>
+          <ArrowLeft className="h-4 w-4" />
+          Back to Quizzes
         </Button>
       </div>
     </div>
