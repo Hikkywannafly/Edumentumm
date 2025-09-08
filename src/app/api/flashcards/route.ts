@@ -17,22 +17,39 @@ function getAuthHeaders(request: NextRequest) {
   return headers;
 }
 
-// GET /api/flashcards - Get all flashcards with pagination
+// GET /api/flashcards - Get all flashcards with pagination, search, and sort
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
+
+    // Get all query parameters
     const page = searchParams.get("page") || "0";
     const size = searchParams.get("size") || "6";
+    const search = searchParams.get("search");
+    const sortBy = searchParams.get("sortBy");
 
     const headers = getAuthHeaders(request);
 
-    const response = await fetch(
-      `${API_BASE_URL}/student/flashcards?page=${page}&size=${size}`,
-      {
-        method: "GET",
-        headers,
-      },
-    );
+    // Build backend URL with all parameters
+    const backendParams = new URLSearchParams({
+      page,
+      size,
+    });
+
+    if (search && search.trim()) {
+      backendParams.append("search", search.trim());
+    }
+
+    if (sortBy && sortBy.trim()) {
+      backendParams.append("sortBy", sortBy.trim());
+    }
+
+    const backendUrl = `${API_BASE_URL}/student/flashcards?${backendParams.toString()}`;
+
+    const response = await fetch(backendUrl, {
+      method: "GET",
+      headers,
+    });
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));

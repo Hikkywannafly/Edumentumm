@@ -86,10 +86,29 @@ class FlashcardService {
     }
   }
 
-  async getAllFlashcards(page = 0, size = 6): Promise<FlashcardApiResponse> {
+  async getAllFlashcards(
+    page = 0,
+    size = 6,
+    search?: string,
+    sortBy?: string,
+  ): Promise<FlashcardApiResponse> {
     try {
+      const params = new URLSearchParams({
+        page: page.toString(),
+        size: size.toString(),
+      });
+
+      if (search && search.trim()) {
+        params.append("search", search.trim());
+      }
+
+      // Only send sortBy to backend if it's not "recent" (default)
+      if (sortBy && sortBy.trim() && sortBy !== "recent") {
+        params.append("sortBy", sortBy.trim());
+      }
+
       const response = await this.request<FlashcardApiResponse>(
-        `/flashcards?page=${page}&size=${size}`,
+        `/flashcards?${params.toString()}`,
       );
       return response;
     } catch (error) {
