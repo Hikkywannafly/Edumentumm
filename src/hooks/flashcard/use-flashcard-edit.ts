@@ -95,6 +95,7 @@ export function useFlashcardEdit(flashcardSetId: number) {
     title: string,
     description: string,
     flashcards: FlashcardData[],
+    isPublic: boolean,
     categoryId?: number,
     flashcardType?: "QUESTIONS" | "VOCABULARY",
   ) => {
@@ -120,7 +121,7 @@ export function useFlashcardEdit(flashcardSetId: number) {
           explanation: flashcard.explanation || "",
         };
       }),
-      isPublic: true,
+      isPublic,
     });
   };
 

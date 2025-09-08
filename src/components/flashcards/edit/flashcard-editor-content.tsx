@@ -201,10 +201,10 @@ export function FlashcardEditorContent({
         title,
         description,
         flashcards,
+        isPublic,
         flashcardData?.metadata?.categoryId || flashcardSet.categoryId,
         flashcardType,
       );
-      setIsPublic(true); // Update local state
       console.log("✅ Flashcard set published successfully", result);
     } catch (err) {
       console.error("❌ Error publishing flashcard set:", err);
