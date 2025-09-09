@@ -1,5 +1,6 @@
 "use client";
 
+import { HtmlViewer } from "@/components/shared/editor/html-viewer";
 import { Button } from "@/components/ui/button";
 import type { QuizHeaderProps } from "@/types/quiz-take";
 import { Copy, Link } from "lucide-react";
@@ -19,10 +20,7 @@ export function QuizHeader({
         <div className="text-center">
           <div className="mb-4 flex items-center justify-between">
             <div className="flex-1" />
-            <h1 className="font-medium text-gray-900 text-lg dark:text-white">
-              {title}
-            </h1>
-            <div className="flex flex-1 items-center justify-end gap-3">
+            <div className="flex-1 items-center justify-end gap-3">
               <span className="font-medium text-gray-900 text-sm dark:text-white">
                 {currentQuestion + 1} / {totalQuestions}
               </span>
@@ -43,6 +41,12 @@ export function QuizHeader({
                 <Copy className="h-4 w-4" />
               </Button>
             </div>
+          </div>
+          <div className="mb-2 line-clamp-2 text-balance text-center font-bold text-gray-900 text-xl sm:text-2xl md:text-3xl dark:text-white">
+            <HtmlViewer
+              content={title}
+              className="font-medium text-gray-900 text-lg dark:text-white"
+            />
           </div>
 
           {/* Progress Bar */}

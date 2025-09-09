@@ -1,5 +1,6 @@
 "use client";
 
+import { useQuestionResults } from "@/hooks/quiz/use-question-results";
 import type { BackendQuizEntity } from "@/types/quiz";
 import type { QuizAnswer, QuizResult, QuizTakeMode } from "@/types/quiz-take";
 import { useCallback, useEffect, useState } from "react";
@@ -20,12 +21,6 @@ export function QuizTakeContent({ quiz, mode = "QUIZ" }: QuizTakeContentProps) {
   const [timeSpent, setTimeSpent] = useState(0);
   const [isCompleted, setIsCompleted] = useState(false);
   const [result, setResult] = useState<QuizResult | null>(null);
-  const [showFeedback, setShowFeedback] = useState(false);
-  const [currentQuestionResult, setCurrentQuestionResult] = useState<{
-    isCorrect: boolean;
-    correctAnswer: string;
-    explanation?: string;
-  } | null>(null);
 
   // Timer effect
   useEffect(() => {
@@ -40,6 +35,21 @@ export function QuizTakeContent({ quiz, mode = "QUIZ" }: QuizTakeContentProps) {
 
   const questions = quiz.quizData?.questions || [];
   const currentQuestion = questions[currentQuestionIndex];
+
+  // Use the new hook to manage question results
+  const { getQuestionResult } = useQuestionResults({
+    questions,
+    answers,
+  });
+
+  // Get the result for the current question
+  const currentQuestionResult = currentQuestion
+    ? getQuestionResult(currentQuestion.id)
+    : null;
+
+  // Determine if we should show feedback for the current question
+  // In EXAM mode, we don't show feedback until the quiz is completed
+  const showFeedback = mode === "QUIZ" && !!currentQuestionResult;
 
   const handleAnswerChange = useCallback(
     (optionId: string) => {
@@ -56,33 +66,14 @@ export function QuizTakeContent({ quiz, mode = "QUIZ" }: QuizTakeContentProps) {
         }
         return [...prev, { questionId, selectedOptionId: optionId, timeSpent }];
       });
-
-      if (mode === "QUIZ") {
-        const correctAnswer = currentQuestion.correctAnswer || "";
-        const isCorrect = optionId === correctAnswer;
-        setCurrentQuestionResult({
-          isCorrect,
-          correctAnswer,
-          explanation: currentQuestion.explanation,
-        });
-        setShowFeedback(true);
-      }
     },
-    [
-      currentQuestion.id,
-      currentQuestion.correctAnswer,
-      currentQuestion.explanation,
-      timeSpent,
-      mode,
-    ],
+    [currentQuestion.id, timeSpent],
   );
 
   const handleNavigateToQuestion = useCallback(
     (index: number) => {
       if (index >= 0 && index < questions.length && !isCompleted) {
         setCurrentQuestionIndex(index);
-        setShowFeedback(false);
-        setCurrentQuestionResult(null);
       }
     },
     [questions.length, isCompleted],
@@ -91,8 +82,6 @@ export function QuizTakeContent({ quiz, mode = "QUIZ" }: QuizTakeContentProps) {
   const handlePrevious = useCallback(() => {
     setCurrentQuestionIndex((prev) => {
       if (prev > 0) {
-        setShowFeedback(false);
-        setCurrentQuestionResult(null);
         return prev - 1;
       }
       return prev;
@@ -102,8 +91,6 @@ export function QuizTakeContent({ quiz, mode = "QUIZ" }: QuizTakeContentProps) {
   const handleNext = useCallback(() => {
     setCurrentQuestionIndex((prev) => {
       if (prev < questions.length - 1) {
-        setShowFeedback(false);
-        setCurrentQuestionResult(null);
         return prev + 1;
       }
       return prev;
@@ -161,8 +148,6 @@ export function QuizTakeContent({ quiz, mode = "QUIZ" }: QuizTakeContentProps) {
     setTimeSpent(0);
     setIsCompleted(false);
     setResult(null);
-    setShowFeedback(false);
-    setCurrentQuestionResult(null);
   }, []);
 
   const handleBackToQuizzes = useCallback(() => {}, []);
@@ -187,7 +172,7 @@ export function QuizTakeContent({ quiz, mode = "QUIZ" }: QuizTakeContentProps) {
 
   // Show quiz interface
   return (
-    <div>
+    <div className="flex min-h-screen flex-col">
       <QuizHeader
         title={quiz.title}
         currentQuestion={currentQuestionIndex}
@@ -195,45 +180,39 @@ export function QuizTakeContent({ quiz, mode = "QUIZ" }: QuizTakeContentProps) {
         timeSpent={timeSpent}
         estimatedTime={quiz.estimatedTime}
       />
-
-      {/* Main Content */}
-      <div className="mx-auto max-w-4xl px-4 py-8">
-        {/* Question Area */}
+      <div className="mx-auto max-w-4xl flex-grow px-4 py-8">
         <div className="mb-8">
           {currentQuestion && (
             <QuizQuestion
               question={currentQuestion}
               selectedOptionId={currentAnswer?.selectedOptionId}
               onAnswerChange={handleAnswerChange}
-              showResult={mode === "QUIZ" && showFeedback}
+              showResult={mode === "QUIZ" && !!currentQuestionResult}
               correctOptionId={currentQuestionResult?.correctAnswer}
               mode={mode}
               isAnswered={!!currentAnswer}
             />
           )}
         </div>
-        <QuizNavigation
-          currentQuestion={currentQuestionIndex}
-          totalQuestions={questions.length}
-          answers={answers}
-          onNavigateToQuestion={handleNavigateToQuestion}
-          onPrevious={handlePrevious}
-          onNext={handleNext}
-          onSubmit={handleSubmit}
-          isCompleted={isCompleted}
-          mode={mode}
-          showFeedback={showFeedback}
-          currentQuestionResult={currentQuestionResult}
-          onRetry={() => {
-            const questionId = currentQuestion.id;
-            setAnswers((prev) =>
-              prev.filter((a) => a.questionId !== questionId),
-            );
-            setShowFeedback(false);
-            setCurrentQuestionResult(null);
-          }}
-        />
       </div>
+      <QuizNavigation
+        currentQuestion={currentQuestionIndex}
+        totalQuestions={questions.length}
+        answers={answers}
+        onNavigateToQuestion={handleNavigateToQuestion}
+        onPrevious={handlePrevious}
+        onNext={handleNext}
+        onSubmit={handleSubmit}
+        isCompleted={isCompleted}
+        mode={mode}
+        showFeedback={showFeedback}
+        currentQuestionResult={currentQuestionResult}
+        questions={questions} // Add questions prop
+        onRetry={() => {
+          const questionId = currentQuestion.id;
+          setAnswers((prev) => prev.filter((a) => a.questionId !== questionId));
+        }}
+      />
     </div>
   );
 }

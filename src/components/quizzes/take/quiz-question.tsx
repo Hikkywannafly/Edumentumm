@@ -1,9 +1,19 @@
 "use client";
 
+import { HtmlViewer } from "@/components/shared/editor/html-viewer";
+import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { cn } from "@/lib/utils";
 import type { QuizQuestionProps } from "@/types/quiz-take";
-import { CheckCircle, XCircle } from "lucide-react";
+import { CheckCircle2, XCircle } from "lucide-react";
+
+type OptionStatus = "default" | "selected" | "correct" | "incorrect";
+
+interface OptionStyleConfig {
+  containerClasses: string;
+  letterClasses: string;
+}
 
 export function QuizQuestion({
   question,
@@ -14,8 +24,10 @@ export function QuizQuestion({
   mode = "QUIZ",
   isAnswered = false,
 }: QuizQuestionProps) {
-  const getOptionStatus = (optionId: string) => {
-    if (!showResult) return "default";
+  const getOptionStatus = (optionId: string): OptionStatus => {
+    if (!showResult) {
+      return optionId === selectedOptionId ? "selected" : "default";
+    }
 
     if (optionId === correctOptionId) return "correct";
     if (optionId === selectedOptionId && optionId !== correctOptionId)
@@ -23,108 +35,132 @@ export function QuizQuestion({
     return "default";
   };
 
-  const getOptionIcon = (optionId: string) => {
-    if (!showResult) return null;
-
-    const status = getOptionStatus(optionId);
-    if (status === "correct")
-      return <CheckCircle className="h-4 w-4 text-green-600" />;
-    if (status === "incorrect")
-      return <XCircle className="h-4 w-4 text-red-600" />;
-    return null;
+  const getStatusIcon = (status: OptionStatus) => {
+    switch (status) {
+      case "correct":
+        return (
+          <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+        );
+      case "incorrect":
+        return <XCircle className="h-5 w-5 text-rose-600 dark:text-rose-400" />;
+      default:
+        return null;
+    }
   };
 
-  const getOptionClassName = (optionId: string) => {
-    if (!showResult)
-      return "hover:bg-muted/50 cursor-pointer transition-colors";
-
-    const status = getOptionStatus(optionId);
-    if (status === "correct")
-      return "bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800";
-    if (status === "incorrect")
-      return "bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-800";
-    return "";
+  const getOptionStyle = (status: OptionStatus): OptionStyleConfig => {
+    switch (status) {
+      case "default":
+        return {
+          containerClasses: "hover:bg-muted/50 dark:hover:bg-muted/30",
+          letterClasses: "border-muted-foreground/30 text-muted-foreground",
+        };
+      case "selected":
+        return {
+          containerClasses:
+            "bg-muted/30 ring-2 ring-primary/40 hover:bg-muted/40 dark:hover:bg-muted/20",
+          letterClasses: "border-muted-foreground/30 text-primary",
+        };
+      case "correct":
+        return {
+          containerClasses:
+            "bg-emerald-50 text-emerald-900 ring-2 ring-emerald-500 hover:bg-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-100 dark:hover:bg-emerald-900/30",
+          letterClasses:
+            "border-emerald-500 text-emerald-900 dark:text-emerald-100",
+        };
+      case "incorrect":
+        return {
+          containerClasses:
+            "bg-rose-50 text-rose-900 ring-2 ring-rose-500 hover:bg-rose-100 dark:bg-rose-900/30 dark:text-rose-100 dark:hover:bg-rose-900/40",
+          letterClasses: "border-rose-500 text-rose-900 dark:text-rose-100",
+        };
+      default:
+        return {
+          containerClasses: "",
+          letterClasses: "",
+        };
+    }
   };
 
   return (
-    <div className="">
-      <div className="p-8">
-        {/* Question Text */}
-        <div className="mb-8 text-center">
-          <h2 className="mb-6 font-medium text-gray-900 text-xl leading-relaxed dark:text-white">
-            {question.text}
-          </h2>
-        </div>
-
-        {/* Type Mode Switcher (for display purposes) */}
-        <div className="mb-8 flex justify-center">
-          <div className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-gray-600 text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300">
-            <svg
-              className="h-4 w-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-              />
-            </svg>
-            Switch to Type mode
-          </div>
-        </div>
-
-        {/* Options */}
-        <RadioGroup
-          value={selectedOptionId}
-          onValueChange={onAnswerChange}
-          disabled={showResult || (mode === "QUIZ" && isAnswered)}
-          className="space-y-4"
-        >
-          {question.options?.map((option, index) => {
-            const optionLetter = String.fromCharCode(65 + index); // A, B, C, D
-            return (
-              <div
-                key={option.id}
-                className={`group rounded-lg border-2 p-4 transition-all hover:border-gray-300 dark:hover:border-gray-600 ${
-                  selectedOptionId === option.id
-                    ? "border-blue-500 bg-blue-50 dark:border-blue-400 dark:bg-blue-900/20"
-                    : "border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800"
-                } ${getOptionClassName(option.id)}`}
-              >
-                <div className="flex items-start gap-4">
-                  <div className="flex items-center gap-3">
-                    <div
-                      className={`flex h-6 w-6 items-center justify-center rounded border font-medium text-sm ${
-                        selectedOptionId === option.id
-                          ? "border-blue-500 bg-blue-500 text-white"
-                          : "border-gray-300 bg-white text-gray-700 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300"
-                      }`}
-                    >
-                      {optionLetter}
-                    </div>
-                    <RadioGroupItem
-                      value={option.id}
-                      id={option.id}
-                      className="sr-only"
-                      disabled={showResult || (mode === "QUIZ" && isAnswered)}
-                    />
-                  </div>
-                  <Label
-                    htmlFor={option.id}
-                    className="flex-1 cursor-pointer text-gray-900 text-sm leading-relaxed dark:text-white"
-                  >
-                    {option.text}
-                  </Label>
-                  {getOptionIcon(option.id)}
-                </div>
-              </div>
-            );
-          })}
-        </RadioGroup>
+    <div className="space-y-6">
+      <div className="text-center">
+        <HtmlViewer
+          content={question.text}
+          className="mb-4 font-semibold text-xl leading-relaxed"
+        />
       </div>
+
+      <div className="flex justify-center">
+        <Button variant="outline" size="sm" className="gap-2 rounded-2xl">
+          <svg
+            className="h-4 w-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+            />
+          </svg>
+          Switch to Type mode
+        </Button>
+      </div>
+      <RadioGroup
+        value={selectedOptionId}
+        onValueChange={onAnswerChange}
+        disabled={showResult || (mode === "QUIZ" && isAnswered)}
+        className="space-y-3 md:space-y-4"
+      >
+        {question.options?.map((option, index) => {
+          const letter = String.fromCharCode(65 + index);
+          const status = getOptionStatus(option.id);
+          const icon = getStatusIcon(status);
+          const { containerClasses, letterClasses } = getOptionStyle(status);
+
+          return (
+            <Label
+              key={option.id}
+              htmlFor={option.id}
+              className={cn(
+                "relative inline-flex w-full select-none items-center justify-start rounded-2xl bg-muted/40 p-2 font-medium text-sm ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.98] sm:text-base md:text-lg lg:text-xl",
+                containerClasses,
+              )}
+            >
+              <div className="flex items-center">
+                <div
+                  className={cn(
+                    "flex h-8 w-8 items-center justify-center rounded-md font-semibold text-sm",
+                    letterClasses,
+                  )}
+                >
+                  {letter}.
+                </div>
+                <RadioGroupItem
+                  id={option.id}
+                  value={option.id}
+                  className="sr-only"
+                />
+              </div>
+              <div className="flex-1 px-2 py-2">
+                <HtmlViewer
+                  content={option.text}
+                  className="max-w-none px-2 py-2 text-left text-sm md:text-lg"
+                />
+              </div>
+
+              {icon && (
+                <span className="-translate-y-1/2 pointer-events-none absolute top-1/2 right-4">
+                  {icon}
+                </span>
+              )}
+            </Label>
+          );
+        })}
+      </RadioGroup>
     </div>
   );
 }
