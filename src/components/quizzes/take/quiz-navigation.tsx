@@ -43,7 +43,7 @@ export function QuizNavigation({
 
   return (
     <div className="space-y-6">
-      <div className="fixed right-0 bottom-0 left-0 z-50">
+      <div className="fixed right-0 bottom-0 left-0 z-0">
         {showFeedback && currentQuestionResult && (
           <div
             className={`${currentQuestionResult.isCorrect ? "bg-green-600" : "bg-red-600"} text-white`}
