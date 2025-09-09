@@ -110,7 +110,7 @@ export function QuizQuestion({
         </Button>
       </div>
       <RadioGroup
-        value={selectedOptionId}
+        value={selectedOptionId || ""}
         onValueChange={onAnswerChange}
         disabled={showResult || (mode === "QUIZ" && isAnswered)}
         className="space-y-3 md:space-y-4"
