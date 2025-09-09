@@ -1,16 +1,36 @@
 "use client";
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useQuizNavigation } from "@/hooks/quiz/use-quiz-navigation";
+import { useLocalizedNavigation } from "@/lib/utils/navigation";
 import type { QuizNavigationProps } from "@/types/quiz-take";
 import {
   ArrowLeft,
   ArrowRight,
   Bot,
+  Edit,
   RefreshCw,
   RotateCcw,
   Settings,
   Share,
+  Trash2,
+  Undo,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -27,7 +47,9 @@ export function QuizNavigation({
   // isCompleted,
   mode = "QUIZ",
   questions = [],
-}: QuizNavigationProps) {
+  quizId,
+  quiz, // Add quiz object to get the slug
+}: QuizNavigationProps & { quiz?: any }) {
   const {
     isAnswered,
     hasNextQuestion,
@@ -43,39 +65,62 @@ export function QuizNavigation({
   });
 
   const [showExplanation, setShowExplanation] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+
+  const { goQuizEdit } = useLocalizedNavigation();
 
   const handleRestartQuiz = () => {
     console.log("Restart quiz clicked");
+    window.location.reload();
   };
 
-  const handleNext = () => {
-    onNext?.();
-    // Hide explanation when moving to next question
-    setShowExplanation(false);
+  const handleEditQuiz = () => {
+    if (quiz?.slug && quizId) {
+      goQuizEdit(quizId, quiz.slug);
+    } else if (quizId) {
+      goQuizEdit(quizId);
+    }
   };
 
-  const handlePrevious = () => {
-    onPrevious?.();
-    // Hide explanation when moving to previous question
-    setShowExplanation(false);
+  const handleResetQuiz = () => {
+    console.log("Reset quiz clicked");
+    window.location.reload();
   };
 
-  const handleRetry = () => {
-    onRetry?.();
-    // Hide explanation when retrying
-    setShowExplanation(false);
+  const handleDeleteQuiz = () => {
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDeleteQuiz = () => {
+    console.log("Delete quiz confirmed");
+
+    setShowDeleteDialog(false);
+  };
+
+  const handleShare = () => {
+    console.log("Share clicked");
   };
 
   const handleAskAI = () => {
     console.log("Ask AI for explanation clicked");
   };
 
-  const handleSettings = () => {
-    console.log("Settings clicked");
+  const handlePrevious = () => {
+    onPrevious?.();
+
+    setShowExplanation(false);
   };
 
-  const handleShare = () => {
-    console.log("Share clicked");
+  const handleNext = () => {
+    onNext?.();
+
+    setShowExplanation(false);
+  };
+
+  const handleRetry = () => {
+    onRetry?.();
+
+    setShowExplanation(false);
   };
 
   const getCorrectAnswerText = () => {
@@ -208,76 +253,125 @@ export function QuizNavigation({
   }
 
   return (
-    <div className="sticky bottom-0 left-0 z-10 w-full bg-secondary p-4 sm:px-6 md:p-8">
-      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 md:flex-nowrap md:gap-8">
-        <div className="flex grow items-center md:w-3/5">
-          <Button
-            variant="secondary"
-            className="flex-1 rounded-2xl px-4 py-2 md:flex-initial"
-            onClick={handleSettings}
-          >
-            <Settings className="mr-2 h-4 w-4" />
-            Settings
-          </Button>
-          <Button
-            variant="secondary"
-            className="ml-2 flex-1 shrink-0 rounded-2xl px-4 py-2 md:flex-initial"
-            onClick={handleShare}
-          >
-            <Share className="mr-2 h-4 w-4" />
-            Share
-          </Button>
-        </div>
+    <>
+      <div className="sticky bottom-0 left-0 z-10 w-full bg-secondary p-4 sm:px-6 md:p-8">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 md:flex-nowrap md:gap-8">
+          <div className="flex grow items-center md:w-3/5">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="secondary"
+                  className="flex-1 rounded-2xl px-4 py-2 md:flex-initial"
+                >
+                  <Settings className="mr-2 h-4 w-4" />
+                  Settings
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-48">
+                <DropdownMenuItem
+                  onClick={handleEditQuiz}
+                  className="cursor-pointer py-2 focus:bg-secondary"
+                >
+                  <Edit className="mr-2 h-4 w-4" />
+                  Edit Quiz
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={handleResetQuiz}
+                  className="cursor-pointer py-2 focus:bg-secondary"
+                >
+                  <Undo className="mr-2 h-4 w-4" />
+                  Reset Quiz
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={handleDeleteQuiz}
+                  className="cursor-pointer py-2 text-red-600 focus:bg-red-50 focus:text-red-600 dark:focus:bg-red-950/50"
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete Quiz
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <Button
+              variant="secondary"
+              className="ml-2 flex-1 shrink-0 rounded-2xl px-4 py-2 md:flex-initial"
+              onClick={handleShare}
+            >
+              <Share className="mr-2 h-4 w-4" />
+              Share
+            </Button>
+          </div>
 
-        <div className="flex w-full items-center justify-end gap-1 sm:gap-2 md:w-2/5">
-          <Button
-            variant="default"
-            size="sm"
-            onClick={handleRestartQuiz}
-            className="flex shrink-0 items-center rounded-2xl px-2 sm:px-3 md:flex-initial"
-          >
-            <RotateCcw className="h-4 w-4 sm:mr-2" />
-            <span className="hidden sm:inline">Restart quiz</span>
-          </Button>
+          <div className="flex w-full items-center justify-end gap-1 sm:gap-2 md:w-2/5">
+            <Button
+              variant="default"
+              size="sm"
+              onClick={handleRestartQuiz}
+              className="flex shrink-0 items-center rounded-2xl px-2 sm:px-3 md:flex-initial"
+            >
+              <RotateCcw className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Restart quiz</span>
+            </Button>
 
-          <>
-            {hasPreviousQuestion && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handlePrevious}
-                className="rounded-2xl px-3"
-              >
-                Previous
-              </Button>
-            )}
+            <>
+              {hasPreviousQuestion && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handlePrevious}
+                  className="rounded-2xl px-3"
+                >
+                  Previous
+                </Button>
+              )}
 
-            {hasNextQuestion ? (
-              <Button
-                variant="default"
-                size="sm"
-                onClick={handleNext}
-                className="flex min-w-0 flex-1 items-center rounded-2xl px-3 sm:min-w-fit sm:flex-initial"
-                disabled={!isAnswered && mode === "QUIZ"}
-              >
-                <span className="truncate">Next</span>
-                <ArrowRight className="ml-2 h-4 w-4 shrink-0" />
-              </Button>
-            ) : (
-              <Button
-                variant="default"
-                size="sm"
-                onClick={onSubmit}
-                className="flex min-w-0 flex-1 items-center rounded-2xl px-3 sm:min-w-fit sm:flex-initial"
-                disabled={!isAnswered && mode === "QUIZ"}
-              >
-                <span className="truncate">Submit</span>
-                <ArrowRight className="ml-2 h-4 w-4 shrink-0" />
-              </Button>
-            )}
-          </>
+              {hasNextQuestion ? (
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={handleNext}
+                  className="flex min-w-0 flex-1 items-center rounded-2xl px-3 sm:min-w-fit sm:flex-initial"
+                  disabled={!isAnswered && mode === "QUIZ"}
+                >
+                  <span className="truncate">Next</span>
+                  <ArrowRight className="ml-2 h-4 w-4 shrink-0" />
+                </Button>
+              ) : (
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={onSubmit}
+                  className="flex min-w-0 flex-1 items-center rounded-2xl px-3 sm:min-w-fit sm:flex-initial"
+                  disabled={!isAnswered && mode === "QUIZ"}
+                >
+                  <span className="truncate">Submit</span>
+                  <ArrowRight className="ml-2 h-4 w-4 shrink-0" />
+                </Button>
+              )}
+            </>
+          </div>
         </div>
       </div>
-    </div>
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete your
+              quiz and remove all associated data.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDeleteQuiz}
+              className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+            >
+              Delete Quiz
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
