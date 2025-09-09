@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import type { QuizHeaderProps } from "@/types/quiz-take";
 import { Copy, Link } from "lucide-react";
+import TiptapEditor from "../../shared/editor/tiptap-editor";
 
 export function QuizHeader({
   title,
@@ -19,9 +20,12 @@ export function QuizHeader({
         <div className="text-center">
           <div className="mb-4 flex items-center justify-between">
             <div className="flex-1" />
-            <h1 className="font-medium text-gray-900 text-lg dark:text-white">
-              {title}
-            </h1>
+            <TiptapEditor
+              content={title}
+              onChange={() => {}}
+              showToolbar={false}
+              className="font-medium text-gray-900 text-lg dark:text-white"
+            />
             <div className="flex flex-1 items-center justify-end gap-3">
               <span className="font-medium text-gray-900 text-sm dark:text-white">
                 {currentQuestion + 1} / {totalQuestions}

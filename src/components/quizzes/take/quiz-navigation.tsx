@@ -1,8 +1,18 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { useQuizNavigation } from "@/hooks/quiz/use-quiz-navigation";
 import type { QuizNavigationProps } from "@/types/quiz-take";
-import { ArrowRight, Bot, RefreshCw, RotateCcw } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Bot,
+  RefreshCw,
+  RotateCcw,
+  Settings,
+  Share,
+} from "lucide-react";
+
 export function QuizNavigation({
   currentQuestion,
   totalQuestions = 1,
@@ -11,149 +21,208 @@ export function QuizNavigation({
   currentQuestionResult,
   onRetry,
   onNext,
+  onPrevious,
+  onSubmit,
+  // isCompleted,
+  mode = "QUIZ",
 }: QuizNavigationProps) {
-  const handleRestartQuiz = () => {};
+  const {
+    isAnswered,
+    hasNextQuestion,
+    hasPreviousQuestion,
+    showFeedbackUI,
+    isCorrect,
+  } = useQuizNavigation({
+    currentQuestion,
+    totalQuestions,
+    answers,
+    showFeedback,
+    currentQuestionResult,
+  });
+
+  const handleRestartQuiz = () => {
+    console.log("Restart quiz clicked");
+  };
 
   const handleNext = () => {
-    if (onNext) {
-      onNext();
-    }
+    onNext?.();
+  };
+
+  const handlePrevious = () => {
+    onPrevious?.();
   };
 
   const handleRetry = () => {
-    if (onRetry) {
-      onRetry();
-    }
+    onRetry?.();
   };
 
   const handleAskAI = () => {
     console.log("Ask AI for explanation clicked");
   };
 
-  const currentAnswer = answers.find((answer) => {
-    const questionId = `q${currentQuestion + 1}`;
-    return (
-      answer.questionId === questionId ||
-      answer.questionId.toString() === questionId
-    );
-  });
-  const isAnswered = !!currentAnswer;
+  const handleSettings = () => {
+    console.log("Settings clicked");
+  };
 
-  const hasNextQuestion = currentQuestion < totalQuestions - 1;
+  const handleShare = () => {
+    console.log("Share clicked");
+  };
+
+  if (showFeedbackUI && currentQuestionResult) {
+    return (
+      <div
+        className={`sticky bottom-0 left-0 z-10 w-full p-4 sm:px-6 md:p-8 !${isCorrect ? "bg-green-900" : "bg-red-900"}`}
+      >
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 md:flex-nowrap md:gap-8">
+          <div className="flex grow items-center md:w-3/5">
+            <div
+              className={`!${isCorrect ? "text-green-200" : "text-red-200"}dark!${isCorrect ? ":text-green-300" : ":text-red-300"}[&_ol>li::marker]:${isCorrect ? "text-green-200" : "text-red-200"}dark:[&_ol>li::marker]:${isCorrect ? "text-green-300" : "text-red-300"}[&_ul>li::marker]:${isCorrect ? "text-green-200" : "text-red-200"}dark:[&_ul>li::marker]:${isCorrect ? "text-green-300" : "text-red-300"}`}
+            >
+              <p className="font-semibold text-xl">
+                {isCorrect ? "Correct!" : "Incorrect!"}
+              </p>
+              <div className="space-y-2">
+                <span className="block">
+                  The answer is:{" "}
+                  <div
+                    className={`prose prose-sm !${isCorrect ? "text-green-200" : "text-red-200"} md:prose-lg dark!${isCorrect ? ":text-green-300" : ":text-red-300"} inline-block max-w-none font-semibold prose-strong:${isCorrect ? "text-green-200" : "text-red-200"}dark:prose-strong:${isCorrect ? "text-green-300" : "text-red-300"}[&_ol>li::marker]:${isCorrect ? "text-green-200" : "text-red-200"}dark:[&_ol>li::marker]:${isCorrect ? "text-green-300" : "text-red-300"}[&_ul>li::marker]:${isCorrect ? "text-green-200" : "text-red-200"}dark:[&_ul>li::marker]:${isCorrect ? "text-green-300" : "text-red-300"}`}
+                  >
+                    {currentQuestionResult.correctAnswer || "Correct answer"}
+                  </div>
+                </span>
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={handleAskAI}
+                  className={`flex items-center rounded-2xl ${isCorrect ? "bg-green-600 hover:bg-green-600 dark:bg-green-700 dark:hover:bg-green-700" : "bg-red-600 hover:bg-red-600 dark:bg-red-700 dark:hover:bg-red-700"} text-white`}
+                >
+                  <Bot className="mr-2 h-4 w-4" />
+                  Ask AI for explanation
+                </Button>
+              </div>
+            </div>
+          </div>
+          <div className="flex w-full items-center justify-end gap-1 sm:gap-2 md:w-2/5">
+            {!isCorrect && hasPreviousQuestion && (
+              <Button
+                variant="default"
+                size="sm"
+                onClick={handlePrevious}
+                className="flex shrink-0 items-center rounded-2xl bg-red-600 px-2 text-white hover:bg-red-600 sm:px-3 md:flex-initial dark:bg-red-700 dark:hover:bg-red-700"
+              >
+                <ArrowLeft className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Previous</span>
+              </Button>
+            )}
+            <Button
+              variant="default"
+              size="sm"
+              onClick={handleRestartQuiz}
+              className={`flex shrink-0 items-center rounded-2xl px-2 text-white sm:px-3 md:flex-initial ${isCorrect ? "bg-green-600 hover:bg-green-600 dark:bg-green-700 dark:hover:bg-green-700" : "bg-red-600 hover:bg-red-600 dark:bg-red-700 dark:hover:bg-red-700"}`}
+            >
+              <RotateCcw className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Restart quiz</span>
+            </Button>
+            {!isCorrect && (
+              <Button
+                variant="default"
+                size="sm"
+                onClick={handleRetry}
+                className="flex shrink-0 items-center rounded-2xl bg-red-600 px-2 text-white hover:bg-red-600 sm:px-3 md:flex-initial dark:bg-red-700 dark:hover:bg-red-700"
+              >
+                <RefreshCw className="mr-2 h-4 w-4" />
+                <span>Retry</span>
+              </Button>
+            )}
+            {hasNextQuestion && (
+              <Button
+                variant="default"
+                size="sm"
+                onClick={handleNext}
+                className={`flex min-w-0 flex-1 items-center rounded-2xl px-3 text-white sm:min-w-fit sm:flex-initial ${isCorrect ? "bg-green-600 hover:bg-green-600 dark:bg-green-700 dark:hover:bg-green-700" : "bg-red-600 hover:bg-red-600 dark:bg-red-700 dark:hover:bg-red-700"}`}
+              >
+                <span className="truncate">Next</span>
+                <ArrowRight className="ml-2 h-4 w-4 shrink-0" />
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-6">
-      <div className="fixed right-0 bottom-0 left-0 z-0">
-        {showFeedback && currentQuestionResult && (
-          <div
-            className={`${currentQuestionResult.isCorrect ? "bg-green-600" : "bg-red-600"} text-white`}
+    <div className="sticky bottom-0 left-0 z-10 w-full bg-secondary p-4 sm:px-6 md:p-8">
+      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 md:flex-nowrap md:gap-8">
+        {/* Left side buttons */}
+        <div className="flex grow items-center md:w-3/5">
+          <Button
+            variant="secondary"
+            className="flex-1 rounded-2xl px-4 py-2 md:flex-initial"
+            onClick={handleSettings}
           >
-            <div className="mx-auto max-w-4xl px-4 py-4">
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <h3 className="mb-1 font-semibold text-lg">
-                    {currentQuestionResult.isCorrect
-                      ? "Correct!"
-                      : "Incorrect!"}
-                  </h3>
-                  {!currentQuestionResult.isCorrect && (
-                    <p
-                      className={`${currentQuestionResult.isCorrect ? "text-green-100" : "text-red-100"} text-sm`}
-                    >
-                      The correct answer was selected.
-                    </p>
-                  )}
-                  {currentQuestionResult.explanation && (
-                    <p
-                      className={`${currentQuestionResult.isCorrect ? "text-green-100" : "text-red-100"} mt-1 text-sm`}
-                    >
-                      {currentQuestionResult.explanation}
-                    </p>
-                  )}
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleAskAI}
-                    className={`${currentQuestionResult.isCorrect ? "border-green-400 bg-green-500 hover:bg-green-400" : "border-red-400 bg-red-500 hover:bg-red-400"} text-white`}
-                  >
-                    <Bot className="mr-1 h-4 w-4" />
-                    Ask AI for explanation
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleRestartQuiz}
-                    className={`${currentQuestionResult.isCorrect ? "border-green-400 bg-green-500 hover:bg-green-400" : "border-red-400 bg-red-500 hover:bg-red-400"} text-white`}
-                  >
-                    <RotateCcw className="mr-1 h-4 w-4" />
-                    Restart quiz
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleRetry}
-                    className={`${currentQuestionResult.isCorrect ? "border-green-400 bg-green-500 hover:bg-green-400" : "border-red-400 bg-red-500 hover:bg-red-400"} text-white`}
-                  >
-                    <RefreshCw className="mr-1 h-4 w-4" />
-                    Retry
-                  </Button>
-                  {hasNextQuestion && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleNext}
-                      className={`${
-                        currentQuestionResult.isCorrect
-                          ? "border-green-400 bg-green-500 hover:bg-green-400"
-                          : "border-red-400 bg-red-500 hover:bg-red-400"
-                      } text-white hover:text-white`}
-                    >
-                      Next
-                      <ArrowRight className="ml-1 h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-        {!showFeedback && (
-          <div className="">
-            <div className="mx-auto max-w-4xl ">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  {isAnswered && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleRetry}
-                      className="text-gray-600 hover:text-gray-800"
-                    >
-                      <RefreshCw className="mr-1 h-4 w-4" />
-                      Retry
-                    </Button>
-                  )}
-                </div>
+            <Settings className="mr-2 h-4 w-4" />
+            Settings
+          </Button>
+          <Button
+            variant="secondary"
+            className="ml-2 flex-1 shrink-0 rounded-2xl px-4 py-2 md:flex-initial"
+            onClick={handleShare}
+          >
+            <Share className="mr-2 h-4 w-4" />
+            Share
+          </Button>
+        </div>
 
-                <div className="flex items-center gap-2">
-                  {isAnswered && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleAskAI}
-                      className="text-purple-600 hover:text-purple-800"
-                    >
-                      <Bot className="mr-1 h-4 w-4" />
-                      Ask AI
-                    </Button>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Right side buttons */}
+        <div className="flex w-full items-center justify-end gap-1 sm:gap-2 md:w-2/5">
+          <Button
+            variant="default"
+            size="sm"
+            onClick={handleRestartQuiz}
+            className="flex shrink-0 items-center rounded-2xl px-2 sm:px-3 md:flex-initial"
+          >
+            <RotateCcw className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Restart quiz</span>
+          </Button>
+
+          <>
+            {hasPreviousQuestion && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handlePrevious}
+                className="rounded-2xl px-3"
+              >
+                Previous
+              </Button>
+            )}
+
+            {hasNextQuestion ? (
+              <Button
+                variant="default"
+                size="sm"
+                onClick={handleNext}
+                className="flex min-w-0 flex-1 items-center rounded-2xl px-3 sm:min-w-fit sm:flex-initial"
+                disabled={!isAnswered && mode === "QUIZ"}
+              >
+                <span className="truncate">Next</span>
+                <ArrowRight className="ml-2 h-4 w-4 shrink-0" />
+              </Button>
+            ) : (
+              <Button
+                variant="default"
+                size="sm"
+                onClick={onSubmit}
+                className="flex min-w-0 flex-1 items-center rounded-2xl px-3 sm:min-w-fit sm:flex-initial"
+                disabled={!isAnswered && mode === "QUIZ"}
+              >
+                <span className="truncate">Submit</span>
+                <ArrowRight className="ml-2 h-4 w-4 shrink-0" />
+              </Button>
+            )}
+          </>
+        </div>
       </div>
     </div>
   );

@@ -111,8 +111,6 @@ export function QuizQuestion({
           Switch to Type mode
         </Button>
       </div>
-
-      {/* Options */}
       <RadioGroup
         value={selectedOptionId}
         onValueChange={onAnswerChange}
@@ -134,7 +132,7 @@ export function QuizQuestion({
                 containerClasses,
               )}
             >
-              <div className="mr-3 flex items-center">
+              <div className="flex items-center">
                 <div
                   className={cn(
                     "flex h-8 w-8 items-center justify-center rounded-md font-semibold text-sm",
@@ -149,8 +147,7 @@ export function QuizQuestion({
                   className="sr-only"
                 />
               </div>
-
-              <div className="flex-1 rounded-xl px-2 py-1">
+              <div className="flex-1 rounded-xl px-1 py-1">
                 <TiptapEditor
                   content={option.text}
                   onChange={() => {}}

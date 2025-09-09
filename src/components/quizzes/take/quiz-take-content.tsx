@@ -187,7 +187,7 @@ export function QuizTakeContent({ quiz, mode = "QUIZ" }: QuizTakeContentProps) {
 
   // Show quiz interface
   return (
-    <div>
+    <div className="flex min-h-screen flex-col">
       <QuizHeader
         title={quiz.title}
         currentQuestion={currentQuestionIndex}
@@ -195,7 +195,7 @@ export function QuizTakeContent({ quiz, mode = "QUIZ" }: QuizTakeContentProps) {
         timeSpent={timeSpent}
         estimatedTime={quiz.estimatedTime}
       />
-      <div className="mx-auto max-w-4xl px-4 py-8">
+      <div className="mx-auto max-w-4xl flex-grow px-4 py-8">
         <div className="mb-8">
           {currentQuestion && (
             <QuizQuestion
@@ -209,28 +209,26 @@ export function QuizTakeContent({ quiz, mode = "QUIZ" }: QuizTakeContentProps) {
             />
           )}
         </div>
-        <QuizNavigation
-          currentQuestion={currentQuestionIndex}
-          totalQuestions={questions.length}
-          answers={answers}
-          onNavigateToQuestion={handleNavigateToQuestion}
-          onPrevious={handlePrevious}
-          onNext={handleNext}
-          onSubmit={handleSubmit}
-          isCompleted={isCompleted}
-          mode={mode}
-          showFeedback={showFeedback}
-          currentQuestionResult={currentQuestionResult}
-          onRetry={() => {
-            const questionId = currentQuestion.id;
-            setAnswers((prev) =>
-              prev.filter((a) => a.questionId !== questionId),
-            );
-            setShowFeedback(false);
-            setCurrentQuestionResult(null);
-          }}
-        />
       </div>
+      <QuizNavigation
+        currentQuestion={currentQuestionIndex}
+        totalQuestions={questions.length}
+        answers={answers}
+        onNavigateToQuestion={handleNavigateToQuestion}
+        onPrevious={handlePrevious}
+        onNext={handleNext}
+        onSubmit={handleSubmit}
+        isCompleted={isCompleted}
+        mode={mode}
+        showFeedback={showFeedback}
+        currentQuestionResult={currentQuestionResult}
+        onRetry={() => {
+          const questionId = currentQuestion.id;
+          setAnswers((prev) => prev.filter((a) => a.questionId !== questionId));
+          setShowFeedback(false);
+          setCurrentQuestionResult(null);
+        }}
+      />
     </div>
   );
 }
