@@ -66,6 +66,7 @@ export interface QuizNavigationProps {
     explanation?: string;
   } | null;
   onRetry?: () => void;
+  questions?: any[]; // Add questions prop to access question data
 }
 
 export interface QuizHeaderProps {

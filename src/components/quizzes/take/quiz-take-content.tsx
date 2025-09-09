@@ -207,6 +207,7 @@ export function QuizTakeContent({ quiz, mode = "QUIZ" }: QuizTakeContentProps) {
         mode={mode}
         showFeedback={showFeedback}
         currentQuestionResult={currentQuestionResult}
+        questions={questions} // Add questions prop
         onRetry={() => {
           const questionId = currentQuestion.id;
           setAnswers((prev) => prev.filter((a) => a.questionId !== questionId));
