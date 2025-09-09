@@ -34,6 +34,12 @@ export interface QuizResult {
   }>;
 }
 
+export interface QuizQuestionResult {
+  isCorrect: boolean;
+  correctAnswer: string;
+  explanation?: string;
+}
+
 export interface QuizTakeProps {
   quiz: BackendQuizEntity;
   mode?: QuizTakeMode;
@@ -60,11 +66,7 @@ export interface QuizNavigationProps {
   isCompleted: boolean;
   mode?: QuizTakeMode;
   showFeedback?: boolean;
-  currentQuestionResult?: {
-    isCorrect: boolean;
-    correctAnswer: string;
-    explanation?: string;
-  } | null;
+  currentQuestionResult?: QuizQuestionResult | null;
   onRetry?: () => void;
   questions?: any[]; // Add questions prop to access question data
 }
