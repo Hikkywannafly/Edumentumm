@@ -70,6 +70,7 @@ export interface QuizNavigationProps {
   onRetry?: () => void;
   questions?: any[]; // Add questions prop to access question data
   quizId?: number; // Add quiz ID for edit/reset/delete functionality
+  quiz?: BackendQuizEntity; // Add quiz object to access the slug
 }
 
 export interface QuizHeaderProps {

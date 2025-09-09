@@ -18,6 +18,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useQuizNavigation } from "@/hooks/quiz/use-quiz-navigation";
+import { useLocalizedNavigation } from "@/lib/utils/navigation";
 import type { QuizNavigationProps } from "@/types/quiz-take";
 import {
   ArrowLeft,
@@ -31,7 +32,6 @@ import {
   Trash2,
   Undo,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 export function QuizNavigation({
@@ -48,7 +48,8 @@ export function QuizNavigation({
   mode = "QUIZ",
   questions = [],
   quizId,
-}: QuizNavigationProps) {
+  quiz, // Add quiz object to get the slug
+}: QuizNavigationProps & { quiz?: any }) {
   const {
     isAnswered,
     hasNextQuestion,
@@ -66,24 +67,23 @@ export function QuizNavigation({
   const [showExplanation, setShowExplanation] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
-  const router = useRouter();
+  const { goQuizEdit } = useLocalizedNavigation();
 
   const handleRestartQuiz = () => {
     console.log("Restart quiz clicked");
-    // This would typically reset the quiz attempt
     window.location.reload();
   };
 
   const handleEditQuiz = () => {
-    if (quizId) {
-      router.push(`/quizzes/${quizId}/edit`);
+    if (quiz?.slug && quizId) {
+      goQuizEdit(quizId, quiz.slug);
+    } else if (quizId) {
+      goQuizEdit(quizId);
     }
   };
 
   const handleResetQuiz = () => {
-    // Reset quiz functionality - this would typically reset the user's progress
     console.log("Reset quiz clicked");
-    // In a real implementation, this would reset the quiz attempt
     window.location.reload();
   };
 
@@ -92,13 +92,8 @@ export function QuizNavigation({
   };
 
   const confirmDeleteQuiz = () => {
-    // Delete quiz functionality
     console.log("Delete quiz confirmed");
-    // In a real implementation, this would call the delete API
-    // For now, we'll just show an alert
-    alert("Quiz deletion functionality would be implemented here");
-    // After deletion, we would typically redirect the user
-    // router.push("/quizzes");
+
     setShowDeleteDialog(false);
   };
 
@@ -112,19 +107,19 @@ export function QuizNavigation({
 
   const handlePrevious = () => {
     onPrevious?.();
-    // Hide explanation when moving to previous question
+
     setShowExplanation(false);
   };
 
   const handleNext = () => {
     onNext?.();
-    // Hide explanation when moving to next question
+
     setShowExplanation(false);
   };
 
   const handleRetry = () => {
     onRetry?.();
-    // Hide explanation when retrying
+
     setShowExplanation(false);
   };
 

@@ -215,6 +215,7 @@ export function QuizTakeContent({ quiz, mode = "QUIZ" }: QuizTakeContentProps) {
           const questionId = currentQuestion.id;
           setAnswers((prev) => prev.filter((a) => a.questionId !== questionId));
         }}
+        quiz={quiz} // Pass the quiz object to access the slug
       />
     </div>
   );
