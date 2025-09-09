@@ -39,7 +39,7 @@ export function QuizNavigation({
     totalQuestions,
     answers,
     showFeedback,
-    currentQuestionResult,
+    currentQuestionResult: currentQuestionResult ?? null,
   });
 
   const [showExplanation, setShowExplanation] = useState(false);
