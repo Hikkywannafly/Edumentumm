@@ -3,65 +3,83 @@
 import { HtmlViewer } from "@/components/shared/editor/html-viewer";
 import { Button } from "@/components/ui/button";
 import type { QuizHeaderProps } from "@/types/quiz-take";
-import { Copy, Link } from "lucide-react";
+import { Copy, Dices } from "lucide-react";
 
 export function QuizHeader({
   title,
   currentQuestion,
   totalQuestions,
+  estimatedTime,
+  timeSpent,
 }: QuizHeaderProps) {
   const handleCopyLink = () => {
     navigator.clipboard.writeText(window.location.href);
   };
 
-  return (
-    <div className="">
-      <div className="mx-auto max-w-4xl px-4 py-6">
-        <div className="text-center">
-          <div className="mb-4 flex items-center justify-between">
-            <div className="flex-1" />
-            <div className="flex-1 items-center justify-end gap-3">
-              <span className="font-medium text-gray-900 text-sm dark:text-white">
-                {currentQuestion + 1} / {totalQuestions}
-              </span>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleCopyLink}
-                className="h-8 w-8 p-0 text-gray-500 hover:text-gray-700"
-              >
-                <Link className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleCopyLink}
-                className="h-8 w-8 p-0 text-gray-500 hover:text-gray-700"
-              >
-                <Copy className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-          <div className="mb-2 line-clamp-2 text-balance text-center font-bold text-gray-900 text-xl sm:text-2xl md:text-3xl dark:text-white">
-            <HtmlViewer
-              content={title}
-              className="font-medium text-gray-900 text-lg dark:text-white"
-            />
-          </div>
+  const handleRandomQuiz = () => {
+    // This would be implemented to navigate to a random quiz
+    console.log("Navigate to random quiz");
+  };
 
-          {/* Progress Bar */}
-          <div className="mx-auto w-full max-w-md">
-            <div className="h-2 w-full rounded-full bg-gray-200 dark:bg-gray-700">
-              <div
-                className="h-2 rounded-full bg-blue-500 transition-all duration-300"
-                style={{
-                  width: `${((currentQuestion + 1) / totalQuestions) * 100}%`,
-                }}
-              />
-            </div>
-          </div>
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
+  };
+
+  return (
+    <div className="w-full">
+      <h1 className="hidden">{title}</h1>
+      <div className="prose prose-sm md:prose-lg mt-4 max-w-none text-center font-medium text-base text-muted-foreground sm:text-lg md:mt-8 lg:mt-12">
+        <HtmlViewer content={title} />
+      </div>
+      <div className="mt-2 flex w-full flex-wrap items-center justify-center gap-3 sm:gap-4 md:flex-nowrap">
+        <div
+          aria-valuemax={100}
+          aria-valuemin={0}
+          aria-valuenow={((currentQuestion + 1) / totalQuestions) * 100}
+          role="progressbar"
+          tabIndex={0}
+          data-state="indeterminate"
+          data-max="100"
+          className="relative h-4 w-full flex-1 overflow-hidden rounded-full bg-secondary"
+        >
+          <div
+            data-state="indeterminate"
+            data-max="100"
+            className="size-full flex-1 bg-primary transition-all"
+            style={{
+              transform: `translateX(-${100 - ((currentQuestion + 1) / totalQuestions) * 100}%)`,
+            }}
+          />
+        </div>
+        <div className="shrink-0 text-right font-semibold text-lg sm:text-xl">
+          {currentQuestion + 1} / {totalQuestions}
+        </div>
+        <div className="flex gap-2">
+          <Button
+            className="inline-flex size-10 shrink-0 select-none items-center justify-center rounded-2xl border border-input font-medium text-sm ring-offset-background transition hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+            onClick={handleRandomQuiz}
+            variant="outline"
+            size="icon"
+          >
+            <Dices className="size-4" />
+          </Button>
+          <Button
+            className="inline-flex size-10 shrink-0 select-none items-center justify-center rounded-2xl border border-input font-medium text-sm ring-offset-background transition hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+            onClick={handleCopyLink}
+            variant="outline"
+            size="icon"
+          >
+            <Copy className="size-4" />
+          </Button>
         </div>
       </div>
+      {estimatedTime && (
+        <div className="mt-2 text-center text-muted-foreground text-sm">
+          Time: {formatTime(timeSpent)} / {formatTime(estimatedTime * 60)}
+        </div>
+      )}
     </div>
   );
 }

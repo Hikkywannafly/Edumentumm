@@ -172,14 +172,16 @@ export function QuizTakeContent({ quiz, mode = "QUIZ" }: QuizTakeContentProps) {
 
   // Show quiz interface
   return (
-    <div className="flex min-h-screen flex-col">
-      <QuizHeader
-        title={quiz.title}
-        currentQuestion={currentQuestionIndex}
-        totalQuestions={questions.length}
-        timeSpent={timeSpent}
-        estimatedTime={quiz.estimatedTime}
-      />
+    <div className="flex min-h-screen flex-col justify-between">
+      <div className="mx-auto w-full max-w-4xl px-4 sm:px-6 lg:px-8">
+        <QuizHeader
+          title={quiz.title}
+          currentQuestion={currentQuestionIndex}
+          totalQuestions={questions.length}
+          timeSpent={timeSpent}
+          estimatedTime={quiz.estimatedTime}
+        />
+      </div>
       <div className="mx-auto max-w-4xl flex-grow px-4 py-8">
         <div className="mb-8">
           {currentQuestion && (
