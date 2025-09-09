@@ -1,6 +1,6 @@
 "use client";
 
-import TiptapEditor from "@/components/shared/editor/tiptap-editor";
+import { HtmlViewer } from "@/components/shared/editor/html-viewer";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -8,7 +8,6 @@ import { cn } from "@/lib/utils";
 import type { QuizQuestionProps } from "@/types/quiz-take";
 import { CheckCircle2, XCircle } from "lucide-react";
 
-// Define types for better readability
 type OptionStatus = "default" | "selected" | "correct" | "incorrect";
 
 interface OptionStyleConfig {
@@ -53,25 +52,26 @@ export function QuizQuestion({
     switch (status) {
       case "default":
         return {
-          containerClasses: "bg-muted/40 hover:bg-muted/60",
+          containerClasses: "hover:bg-muted/50 dark:hover:bg-muted/30",
           letterClasses: "border-muted-foreground/30 text-muted-foreground",
         };
       case "selected":
         return {
-          containerClasses: "bg-muted/30 ring-1 ring-primary/40",
+          containerClasses:
+            "bg-muted/30 ring-2 ring-primary/40 hover:bg-muted/40 dark:hover:bg-muted/20",
           letterClasses: "border-muted-foreground/30 text-primary",
         };
       case "correct":
         return {
           containerClasses:
-            "bg-emerald-50 text-emerald-900 ring-2 ring-emerald-500 dark:bg-emerald-900/20 dark:text-emerald-100",
+            "bg-emerald-50 text-emerald-900 ring-2 ring-emerald-500 hover:bg-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-100 dark:hover:bg-emerald-900/30",
           letterClasses:
             "border-emerald-500 text-emerald-900 dark:text-emerald-100",
         };
       case "incorrect":
         return {
           containerClasses:
-            "bg-rose-50 text-rose-900 ring-2 ring-rose-500 dark:bg-rose-900/30 dark:text-rose-100",
+            "bg-rose-50 text-rose-900 ring-2 ring-rose-500 hover:bg-rose-100 dark:bg-rose-900/30 dark:text-rose-100 dark:hover:bg-rose-900/40",
           letterClasses: "border-rose-500 text-rose-900 dark:text-rose-100",
         };
       default:
@@ -85,10 +85,8 @@ export function QuizQuestion({
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <TiptapEditor
+        <HtmlViewer
           content={question.text}
-          onChange={() => {}}
-          showToolbar={false}
           className="mb-4 font-semibold text-xl leading-relaxed"
         />
       </div>
@@ -128,7 +126,7 @@ export function QuizQuestion({
               key={option.id}
               htmlFor={option.id}
               className={cn(
-                "relative inline-flex w-full select-none items-center justify-start rounded-2xl p-2 font-medium text-sm ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.98] sm:text-base md:text-lg lg:text-xl",
+                "relative inline-flex w-full select-none items-center justify-start rounded-2xl bg-muted/40 p-2 font-medium text-sm ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.98] sm:text-base md:text-lg lg:text-xl",
                 containerClasses,
               )}
             >
@@ -147,12 +145,10 @@ export function QuizQuestion({
                   className="sr-only"
                 />
               </div>
-              <div className="flex-1 rounded-xl px-1 py-1">
-                <TiptapEditor
+              <div className="flex-1 px-2 py-2">
+                <HtmlViewer
                   content={option.text}
-                  onChange={() => {}}
-                  showToolbar={false}
-                  className={`max-w-none text-left text-sm md:text-lg ${containerClasses}`}
+                  className="max-w-none px-2 py-2 text-left text-sm md:text-lg"
                 />
               </div>
 

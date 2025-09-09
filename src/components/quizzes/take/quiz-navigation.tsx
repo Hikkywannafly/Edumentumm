@@ -71,12 +71,12 @@ export function QuizNavigation({
   if (showFeedbackUI && currentQuestionResult) {
     return (
       <div
-        className={`sticky bottom-0 left-0 z-10 w-full p-4 sm:px-6 md:p-8 !${isCorrect ? "bg-green-900" : "bg-red-900"}`}
+        className={`sticky bottom-0 left-0 z-10 w-full p-4 sm:px-6 md:p-8 ${isCorrect ? "bg-green-900" : "bg-red-900"}`}
       >
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 md:flex-nowrap md:gap-8">
           <div className="flex grow items-center md:w-3/5">
             <div
-              className={`!${isCorrect ? "text-green-200" : "text-red-200"}dark!${isCorrect ? ":text-green-300" : ":text-red-300"}[&_ol>li::marker]:${isCorrect ? "text-green-200" : "text-red-200"}dark:[&_ol>li::marker]:${isCorrect ? "text-green-300" : "text-red-300"}[&_ul>li::marker]:${isCorrect ? "text-green-200" : "text-red-200"}dark:[&_ul>li::marker]:${isCorrect ? "text-green-300" : "text-red-300"}`}
+              className={`${isCorrect ? "text-green-200" : "text-red-200"}dark:${isCorrect ? "text-green-300" : "text-red-300"}[&_ol>li::marker]:${isCorrect ? "text-green-200" : "text-red-200"}dark:[&_ol>li::marker]:${isCorrect ? "text-green-300" : "text-red-300"}[&_ul>li::marker]:${isCorrect ? "text-green-200" : "text-red-200"}dark:[&_ul>li::marker]:${isCorrect ? "text-green-300" : "text-red-300"}`}
             >
               <p className="font-semibold text-xl">
                 {isCorrect ? "Correct!" : "Incorrect!"}
@@ -85,7 +85,7 @@ export function QuizNavigation({
                 <span className="block">
                   The answer is:{" "}
                   <div
-                    className={`prose prose-sm !${isCorrect ? "text-green-200" : "text-red-200"} md:prose-lg dark!${isCorrect ? ":text-green-300" : ":text-red-300"} inline-block max-w-none font-semibold prose-strong:${isCorrect ? "text-green-200" : "text-red-200"}dark:prose-strong:${isCorrect ? "text-green-300" : "text-red-300"}[&_ol>li::marker]:${isCorrect ? "text-green-200" : "text-red-200"}dark:[&_ol>li::marker]:${isCorrect ? "text-green-300" : "text-red-300"}[&_ul>li::marker]:${isCorrect ? "text-green-200" : "text-red-200"}dark:[&_ul>li::marker]:${isCorrect ? "text-green-300" : "text-red-300"}`}
+                    className={`prose prose-sm ${isCorrect ? "text-green-200" : "text-red-200"} md:prose-lg dark:${isCorrect ? "text-green-300" : "text-red-300"} inline-block max-w-none font-semibold prose-strong:${isCorrect ? "text-green-200" : "text-red-200"}dark:prose-strong:${isCorrect ? "text-green-300" : "text-red-300"}[&_ol>li::marker]:${isCorrect ? "text-green-200" : "text-red-200"}dark:[&_ol>li::marker]:${isCorrect ? "text-green-300" : "text-red-300"}[&_ul>li::marker]:${isCorrect ? "text-green-200" : "text-red-200"}dark:[&_ul>li::marker]:${isCorrect ? "text-green-300" : "text-red-300"}`}
                   >
                     {currentQuestionResult.correctAnswer || "Correct answer"}
                   </div>
@@ -174,7 +174,6 @@ export function QuizNavigation({
           </Button>
         </div>
 
-        {/* Right side buttons */}
         <div className="flex w-full items-center justify-end gap-1 sm:gap-2 md:w-2/5">
           <Button
             variant="default"

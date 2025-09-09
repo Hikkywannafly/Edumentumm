@@ -24,16 +24,10 @@ export function useQuizNavigation({
   showFeedback,
   currentQuestionResult,
 }: UseQuizNavigationProps): UseQuizNavigationReturn {
-  const currentAnswer = useMemo(() => {
-    const questionId = `q${currentQuestion + 1}`;
-    return answers.find(
-      (answer) =>
-        answer.questionId === questionId ||
-        answer.questionId.toString() === questionId,
-    );
-  }, [answers, currentQuestion]);
+  const isAnswered = useMemo(() => {
+    return !!answers[currentQuestion] || !!currentQuestionResult;
+  }, [answers, currentQuestion, currentQuestionResult]);
 
-  const isAnswered = !!currentAnswer;
   const hasNextQuestion = currentQuestion < totalQuestions - 1;
   const hasPreviousQuestion = currentQuestion > 0;
   const showFeedbackUI = showFeedback && !!currentQuestionResult;
