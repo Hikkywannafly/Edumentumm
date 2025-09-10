@@ -1,9 +1,19 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
+export interface IPagination {
+  currentPage: number;
+  pageSize: number;
+  totalElements: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrevious: boolean;
+}
+
 export type AchievementAPIResponse = {
+  pagination: IPagination;
   data: Achievement[];
-  message: string;
   status: string;
+  message: string;
 };
 
 export type Achievement = {
@@ -55,11 +65,25 @@ class AchievementAPI {
     }
   }
 
-  async getAllAchievement(): Promise<Achievement[]> {
-    const response =
-      await this.request<AchievementAPIResponse>("/user/achievement");
-    console.log(response.data);
-    return response.data;
+  async getAllAchievement(
+    page: number,
+    size: number,
+    keyword: string,
+    rarity?: string,
+    achieved?: boolean,
+  ): Promise<AchievementAPIResponse> {
+    const params = [
+      `page=${page}`,
+      `size=${size}`,
+      `keyword=${encodeURIComponent(keyword || "")}`,
+    ];
+    if (rarity) params.push(`rarity=${encodeURIComponent(rarity)}`);
+    if (typeof achieved === "boolean") params.push(`achieved=${achieved}`);
+    const query = params.join("&");
+    const response = await this.request<AchievementAPIResponse>(
+      `/user/achievement?${query}`,
+    );
+    return response;
   }
 }
 
