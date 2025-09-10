@@ -1,4 +1,5 @@
 import type { Answer, QuestionData } from "@/types/quiz";
+import { v4 as uuidv4 } from "uuid";
 export type { QuestionData, Answer };
 
 interface ParsedQuestion {
@@ -55,7 +56,7 @@ export class ContentExtractor {
     /^(\*?\s*)([A-Za-z])\s*\*\s*/,
     /^(\*?\s*)([1-9])[\.\)\:\-]\s*/,
     /^(\*?\s*)\(([1-9])\)[\s\.\:\-]*/,
-    /^(\*?\s*)(Answer|Option|Choice)\s*([A-Za-z1-9])/i,
+    /^(\*?\s*)Answer|Option|Choice\s*([A-Za-z1-9])/i,
     /^(\*?\s*)Đáp\s*án\s*([A-Za-z1-9])[\.\:\-]?/i,
     /^(\*?\s*)ĐA\s*([A-Za-z1-9])[\.\:\-]?/i,
     /^→\s*([A-Za-z1-9])[\.\)\:\-]?/,
@@ -308,20 +309,20 @@ export class ContentExtractor {
 
   private convertToQuestionData(
     parsedQuestion: ParsedQuestion,
-    index: number,
+    _index: number,
   ): QuestionData {
     const questionText = parsedQuestion.questionLines
       .join(" ")
       .trim()
       .replace(/\s+/g, " ");
     const answers: Answer[] = parsedQuestion.answers.map((pa, answerIndex) => ({
-      id: `answer_${index}_${answerIndex}`,
+      id: uuidv4(),
       text: pa.lines.join(" ").trim().replace(/\s+/g, " "),
       isCorrect: pa.isCorrect,
       order_index: answerIndex + 1,
     }));
     return {
-      id: `question_${index}`,
+      id: uuidv4(),
       question: questionText,
       type: "MULTIPLE_CHOICE",
       points: 1,

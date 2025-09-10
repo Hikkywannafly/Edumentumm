@@ -88,7 +88,8 @@ export function QuizCard({ quiz, onDelete, onEdit, onView }: QuizCardProps) {
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-8 w-8 p-0 opacity-0 transition-opacity hover:bg-muted group-hover:opacity-100"
+                className="h-8 w-8 p-0 opacity-0 transition-opacity duration-200 hover:bg-muted group-hover:opacity-100"
+                aria-label="Quiz options"
               >
                 <MoreVertical className="h-4 w-4" />
               </Button>

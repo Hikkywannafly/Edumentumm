@@ -20,7 +20,6 @@ export function useQuizGenerator(
     mutationFn: async (
       settings: QuizCreatorSettings,
     ): Promise<GeneratedQuiz> => {
-      // Only send files that have been successfully parsed and have content
       const filesToSend = uploadedFiles
         .filter(
           (f) =>
@@ -61,7 +60,6 @@ export function useQuizGenerator(
     mutationFn: async (
       settings: QuizCreatorSettings,
     ): Promise<GeneratedQuiz> => {
-      // Only send files that have been successfully parsed and have content
       const filesToSend = uploadedFiles
         .filter(
           (f) =>

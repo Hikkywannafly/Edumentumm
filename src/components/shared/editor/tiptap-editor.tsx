@@ -7,17 +7,33 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import Link from "@tiptap/extension-link";
+import Underline from "@tiptap/extension-underline";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import {
   Bold,
   ChevronDown,
+  Code,
+  Heading1,
+  Heading2,
+  Heading3,
   Italic,
   LinkIcon,
-  MoreHorizontal,
+  List,
+  ListOrdered,
+  Quote,
+  Redo,
+  Strikethrough,
   Type,
-  Underline,
+  Underline as UnderlineIcon,
+  Undo,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -47,6 +63,7 @@ export default function TiptapEditor({
       Link.configure({
         openOnClick: false,
       }),
+      Underline,
     ],
     content: content,
     immediatelyRender: false,
@@ -57,7 +74,6 @@ export default function TiptapEditor({
       setIsFocused(true);
     },
     onBlur: (_props) => {
-      // Don't hide toolbar immediately if user is interacting with it
       setTimeout(() => {
         if (!isToolbarInteracting) {
           setIsFocused(false);
@@ -91,6 +107,10 @@ export default function TiptapEditor({
     }
   };
 
+  const setHeading = (level: 1 | 2 | 3) => {
+    editor.chain().focus().toggleHeading({ level }).run();
+  };
+
   return (
     <div
       className={
@@ -105,128 +125,256 @@ export default function TiptapEditor({
           onMouseEnter={() => setIsToolbarInteracting(true)}
           onMouseLeave={() => setIsToolbarInteracting(false)}
         >
-          <div className="flex items-center gap-1">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-8 px-2">
-                  <Type className="mr-1 h-4 w-4" />
-                  <ChevronDown className="h-3 w-3" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem
-                  onClick={() => editor.chain().focus().setParagraph().run()}
-                >
-                  Normal
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() =>
-                    editor.chain().focus().toggleHeading({ level: 1 }).run()
-                  }
-                >
-                  Heading 1
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() =>
-                    editor.chain().focus().toggleHeading({ level: 2 }).run()
-                  }
-                >
-                  Heading 2
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() =>
-                    editor.chain().focus().toggleHeading({ level: 3 }).run()
-                  }
-                >
-                  Heading 3
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+          <TooltipProvider>
+            <div className="flex flex-wrap items-center gap-1">
+              <DropdownMenu>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm" className="h-8 px-2">
+                        <Type className="mr-1 h-4 w-4" />
+                        <ChevronDown className="h-3 w-3" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Text formatting</p>
+                  </TooltipContent>
+                </Tooltip>
+                <DropdownMenuContent>
+                  <DropdownMenuItem
+                    onClick={() => editor.chain().focus().setParagraph().run()}
+                  >
+                    <Type className="mr-2 h-4 w-4" />
+                    Normal
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => setHeading(1)}
+                    className={
+                      editor.isActive("heading", { level: 1 })
+                        ? "bg-accent"
+                        : ""
+                    }
+                  >
+                    <Heading1 className="mr-2 h-4 w-4" />
+                    Heading 1
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => setHeading(2)}
+                    className={
+                      editor.isActive("heading", { level: 2 })
+                        ? "bg-accent"
+                        : ""
+                    }
+                  >
+                    <Heading2 className="mr-2 h-4 w-4" />
+                    Heading 2
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => setHeading(3)}
+                    className={
+                      editor.isActive("heading", { level: 3 })
+                        ? "bg-accent"
+                        : ""
+                    }
+                  >
+                    <Heading3 className="mr-2 h-4 w-4" />
+                    Heading 3
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
 
-            <Button
-              variant="ghost"
-              size="sm"
-              className={`h-8 px-2 ${editor.isActive("bold") ? "bg-gray-200" : ""}`}
-              onClick={() => editor.chain().focus().toggleBold().run()}
-            >
-              <Bold className="h-4 w-4" />
-            </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className={`h-8 px-2 ${editor.isActive("bold") ? "bg-gray-200 dark:bg-gray-700" : ""}`}
+                    onClick={() => editor.chain().focus().toggleBold().run()}
+                  >
+                    <Bold className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Bold (Ctrl+B)</p>
+                </TooltipContent>
+              </Tooltip>
 
-            <Button
-              variant="ghost"
-              size="sm"
-              className={`h-8 px-2 ${editor.isActive("italic") ? "bg-gray-200" : ""}`}
-              onClick={() => editor.chain().focus().toggleItalic().run()}
-            >
-              <Italic className="h-4 w-4" />
-            </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className={`h-8 px-2 ${editor.isActive("italic") ? "bg-gray-200 dark:bg-gray-700" : ""}`}
+                    onClick={() => editor.chain().focus().toggleItalic().run()}
+                  >
+                    <Italic className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Italic (Ctrl+I)</p>
+                </TooltipContent>
+              </Tooltip>
 
-            <Button
-              variant="ghost"
-              size="sm"
-              className={`h-8 px-2 ${editor.isActive("strike") ? "bg-gray-200" : ""}`}
-              onClick={() => editor.chain().focus().toggleStrike().run()}
-            >
-              <Underline className="h-4 w-4" />
-            </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className={`h-8 px-2 ${editor.isActive("underline") ? "bg-gray-200 dark:bg-gray-700" : ""}`}
+                    onClick={() =>
+                      editor.chain().focus().toggleUnderline().run()
+                    }
+                  >
+                    <UnderlineIcon className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Underline (Ctrl+U)</p>
+                </TooltipContent>
+              </Tooltip>
 
-            <Button
-              variant="ghost"
-              size="sm"
-              className={`h-8 px-2 ${editor.isActive("link") ? "bg-gray-200" : ""}`}
-              onClick={addLink}
-            >
-              <LinkIcon className="h-4 w-4" />
-            </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className={`h-8 px-2 ${editor.isActive("strike") ? "bg-gray-200 dark:bg-gray-700" : ""}`}
+                    onClick={() => editor.chain().focus().toggleStrike().run()}
+                  >
+                    <Strikethrough className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Strikethrough</p>
+                </TooltipContent>
+              </Tooltip>
 
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-8 px-2">
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem
-                  onClick={() =>
-                    editor.chain().focus().toggleBulletList().run()
-                  }
-                >
-                  Bullet List
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() =>
-                    editor.chain().focus().toggleOrderedList().run()
-                  }
-                >
-                  Numbered List
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() =>
-                    editor.chain().focus().toggleBlockquote().run()
-                  }
-                >
-                  Quote
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() =>
-                    editor.chain().focus().setHorizontalRule().run()
-                  }
-                >
-                  Horizontal Rule
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => editor.chain().focus().undo().run()}
-                >
-                  Undo
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => editor.chain().focus().redo().run()}
-                >
-                  Redo
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className={`h-8 px-2 ${editor.isActive("code") ? "bg-gray-200 dark:bg-gray-700" : ""}`}
+                    onClick={() => editor.chain().focus().toggleCode().run()}
+                  >
+                    <Code className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Inline code</p>
+                </TooltipContent>
+              </Tooltip>
+
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className={`h-8 px-2 ${editor.isActive("link") ? "bg-gray-200 dark:bg-gray-700" : ""}`}
+                    onClick={addLink}
+                  >
+                    <LinkIcon className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Add link (Ctrl+K)</p>
+                </TooltipContent>
+              </Tooltip>
+
+              <div className="mx-1 h-5 w-px bg-border" />
+
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className={`h-8 px-2 ${editor.isActive("bulletList") ? "bg-gray-200 dark:bg-gray-700" : ""}`}
+                    onClick={() =>
+                      editor.chain().focus().toggleBulletList().run()
+                    }
+                  >
+                    <List className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Bullet list</p>
+                </TooltipContent>
+              </Tooltip>
+
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className={`h-8 px-2 ${editor.isActive("orderedList") ? "bg-gray-200 dark:bg-gray-700" : ""}`}
+                    onClick={() =>
+                      editor.chain().focus().toggleOrderedList().run()
+                    }
+                  >
+                    <ListOrdered className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Numbered list</p>
+                </TooltipContent>
+              </Tooltip>
+
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className={`h-8 px-2 ${editor.isActive("blockquote") ? "bg-gray-200 dark:bg-gray-700" : ""}`}
+                    onClick={() =>
+                      editor.chain().focus().toggleBlockquote().run()
+                    }
+                  >
+                    <Quote className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Blockquote</p>
+                </TooltipContent>
+              </Tooltip>
+
+              <div className="mx-1 h-5 w-px bg-border" />
+
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 px-2"
+                    onClick={() => editor.chain().focus().undo().run()}
+                    disabled={!editor.can().undo()}
+                  >
+                    <Undo className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Undo (Ctrl+Z)</p>
+                </TooltipContent>
+              </Tooltip>
+
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 px-2"
+                    onClick={() => editor.chain().focus().redo().run()}
+                    disabled={!editor.can().redo()}
+                  >
+                    <Redo className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Redo (Ctrl+Y)</p>
+                </TooltipContent>
+              </Tooltip>
+            </div>
+          </TooltipProvider>
         </div>
       )}
 

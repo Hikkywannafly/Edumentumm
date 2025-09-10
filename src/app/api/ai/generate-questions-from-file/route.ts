@@ -91,18 +91,18 @@ FORMAT:
   "selectedCategory": "${availableCategories ? "[Choose from available categories above]" : "General Knowledge"}",
   "questions": [
     {
-      "id": "q1",
+      "id": "uuid-v4-format-id",
       "question": "Your question?",
       "type": "MULTIPLE_CHOICE",
       "difficulty": "${settings.difficulty || "EASY"}",
       "points": 1,
       "explanation": "Detailed explanation why this answer is correct and others are wrong",
-      "tags": ["file-based-tag1", "content-tag2", "topic-tag3"],
+      "tags": ["tag1", "tag2", "tag3"],
       "answers": [
-        {"id": "a1", "text": "Option A", "isCorrect": false, "order_index": 0},
-        {"id": "a2", "text": "Option B", "isCorrect": true, "order_index": 1},
-        {"id": "a3", "text": "Option C", "isCorrect": false, "order_index": 2},
-        {"id": "a4", "text": "Option D", "isCorrect": false, "order_index": 3}
+        {"id": "uuid-v4-format-id", "text": "Option A", "isCorrect": false, "order_index": 0},
+        {"id": "uuid-v4-format-id", "text": "Option B", "isCorrect": true, "order_index": 1},
+        {"id": "uuid-v4-format-id", "text": "Option C", "isCorrect": false, "order_index": 2},
+        {"id": "uuid-v4-format-id", "text": "Option D", "isCorrect": false, "order_index": 3}
       ]
     }
   ]

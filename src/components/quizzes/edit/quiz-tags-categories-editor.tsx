@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { Tag } from "@/types/quiz";
-import { Bot, Plus, Tag as TagIcon, X } from "lucide-react";
+import { Bot, Plus, X } from "lucide-react";
 import { useEffect, useState } from "react";
 
 const getTagName = (tag: Tag): string => {
@@ -89,10 +89,7 @@ export function QuizTagsEditor({
   return (
     <Card className="border-none">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <TagIcon className="h-5 w-5" />
-          Tags
-        </CardTitle>
+        <CardTitle className="flex items-center gap-2">Tags</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Tags Management */}

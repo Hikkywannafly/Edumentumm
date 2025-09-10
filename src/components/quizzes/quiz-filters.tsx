@@ -93,9 +93,9 @@ export function QuizFilters({
         </Button>
       </div>
       <LocalizedLink href="/quizzes/create">
-        <Button className="flex items-center gap-2">
+        <Button className="flex items-center gap-2 whitespace-nowrap">
           <Plus className="h-4 w-4" />
-          Add Quiz
+          <span className="hidden sm:inline">Add Quiz</span>
         </Button>
       </LocalizedLink>
     </div>
