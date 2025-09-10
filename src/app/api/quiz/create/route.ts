@@ -111,7 +111,7 @@ export async function POST(request: NextRequest) {
         const titleDescResult = await generateQuizTitleDescription({
           content: questionsContent,
           questions: questionsForAI,
-          isExtractMode: false, // Always false for create route
+          isExtractMode: false,
           targetLanguage: "auto",
           filename: undefined,
           tags: data.tags.map((t) => t.name),
@@ -158,7 +158,7 @@ export async function POST(request: NextRequest) {
         Authorization: authHeader,
       },
     });
-    const savedQuiz = response.data;
+    const savedQuiz = response.data.data;
 
     return NextResponse.json({
       success: true,

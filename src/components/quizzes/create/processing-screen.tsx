@@ -86,7 +86,7 @@ export function ProcessingScreen({
       return "Preparing your quiz";
     }
     if (hasError) return "Something went wrong";
-    if (isNavigating) return "Redirecting...";
+    if (isNavigating) return "Opening quiz editor...";
     return "Quiz Ready!";
   };
 
@@ -98,7 +98,7 @@ export function ProcessingScreen({
       return label || "Please wait a moment";
     }
     if (hasError) return "Please try again";
-    if (isNavigating) return "Opening quiz editor...";
+    if (isNavigating) return "Taking you to the quiz editor...";
     return "Your quiz has been created successfully!";
   };
 
