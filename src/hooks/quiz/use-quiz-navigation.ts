@@ -25,8 +25,9 @@ export function useQuizNavigation({
   currentQuestionResult,
 }: UseQuizNavigationProps): UseQuizNavigationReturn {
   const isAnswered = useMemo(() => {
-    return !!answers[currentQuestion] || !!currentQuestionResult;
-  }, [answers, currentQuestion, currentQuestionResult]);
+    // Kiểm tra xem người dùng đã chọn đáp án cho câu hỏi hiện tại chưa
+    return answers.some((a) => a.questionId === currentQuestion.toString());
+  }, [answers, currentQuestion]);
 
   const hasNextQuestion = currentQuestion < totalQuestions - 1;
   const hasPreviousQuestion = currentQuestion > 0;

@@ -35,19 +35,15 @@ export function QuizTakeContent({ quiz, mode = "QUIZ" }: QuizTakeContentProps) {
   const questions = quiz.quizData?.questions || [];
   const currentQuestion = questions[currentQuestionIndex];
 
-  // Use the new hook to manage question results
   const { getQuestionResult } = useQuestionResults({
     questions,
     answers,
   });
 
-  // Get the result for the current question
   const currentQuestionResult = currentQuestion
     ? getQuestionResult(currentQuestion.id)
     : null;
 
-  // Determine if we should show feedback for the current question
-  // In EXAM mode, we don't show feedback until the quiz is completed
   const showFeedback = mode === "QUIZ" && !!currentQuestionResult;
 
   const handleAnswerChange = useCallback(
@@ -155,7 +151,6 @@ export function QuizTakeContent({ quiz, mode = "QUIZ" }: QuizTakeContentProps) {
     (a) => a.questionId === currentQuestion?.id,
   );
 
-  // Show result screen
   if (isCompleted && result) {
     return (
       <div className="flex-1 p-6">
@@ -179,6 +174,7 @@ export function QuizTakeContent({ quiz, mode = "QUIZ" }: QuizTakeContentProps) {
           totalQuestions={questions.length}
           timeSpent={timeSpent}
           estimatedTime={quiz.estimatedTime}
+          mode={mode}
         />
       </div>
       <div className="mx-auto max-w-4xl flex-grow px-4 py-8">
