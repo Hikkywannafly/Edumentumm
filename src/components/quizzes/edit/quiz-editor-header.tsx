@@ -9,7 +9,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  ArrowLeft,
   ChevronUp,
   Info,
   MoreVertical,
@@ -41,7 +40,6 @@ export function QuizEditorHeader({
   onDeleteQuiz,
   onShowSettings,
   onShowInfo,
-  onBack,
   // canCreate,
   canSave = false,
   // isCreating = false,
@@ -72,22 +70,7 @@ export function QuizEditorHeader({
           isScrolled ? "border-gray-200 border-b" : "border-gray-200 border-b"
         }`}
       >
-        <div className="flex w-full items-center justify-between p-4">
-          {/* Left side - Back button and title */}
-          <div className="flex items-center gap-4">
-            {isScrolled && onBack && (
-              <Button
-                variant="ghost"
-                onClick={onBack}
-                className="flex items-center gap-2"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                {t("editor.back")}
-              </Button>
-            )}
-          </div>
-
-          {/* Right side - Action buttons */}
+        <div className="flex w-full items-center justify-end p-4">
           <div className="flex items-center gap-2">
             <Button
               onClick={scrollToTop}
