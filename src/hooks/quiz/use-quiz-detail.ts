@@ -27,7 +27,7 @@ export function useQuizDetail({ id, enabled = true }: UseQuizDetailParams) {
       return response.data.data;
     },
     enabled: enabled && !!id,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes (renamed from cacheTime)
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 }
