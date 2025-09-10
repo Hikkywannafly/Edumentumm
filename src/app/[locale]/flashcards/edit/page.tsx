@@ -156,7 +156,7 @@ export default function FlashcardEditorPage() {
             </div>
           }
         />
-        <div className="flex-1 overflow-hidden">
+        <div className="flex-1 overflow-y-auto">
           <div className="container mx-auto max-w-4xl p-6">
             <div className="space-y-6">
               <FlashcardTitleEditor
