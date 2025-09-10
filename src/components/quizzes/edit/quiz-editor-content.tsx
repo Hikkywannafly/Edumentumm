@@ -71,21 +71,6 @@ export function QuizEditorContent() {
       console.error("Failed to save quiz:", error);
 
       const errorMessage = "Failed to save quiz. Please try again.";
-
-      // if (error instanceof Error) {
-      //   if (error.message.includes("network") || error.message.includes("fetch")) {
-      //     errorMessage = "Network error. Please check your connection and try again.";
-      //   } else if (error.message.includes("401") || error.message.includes("unauthorized")) {
-      //     errorMessage = "You need to be logged in to save quizzes.";
-      //   } else if (error.message.includes("403") || error.message.includes("forbidden")) {
-      //     errorMessage = "You don't have permission to save this quiz.";
-      //   } else if (error.message.includes("400") || error.message.includes("validation")) {
-      //     errorMessage = "Invalid quiz data. Please check your quiz content.";
-      //   } else if (error.message !== "Unknown error") {
-      //     errorMessage = error.message;
-      //   }
-      // }
-
       toast.error(errorMessage);
     }
   };

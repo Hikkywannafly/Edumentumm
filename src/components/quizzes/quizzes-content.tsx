@@ -93,9 +93,6 @@ export function QuizzesContent() {
     setCurrentPage(page);
   };
 
-  console.log("test", quizListData);
-
-  // Loading state
   if (isLoading) {
     return (
       <ThinLayout classNames="flex-1 space-y-6 p-6">

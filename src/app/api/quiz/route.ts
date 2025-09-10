@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(
         {
           success: false,
-          error: "Invalid query parameters",
+          message: "Invalid query parameters",
           details: validated.error.issues,
         },
         { status: 400 },
@@ -61,10 +61,11 @@ export async function GET(request: NextRequest) {
     }
 
     const response = await apiClient.get(endpoint, { headers });
-
+    console.log("Quizzes response:", response.data);
     return NextResponse.json({
       success: true,
-      data: response.data,
+      message: "Paginated quizzes retrieved successfully",
+      data: response.data.data,
     });
   } catch (error) {
     return handleApiError(error);
