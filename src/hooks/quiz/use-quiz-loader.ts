@@ -35,12 +35,11 @@ function convertBackendQuiz(backendQuiz: BackendQuizEntity): GeneratedQuiz {
 
   const convertTags = (tags: any[]): string[] => {
     if (!Array.isArray(tags)) return [];
-    const converted = tags.map((tag) => {
+    return tags.map((tag) => {
       if (typeof tag === "string") return tag;
       if (typeof tag === "object" && tag.name) return tag.name;
       return String(tag);
     });
-    return converted;
   };
 
   return {
@@ -81,9 +80,13 @@ export function useQuizLoader(quizId: string): UseQuizLoaderReturn {
     isError,
     error,
     refetch,
-  } = useQuery({
+  } = useQuery<BackendQuizEntity, Error>({
     queryKey: ["quiz", quizId],
     queryFn: async (): Promise<BackendQuizEntity> => {
+      if (!quizId) {
+        throw new Error("Quiz ID is required");
+      }
+
       const accessToken = localStorage.getItem("accessToken");
       const headers: Record<string, string> = {
         "Content-Type": "application/json",
@@ -98,32 +101,49 @@ export function useQuizLoader(quizId: string): UseQuizLoaderReturn {
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to load quiz: ${response.status}`);
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage =
+          errorData.message ||
+          `Failed to load quiz: ${response.status} ${response.statusText}`;
+        throw new Error(errorMessage);
       }
 
-      const data = await response.json();
+      const result = await response.json();
 
-      if (!data || !data.id) {
+      let data: BackendQuizEntity;
+      if (
+        typeof result === "object" &&
+        result !== null &&
+        "success" in result
+      ) {
+        if (!result.success) {
+          throw new Error(result.message || "Failed to load quiz");
+        }
+        data = result.data as BackendQuizEntity;
+      } else {
+        // Old structure, data is directly in result
+        data = result as BackendQuizEntity;
+      }
+
+      if (!data || typeof data !== "object" || !data.id) {
         throw new Error("Invalid quiz data received from server");
       }
-
       if (!data.quizData) {
-        console.warn("Quiz data missing quizData field", data);
-        // Create a minimal structure if missing
         data.quizData = { questions: [] };
       }
 
-      if (!data.quizData.questions) {
-        console.warn("Quiz data missing questions array", data.quizData);
+      // Ensure questions array exists
+      if (!Array.isArray(data.quizData.questions)) {
         data.quizData.questions = [];
       }
-      return data as BackendQuizEntity;
+
+      return data;
     },
-    enabled: !!quizId,
-    retry: 3, // Retry up to 3 times
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
-    staleTime: 0, // Always fetch fresh data
-    gcTime: 0, // Don't cache data for too long
+    enabled: !!quizId && quizId !== "undefined",
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    staleTime: 0,
+    gcTime: 0,
   });
 
   const convertedQuiz = backendQuiz ? convertBackendQuiz(backendQuiz) : null;

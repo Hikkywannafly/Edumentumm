@@ -142,18 +142,13 @@ export function useQuizList(params: QuizListParams = {}) {
       }
 
       const result: ApiResponse = await response.json();
-
       if (!result.success) {
         throw new Error(result.data?.toString() || "Failed to fetch quiz list");
       }
-
-      // Convert backend entities to display format if needed
       const convertedContent = result.data.content.map((quiz: any) => {
-        // If already in display format, return as is
         if ("slug" in quiz && "viewCount" in quiz) {
           return quiz as QuizDisplayData;
         }
-        // Otherwise convert from backend format
         return convertToDisplayData(quiz as BackendQuizEntity);
       });
 

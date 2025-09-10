@@ -27,7 +27,7 @@ export function handleApiError(error: unknown) {
     return NextResponse.json(
       {
         success: false,
-        error:
+        message:
           error.response?.data?.message ||
           error.message ||
           "API request failed",
@@ -40,7 +40,7 @@ export function handleApiError(error: unknown) {
   return NextResponse.json(
     {
       success: false,
-      error: error instanceof Error ? error.message : "Unknown error",
+      message: error instanceof Error ? error.message : "Unknown error",
     },
     { status: 500 },
   );

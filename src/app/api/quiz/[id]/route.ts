@@ -31,7 +31,7 @@ export async function GET(
 
     if (!quizId) {
       return NextResponse.json(
-        { success: false, error: "Invalid quiz ID" },
+        { success: false, message: "Invalid quiz ID" },
         { status: 400 },
       );
     }
@@ -47,7 +47,11 @@ export async function GET(
       headers,
     });
 
-    return NextResponse.json(response.data);
+    return NextResponse.json({
+      success: true,
+      message: "Quiz retrieved successfully",
+      data: response.data.data,
+    });
   } catch (error) {
     return handleApiError(error);
   }
@@ -64,7 +68,7 @@ export async function PUT(
 
     if (!quizId) {
       return NextResponse.json(
-        { success: false, error: "Invalid quiz ID" },
+        { success: false, message: "Invalid quiz ID" },
         { status: 400 },
       );
     }
@@ -76,7 +80,7 @@ export async function PUT(
       return NextResponse.json(
         {
           success: false,
-          error: "Invalid update data",
+          message: "Invalid update data",
           details: validated.error.issues,
         },
         { status: 400 },
@@ -133,9 +137,12 @@ export async function PUT(
       updatePayload,
       { headers },
     );
+
     return NextResponse.json({
       success: true,
-      quiz: response.data,
+      message: "Quiz updated successfully",
+      data: response.data,
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     return handleApiError(error);
@@ -153,7 +160,7 @@ export async function PATCH(
 
     if (!quizId) {
       return NextResponse.json(
-        { success: false, error: "Invalid quiz ID" },
+        { success: false, message: "Invalid quiz ID" },
         { status: 400 },
       );
     }
@@ -165,7 +172,7 @@ export async function PATCH(
       return NextResponse.json(
         {
           success: false,
-          error: "Invalid update data",
+          message: "Invalid update data",
           details: validated.error.issues,
         },
         { status: 400 },
@@ -227,7 +234,9 @@ export async function PATCH(
 
     return NextResponse.json({
       success: true,
-      quiz: response.data,
+      message: "Quiz updated successfully",
+      data: response.data,
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     return handleApiError(error);
@@ -245,7 +254,7 @@ export async function DELETE(
 
     if (!quizId) {
       return NextResponse.json(
-        { success: false, error: "Invalid quiz ID" },
+        { success: false, message: "Invalid quiz ID" },
         { status: 400 },
       );
     }
@@ -258,6 +267,7 @@ export async function DELETE(
     return NextResponse.json({
       success: true,
       message: "Quiz deleted successfully",
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     return handleApiError(error);

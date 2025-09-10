@@ -56,13 +56,32 @@ export function useQuizSaverEditor(
       });
 
       if (!response.ok) {
-        toast.error("Error saving quiz");
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData.message || "Error saving quiz";
+        toast.error(errorMessage);
+        throw new Error(errorMessage);
       }
 
-      return response.json();
+      const result = await response.json();
+
+      // Handle the new API response structure
+      if (result.success !== undefined) {
+        // New structure with success/message/data wrapper
+        if (!result.success) {
+          const errorMessage = result.message || "Failed to save quiz";
+          toast.error(errorMessage);
+          throw new Error(errorMessage);
+        }
+        toast.success(result.message || "Quiz saved successfully");
+        return result.data;
+      }
+
+      // Old structure
+      toast.success("Quiz saved successfully");
+      return result;
     },
-    onSuccess: () => {
-      queryClient.setQueryData(["quiz", quizId], quiz);
+    onSuccess: (data) => {
+      queryClient.setQueryData(["quiz", quizId], data);
       queryClient.invalidateQueries({ queryKey: ["quizzes"] });
     },
   });
