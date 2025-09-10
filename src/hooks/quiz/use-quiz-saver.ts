@@ -26,17 +26,17 @@ export function useQuizSaver(): UseQuizSaverReturn {
           name: tagName,
           description: `Auto-generated tag for ${tagName}`,
           icon: "tag",
-          color: "#4285F4", // Default blue color
+          color: "#4285F4",
         }),
       );
 
       const payload: QuizPayload = {
         title: quiz.title,
         description: quiz.description || "",
-        thumbnailUrl: undefined, // Could be enhanced later
+        thumbnailUrl: undefined,
         difficulty: settings.difficulty as any,
         estimatedTime: quiz.metadata?.estimated_time || 30,
-        passingScore: 70,
+        passingScore: 100,
         maxAttempts: 3,
         isAiGenerated: settings.generationMode === "GENERATE",
         aiModel: settings.generationMode === "GENERATE" ? "GPT-4" : undefined,

@@ -1,4 +1,5 @@
 import type { Difficulty, QuestionData } from "@/types/quiz";
+import { v4 as uuidv4 } from "uuid";
 import { z } from "zod";
 import { ContentExtractor } from "./content-extractor.service";
 import type { FileForAI } from "./file-to-ai.service";
@@ -103,14 +104,14 @@ function ensureCorrectAnswers(questions: QuestionData[]): QuestionData[] {
 
 // Utility functions for ID generation
 export function generateQuestionId(): string {
-  return `q-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  return uuidv4();
 }
 
 export function generateAnswerId(
-  questionIndex: number,
-  answerIndex: number,
+  _questionIndex: number,
+  _answerIndex: number,
 ): string {
-  return `a-${Date.now()}-${questionIndex}-${answerIndex}`;
+  return uuidv4();
 }
 
 // Extract topics from content and questions for better fallback titles
@@ -363,18 +364,18 @@ FORMAT:
 {
   "questions": [
     {
-      "id": "q1",
+      "id": "uuid-v4-format-id",
       "question": "Your question?",
       "type": "MULTIPLE_CHOICE",
       "difficulty": "${settings.difficulty || "EASY"}",
       "points": 1,
       "explanation": "Detailed explanation why this answer is correct and others are wrong",
-      "tags": ["content-tag1", "topic-tag2", "subject-tag3"],
+      "tags": ["tag1", "tag2", "tag3"],
       "answers": [
-        {"id": "a1", "text": "Option A", "isCorrect": false, "order_index": 0},
-        {"id": "a2", "text": "Option B", "isCorrect": true, "order_index": 1},
-        {"id": "a3", "text": "Option C", "isCorrect": false, "order_index": 2},
-        {"id": "a4", "text": "Option D", "isCorrect": false, "order_index": 3}
+        {"id": "uuid-v4-format-id", "text": "Option A", "isCorrect": false, "order_index": 0},
+        {"id": "uuid-v4-format-id", "text": "Option B", "isCorrect": true, "order_index": 1},
+        {"id": "uuid-v4-format-id", "text": "Option C", "isCorrect": false, "order_index": 2},
+        {"id": "uuid-v4-format-id", "text": "Option D", "isCorrect": false, "order_index": 3}
       ]
     }
   ]

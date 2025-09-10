@@ -147,17 +147,17 @@ export async function createMultiAgentWorkflow(
      IMPORTANT: Return your response as a valid JSON array with EXACTLY the requested number of question objects:
      [
        {
-         "id": "q1",
+         "id": "uuid-v4-format-id",
          "question": "Your question text?",
          "type": "MULTIPLE_CHOICE",
          "difficulty": "EASY|MEDIUM|HARD",
          "points": 1,
          "explanation": "Explanation for correct answer",
          "answers": [
-           {"id": "a1", "text": "Option A", "isCorrect": false, "order_index": 0},
-           {"id": "a2", "text": "Option B", "isCorrect": true, "order_index": 1},
-           {"id": "a3", "text": "Option C", "isCorrect": false, "order_index": 2},
-           {"id": "a4", "text": "Option D", "isCorrect": false, "order_index": 3}
+           {"id": "uuid-v4-format-id", "text": "Option A", "isCorrect": false, "order_index": 0},
+           {"id": "uuid-v4-format-id", "text": "Option B", "isCorrect": true, "order_index": 1},
+           {"id": "uuid-v4-format-id", "text": "Option C", "isCorrect": false, "order_index": 2},
+           {"id": "uuid-v4-format-id", "text": "Option D", "isCorrect": false, "order_index": 3}
          ]
        }
      ]
