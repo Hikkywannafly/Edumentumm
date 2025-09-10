@@ -158,7 +158,6 @@ export async function POST(request: NextRequest) {
         Authorization: authHeader,
       },
     });
-    console.log("✅ Quiz created:", response);
     const savedQuiz = response.data.data;
 
     return NextResponse.json({

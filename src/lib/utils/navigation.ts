@@ -73,6 +73,10 @@ export function useLocalizedNavigation() {
       const path = `/quizzes/${slug}-${quizId}/edit`;
       // Use replace to prevent back navigation to create page
       router.replace(`/${locale}${path}`);
+    } else if (quizId) {
+      // Fallback if slug is not provided
+      const path = `/quizzes/${quizId}/edit`;
+      router.replace(`/${locale}${path}`);
     } else {
       router.replace(`/${locale}/quizzes/edit`);
     }
