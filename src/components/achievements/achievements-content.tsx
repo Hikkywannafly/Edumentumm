@@ -3,15 +3,40 @@
 import {} from "@radix-ui/react-dropdown-menu";
 import {} from "lucide-react";
 import { useTranslations } from "next-intl";
+import { useCallback, useEffect } from "react";
 import useGetAllAchievement from "../../hooks/achievement/use-get-all-achievement";
+import { Skeleton } from "../ui/skeleton";
 import { AchievementCard } from "./achievement-card";
 import AchievementFilter from "./achievement-filter";
 import AchievementPaging from "./achievement-paging";
+import {
+  AchievementCardSkeleton,
+  StatsCardSkeleton,
+} from "./achievement-skeleton";
 import { StatsCard } from "./starts-card";
 
 export const AchievementsContent = () => {
   const t = useTranslations("Achievements");
-  const { achievements } = useGetAllAchievement();
+  const {
+    achievements,
+    paging,
+    loading,
+    keyword,
+    setKeyword,
+    setPage,
+    rarity,
+    setRarity,
+    achieved,
+    setAchieved,
+  } = useGetAllAchievement();
+
+  const resetPage = useCallback(() => {
+    setPage(0);
+  }, [setPage]);
+
+  useEffect(() => {
+    resetPage();
+  }, [resetPage]);
 
   const statsData: Array<{
     title: string;
@@ -53,36 +78,76 @@ export const AchievementsContent = () => {
   return (
     <div className="flex-1 space-y-6 p-6">
       <header className="mb-8">
-        <h1 className="mb-2 font-bold text-3xl text-zinc-900 md:text-4xl dark:text-white">
-          {t("title")}
-        </h1>
-        <p className="text-lg text-zinc-600 dark:text-zinc-400">
-          {t("description")}
-        </p>
+        {loading ? (
+          <div>
+            <Skeleton className="mb-2 h-10 w-1/3" />
+            <Skeleton className="h-6 w-1/2" />
+          </div>
+        ) : (
+          <>
+            <h1 className="mb-2 font-bold text-3xl text-zinc-900 md:text-4xl dark:text-white">
+              {t("title")}
+            </h1>
+            <p className="text-lg text-zinc-600 dark:text-zinc-400">
+              {t("description")}
+            </p>
+          </>
+        )}
       </header>
 
       <section className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {statsData.map((stat, index) => (
-          <StatsCard
-            key={index}
-            title={stat.title}
-            value={stat.value}
-            description={stat.description}
-            icon={stat.icon}
-            iconColor={stat.iconColor}
-          />
-        ))}
+        {loading
+          ? Array.from({ length: 4 }).map((_, i) => (
+              <StatsCardSkeleton key={i} />
+            ))
+          : statsData.map((stat, index) => (
+              <StatsCard
+                key={index}
+                title={stat.title}
+                value={stat.value}
+                description={stat.description}
+                icon={stat.icon}
+                iconColor={stat.iconColor}
+              />
+            ))}
       </section>
 
-      <AchievementFilter />
+      {loading ? (
+        <div className="flex gap-4">
+          <Skeleton className="h-10 w-full rounded-md" />
+          <Skeleton className="h-10 w-56 rounded-md" />
+          <Skeleton className="h-10 w-56 rounded-md" />
+        </div>
+      ) : (
+        <AchievementFilter
+          keyword={keyword}
+          setKeyword={setKeyword}
+          rarity={rarity}
+          setRarity={setRarity}
+          achieved={achieved}
+          setAchieved={setAchieved}
+        />
+      )}
 
       <section className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {achievements.map((achievement, index) => (
-          <AchievementCard achievement={achievement} key={index} />
-        ))}
+        {loading
+          ? Array.from({ length: 6 }).map((_, i) => (
+              <AchievementCardSkeleton key={i} />
+            ))
+          : achievements.map((achievement, index) => (
+              <AchievementCard achievement={achievement} key={index} />
+            ))}
       </section>
-
-      <AchievementPaging />
+      {loading ? (
+        <div className="mt-4 flex justify-center">
+          <Skeleton className="h-10 w-40 rounded-md" />
+        </div>
+      ) : (
+        <AchievementPaging
+          pagination={paging || undefined}
+          pageIndex={setPage}
+        />
+      )}
     </div>
   );
 };

@@ -1,25 +1,27 @@
-import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { type GetStudyTimeResponse, profileAPI } from "../../lib/api/profile";
 
 export function useProfileStudyTime() {
-  const [studyTime, setStudyTime] = useState<GetStudyTimeResponse | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const {
+    data: studyTime,
+    isLoading,
+    error,
+  } = useQuery<GetStudyTimeResponse>({
+    queryKey: ["studyTime"],
+    queryFn: async () => {
+      const res = await profileAPI.getStudyTime();
+      return res;
+    },
+    staleTime: 1000 * 60,
+    gcTime: 1000 * 60 * 5,
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
+    refetchInterval: false,
+  });
 
-  useEffect(() => {
-    setLoading(true);
-    profileAPI
-      .getStudyTime()
-      .then((res) => {
-        setStudyTime(res);
-        setError(null);
-      })
-      .catch((err) => {
-        setError(err?.message || "Failed to fetch study time");
-        setStudyTime(null);
-      })
-      .finally(() => setLoading(false));
-  }, []);
-
-  return { studyTime, loading, error };
+  return {
+    studyTime: studyTime ?? null,
+    loading: isLoading,
+    error: error ? (error as Error).message : null,
+  };
 }
