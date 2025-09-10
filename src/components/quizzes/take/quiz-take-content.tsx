@@ -22,7 +22,6 @@ export function QuizTakeContent({ quiz, mode = "QUIZ" }: QuizTakeContentProps) {
   const [isCompleted, setIsCompleted] = useState(false);
   const [result, setResult] = useState<QuizResult | null>(null);
 
-  // Timer effect
   useEffect(() => {
     if (isCompleted) return;
 

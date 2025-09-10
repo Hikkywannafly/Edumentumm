@@ -182,13 +182,6 @@ export default function QuizDetailPage() {
                   Back to Quizzes
                 </Button>
               </LocalizedLink>
-              {/* {quiz.status === "DRAFT" && (
-                <LocalizedLink href={`quizzes/${quiz.slug}-${quiz.id}/edit`}>
-                  <Button variant="outline" size="sm">
-                    Edit Quiz
-                  </Button>
-                </LocalizedLink>
-              )} */}
             </div>
           }
           showThemeToggle={true}

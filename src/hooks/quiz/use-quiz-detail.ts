@@ -24,7 +24,7 @@ export function useQuizDetail({ id, enabled = true }: UseQuizDetailParams) {
       const response = await apiClient.get(`/student/quizzes/${id}`, {
         headers,
       });
-      return response.data;
+      return response.data.data;
     },
     enabled: enabled && !!id,
     staleTime: 5 * 60 * 1000, // 5 minutes
