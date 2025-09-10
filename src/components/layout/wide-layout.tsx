@@ -8,14 +8,23 @@ interface WideContainerProps {
   children?: ReactNode;
   ultraWide?: boolean;
   padding?: boolean;
+  id?: string;
 }
 
 const WideContainer = React.forwardRef<HTMLDivElement, WideContainerProps>(
   (props, ref) => {
-    const { children, title, classNames, ultraWide = false, padding } = props;
+    const {
+      children,
+      title,
+      classNames,
+      ultraWide = false,
+      padding,
+      id,
+    } = props;
     return (
       <section
         ref={ref}
+        id={id}
         className={`container mx-auto text-center${ultraWide ? "w-[1600px] sm:px-16" : " "} ${classNames || ""} ${padding ? "px-4 py-24" : ""}`}
       >
         {title && (

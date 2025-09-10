@@ -20,6 +20,34 @@
       "exams": {
         "title": "Smart Exam Creation",
         "description": "Automatically create exams with appropriate difficulty levels, grade and analyze results in detail."
+      },
+      "detail": {
+        "note": "There is a better way",
+        "title": "Turn your notes into quizzes & flashcards for easy recall",
+        "subtitle": "An easier way to study that helps you focus, remember better, and feel more prepared.",
+        "quizzes": {
+          "title1": "Make learning fun with easy-to-use quizzes",
+          "subtitle1": "Turn documents into active practice to help you remember more, understand better, and study less",
+          "featDrop": "Drag and drop study material",
+          "title2": "Build a quiz that fits your needs",
+          "subtitle2": "Choose the language, question style, difficulty, and feedback options to match your learning preferences."
+        },
+        "studyGroup": {
+          "title": "Study Groups",
+          "subTitle": "Create or join study groups to compete and learn together with friends."
+        },
+        "mindMap": {
+          "title": "Visualize ideas with Mind Maps",
+          "subTitle": "Organize your thoughts and concepts in a visual, hierarchical structure."
+        },
+        "pomodoro": {
+          "title": "Stay focused with the Pomodoro Timer",
+          "subTitle": "Use the Pomodoro Timer to break your work into intervals, helping you maintain focus and productivity."
+        },
+        "kanbanBoard": {
+          "title": "Organize your tasks with a Kanban Board",
+          "subTitle": "Keep your study tasks organized and track your progress."
+        }
       }
     }
   },
