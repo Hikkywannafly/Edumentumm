@@ -20,6 +20,34 @@
       "exams": {
         "title": "Tạo kỳ thi thông minh",
         "description": "Tự động tạo đề thi với độ khó phù hợp, chấm điểm và phân tích kết quả chi tiết."
+      },
+      "detail": {
+        "note": "Có một cách tốt hơn",
+        "title": "Biến ghi chú của bạn thành câu hỏi trắc nghiệm & flashcard để ghi nhớ dễ dàng",
+        "subtitle": "Một cách học dễ dàng hơn giúp bạn tập trung, ghi nhớ tốt hơn và cảm thấy sẵn sàng hơn.",
+        "quizzes": {
+          "title1": "Học tập vui vẻ với các bài quiz dễ sử dụng",
+          "subtitle1": "Biến tài liệu thành bài tập thực hành chủ động để giúp bạn ghi nhớ nhiều hơn, hiểu rõ hơn và học ít hơn",
+          "featDrop": "Kéo và thả tài liệu học tập",
+          "title2": "Tạo bài quiz phù hợp với nhu cầu của bạn",
+          "subtitle2": "Chọn ngôn ngữ, kiểu câu hỏi, độ khó và tùy chọn phản hồi để phù hợp với sở thích học tập của bạn."
+        },
+        "studyGroup": {
+          "title": "Nhóm học tập",
+          "subTitle": "Tạo hoặc tham gia nhóm học để cùng thi đua và học tập với bạn bè."
+        },
+        "mindMap": {
+          "title": "Hình dung ý tưởng với Sơ đồ tư duy",
+          "subTitle": "Tổ chức suy nghĩ và khái niệm của bạn trong một cấu trúc trực quan, phân cấp."
+        },
+        "pomodoro": {
+          "title": "Tập trung hơn với Bộ hẹn giờ Pomodoro",
+          "subTitle": "Sử dụng Bộ hẹn giờ Pomodoro để chia công việc thành từng khoảng, giúp bạn duy trì sự tập trung và năng suất."
+        },
+        "kanbanBoard": {
+          "title": "Sắp xếp công việc với Bảng Kanban",
+          "subTitle": "Giữ cho các nhiệm vụ học tập của bạn được tổ chức và theo dõi tiến độ."
+        }
       }
     }
   },
