@@ -191,6 +191,10 @@ export function AppSidebar() {
     ? "opacity-100"
     : "opacity-0 w-0 overflow-hidden";
 
+  const iconVisibility = isExpanded
+    ? "opacity-100 w-3"
+    : "opacity-0 w-0 overflow-hidden";
+
   return (
     <div
       onMouseEnter={handleMouseEnter}
@@ -216,7 +220,7 @@ export function AppSidebar() {
             <Button
               variant="ghost"
               size="icon"
-              className={`h-6 w-6 opacity-70 transition-opacity duration-200 hover:opacity-100 ${textVisibility}`}
+              className={`h-6 w-6 transition-opacity duration-200 hover:opacity-100 ${textVisibility}`}
               onClick={handlePinToggle}
               title={isPinned ? "Unpin sidebar" : "Pin sidebar"}
             >
@@ -247,7 +251,7 @@ export function AppSidebar() {
                     {key === "socialprogress" && "SOCIAL PROGRESS"}
                   </span>
                   <ChevronDown
-                    className={`h-3 w-3 transition-all duration-200 group-data-[state=open]/collapsible:rotate-180 ${textVisibility}`}
+                    className={`h-3 w-3 transition-all duration-200 group-data-[state=open]/collapsible:rotate-180 ${iconVisibility}`}
                   />
                 </CollapsibleTrigger>
                 <CollapsibleContent>

@@ -198,6 +198,7 @@ export function QuizzesContent() {
                 disabled={currentPage === 0 || isFetching}
                 variant="outline"
                 size="sm"
+                className="min-w-[70px]"
               >
                 Previous
               </Button>
@@ -238,6 +239,7 @@ export function QuizzesContent() {
                 disabled={currentPage >= totalPages - 1 || isFetching}
                 variant="outline"
                 size="sm"
+                className="min-w-[70px]"
               >
                 Next
               </Button>

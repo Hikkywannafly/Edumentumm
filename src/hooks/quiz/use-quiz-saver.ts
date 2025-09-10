@@ -40,7 +40,7 @@ export function useQuizSaver(): UseQuizSaverReturn {
         maxAttempts: 3,
         isAiGenerated: settings.generationMode === "GENERATE",
         aiModel: settings.generationMode === "GENERATE" ? "GPT-4" : undefined,
-        sourceType: "FILE", // Could be dynamic based on settings.sourceType
+        sourceType: "FILE",
         metaTitle: quiz.title,
         metaDescription: quiz.description || "",
         canonicalUrl: undefined,
