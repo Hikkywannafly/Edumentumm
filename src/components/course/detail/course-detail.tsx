@@ -29,9 +29,9 @@ export default function CourseDetailPage() {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="text-center">
-          <h1 className="mb-4 font-bold text-2xl">Không tìm thấy khóa học</h1>
+          <h1 className="mb-4 font-bold text-2xl">Course not found</h1>
           <LocalizedLink href="course">
-            <Button>Quay lại danh sách khóa học</Button>
+            <Button>Back to course list</Button>
           </LocalizedLink>
         </div>
       </div>
@@ -41,11 +41,11 @@ export default function CourseDetailPage() {
   const getLevelText = (level: string) => {
     switch (level) {
       case "basic":
-        return "Cơ bản";
+        return "Basic";
       case "intermediate":
-        return "Trung bình";
+        return "Intermediate";
       case "advanced":
-        return "Nâng cao";
+        return "Advanced";
       default:
         return level;
     }
@@ -67,7 +67,7 @@ export default function CourseDetailPage() {
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("vi-VN", {
       style: "currency",
-      currency: "VND",
+      currency: "USD",
     }).format(price);
   };
 
@@ -108,7 +108,7 @@ export default function CourseDetailPage() {
         <LocalizedLink href="course">
           <Button variant="ghost" className="gap-2">
             <ArrowLeft className="h-4 w-4" />
-            Quay lại danh sách khóa học
+            Back to course list
           </Button>
         </LocalizedLink>
       </div>
@@ -127,7 +127,7 @@ export default function CourseDetailPage() {
               <div className="absolute inset-0 flex items-center justify-center bg-black/20">
                 <Button size="lg" className="gap-2">
                   <Play className="h-5 w-5" />
-                  Xem trước khóa học
+                  Preview course
                 </Button>
               </div>
             </div>
@@ -136,7 +136,7 @@ export default function CourseDetailPage() {
               <Badge className={getLevelColor(course.level)}>
                 {getLevelText(course.level)}
               </Badge>
-              {course.topics.map((topic) => (
+              {course.tags.map((topic) => (
                 <Badge key={topic} variant="secondary">
                   {topic}
                 </Badge>
@@ -151,12 +151,12 @@ export default function CourseDetailPage() {
               </div>
               <span className="font-medium">{course.rating}</span>
               <span className="text-muted-foreground">
-                ({course.reviewCount} đánh giá)
+                ({course.reviewCount} ratings)
               </span>
               <span className="text-muted-foreground">•</span>
               <div className="flex items-center gap-1">
                 <Users className="h-4 w-4" />
-                <span>{course.reviewCount * 3} học viên</span>
+                <span>{course.reviewCount * 3} Students</span>
               </div>
             </div>
 
@@ -167,7 +167,7 @@ export default function CourseDetailPage() {
                 </AvatarFallback>
               </Avatar>
               <span className="text-muted-foreground">
-                Giảng viên:{" "}
+                Teacher:{" "}
                 <span className="font-medium text-foreground">
                   {course.teacherName}
                 </span>
@@ -178,7 +178,7 @@ export default function CourseDetailPage() {
           {/* Course description */}
           <Card className="mb-6">
             <CardHeader>
-              <CardTitle>Mô tả khóa học</CardTitle>
+              <CardTitle>Description</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground leading-relaxed">
@@ -190,7 +190,7 @@ export default function CourseDetailPage() {
           {/* Course curriculum */}
           <Card>
             <CardHeader>
-              <CardTitle>Nội dung khóa học</CardTitle>
+              <CardTitle>Curriculum</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
@@ -202,10 +202,10 @@ export default function CourseDetailPage() {
                     <CheckCircle className="h-5 w-5 text-green-500" />
                     <div className="flex-1">
                       <h4 className="font-medium">
-                        Bài {i + 1}: Chủ đề học tập số {i + 1}
+                        Lesson {i + 1}: Topic {i + 1}
                       </h4>
                       <p className="text-muted-foreground text-sm">
-                        Thời lượng: 15 phút
+                        Duration: 15 minutes
                       </p>
                     </div>
                     <Play className="h-4 w-4 text-muted-foreground" />

@@ -7,7 +7,7 @@ import { CourseFilter } from "./course-filter";
 export function CourseStudentPage() {
   const [filter, setFilter] = useState<ICourseFilter>({
     search: "",
-    topics: [],
+    tags: [],
     level: [],
     sortBy: "popular",
   });
@@ -30,7 +30,7 @@ export function CourseStudentPage() {
             </div>
           </div>
 
-          <Suspense fallback={<div>Đang tải khóa học...</div>}>
+          <Suspense fallback={<div>Loading courses...</div>}>
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
               {mockCourses.map((course) => (
                 <CourseCard key={course.id} course={course} />

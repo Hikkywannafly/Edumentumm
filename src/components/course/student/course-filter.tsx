@@ -30,23 +30,23 @@ export function CourseFilter({ filter, onFilterChange }: CourseFilterProps) {
   const [isLevelOpen, setIsLevelOpen] = useState(false);
 
   const levels = [
-    { value: "basic", label: "Cơ bản" },
-    { value: "intermediate", label: "Trung bình" },
-    { value: "advanced", label: "Nâng cao" },
+    { value: "basic", label: "Basic" },
+    { value: "intermediate", label: "Intermediate" },
+    { value: "advanced", label: "Advanced" },
   ];
 
   const sortOptions = [
-    { value: "newest", label: "Mới nhất" },
-    { value: "popular", label: "Phổ biến" },
-    { value: "level", label: "Theo cấp độ" },
+    { value: "level", label: "Level" },
+    { value: "popular", label: "Popular" },
+    { value: "price", label: "Price" },
   ];
 
   const handleTopicChange = (topic: string, checked: boolean) => {
     const newTopics = checked
-      ? [...filter.topics, topic]
-      : filter.topics.filter((t) => t !== topic);
+      ? [...filter.tags, topic]
+      : filter.tags.filter((t) => t !== topic);
 
-    onFilterChange({ ...filter, topics: newTopics });
+    onFilterChange({ ...filter, tags: newTopics });
   };
 
   const handleLevelChange = (level: string, checked: boolean) => {
@@ -60,13 +60,13 @@ export function CourseFilter({ filter, onFilterChange }: CourseFilterProps) {
   const clearFilters = () => {
     onFilterChange({
       search: filter.search,
-      topics: [],
+      tags: [],
       level: [],
-      sortBy: "newest",
+      sortBy: "price",
     });
   };
 
-  const activeFiltersCount = filter.topics.length + filter.level.length;
+  const activeFiltersCount = filter.tags.length + filter.level.length;
 
   return (
     <div className="flex items-center gap-2">
@@ -75,10 +75,10 @@ export function CourseFilter({ filter, onFilterChange }: CourseFilterProps) {
         <PopoverTrigger asChild>
           <Button variant="outline" className="relative bg-transparent">
             <Filter className="mr-2 h-4 w-4" />
-            Chủ đề
-            {filter.topics.length > 0 && (
+            Tags
+            {filter.tags.length > 0 && (
               <Badge className="ml-2 h-5 w-5 p-0 text-xs">
-                {filter.topics.length}
+                {filter.tags.length}
               </Badge>
             )}
             <ChevronDown className="ml-2 h-4 w-4" />
@@ -86,13 +86,13 @@ export function CourseFilter({ filter, onFilterChange }: CourseFilterProps) {
         </PopoverTrigger>
         <PopoverContent className="w-64" align="start">
           <div className="space-y-2">
-            <h4 className="font-medium">Chọn chủ đề</h4>
+            <h4 className="font-medium">Select Tags</h4>
             <div className="max-h-48 space-y-2 overflow-y-auto">
               {mockTopics.map((topic) => (
                 <div key={topic} className="flex items-center space-x-2">
                   <Checkbox
                     id={`topic-${topic}`}
-                    checked={filter.topics.includes(topic)}
+                    checked={filter.tags.includes(topic)}
                     onCheckedChange={(checked) =>
                       handleTopicChange(topic, checked as boolean)
                     }
@@ -114,7 +114,7 @@ export function CourseFilter({ filter, onFilterChange }: CourseFilterProps) {
       <Popover open={isLevelOpen} onOpenChange={setIsLevelOpen}>
         <PopoverTrigger asChild>
           <Button variant="outline" className="relative bg-transparent">
-            Cấp độ
+            Level
             {filter.level.length > 0 && (
               <Badge className="ml-2 h-5 w-5 p-0 text-xs">
                 {filter.level.length}
@@ -125,7 +125,7 @@ export function CourseFilter({ filter, onFilterChange }: CourseFilterProps) {
         </PopoverTrigger>
         <PopoverContent className="w-48" align="start">
           <div className="space-y-2">
-            <h4 className="font-medium">Chọn cấp độ</h4>
+            <h4 className="font-medium">Select Level</h4>
             <div className="space-y-2">
               {levels.map((level) => (
                 <div key={level.value} className="flex items-center space-x-2">

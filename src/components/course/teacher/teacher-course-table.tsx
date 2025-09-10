@@ -161,12 +161,12 @@ export function TeacherCourseTable({ courses }: TeacherCourseTableProps) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Khóa học</TableHead>
-              <TableHead>Cấp độ</TableHead>
-              <TableHead>Trạng thái</TableHead>
-              <TableHead>Bài học</TableHead>
-              <TableHead>Ngày tạo</TableHead>
-              <TableHead>Cập nhật</TableHead>
+              <TableHead>Course</TableHead>
+              <TableHead>Level</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Lessons</TableHead>
+              <TableHead>Created At</TableHead>
+              <TableHead>Updated At</TableHead>
               <TableHead className="w-[50px]" />
             </TableRow>
           </TableHeader>
@@ -188,7 +188,7 @@ export function TeacherCourseTable({ courses }: TeacherCourseTableProps) {
                         {course.shortDescription}
                       </div>
                       <div className="mt-1 flex flex-wrap gap-1">
-                        {course.topics.slice(0, 2).map((topic) => (
+                        {course.tags.slice(0, 2).map((topic) => (
                           <Badge
                             key={topic}
                             variant="secondary"
@@ -197,9 +197,9 @@ export function TeacherCourseTable({ courses }: TeacherCourseTableProps) {
                             {topic}
                           </Badge>
                         ))}
-                        {course.topics.length > 2 && (
+                        {course.tags.length > 2 && (
                           <Badge variant="secondary" className="text-xs">
-                            +{course.topics.length - 2}
+                            +{course.tags.length - 2}
                           </Badge>
                         )}
                       </div>

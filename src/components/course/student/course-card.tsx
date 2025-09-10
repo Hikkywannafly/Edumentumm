@@ -18,11 +18,11 @@ export function CourseCard({ course }: CourseCardProps) {
   const getLevelText = (level: string) => {
     switch (level) {
       case "basic":
-        return "Cơ bản";
+        return "Basic";
       case "intermediate":
-        return "Trung bình";
+        return "Intermediate";
       case "advanced":
-        return "Nâng cao";
+        return "Advanced";
       default:
         return level;
     }
@@ -85,9 +85,9 @@ export function CourseCard({ course }: CourseCardProps) {
       {/* Content */}
       <CardHeader className="flex-1">
         <div className="mb-2 flex flex-wrap gap-1">
-          {course.topics.slice(0, 2).map((topic) => (
-            <Badge key={topic} variant="secondary" className="text-xs">
-              {topic}
+          {course.tags.slice(0, 2).map((tags) => (
+            <Badge key={tags} variant="secondary" className="text-xs">
+              {tags}
             </Badge>
           ))}
         </div>

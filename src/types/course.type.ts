@@ -6,7 +6,7 @@ export interface Course {
   level: "basic" | "intermediate" | "advanced";
   thumbnail: string;
   status: "draft" | "published";
-  topics: string[];
+  tags: string[];
   teacherId: string;
   teacherName: string;
   createdAt: Date;
@@ -20,9 +20,9 @@ export interface Course {
 
 export interface ICourseFilter {
   search: string;
-  topics: string[];
+  tags: string[];
   level: string[];
-  sortBy: "newest" | "popular" | "level";
+  sortBy: "price" | "popular" | "level";
 }
 
 export interface Lesson {

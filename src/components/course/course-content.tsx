@@ -14,7 +14,7 @@ export default function CourseContent() {
       <div className="flex min-h-[400px] items-center justify-center">
         <div className="text-center">
           <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-primary border-b-2" />
-          <p className="text-muted-foreground">Đang tải...</p>
+          <p className="text-muted-foreground">Loading...</p>
         </div>
       </div>
     );
@@ -27,9 +27,9 @@ export default function CourseContent() {
           <CardContent className="pt-6">
             <div className="text-center">
               <AlertTriangle className="mx-auto mb-4 h-12 w-12 text-yellow-500" />
-              <h3 className="mb-2 font-semibold text-lg">Chưa đăng nhập</h3>
+              <h3 className="mb-2 font-semibold text-lg">Not Logged In</h3>
               <p className="text-muted-foreground">
-                Vui lòng đăng nhập để truy cập khóa học.
+                Please log in to access the course.
               </p>
             </div>
           </CardContent>
@@ -55,10 +55,10 @@ export default function CourseContent() {
         <CardContent className="pt-6">
           <div className="text-center">
             <AlertTriangle className="mx-auto mb-4 h-12 w-12 text-red-500" />
-            <h3 className="mb-2 font-semibold text-lg">Truy cập bị từ chối</h3>
+            <h3 className="mb-2 font-semibold text-lg">Access Denied</h3>
             <p className="text-muted-foreground">
-              Bạn không có quyền truy cập vào trang này. Vui lòng liên hệ quản
-              trị viên.
+              You do not have permission to access this page. Please contact the
+              administrator.
             </p>
           </div>
         </CardContent>
