@@ -72,10 +72,12 @@
       "completionRate": "Completion Rate"
     },
     "quickActions": {
+      "title": "Quick Actions",
       "createCourse": "Create Course",
       "addStudent": "Add Student",
       "generateReport": "Generate Report",
-      "sendNotification": "Send Notification"
+      "sendNotification": "Send Notification",
+      "goToQuizzes": "Go to Quizzes"
     }
   },
   "Courses": {

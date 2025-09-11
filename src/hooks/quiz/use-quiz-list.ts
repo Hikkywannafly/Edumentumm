@@ -100,8 +100,10 @@ function convertToDisplayData(backendQuiz: any): QuizDisplayData {
   };
 }
 
-// Main hook for fetching quiz list with pagination, filtering, and sorting
-export function useQuizList(params: QuizListParams = {}) {
+// Fetch quiz list data from API
+async function fetchQuizList(
+  params: QuizListParams,
+): Promise<QuizListResponse> {
   const {
     page = 0,
     size = 10,
@@ -124,6 +126,53 @@ export function useQuizList(params: QuizListParams = {}) {
     ...(visibility && { visibility }),
   });
 
+  const accessToken = localStorage.getItem("accessToken");
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+
+  if (accessToken) {
+    headers.Authorization = `Bearer ${accessToken}`;
+  }
+
+  const response = await fetch(`/api/quiz?${queryParams}`, {
+    headers,
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch quiz list: ${response.status}`);
+  }
+
+  const result: ApiResponse = await response.json();
+  if (!result.success) {
+    throw new Error(result.data?.toString() || "Failed to fetch quiz list");
+  }
+  const convertedContent = result.data.content.map((quiz: any) => {
+    if ("slug" in quiz && "viewCount" in quiz) {
+      return quiz as QuizDisplayData;
+    }
+    return convertToDisplayData(quiz as BackendQuizEntity);
+  });
+
+  return {
+    ...result.data,
+    content: convertedContent,
+  };
+}
+
+// Main hook for fetching quiz list with pagination, filtering, and sorting
+export function useQuizList(params: QuizListParams = {}) {
+  const {
+    page = 0,
+    size = 10,
+    search,
+    difficulty,
+    status,
+    visibility,
+    sortBy = "createdAt",
+    sortDirection = "desc",
+  } = params;
+
   return useQuery<QuizListResponse, Error>({
     queryKey: QUIZ_QUERY_KEYS.list({
       page,
@@ -135,45 +184,49 @@ export function useQuizList(params: QuizListParams = {}) {
       sortBy,
       sortDirection,
     }),
-    queryFn: async (): Promise<QuizListResponse> => {
-      const accessToken = localStorage.getItem("accessToken");
-      const headers: Record<string, string> = {
-        "Content-Type": "application/json",
-      };
-
-      if (accessToken) {
-        headers.Authorization = `Bearer ${accessToken}`;
-      }
-
-      const response = await fetch(`/api/quiz?${queryParams}`, {
-        headers,
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch quiz list: ${response.status}`);
-      }
-
-      const result: ApiResponse = await response.json();
-      if (!result.success) {
-        throw new Error(result.data?.toString() || "Failed to fetch quiz list");
-      }
-      const convertedContent = result.data.content.map((quiz: any) => {
-        if ("slug" in quiz && "viewCount" in quiz) {
-          return quiz as QuizDisplayData;
-        }
-        return convertToDisplayData(quiz as BackendQuizEntity);
-      });
-
-      return {
-        ...result.data,
-        content: convertedContent,
-      };
-    },
+    queryFn: () => fetchQuizList(params),
     refetchOnWindowFocus: false,
     staleTime: 1 * 60 * 1000, // 1 minute
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
+}
+
+// Hook for prefetching quiz list data
+export function usePrefetchQuizList() {
+  const queryClient = useQueryClient();
+
+  return async (params: QuizListParams = {}) => {
+    const {
+      page = 0,
+      size = 10,
+      search,
+      difficulty,
+      status,
+      visibility,
+      sortBy = "createdAt",
+      sortDirection = "desc",
+    } = params;
+
+    try {
+      await queryClient.prefetchQuery({
+        queryKey: QUIZ_QUERY_KEYS.list({
+          page,
+          size,
+          search,
+          difficulty,
+          status,
+          visibility,
+          sortBy,
+          sortDirection,
+        }),
+        queryFn: () => fetchQuizList(params),
+        staleTime: 1 * 60 * 1000, // 1 minute
+      });
+    } catch (error) {
+      console.warn("Failed to prefetch quiz data:", error);
+    }
+  };
 }
 
 // Hook for fetching quiz statistics

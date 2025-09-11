@@ -116,10 +116,12 @@
       "completionRate": "Tỷ lệ hoàn thành"
     },
     "quickActions": {
+      "title": "Hành động nhanh",
       "createCourse": "Tạo khóa học",
       "addStudent": "Thêm học sinh",
       "generateReport": "Tạo báo cáo",
-      "sendNotification": "Gửi thông báo"
+      "sendNotification": "Gửi thông báo",
+      "goToQuizzes": "Đi đến Quizzes"
     }
   },
   "Courses": {

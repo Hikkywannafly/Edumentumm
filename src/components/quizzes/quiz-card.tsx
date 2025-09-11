@@ -10,6 +10,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import type { QuizCardProps } from "@/types/quiz-display";
 import {
   ArrowRight,
@@ -141,24 +146,55 @@ export function QuizCard({ quiz, onDelete, onEdit, onView }: QuizCardProps) {
         )}
 
         {quiz.keywords.length > 0 && (
-          <div className="mb-6 flex flex-wrap gap-1.5">
-            {quiz.keywords.slice(0, 3).map((keyword, index) => (
-              <Badge
-                key={index}
-                variant="secondary"
-                className="bg-muted font-normal text-muted-foreground text-xs hover:bg-muted/80"
-              >
-                {keyword}
-              </Badge>
-            ))}
-            {quiz.keywords.length > 3 && (
-              <Badge
-                variant="secondary"
-                className="bg-muted font-normal text-muted-foreground text-xs"
-              >
-                +{quiz.keywords.length - 3}
-              </Badge>
-            )}
+          <div className="mb-6">
+            <div className="flex flex-wrap gap-1.5">
+              {quiz.keywords.slice(0, 2).map((keyword, index) => (
+                <Tooltip key={index}>
+                  <TooltipTrigger asChild>
+                    <Badge
+                      variant="secondary"
+                      className="max-w-[120px] cursor-default truncate bg-muted/80 font-normal text-muted-foreground text-xs transition-colors hover:bg-muted/90"
+                    >
+                      {keyword}
+                    </Badge>
+                  </TooltipTrigger>
+                  <TooltipContent
+                    side="top"
+                    className="border border-border/80 bg-popover px-2.5 py-1.5 text-popover-foreground text-xs shadow-sm"
+                  >
+                    <p>{keyword}</p>
+                  </TooltipContent>
+                </Tooltip>
+              ))}
+              {quiz.keywords.length > 2 && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Badge
+                      variant="secondary"
+                      className="cursor-pointer bg-muted/80 font-normal text-muted-foreground text-xs transition-colors hover:bg-muted/90"
+                    >
+                      +{quiz.keywords.length - 2} more
+                    </Badge>
+                  </TooltipTrigger>
+                  <TooltipContent
+                    side="bottom"
+                    className="max-w-xs border border-border/80 bg-popover p-2 text-popover-foreground shadow-lg"
+                  >
+                    <div className="grid grid-cols-1 gap-1.5">
+                      {quiz.keywords.slice(2).map((keyword, index) => (
+                        <Badge
+                          key={index}
+                          variant="secondary"
+                          className="justify-start truncate bg-muted/50 font-normal text-muted-foreground text-xs transition-colors hover:bg-muted/60"
+                        >
+                          {keyword}
+                        </Badge>
+                      ))}
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
+              )}
+            </div>
           </div>
         )}
 

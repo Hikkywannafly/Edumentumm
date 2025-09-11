@@ -45,7 +45,7 @@ export default async function HomePage({
           <ScrollAnimation direction="up" delay={0.8} distance={30}>
             <div className="flex flex-col justify-center gap-4 sm:flex-row">
               <Button size="lg" className="px-8 text-lg" asChild>
-                <Link href={`/${locale}/quizzes`}>
+                <Link href={`/${locale}/quizzes`} prefetch>
                   <Play className="mr-2 h-5 w-5" />
                   {t("startLearning")}
                 </Link>
