@@ -35,7 +35,6 @@ export function QuizNavigation({
       currentQuestionResult: currentQuestionResult ?? null,
     });
 
-  // Calculate isAnswered in the component since we need the question ID
   const isAnswered = useMemo(() => {
     if (!currentQuestionId) return false;
     return answers.some((a) => a.questionId === currentQuestionId);
@@ -69,10 +68,8 @@ export function QuizNavigation({
     setShowDeleteDialog(false);
   };
 
-  const handleShare = () => {
-    // Share functionality
-  };
-  // Render feedback UI when needed
+  const handleShare = () => {};
+
   if (showFeedbackUI && currentQuestionResult) {
     return (
       <QuizFeedback

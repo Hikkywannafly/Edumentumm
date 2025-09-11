@@ -73,12 +73,12 @@ export function QuizResult({ result, quiz, onRetake }: QuizResultProps) {
             <Badge
               className={`px-4 py-2 text-lg ${getScoreBadgeColor(result.percentage)}`}
             >
-              {result.score}/{result.maxScore} points
+              {result.score || 0}/{result.maxScore || 0} points
             </Badge>
             <Badge
-              className={`px-4 py-2 text-lg ${getScoreBadgeColor(result.percentage)}`}
+              className={`px-4 py-2 text-lg ${getScoreBadgeColor(result.percentage || 0)}`}
             >
-              {result.percentage.toFixed(1)}%
+              {(result.percentage || 0).toFixed(1)}%
             </Badge>
           </div>
         </CardContent>
@@ -90,9 +90,9 @@ export function QuizResult({ result, quiz, onRetake }: QuizResultProps) {
           <CardContent className="p-6 text-center">
             <Award className="mx-auto mb-3 h-8 w-8 text-blue-600" />
             <div
-              className={`font-bold text-2xl ${getScoreColor(result.percentage)}`}
+              className={`font-bold text-2xl ${getScoreColor(result.percentage || 0)}`}
             >
-              {result.percentage.toFixed(1)}%
+              {(result.percentage || 0).toFixed(1)}%
             </div>
             <p className="text-muted-foreground text-sm">Final Score</p>
           </CardContent>
@@ -102,7 +102,7 @@ export function QuizResult({ result, quiz, onRetake }: QuizResultProps) {
           <CardContent className="p-6 text-center">
             <CheckCircle className="mx-auto mb-3 h-8 w-8 text-green-600" />
             <div className="font-bold text-2xl text-foreground">
-              {result.correctAnswers}/{result.totalQuestions}
+              {result.correctAnswers || 0}/{result.totalQuestions || 0}
             </div>
             <p className="text-muted-foreground text-sm">Correct Answers</p>
           </CardContent>
@@ -112,7 +112,7 @@ export function QuizResult({ result, quiz, onRetake }: QuizResultProps) {
           <CardContent className="p-6 text-center">
             <Clock className="mx-auto mb-3 h-8 w-8 text-purple-600" />
             <div className="font-bold text-2xl text-foreground">
-              {formatTime(result.timeSpent)}
+              {formatTime(result.timeSpent || 0)}
             </div>
             <p className="text-muted-foreground text-sm">Time Spent</p>
           </CardContent>
@@ -132,7 +132,8 @@ export function QuizResult({ result, quiz, onRetake }: QuizResultProps) {
                       Congratulations! You passed!
                     </p>
                     <p className="text-muted-foreground text-sm">
-                      You scored above the passing score of {quiz.passingScore}%
+                      You scored above the passing score of{" "}
+                      {quiz.passingScore || 70}%
                     </p>
                   </div>
                 </>
@@ -144,15 +145,15 @@ export function QuizResult({ result, quiz, onRetake }: QuizResultProps) {
                       You didn't pass this time
                     </p>
                     <p className="text-muted-foreground text-sm">
-                      You need {quiz.passingScore}% to pass. Keep studying and
-                      try again!
+                      You need {quiz.passingScore || 70}% to pass. Keep studying
+                      and try again!
                     </p>
                   </div>
                 </>
               )}
             </div>
             <TrendingUp
-              className={`h-6 w-6 ${result.passed ? "text-green-600" : "text-red-600"}`}
+              className={`h-6 w-6 ${result.passed || false ? "text-green-600" : "text-red-600"}`}
             />
           </div>
         </CardContent>
