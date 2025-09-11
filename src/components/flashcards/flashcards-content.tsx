@@ -35,7 +35,6 @@ export function FlashcardsContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
-  // const queryClient = useQueryClient();
 
   // Get values from URL search params
   const currentPage = Number(searchParams.get("page")) || 1;
@@ -144,14 +143,6 @@ export function FlashcardsContent() {
   const handleSearchChange = (value: string) => {
     setSearchInput(value);
   };
-
-  // Function to force refresh when needed (use after)
-  // const refreshFlashcards = () => {
-  //   queryClient.invalidateQueries({
-  //     queryKey: ["flashcards"],
-  //     refetchType: "active",
-  //   });
-  // };
 
   // Show loading skeleton on initial load
   const isInitialLoad = isLoading && !flashcardsResponse;
