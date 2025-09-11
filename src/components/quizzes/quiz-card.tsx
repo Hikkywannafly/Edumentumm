@@ -10,6 +10,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import type { QuizCardProps } from "@/types/quiz-display";
 import {
   ArrowRight,
@@ -17,9 +22,10 @@ import {
   Clock,
   Edit,
   Eye,
+  FileCheck2,
   MoreVertical,
   Trash2,
-  Users,
+  TrendingUp,
 } from "lucide-react";
 
 export function QuizCard({ quiz, onDelete, onEdit, onView }: QuizCardProps) {
@@ -34,6 +40,24 @@ export function QuizCard({ quiz, onDelete, onEdit, onView }: QuizCardProps) {
       default:
         return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200 border-gray-200 dark:border-gray-700";
     }
+  };
+
+  const formatBestScore = () => {
+    if (
+      quiz.attemptCount > 0 &&
+      quiz.bestCorrectAnswers !== undefined &&
+      quiz.totalQuestions > 0
+    ) {
+      const bestScore = Math.round(
+        (quiz.bestCorrectAnswers / quiz.totalQuestions) * 100,
+      );
+      return `Best: ${bestScore}% (${quiz.attemptCount} ${quiz.attemptCount === 1 ? "attempt" : "attempts"})`;
+    }
+    if (quiz.attemptCount === 0) {
+      return "Not attempted yet";
+    }
+
+    return `(${quiz.attemptCount} ${quiz.attemptCount === 1 ? "attempt" : "attempts"})`;
   };
 
   const handleView = () => {
@@ -63,22 +87,20 @@ export function QuizCard({ quiz, onDelete, onEdit, onView }: QuizCardProps) {
             <h3 className="line-clamp-2 font-semibold text-foreground text-lg leading-tight">
               {quiz.title}
             </h3>
-            <div className="flex items-center gap-3 text-muted-foreground text-sm">
-              <div className="flex items-center gap-1">
-                <Badge
-                  variant="outline"
-                  className={`${getDifficultyColor(quiz.difficulty)} font-medium text-xs`}
-                >
-                  {quiz.difficulty}
-                </Badge>
-              </div>
-              <div className="flex items-center gap-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge
+                variant="outline"
+                className={`${getDifficultyColor(quiz.difficulty)} font-medium text-xs`}
+              >
+                {quiz.difficulty}
+              </Badge>
+              <div className="flex items-center gap-1 text-muted-foreground text-sm">
                 <BookOpen className="h-3.5 w-3.5" />
                 <span>{quiz.totalQuestions} questions</span>
               </div>
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1 text-muted-foreground text-sm">
                 <Clock className="h-3.5 w-3.5" />
-                <span>{quiz.estimatedTime}m</span>
+                <span>{new Date(quiz.createdAt).toLocaleDateString()}</span>
               </div>
             </div>
           </div>
@@ -114,45 +136,70 @@ export function QuizCard({ quiz, onDelete, onEdit, onView }: QuizCardProps) {
           </DropdownMenu>
         </div>
 
-        {/* Status & Privacy Indicators */}
-        <div className="mb-4 flex items-center justify-between">
-          <div className="flex items-center gap-1 text-muted-foreground text-sm">
-            <Users className="h-3.5 w-3.5" />
-            <span>{quiz.attemptCount} attempts</span>
+        {quiz.attemptCount > 0 && (
+          <div className="mb-4 flex items-center gap-2">
+            <TrendingUp className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
+            <span className="text-muted-foreground text-sm">
+              {formatBestScore()}
+            </span>
           </div>
-        </div>
+        )}
 
-        {quiz.tags.length > 0 && (
-          <div className="mb-6 flex flex-wrap gap-1.5">
-            {quiz.tags.slice(0, 2).map((tag, index) => {
-              // Handle both string tags and tag objects
-              const tagName =
-                typeof tag === "string"
-                  ? tag
-                  : (tag as any)?.name || String(tag);
-              return (
-                <Badge
-                  key={index}
-                  variant="secondary"
-                  className="bg-muted font-normal text-muted-foreground text-xs hover:bg-muted/80"
-                >
-                  {String(tagName)}
-                </Badge>
-              );
-            })}
-            {quiz.tags.length > 2 && (
-              <Badge
-                variant="secondary"
-                className="bg-muted font-normal text-muted-foreground text-xs"
-              >
-                +{quiz.tags.length - 2}
-              </Badge>
-            )}
+        {quiz.keywords.length > 0 && (
+          <div className="mb-6">
+            <div className="flex flex-wrap gap-1.5">
+              {quiz.keywords.slice(0, 2).map((keyword, index) => (
+                <Tooltip key={index}>
+                  <TooltipTrigger asChild>
+                    <Badge
+                      variant="secondary"
+                      className="max-w-[120px] cursor-default truncate bg-muted/80 font-normal text-muted-foreground text-xs transition-colors hover:bg-muted/90"
+                    >
+                      {keyword}
+                    </Badge>
+                  </TooltipTrigger>
+                  <TooltipContent
+                    side="top"
+                    className="border border-border/80 bg-popover px-2.5 py-1.5 text-popover-foreground text-xs shadow-sm"
+                  >
+                    <p>{keyword}</p>
+                  </TooltipContent>
+                </Tooltip>
+              ))}
+              {quiz.keywords.length > 2 && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Badge
+                      variant="secondary"
+                      className="cursor-pointer bg-muted/80 font-normal text-muted-foreground text-xs transition-colors hover:bg-muted/90"
+                    >
+                      +{quiz.keywords.length - 2} more
+                    </Badge>
+                  </TooltipTrigger>
+                  <TooltipContent
+                    side="bottom"
+                    className="max-w-xs border border-border/80 bg-popover p-2 text-popover-foreground shadow-lg"
+                  >
+                    <div className="grid grid-cols-1 gap-1.5">
+                      {quiz.keywords.slice(2).map((keyword, index) => (
+                        <Badge
+                          key={index}
+                          variant="secondary"
+                          className="justify-start truncate bg-muted/50 font-normal text-muted-foreground text-xs transition-colors hover:bg-muted/60"
+                        >
+                          {keyword}
+                        </Badge>
+                      ))}
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
+              )}
+            </div>
           </div>
         )}
 
         {/* Action Buttons */}
-        <div className="flex gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row">
           <Button
             variant="outline"
             size="sm"
@@ -164,9 +211,23 @@ export function QuizCard({ quiz, onDelete, onEdit, onView }: QuizCardProps) {
               Edit
             </LocalizedLink>
           </Button>
+
+          {quiz.attemptCount > 0 && (
+            <Button
+              variant="secondary"
+              size="sm"
+              className="flex-1 justify-center gap-2 font-medium"
+              asChild
+            >
+              <LocalizedLink href={`quizzes/${quiz.slug}-${quiz.id}/results`}>
+                <FileCheck2 className="h-4 w-4" />
+                View Results
+              </LocalizedLink>
+            </Button>
+          )}
           <Button
             size="sm"
-            className="flex-1 transform justify-center gap-2 bg-blue-600 font-medium text-white duration-200 hover:bg-blue-700 active:scale-95"
+            className="flex-1 justify-center gap-2 bg-blue-600 font-medium text-white hover:bg-blue-700"
             asChild
           >
             <LocalizedLink href={`quizzes/${quiz.slug}-${quiz.id}`}>

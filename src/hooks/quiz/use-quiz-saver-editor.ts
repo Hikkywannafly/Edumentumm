@@ -1,5 +1,6 @@
 "use client";
 
+import type { Tag } from "@/types/quiz";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import type { GeneratedQuiz, UseQuizSaverReturn } from "./quiz-editor-types";
@@ -11,7 +12,6 @@ export function useQuizSaverEditor(
 ): UseQuizSaverReturn {
   const queryClient = useQueryClient();
 
-  // Save quiz mutation
   const saveMutation = useMutation({
     mutationFn: async (): Promise<any> => {
       if (!quiz) throw new Error("No quiz to save");
@@ -45,9 +45,14 @@ export function useQuizSaverEditor(
 
       if (changedFields.metadata !== undefined) {
         payload.metadata = changedFields.metadata;
+        if (changedFields.metadata?.tags) {
+          payload.keywords = (changedFields.metadata.tags as Tag[]).map(
+            (tag) => (typeof tag === "string" ? tag : tag.name),
+          );
+        }
       }
 
-      console.log("Saving only changed fields:", payload);
+      console.log("Saving only changed fields:", JSON.stringify(payload));
 
       const response = await fetch(`/api/quiz/${quizId}`, {
         method: "PATCH",
@@ -64,9 +69,7 @@ export function useQuizSaverEditor(
 
       const result = await response.json();
 
-      // Handle the new API response structure
       if (result.success !== undefined) {
-        // New structure with success/message/data wrapper
         if (!result.success) {
           const errorMessage = result.message || "Failed to save quiz";
           toast.error(errorMessage);
@@ -76,7 +79,6 @@ export function useQuizSaverEditor(
         return result.data;
       }
 
-      // Old structure
       toast.success("Quiz saved successfully");
       return result;
     },

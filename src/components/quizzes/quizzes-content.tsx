@@ -10,6 +10,7 @@ import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import ThinLayout from "../layout/thin-layout";
+import WideContainer from "../layout/wide-layout";
 import { Button } from "../ui/button";
 import { Skeleton } from "../ui/skeleton";
 import { EmptyState } from "./empty-state";
@@ -39,8 +40,6 @@ export function QuizzesContent() {
 
   const [currentPage, setCurrentPage] = useState(0);
   const pageSize = 6;
-
-  // Fetch quiz list with pagination
   const {
     data: quizListData,
     isLoading,
@@ -95,7 +94,7 @@ export function QuizzesContent() {
 
   if (isLoading) {
     return (
-      <ThinLayout classNames="flex-1 space-y-6 p-6">
+      <WideContainer classNames="flex-1 space-y-6 p-6">
         <QuizFilters
           onSearch={handleSearch}
           onFilter={handleFilter}
@@ -140,7 +139,7 @@ export function QuizzesContent() {
             </div>
           ))}
         </div>
-      </ThinLayout>
+      </WideContainer>
     );
   }
 

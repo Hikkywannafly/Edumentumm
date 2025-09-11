@@ -1,18 +1,24 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useQuizPrefetch } from "@/hooks/quiz/use-quiz-prefetch";
 import {
   Activity,
   BarChart3,
-  Bell,
   BookOpen,
   Plus,
   TrendingUp,
   Users,
 } from "lucide-react";
-import { getTranslations } from "next-intl/server";
+import { useTranslations } from "next-intl";
+import Link from "next/link";
 
-export default async function DashboardContent() {
-  const t = await getTranslations("Dashboard");
+export default function DashboardContent() {
+  const t = useTranslations("Dashboard");
+
+  // Prefetch quiz data when dashboard loads
+  useQuizPrefetch();
 
   return (
     <div className="container mx-auto space-y-6 p-6">
@@ -84,10 +90,16 @@ export default async function DashboardContent() {
       {/* Quick Actions */}
       <Card>
         <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
+          <CardTitle>{t("quickActions.title")}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <Button variant="outline" className="h-20 flex-col" asChild>
+              <Link href="/quizzes" prefetch>
+                <BookOpen className="mb-2 h-6 w-6" />
+                {t("quickActions.goToQuizzes")}
+              </Link>
+            </Button>
             <Button variant="outline" className="h-20 flex-col">
               <Plus className="mb-2 h-6 w-6" />
               {t("quickActions.createCourse")}
@@ -99,10 +111,6 @@ export default async function DashboardContent() {
             <Button variant="outline" className="h-20 flex-col">
               <BarChart3 className="mb-2 h-6 w-6" />
               {t("quickActions.generateReport")}
-            </Button>
-            <Button variant="outline" className="h-20 flex-col">
-              <Bell className="mb-2 h-6 w-6" />
-              {t("quickActions.sendNotification")}
             </Button>
           </div>
         </CardContent>

@@ -104,9 +104,10 @@ export function QuizTakeContent({ quiz, mode = "QUIZ" }: QuizTakeContentProps) {
   const calculateResult = useCallback((): QuizResult => {
     let correctAnswers = 0;
     let totalScore = 0;
-    const maxScore = questions.reduce((sum, q) => sum + (q.points || 1), 0);
+    const maxScore =
+      questions?.reduce((sum, q) => sum + (q.points || 1), 0) || 0;
 
-    const detailedAnswers = questions.map((question) => {
+    const detailedAnswers = (questions || []).map((question) => {
       const userAnswer = answers.find((a) => a.questionId === question.id);
       const correctOptionId = question.correctAnswer || "";
       const isCorrect = userAnswer?.selectedOptionId === correctOptionId;
@@ -133,7 +134,7 @@ export function QuizTakeContent({ quiz, mode = "QUIZ" }: QuizTakeContentProps) {
       maxScore,
       percentage,
       correctAnswers,
-      totalQuestions: questions.length,
+      totalQuestions: questions?.length || 0,
       timeSpent,
       passed,
       answers: detailedAnswers,
@@ -157,27 +158,35 @@ export function QuizTakeContent({ quiz, mode = "QUIZ" }: QuizTakeContentProps) {
       // Submit to backend
       const review = await submitAttempt({ quizId: quiz.id, data: submitData });
 
+      // Log the review response for debugging
+      console.log("Quiz submission response:", review);
+
+      // Validate the review response
+      if (!review) {
+        throw new Error("Empty response from server");
+      }
+
       // Convert backend response to frontend format
       const quizResult: QuizResult = {
         score: review.score,
         maxScore: review.maxScore,
         percentage: review.finalScorePercent,
         correctAnswers: review.correct,
-        totalQuestions: review.questions.length,
+        totalQuestions: review.questions?.length || 0,
         timeSpent: review.timeSpentSec,
         passed: review.score >= (quiz.passingScore || 70), // Default to 70% if not set
-        answers: review.questions.map((q) => ({
+        answers: (review.questions || []).map((q) => ({
           questionId: q.questionId,
-          selectedOptionId: q.selectedOptionIds[0] || "",
-          correctOptionId: q.correctOptionIds[0] || "",
+          selectedOptionId: q.selectedOptionIds?.[0] || "",
+          correctOptionId: q.correctOptionIds?.[0] || "",
           isCorrect: q.isCorrect,
           question: {
             id: q.questionId,
             text: q.questionText,
             type: "MULTIPLE_CHOICE",
             points: q.pointsPossible,
-            options: q.options,
-            correctAnswer: q.correctOptionIds[0] || "",
+            options: q.options || [],
+            correctAnswer: q.correctOptionIds?.[0] || "",
             explanation: q.explanation,
           },
         })),
@@ -185,8 +194,29 @@ export function QuizTakeContent({ quiz, mode = "QUIZ" }: QuizTakeContentProps) {
 
       setResult(quizResult);
       setIsCompleted(true);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to submit quiz:", error);
+
+      if (error.response) {
+        console.error("Error response:", error.response);
+        // The request was made and the server responded with a status code
+        // that falls out of the range of 2xx
+        console.error("Error data:", error.response.data);
+        console.error("Error status:", error.response.status);
+        console.error("Error headers:", error.response.headers);
+      } else if (error.request) {
+        // The request was made but no response was received
+        console.error("Error request:", error.request);
+      } else {
+        // Something happened in setting up the request that triggered an Error
+        console.error("Error message:", error.message);
+      }
+
+      // Show user-friendly error message
+      alert(
+        "Failed to submit quiz. Please try again. Check console for details.",
+      );
+
       // Fallback to local calculation if backend fails
       const quizResult = calculateResult();
       setResult(quizResult);

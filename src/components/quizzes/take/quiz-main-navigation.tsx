@@ -49,9 +49,11 @@ export function QuizMainNavigation({
   onShare,
 }: QuizMainNavigationProps) {
   const [showWarning, setShowWarning] = useState(false);
+  const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
 
   const handleNext = () => {
     if (!isAnswered) {
+      setPendingAction(() => onNext);
       setShowWarning(true);
     } else {
       onNext();
@@ -60,9 +62,18 @@ export function QuizMainNavigation({
 
   const handleSubmit = () => {
     if (!isAnswered) {
+      setPendingAction(() => onSubmit);
       setShowWarning(true);
     } else {
       onSubmit();
+    }
+  };
+
+  const handleWarningConfirm = () => {
+    setShowWarning(false);
+    if (pendingAction) {
+      pendingAction();
+      setPendingAction(null);
     }
   };
 
@@ -164,7 +175,7 @@ export function QuizMainNavigation({
       <QuizWarningDialog
         open={showWarning}
         onOpenChange={setShowWarning}
-        onConfirm={() => setShowWarning(false)}
+        onConfirm={handleWarningConfirm}
         mode={mode as "QUIZ" | "EXAM"}
       />
     </div>
