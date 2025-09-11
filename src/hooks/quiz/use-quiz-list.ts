@@ -189,8 +189,16 @@ export function useQuizList(params: QuizListParams = {}) {
 
 export function usePrefetchQuizList() {
   const queryClient = useQueryClient();
+  const prefetchQuizDetail = usePrefetchQuizDetail();
+  const prefetchQuizEditor = usePrefetchQuizEditor();
 
-  return async (params: QuizListParams = {}) => {
+  return async (
+    params: QuizListParams = {},
+    options?: {
+      prefetchDetails?: boolean;
+      prefetchEditor?: boolean;
+    },
+  ) => {
     const {
       page = 0,
       size = 10,
@@ -217,8 +225,32 @@ export function usePrefetchQuizList() {
         queryFn: () => fetchQuizList(params),
         staleTime: 1 * 60 * 1000, // 1 minute
       });
+
+      // If prefetch details or editor is requested, fetch the data to get quiz IDs
+      if (options?.prefetchDetails || options?.prefetchEditor) {
+        try {
+          const data = await fetchQuizList(params);
+          const quizzes = data.content;
+
+          // Prefetch details for each quiz in the list
+          if (options.prefetchDetails) {
+            for (const quiz of quizzes) {
+              prefetchQuizDetail(quiz.id);
+            }
+          }
+
+          // Prefetch editor data for each quiz in the list
+          if (options.prefetchEditor) {
+            for (const quiz of quizzes) {
+              prefetchQuizEditor(String(quiz.id));
+            }
+          }
+        } catch (error) {
+          console.warn("Failed to prefetch quiz details/editor data:", error);
+        }
+      }
     } catch (error) {
-      console.warn("Failed to prefetch quiz data:", error);
+      console.warn("Failed to prefetch quiz list data:", error);
     }
   };
 }
@@ -277,7 +309,7 @@ export function usePrefetchQuizEditor() {
       }
 
       await queryClient.prefetchQuery({
-        queryKey: QUIZ_QUERY_KEYS.editing(id),
+        queryKey: ["quiz", id],
         queryFn: async () => {
           const response = await fetch(`/api/quiz/${id}`, {
             headers,
@@ -290,7 +322,35 @@ export function usePrefetchQuizEditor() {
           }
 
           const result = await response.json();
-          return result.data;
+
+          let data: any;
+          if (
+            typeof result === "object" &&
+            result !== null &&
+            "success" in result
+          ) {
+            if (!result.success) {
+              throw new Error(result.message || "Failed to load quiz");
+            }
+            data = result.data;
+          } else {
+            // Old structure, data is directly in result
+            data = result;
+          }
+
+          if (!data || typeof data !== "object" || !data.id) {
+            throw new Error("Invalid quiz data received from server");
+          }
+          if (!data.quizData) {
+            data.quizData = { questions: [] };
+          }
+
+          // Ensure questions array exists
+          if (!Array.isArray(data.quizData.questions)) {
+            data.quizData.questions = [];
+          }
+
+          return data;
         },
         staleTime: 5 * 60 * 1000, // 5 minutes
       });

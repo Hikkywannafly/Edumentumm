@@ -75,22 +75,42 @@ export function QuizzesContent() {
   // Prefetch next page when current page loads
   useEffect(() => {
     if (quizListData && !isFetching) {
+      // Prefetch details and editor data for quizzes in current page
+      for (const quiz of quizListData.content) {
+        prefetchQuizDetail(quiz.id);
+        prefetchQuizEditor(String(quiz.id));
+      }
+
       const totalPages = quizListData.totalPages;
       if (currentPage < totalPages - 1) {
         // Prefetch next page
-        prefetchQuizList({
-          page: currentPage + 1,
-          size: pageSize,
-          search: filters.search || undefined,
-          difficulty: filters.difficulty,
-          status: filters.status,
-          visibility: filters.visibility,
-          sortBy: filters.sortBy,
-          sortDirection: filters.sortDirection,
-        });
+        prefetchQuizList(
+          {
+            page: currentPage + 1,
+            size: pageSize,
+            search: filters.search || undefined,
+            difficulty: filters.difficulty,
+            status: filters.status,
+            visibility: filters.visibility,
+            sortBy: filters.sortBy,
+            sortDirection: filters.sortDirection,
+          },
+          {
+            prefetchDetails: true,
+            prefetchEditor: true,
+          },
+        );
       }
     }
-  }, [quizListData, isFetching, currentPage, filters, prefetchQuizList]);
+  }, [
+    quizListData,
+    isFetching,
+    currentPage,
+    filters,
+    prefetchQuizList,
+    prefetchQuizDetail,
+    prefetchQuizEditor,
+  ]);
 
   // Event handlers
   const handleSearch = (query: string) => {
