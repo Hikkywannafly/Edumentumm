@@ -2,6 +2,7 @@
 
 import DashboardLayout from "@/components/layout/dashboard-layout";
 import { PageHeaderClient } from "@/components/layout/page-header-client";
+import ThinLayout from "@/components/layout/thin-layout";
 import { LocalizedLink } from "@/components/localized-link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -13,7 +14,6 @@ import { extractIdFromSlug } from "@/utils/index";
 import { ArrowLeft, Play } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useState } from "react";
-import ThinLayout from "../../../../components/layout/thin-layout";
 export default function QuizDetailPage() {
   const params = useParams();
   const { navigate } = useLocalizedNavigation();

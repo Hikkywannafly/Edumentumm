@@ -19,7 +19,6 @@ import { OverviewCards } from "./overview-cards";
 import { PlansTab } from "./plans-tab";
 import { ReportsTab } from "./reports-tab";
 
-// Move static data to constants
 const STATIC_MEMBERS = [
   {
     id: 1,

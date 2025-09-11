@@ -87,11 +87,11 @@ export function QuizNavigation({
         onNext={onNext}
         onRetry={onRetry || (() => {})} // Provide default function if undefined
         onRestartQuiz={handleRestartQuiz}
+        onSubmit={onSubmit} // Pass onSubmit function
       />
     );
   }
 
-  // Render main navigation UI
   return (
     <>
       <QuizMainNavigation

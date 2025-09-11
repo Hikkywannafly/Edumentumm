@@ -1,8 +1,11 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
 import { useQuestionResults } from "@/hooks/quiz/use-question-results";
+import { useSubmitQuizAttempt } from "@/hooks/quiz/use-quiz-attempt";
 import type { BackendQuizEntity } from "@/types/quiz";
 import type { QuizAnswer, QuizResult, QuizTakeMode } from "@/types/quiz-take";
+import { Loader2 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { QuizHeader } from "./quiz-header";
 import { QuizNavigation } from "./quiz-navigation";
@@ -22,6 +25,9 @@ export function QuizTakeContent({ quiz, mode = "QUIZ" }: QuizTakeContentProps) {
   const [isCompleted, setIsCompleted] = useState(false);
   const [result, setResult] = useState<QuizResult | null>(null);
 
+  const { mutateAsync: submitAttempt, isPending: isSubmitting } =
+    useSubmitQuizAttempt();
+
   useEffect(() => {
     if (isCompleted) return;
 
@@ -35,24 +41,23 @@ export function QuizTakeContent({ quiz, mode = "QUIZ" }: QuizTakeContentProps) {
   const questions = quiz.quizData?.questions || [];
   const currentQuestion = questions[currentQuestionIndex];
 
-  // Use the new hook to manage question results
   const { getQuestionResult } = useQuestionResults({
     questions,
     answers,
   });
 
-  // Get the result for the current question
   const currentQuestionResult = currentQuestion
     ? getQuestionResult(currentQuestion.id)
     : null;
 
-  // Determine if we should show feedback for the current question
-  // In EXAM mode, we don't show feedback until the quiz is completed
   const showFeedback = mode === "QUIZ" && !!currentQuestionResult;
 
   const handleAnswerChange = useCallback(
     (optionId: string) => {
-      const questionId = currentQuestion.id;
+      const questionId = currentQuestion?.id;
+
+      // Ensure we have a valid question ID
+      if (!questionId) return;
 
       setAnswers((prev) => {
         const existing = prev.find((a) => a.questionId === questionId);
@@ -66,7 +71,7 @@ export function QuizTakeContent({ quiz, mode = "QUIZ" }: QuizTakeContentProps) {
         return [...prev, { questionId, selectedOptionId: optionId, timeSpent }];
       });
     },
-    [currentQuestion.id, timeSpent],
+    [currentQuestion?.id, timeSpent],
   );
 
   const handleNavigateToQuestion = useCallback(
@@ -121,7 +126,7 @@ export function QuizTakeContent({ quiz, mode = "QUIZ" }: QuizTakeContentProps) {
     });
 
     const percentage = maxScore > 0 ? (totalScore / maxScore) * 100 : 0;
-    const passed = percentage >= quiz.passingScore;
+    const passed = percentage >= (quiz.passingScore || 70); // Default to 70% if not set
 
     return {
       score: totalScore,
@@ -135,11 +140,67 @@ export function QuizTakeContent({ quiz, mode = "QUIZ" }: QuizTakeContentProps) {
     };
   }, [answers, questions, quiz.passingScore, timeSpent]);
 
-  const handleSubmit = useCallback(() => {
-    const quizResult = calculateResult();
-    setResult(quizResult);
-    setIsCompleted(true);
-  }, [calculateResult]);
+  const handleSubmit = useCallback(async () => {
+    try {
+      // Prepare data for submission
+      const submitData = {
+        answers: answers.map((a) => ({
+          questionId: a.questionId,
+          selectedOptionIds: [a.selectedOptionId],
+          timeSpent: a.timeSpent,
+        })),
+        startedAt: new Date(startTime).toISOString(),
+        completedAt: new Date().toISOString(),
+        timeSpentSec: timeSpent,
+      };
+
+      // Submit to backend
+      const review = await submitAttempt({ quizId: quiz.id, data: submitData });
+
+      // Convert backend response to frontend format
+      const quizResult: QuizResult = {
+        score: review.score,
+        maxScore: review.maxScore,
+        percentage: review.finalScorePercent,
+        correctAnswers: review.correct,
+        totalQuestions: review.questions.length,
+        timeSpent: review.timeSpentSec,
+        passed: review.score >= (quiz.passingScore || 70), // Default to 70% if not set
+        answers: review.questions.map((q) => ({
+          questionId: q.questionId,
+          selectedOptionId: q.selectedOptionIds[0] || "",
+          correctOptionId: q.correctOptionIds[0] || "",
+          isCorrect: q.isCorrect,
+          question: {
+            id: q.questionId,
+            text: q.questionText,
+            type: "MULTIPLE_CHOICE",
+            points: q.pointsPossible,
+            options: q.options,
+            correctAnswer: q.correctOptionIds[0] || "",
+            explanation: q.explanation,
+          },
+        })),
+      };
+
+      setResult(quizResult);
+      setIsCompleted(true);
+    } catch (error) {
+      console.error("Failed to submit quiz:", error);
+      // Fallback to local calculation if backend fails
+      const quizResult = calculateResult();
+      setResult(quizResult);
+      setIsCompleted(true);
+    }
+  }, [
+    answers,
+    calculateResult,
+    quiz.id,
+    quiz.passingScore,
+    startTime,
+    timeSpent,
+    submitAttempt,
+  ]);
 
   const handleRetake = useCallback(() => {
     setCurrentQuestionIndex(0);
@@ -155,7 +216,33 @@ export function QuizTakeContent({ quiz, mode = "QUIZ" }: QuizTakeContentProps) {
     (a) => a.questionId === currentQuestion?.id,
   );
 
-  // Show result screen
+  // Loading state
+  if (!quiz || !questions) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin" />
+          <p>Loading quiz...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (questions.length === 0) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-center">
+          <h2 className="mb-4 font-bold text-2xl">No Questions Available</h2>
+          <p className="mb-6 text-muted-foreground">
+            This quiz doesn't have any questions yet.
+          </p>
+          <Button onClick={handleBackToQuizzes}>Back to Quizzes</Button>
+        </div>
+      </div>
+    );
+  }
+
   if (isCompleted && result) {
     return (
       <div className="flex-1 p-6">
@@ -179,6 +266,7 @@ export function QuizTakeContent({ quiz, mode = "QUIZ" }: QuizTakeContentProps) {
           totalQuestions={questions.length}
           timeSpent={timeSpent}
           estimatedTime={quiz.estimatedTime}
+          mode={mode}
         />
       </div>
       <div className="mx-auto max-w-4xl flex-grow px-4 py-8">
@@ -211,11 +299,25 @@ export function QuizTakeContent({ quiz, mode = "QUIZ" }: QuizTakeContentProps) {
         questions={questions}
         quizId={quiz.id}
         onRetry={() => {
-          const questionId = currentQuestion.id;
-          setAnswers((prev) => prev.filter((a) => a.questionId !== questionId));
+          const questionId = currentQuestion?.id;
+          if (questionId) {
+            setAnswers((prev) =>
+              prev.filter((a) => a.questionId !== questionId),
+            );
+          }
         }}
-        quiz={quiz} // Pass the quiz object to access the slug
+        quiz={quiz}
       />
+
+      {/* Submission loading overlay */}
+      {isSubmitting && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="flex flex-col items-center gap-4 rounded-lg bg-white p-6 dark:bg-gray-800">
+            <Loader2 className="h-8 w-8 animate-spin" />
+            <p>Submitting your quiz...</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
