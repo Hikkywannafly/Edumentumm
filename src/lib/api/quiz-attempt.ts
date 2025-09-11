@@ -7,9 +7,6 @@ export interface SubmitAttemptRequest {
     selectedOptionIds: string[];
     timeSpent: number;
   }>;
-  startedAt?: string;
-  completedAt?: string;
-  timeSpentSec?: number;
 }
 
 // Response structure for attempt review

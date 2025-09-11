@@ -18,9 +18,14 @@ export interface QuizDisplayData {
   status: "DRAFT" | "PUBLISHED" | "ARCHIVED";
   visibility: "PUBLIC" | "PRIVATE";
   tags: (string | TagObjectDisplay)[];
+  keywords: string[];
   createdAt: string;
   viewCount: number;
   attemptCount: number;
+  bestCorrectAnswers?: number;
+  maxAttempts?: number;
+  publishedAt?: string | null;
+  lastAttemptAt?: string;
 }
 
 export interface QuizCardProps {

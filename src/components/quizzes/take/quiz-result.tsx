@@ -8,6 +8,8 @@ import {
   ArrowLeft,
   Award,
   CheckCircle,
+  ChevronDown,
+  ChevronUp,
   Clock,
   RotateCcw,
   Target,
@@ -16,9 +18,12 @@ import {
   XCircle,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 export function QuizResult({ result, quiz, onRetake }: QuizResultProps) {
   const router = useRouter();
+  const [expandedQuestion, setExpandedQuestion] = useState<number | null>(null);
+
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
@@ -46,6 +51,30 @@ export function QuizResult({ result, quiz, onRetake }: QuizResultProps) {
     if (percentage >= 65) return "Good effort! 👍";
     if (percentage >= 50) return "Keep practicing! 💪";
     return "Don't give up! Try again! 🚀";
+  };
+
+  const toggleQuestionExpansion = (index: number) => {
+    setExpandedQuestion(expandedQuestion === index ? null : index);
+  };
+
+  const getSelectedOptionText = (
+    questionId: string,
+    selectedOptionId: string,
+  ) => {
+    const question = quiz.quizData?.questions?.find((q) => q.id === questionId);
+    const option = question?.options?.find(
+      (opt) => opt.id === selectedOptionId,
+    );
+    return option ? option.text : "No answer selected";
+  };
+
+  const getCorrectOptionText = (
+    questionId: string,
+    correctOptionId: string,
+  ) => {
+    const question = quiz.quizData?.questions?.find((q) => q.id === questionId);
+    const option = question?.options?.find((opt) => opt.id === correctOptionId);
+    return option ? option.text : "Unknown";
   };
 
   return (
@@ -155,6 +184,156 @@ export function QuizResult({ result, quiz, onRetake }: QuizResultProps) {
             <TrendingUp
               className={`h-6 w-6 ${result.passed || false ? "text-green-600" : "text-red-600"}`}
             />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Review Answers Section */}
+      <Card className="border border-border/50 bg-card/50 backdrop-blur-sm">
+        <CardContent className="p-6">
+          <h2 className="mb-4 font-bold text-xl">Review Your Answers</h2>
+          <p className="mb-6 text-muted-foreground">
+            Check your answers and see explanations for each question
+          </p>
+
+          <div className="space-y-4">
+            {result.answers.map((answer, index) => {
+              const isExpanded = expandedQuestion === index;
+              const question = quiz.quizData?.questions?.find(
+                (q) => q.id === answer.questionId,
+              );
+
+              return (
+                <Card
+                  key={answer.questionId}
+                  className="border border-border/50"
+                >
+                  <CardContent className="p-4">
+                    <div
+                      className="flex cursor-pointer items-start justify-between"
+                      onClick={() => toggleQuestionExpansion(index)}
+                    >
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium">
+                            Question {index + 1}:
+                          </span>
+                          <h3 className="text-foreground">
+                            {question?.text || "Unknown question"}
+                          </h3>
+                        </div>
+                        <div className="mt-2 flex items-center gap-4">
+                          <div className="flex items-center gap-1">
+                            {answer.isCorrect ? (
+                              <CheckCircle className="h-4 w-4 text-green-600" />
+                            ) : (
+                              <XCircle className="h-4 w-4 text-red-600" />
+                            )}
+                            <span
+                              className={`text-sm ${answer.isCorrect ? "text-green-600" : "text-red-600"}`}
+                            >
+                              {answer.isCorrect ? "Correct" : "Incorrect"}
+                            </span>
+                          </div>
+                          <div className="text-sm">
+                            <span className="font-medium">Your answer:</span>{" "}
+                            <span
+                              className={
+                                answer.isCorrect
+                                  ? "text-green-600"
+                                  : "text-red-600"
+                              }
+                            >
+                              {getSelectedOptionText(
+                                answer.questionId,
+                                answer.selectedOptionId,
+                              )}
+                            </span>
+                          </div>
+                          {!answer.isCorrect && (
+                            <div className="text-sm">
+                              <span className="font-medium">
+                                Correct answer:
+                              </span>{" "}
+                              <span className="text-green-600">
+                                {getCorrectOptionText(
+                                  answer.questionId,
+                                  answer.correctOptionId,
+                                )}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <Button className="ml-2 p-1">
+                        {isExpanded ? (
+                          <ChevronUp className="h-5 w-5 text-muted-foreground" />
+                        ) : (
+                          <ChevronDown className="h-5 w-5 text-muted-foreground" />
+                        )}
+                      </Button>
+                    </div>
+
+                    {isExpanded && (
+                      <div className="mt-4 border-border/50 border-t pt-4">
+                        <div className="space-y-3">
+                          <div>
+                            <h4 className="font-medium">Explanation:</h4>
+                            <p className="mt-1 text-muted-foreground">
+                              {question?.explanation ||
+                                "No explanation available"}
+                            </p>
+                          </div>
+
+                          <div>
+                            <h4 className="font-medium">Options:</h4>
+                            <div className="mt-2 space-y-2">
+                              {question?.options?.map((option) => {
+                                const isUserSelected =
+                                  option.id === answer.selectedOptionId;
+                                const isCorrect =
+                                  option.id === answer.correctOptionId;
+
+                                return (
+                                  <div
+                                    key={option.id}
+                                    className={`rounded-md p-2 ${
+                                      isUserSelected
+                                        ? isCorrect
+                                          ? "bg-green-100 dark:bg-green-900/30"
+                                          : "bg-red-100 dark:bg-red-900/30"
+                                        : isCorrect
+                                          ? "bg-green-100 dark:bg-green-900/30"
+                                          : "bg-muted"
+                                    }`}
+                                  >
+                                    <div className="flex items-center gap-2">
+                                      {isUserSelected && (
+                                        <span className="font-medium">
+                                          {isCorrect
+                                            ? "✓ Your answer"
+                                            : "✗ Your answer"}
+                                        </span>
+                                      )}
+                                      {isCorrect && !isUserSelected && (
+                                        <span className="font-medium text-green-600">
+                                          ✓ Correct answer
+                                        </span>
+                                      )}
+                                      <span>{option.text}</span>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         </CardContent>
       </Card>

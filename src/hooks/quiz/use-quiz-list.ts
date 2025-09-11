@@ -52,23 +52,29 @@ interface QuizStatsData {
 }
 
 // Convert backend quiz entity to display format
-function convertToDisplayData(backendQuiz: BackendQuizEntity): QuizDisplayData {
+function convertToDisplayData(backendQuiz: any): QuizDisplayData {
   // Extract tags - handle both string arrays and tag objects
   const tags: (string | any)[] = backendQuiz.tags
-    ? backendQuiz.tags.map((tag) => {
+    ? backendQuiz.tags.map((tag: any) => {
         if (typeof tag === "string") {
           return tag;
         }
-        // For tag objects, preserve the structure for display
+
         return {
-          id: (tag as any).id,
-          name: (tag as any).name || tag,
-          slug: (tag as any).slug,
-          icon: (tag as any).icon,
-          color: (tag as any).color,
-          description: (tag as any).description,
+          id: tag.id,
+          name: tag.name || tag,
+          slug: tag.slug,
+          icon: tag.icon,
+          color: tag.color,
+          description: tag.description,
         };
       })
+    : [];
+
+  const keywords: string[] = backendQuiz.keywords
+    ? Array.isArray(backendQuiz.keywords)
+      ? backendQuiz.keywords
+      : []
     : [];
 
   return {
@@ -77,14 +83,20 @@ function convertToDisplayData(backendQuiz: BackendQuizEntity): QuizDisplayData {
     description: backendQuiz.description || "",
     slug: backendQuiz.slug,
     difficulty: backendQuiz.difficulty,
-    totalQuestions: backendQuiz.totalQuestions,
-    estimatedTime: backendQuiz.estimatedTime,
-    status: backendQuiz.status,
-    visibility: backendQuiz.visibility as "PUBLIC" | "PRIVATE",
+    totalQuestions: backendQuiz.totalQuestions || 0,
+    estimatedTime: backendQuiz.estimatedTime || 0,
+    status: backendQuiz.status || "DRAFT",
+    visibility: (backendQuiz.visibility as "PUBLIC" | "PRIVATE") || "PRIVATE",
     tags,
+    keywords,
     createdAt: backendQuiz.createdAt,
     viewCount: backendQuiz.viewCount || 0,
-    attemptCount: backendQuiz.attemptCount || 0,
+    attemptCount: backendQuiz.totalAttempts || backendQuiz.attemptCount || 0,
+    bestCorrectAnswers: backendQuiz.bestCorrectAnswers || undefined,
+    // Additional fields from backend
+    maxAttempts: backendQuiz.maxAttempts,
+    publishedAt: backendQuiz.publishedAt,
+    lastAttemptAt: backendQuiz.lastAttemptAt,
   };
 }
 

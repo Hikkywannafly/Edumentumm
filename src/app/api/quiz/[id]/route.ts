@@ -12,6 +12,7 @@ const UpdateQuizSchema = z.object({
       tags: z.array(z.string()).optional(),
     })
     .optional(),
+  keywords: z.array(z.string()).optional(),
 });
 
 // Helper function to validate quiz ID
@@ -132,6 +133,11 @@ export async function PUT(
       }));
     }
 
+    // Handle keywords if provided
+    if (validated.data.keywords) {
+      updatePayload.keywords = validated.data.keywords;
+    }
+
     const response = await apiClient.put(
       `/student/quizzes/${quizId}`,
       updatePayload,
@@ -222,6 +228,11 @@ export async function PATCH(
         icon: "",
         color: "",
       }));
+    }
+
+    // Handle keywords if provided
+    if (validated.data.keywords !== undefined) {
+      updatePayload.keywords = validated.data.keywords;
     }
 
     console.log("PATCH Quiz update payload:", updatePayload);
