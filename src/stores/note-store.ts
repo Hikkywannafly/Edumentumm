@@ -127,7 +127,7 @@ export const useNoteStore = create<NoteState>()(
               return {
                 ...note,
                 blocks: [...note.blocks, block],
-                totalBlocks: note.totalBlocks + 1,
+                totalBlocks: (note.totalBlocks ?? 0) + 1,
               };
             }
             return note;
@@ -138,7 +138,7 @@ export const useNoteStore = create<NoteState>()(
               ? {
                   ...state.currentNote,
                   blocks: [...state.currentNote.blocks, block],
-                  totalBlocks: state.currentNote.totalBlocks + 1,
+                  totalBlocks: (state.currentNote.totalBlocks ?? 0) + 1,
                 }
               : state.currentNote;
 
@@ -191,7 +191,7 @@ export const useNoteStore = create<NoteState>()(
               return {
                 ...note,
                 blocks: filterBlocks(note.blocks),
-                totalBlocks: Math.max(0, note.totalBlocks - 1),
+                totalBlocks: Math.max(0, (note.totalBlocks ?? 0) - 1),
               };
             }
             return note;
@@ -202,7 +202,10 @@ export const useNoteStore = create<NoteState>()(
               ? {
                   ...state.currentNote,
                   blocks: filterBlocks(state.currentNote.blocks),
-                  totalBlocks: Math.max(0, state.currentNote.totalBlocks - 1),
+                  totalBlocks: Math.max(
+                    0,
+                    (state.currentNote.totalBlocks ?? 0) - 1,
+                  ),
                 }
               : state.currentNote;
 
