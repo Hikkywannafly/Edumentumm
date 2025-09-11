@@ -16,6 +16,7 @@ interface QuizFeedbackProps {
   onNext: () => void;
   onRetry: () => void;
   onRestartQuiz: () => void;
+  onSubmit?: () => void; // Add onSubmit prop
 }
 
 export function QuizFeedback({
@@ -29,6 +30,7 @@ export function QuizFeedback({
   onNext,
   onRetry,
   onRestartQuiz,
+  onSubmit, // Destructure onSubmit prop
 }: QuizFeedbackProps) {
   const [showExplanation, setShowExplanation] = useState(false);
 
@@ -153,7 +155,7 @@ export function QuizFeedback({
               <span>Retry</span>
             </Button>
           )}
-          {hasNextQuestion && (
+          {hasNextQuestion ? (
             <Button
               variant="default"
               size="sm"
@@ -164,6 +166,19 @@ export function QuizFeedback({
               className={`flex min-w-0 flex-1 items-center rounded-2xl px-3 text-white sm:min-w-fit sm:flex-initial ${isCorrect ? "bg-green-600 hover:bg-green-600 dark:bg-green-700 dark:hover:bg-green-700" : "bg-red-600 hover:bg-red-600 dark:bg-red-700 dark:hover:bg-red-700"}`}
             >
               <span className="truncate">Next</span>
+              <ArrowRight className="ml-2 h-4 w-4 shrink-0" />
+            </Button>
+          ) : (
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() => {
+                onSubmit && onSubmit();
+                setShowExplanation(false);
+              }}
+              className={`flex min-w-0 flex-1 items-center rounded-2xl px-3 text-white sm:min-w-fit sm:flex-initial ${isCorrect ? "bg-green-600 hover:bg-green-600 dark:bg-green-700 dark:hover:bg-green-700" : "bg-red-600 hover:bg-red-600 dark:bg-red-700 dark:hover:bg-red-700"}`}
+            >
+              <span className="truncate">Submit</span>
               <ArrowRight className="ml-2 h-4 w-4 shrink-0" />
             </Button>
           )}

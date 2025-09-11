@@ -29,6 +29,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { useSidebarContext } from "@/contexts/sidebar-context";
+import { usePrefetchQuizList } from "@/hooks/quiz/use-quiz-list";
 import { LocalizedLink } from "../localized-link";
 
 type MenuItem = {
@@ -136,6 +137,7 @@ export function AppSidebar() {
   const { isPinned, isHovered, setIsPinned, setIsHovered, isExpanded } =
     useSidebarContext();
   const timeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+  const prefetchQuizList = usePrefetchQuizList();
 
   // Suppress ResizeObserver errors
   React.useEffect(() => {
@@ -186,6 +188,16 @@ export function AppSidebar() {
       }
     };
   }, []);
+
+  const handleQuizMenuHover = () => {
+    // Prefetch quiz data when user hovers over the quizzes menu item
+    prefetchQuizList({
+      page: 0,
+      size: 10,
+      sortBy: "createdAt",
+      sortDirection: "desc",
+    });
+  };
 
   const textVisibility = isExpanded
     ? "opacity-100"
@@ -266,6 +278,14 @@ export function AppSidebar() {
                             <LocalizedLink
                               href={item.url}
                               className="peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm outline-none transition-[width,height,padding] hover:bg-gray-100 focus-visible:ring-2 active:bg-gray-100 dark:active:bg-gray-800 dark:hover:bg-gray-800"
+                              prefetch={
+                                item.url === "/quizzes" ? true : undefined
+                              }
+                              onMouseEnter={
+                                item.url === "/quizzes"
+                                  ? handleQuizMenuHover
+                                  : undefined
+                              }
                             >
                               <item.icon className="h-4 w-4 flex-shrink-0" />
                               <span

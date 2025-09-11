@@ -2,14 +2,18 @@
 
 import {
   useDeleteQuiz,
+  usePrefetchQuizDetail,
+  usePrefetchQuizEditor,
+  usePrefetchQuizList,
   useQuizList,
   useQuizStats,
 } from "@/hooks/quiz/use-quiz-list";
 import type { QuizDisplayData } from "@/types/quiz-display";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { useState } from "react";
-import ThinLayout from "../layout/thin-layout";
+import WideContainer from "../layout/wide-layout";
 import { Button } from "../ui/button";
 import { Skeleton } from "../ui/skeleton";
 import { EmptyState } from "./empty-state";
@@ -30,6 +34,11 @@ export function QuizzesContent() {
   const t = useTranslations("Quizzes");
   const router = useRouter();
 
+  // Prefetch hooks
+  const prefetchQuizList = usePrefetchQuizList();
+  const prefetchQuizDetail = usePrefetchQuizDetail();
+  const prefetchQuizEditor = usePrefetchQuizEditor();
+
   // Filter state
   const [filters, setFilters] = useState<QuizFiltersState>({
     search: "",
@@ -39,8 +48,6 @@ export function QuizzesContent() {
 
   const [currentPage, setCurrentPage] = useState(0);
   const pageSize = 6;
-
-  // Fetch quiz list with pagination
   const {
     data: quizListData,
     isLoading,
@@ -65,6 +72,46 @@ export function QuizzesContent() {
   // Delete quiz mutation
   const deleteMutation = useDeleteQuiz();
 
+  // Prefetch next page when current page loads
+  useEffect(() => {
+    if (quizListData && !isFetching) {
+      // Prefetch details and editor data for quizzes in current page
+      for (const quiz of quizListData.content) {
+        prefetchQuizDetail(quiz.id);
+        prefetchQuizEditor(String(quiz.id));
+      }
+
+      const totalPages = quizListData.totalPages;
+      if (currentPage < totalPages - 1) {
+        // Prefetch next page
+        prefetchQuizList(
+          {
+            page: currentPage + 1,
+            size: pageSize,
+            search: filters.search || undefined,
+            difficulty: filters.difficulty,
+            status: filters.status,
+            visibility: filters.visibility,
+            sortBy: filters.sortBy,
+            sortDirection: filters.sortDirection,
+          },
+          {
+            prefetchDetails: true,
+            prefetchEditor: true,
+          },
+        );
+      }
+    }
+  }, [
+    quizListData,
+    isFetching,
+    currentPage,
+    filters,
+    prefetchQuizList,
+    prefetchQuizDetail,
+    prefetchQuizEditor,
+  ]);
+
   // Event handlers
   const handleSearch = (query: string) => {
     setFilters((prev) => ({ ...prev, search: query }));
@@ -82,10 +129,14 @@ export function QuizzesContent() {
   };
 
   const handleQuizEdit = (quiz: QuizDisplayData) => {
+    // Prefetch quiz editor data
+    prefetchQuizEditor(String(quiz.id));
     router.push(`/quizzes/${quiz.slug}-${quiz.id}/edit`);
   };
 
   const handleQuizView = (quiz: QuizDisplayData) => {
+    // Prefetch quiz detail data
+    prefetchQuizDetail(quiz.id);
     router.push(`/quizzes/${quiz.slug}-${quiz.id}`);
   };
 
@@ -95,7 +146,7 @@ export function QuizzesContent() {
 
   if (isLoading) {
     return (
-      <ThinLayout classNames="flex-1 space-y-6 p-6">
+      <WideContainer classNames="flex-1 space-y-6 p-6">
         <QuizFilters
           onSearch={handleSearch}
           onFilter={handleFilter}
@@ -140,14 +191,14 @@ export function QuizzesContent() {
             </div>
           ))}
         </div>
-      </ThinLayout>
+      </WideContainer>
     );
   }
 
   // Error state
   if (isError) {
     return (
-      <ThinLayout classNames="flex-1 space-y-6 p-6">
+      <WideContainer classNames="flex-1 space-y-6 p-6">
         <div className="py-12 text-center">
           <h3 className="font-semibold text-destructive text-lg">
             Error loading quizzes
@@ -159,7 +210,7 @@ export function QuizzesContent() {
             Try Again
           </Button>
         </div>
-      </ThinLayout>
+      </WideContainer>
     );
   }
 
@@ -169,7 +220,7 @@ export function QuizzesContent() {
   const totalElements = quizListData?.totalElements || 0;
 
   return (
-    <ThinLayout classNames="flex-1 space-y-6 p-6">
+    <WideContainer classNames="flex-1 space-y-6 p-6">
       {/* Search and Filters */}
       <QuizFilters
         onSearch={handleSearch}
@@ -289,6 +340,6 @@ export function QuizzesContent() {
           createHref="quizzes/create"
         />
       )}
-    </ThinLayout>
+    </WideContainer>
   );
 }

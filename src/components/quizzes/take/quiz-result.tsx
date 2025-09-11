@@ -8,6 +8,8 @@ import {
   ArrowLeft,
   Award,
   CheckCircle,
+  ChevronDown,
+  ChevronUp,
   Clock,
   RotateCcw,
   Target,
@@ -16,9 +18,12 @@ import {
   XCircle,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 export function QuizResult({ result, quiz, onRetake }: QuizResultProps) {
   const router = useRouter();
+  const [expandedQuestion, setExpandedQuestion] = useState<number | null>(null);
+
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
@@ -48,6 +53,30 @@ export function QuizResult({ result, quiz, onRetake }: QuizResultProps) {
     return "Don't give up! Try again! 🚀";
   };
 
+  const toggleQuestionExpansion = (index: number) => {
+    setExpandedQuestion(expandedQuestion === index ? null : index);
+  };
+
+  const getSelectedOptionText = (
+    questionId: string,
+    selectedOptionId: string,
+  ) => {
+    const question = quiz.quizData?.questions?.find((q) => q.id === questionId);
+    const option = question?.options?.find(
+      (opt) => opt.id === selectedOptionId,
+    );
+    return option ? option.text : "No answer selected";
+  };
+
+  const getCorrectOptionText = (
+    questionId: string,
+    correctOptionId: string,
+  ) => {
+    const question = quiz.quizData?.questions?.find((q) => q.id === questionId);
+    const option = question?.options?.find((opt) => opt.id === correctOptionId);
+    return option ? option.text : "Unknown";
+  };
+
   return (
     <div className="mx-auto max-w-4xl space-y-6">
       {/* Result Header */}
@@ -73,12 +102,12 @@ export function QuizResult({ result, quiz, onRetake }: QuizResultProps) {
             <Badge
               className={`px-4 py-2 text-lg ${getScoreBadgeColor(result.percentage)}`}
             >
-              {result.score}/{result.maxScore} points
+              {result.score || 0}/{result.maxScore || 0} points
             </Badge>
             <Badge
-              className={`px-4 py-2 text-lg ${getScoreBadgeColor(result.percentage)}`}
+              className={`px-4 py-2 text-lg ${getScoreBadgeColor(result.percentage || 0)}`}
             >
-              {result.percentage.toFixed(1)}%
+              {(result.percentage || 0).toFixed(1)}%
             </Badge>
           </div>
         </CardContent>
@@ -90,9 +119,9 @@ export function QuizResult({ result, quiz, onRetake }: QuizResultProps) {
           <CardContent className="p-6 text-center">
             <Award className="mx-auto mb-3 h-8 w-8 text-blue-600" />
             <div
-              className={`font-bold text-2xl ${getScoreColor(result.percentage)}`}
+              className={`font-bold text-2xl ${getScoreColor(result.percentage || 0)}`}
             >
-              {result.percentage.toFixed(1)}%
+              {(result.percentage || 0).toFixed(1)}%
             </div>
             <p className="text-muted-foreground text-sm">Final Score</p>
           </CardContent>
@@ -102,7 +131,7 @@ export function QuizResult({ result, quiz, onRetake }: QuizResultProps) {
           <CardContent className="p-6 text-center">
             <CheckCircle className="mx-auto mb-3 h-8 w-8 text-green-600" />
             <div className="font-bold text-2xl text-foreground">
-              {result.correctAnswers}/{result.totalQuestions}
+              {result.correctAnswers || 0}/{result.totalQuestions || 0}
             </div>
             <p className="text-muted-foreground text-sm">Correct Answers</p>
           </CardContent>
@@ -112,7 +141,7 @@ export function QuizResult({ result, quiz, onRetake }: QuizResultProps) {
           <CardContent className="p-6 text-center">
             <Clock className="mx-auto mb-3 h-8 w-8 text-purple-600" />
             <div className="font-bold text-2xl text-foreground">
-              {formatTime(result.timeSpent)}
+              {formatTime(result.timeSpent || 0)}
             </div>
             <p className="text-muted-foreground text-sm">Time Spent</p>
           </CardContent>
@@ -132,7 +161,8 @@ export function QuizResult({ result, quiz, onRetake }: QuizResultProps) {
                       Congratulations! You passed!
                     </p>
                     <p className="text-muted-foreground text-sm">
-                      You scored above the passing score of {quiz.passingScore}%
+                      You scored above the passing score of{" "}
+                      {quiz.passingScore || 70}%
                     </p>
                   </div>
                 </>
@@ -144,16 +174,166 @@ export function QuizResult({ result, quiz, onRetake }: QuizResultProps) {
                       You didn't pass this time
                     </p>
                     <p className="text-muted-foreground text-sm">
-                      You need {quiz.passingScore}% to pass. Keep studying and
-                      try again!
+                      You need {quiz.passingScore || 70}% to pass. Keep studying
+                      and try again!
                     </p>
                   </div>
                 </>
               )}
             </div>
             <TrendingUp
-              className={`h-6 w-6 ${result.passed ? "text-green-600" : "text-red-600"}`}
+              className={`h-6 w-6 ${result.passed || false ? "text-green-600" : "text-red-600"}`}
             />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Review Answers Section */}
+      <Card className="border border-border/50 bg-card/50 backdrop-blur-sm">
+        <CardContent className="p-6">
+          <h2 className="mb-4 font-bold text-xl">Review Your Answers</h2>
+          <p className="mb-6 text-muted-foreground">
+            Check your answers and see explanations for each question
+          </p>
+
+          <div className="space-y-4">
+            {result.answers.map((answer, index) => {
+              const isExpanded = expandedQuestion === index;
+              const question = quiz.quizData?.questions?.find(
+                (q) => q.id === answer.questionId,
+              );
+
+              return (
+                <Card
+                  key={answer.questionId}
+                  className="border border-border/50"
+                >
+                  <CardContent className="p-4">
+                    <div
+                      className="flex cursor-pointer items-start justify-between"
+                      onClick={() => toggleQuestionExpansion(index)}
+                    >
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium">
+                            Question {index + 1}:
+                          </span>
+                          <h3 className="text-foreground">
+                            {question?.text || "Unknown question"}
+                          </h3>
+                        </div>
+                        <div className="mt-2 flex items-center gap-4">
+                          <div className="flex items-center gap-1">
+                            {answer.isCorrect ? (
+                              <CheckCircle className="h-4 w-4 text-green-600" />
+                            ) : (
+                              <XCircle className="h-4 w-4 text-red-600" />
+                            )}
+                            <span
+                              className={`text-sm ${answer.isCorrect ? "text-green-600" : "text-red-600"}`}
+                            >
+                              {answer.isCorrect ? "Correct" : "Incorrect"}
+                            </span>
+                          </div>
+                          <div className="text-sm">
+                            <span className="font-medium">Your answer:</span>{" "}
+                            <span
+                              className={
+                                answer.isCorrect
+                                  ? "text-green-600"
+                                  : "text-red-600"
+                              }
+                            >
+                              {getSelectedOptionText(
+                                answer.questionId,
+                                answer.selectedOptionId,
+                              )}
+                            </span>
+                          </div>
+                          {!answer.isCorrect && (
+                            <div className="text-sm">
+                              <span className="font-medium">
+                                Correct answer:
+                              </span>{" "}
+                              <span className="text-green-600">
+                                {getCorrectOptionText(
+                                  answer.questionId,
+                                  answer.correctOptionId,
+                                )}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <Button className="ml-2 p-1">
+                        {isExpanded ? (
+                          <ChevronUp className="h-5 w-5 text-muted-foreground" />
+                        ) : (
+                          <ChevronDown className="h-5 w-5 text-muted-foreground" />
+                        )}
+                      </Button>
+                    </div>
+
+                    {isExpanded && (
+                      <div className="mt-4 border-border/50 border-t pt-4">
+                        <div className="space-y-3">
+                          <div>
+                            <h4 className="font-medium">Explanation:</h4>
+                            <p className="mt-1 text-muted-foreground">
+                              {question?.explanation ||
+                                "No explanation available"}
+                            </p>
+                          </div>
+
+                          <div>
+                            <h4 className="font-medium">Options:</h4>
+                            <div className="mt-2 space-y-2">
+                              {question?.options?.map((option) => {
+                                const isUserSelected =
+                                  option.id === answer.selectedOptionId;
+                                const isCorrect =
+                                  option.id === answer.correctOptionId;
+
+                                return (
+                                  <div
+                                    key={option.id}
+                                    className={`rounded-md p-2 ${
+                                      isUserSelected
+                                        ? isCorrect
+                                          ? "bg-green-100 dark:bg-green-900/30"
+                                          : "bg-red-100 dark:bg-red-900/30"
+                                        : isCorrect
+                                          ? "bg-green-100 dark:bg-green-900/30"
+                                          : "bg-muted"
+                                    }`}
+                                  >
+                                    <div className="flex items-center gap-2">
+                                      {isUserSelected && (
+                                        <span className="font-medium">
+                                          {isCorrect
+                                            ? "✓ Your answer"
+                                            : "✗ Your answer"}
+                                        </span>
+                                      )}
+                                      {isCorrect && !isUserSelected && (
+                                        <span className="font-medium text-green-600">
+                                          ✓ Correct answer
+                                        </span>
+                                      )}
+                                      <span>{option.text}</span>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         </CardContent>
       </Card>

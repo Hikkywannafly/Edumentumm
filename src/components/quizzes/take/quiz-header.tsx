@@ -11,7 +11,8 @@ export function QuizHeader({
   totalQuestions,
   estimatedTime,
   timeSpent,
-}: QuizHeaderProps) {
+  mode = "QUIZ",
+}: QuizHeaderProps & { mode?: "QUIZ" | "EXAM" }) {
   const handleCopyLink = () => {
     navigator.clipboard.writeText(window.location.href);
   };
@@ -25,6 +26,13 @@ export function QuizHeader({
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, "0")}`;
+  };
+
+  const getModeDescription = () => {
+    if (mode === "QUIZ") {
+      return "You receive immediate feedback after each question.";
+    }
+    return "All feedback is provided at the end of the quiz.";
   };
 
   return (
@@ -80,6 +88,9 @@ export function QuizHeader({
           Time: {formatTime(timeSpent)} / {formatTime(estimatedTime * 60)}
         </div>
       )}
+      <div className="mt-2 text-center text-muted-foreground text-sm">
+        {getModeDescription()}
+      </div>
     </div>
   );
 }

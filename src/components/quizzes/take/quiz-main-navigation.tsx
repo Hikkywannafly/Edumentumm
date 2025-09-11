@@ -16,6 +16,8 @@ import {
   Trash2,
   Undo,
 } from "lucide-react";
+import { useState } from "react";
+import { QuizWarningDialog } from "./quiz-warning-dialog";
 
 interface QuizMainNavigationProps {
   hasPreviousQuestion: boolean;
@@ -46,6 +48,35 @@ export function QuizMainNavigation({
   onDeleteQuiz,
   onShare,
 }: QuizMainNavigationProps) {
+  const [showWarning, setShowWarning] = useState(false);
+  const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
+
+  const handleNext = () => {
+    if (!isAnswered) {
+      setPendingAction(() => onNext);
+      setShowWarning(true);
+    } else {
+      onNext();
+    }
+  };
+
+  const handleSubmit = () => {
+    if (!isAnswered) {
+      setPendingAction(() => onSubmit);
+      setShowWarning(true);
+    } else {
+      onSubmit();
+    }
+  };
+
+  const handleWarningConfirm = () => {
+    setShowWarning(false);
+    if (pendingAction) {
+      pendingAction();
+      setPendingAction(null);
+    }
+  };
+
   return (
     <div className="sticky bottom-0 left-0 z-10 w-full bg-secondary p-4 sm:px-6 md:p-8">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 md:flex-nowrap md:gap-8">
@@ -121,9 +152,8 @@ export function QuizMainNavigation({
               <Button
                 variant="default"
                 size="sm"
-                onClick={onNext}
+                onClick={handleNext}
                 className="flex min-w-0 flex-1 items-center rounded-2xl px-3 sm:min-w-fit sm:flex-initial"
-                disabled={!isAnswered && mode === "QUIZ"}
               >
                 <span className="truncate">Next</span>
                 <ArrowRight className="ml-2 h-4 w-4 shrink-0" />
@@ -132,9 +162,8 @@ export function QuizMainNavigation({
               <Button
                 variant="default"
                 size="sm"
-                onClick={onSubmit}
+                onClick={handleSubmit}
                 className="flex min-w-0 flex-1 items-center rounded-2xl px-3 sm:min-w-fit sm:flex-initial"
-                disabled={!isAnswered && mode === "QUIZ"}
               >
                 <span className="truncate">Submit</span>
                 <ArrowRight className="ml-2 h-4 w-4 shrink-0" />
@@ -143,6 +172,12 @@ export function QuizMainNavigation({
           </>
         </div>
       </div>
+      <QuizWarningDialog
+        open={showWarning}
+        onOpenChange={setShowWarning}
+        onConfirm={handleWarningConfirm}
+        mode={mode as "QUIZ" | "EXAM"}
+      />
     </div>
   );
 }

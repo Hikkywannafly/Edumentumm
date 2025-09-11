@@ -82,7 +82,9 @@ export function useQuizStateManager(
   const hasUnsavedChanges = Object.keys(changedFields).length > 0;
 
   const isValid = quiz
-    ? quiz.title.trim().length > 0 && quiz.questions.length > 0
+    ? quiz.title?.trim().length > 0 &&
+      quiz.questions &&
+      quiz.questions.length > 0
     : false;
 
   return {

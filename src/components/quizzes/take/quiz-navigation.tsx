@@ -3,7 +3,7 @@
 import { useQuizNavigation } from "@/hooks/quiz/use-quiz-navigation";
 import { useLocalizedNavigation } from "@/lib/utils/navigation";
 import type { QuizNavigationProps } from "@/types/quiz-take";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { QuizDeleteDialog } from "./quiz-delete-dialog";
 import { QuizFeedback } from "./quiz-feedback";
 import { QuizMainNavigation } from "./quiz-main-navigation";
@@ -24,26 +24,27 @@ export function QuizNavigation({
   quizId,
   quiz, // Add quiz object to get the slug
 }: QuizNavigationProps & { quiz?: any }) {
-  const {
-    isAnswered,
-    hasNextQuestion,
-    hasPreviousQuestion,
-    showFeedbackUI,
-    isCorrect,
-  } = useQuizNavigation({
-    currentQuestion,
-    totalQuestions,
-    answers,
-    showFeedback,
-    currentQuestionResult: currentQuestionResult ?? null,
-  });
+  // Get the current question ID
+  const currentQuestionId = questions[currentQuestion]?.id;
+
+  const { hasNextQuestion, hasPreviousQuestion, showFeedbackUI, isCorrect } =
+    useQuizNavigation({
+      currentQuestionIndex: currentQuestion,
+      totalQuestions,
+      showFeedback,
+      currentQuestionResult: currentQuestionResult ?? null,
+    });
+
+  const isAnswered = useMemo(() => {
+    if (!currentQuestionId) return false;
+    return answers.some((a) => a.questionId === currentQuestionId);
+  }, [answers, currentQuestionId]);
 
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const { goQuizEdit } = useLocalizedNavigation();
 
   const handleRestartQuiz = () => {
-    console.log("Restart quiz clicked");
     window.location.reload();
   };
 
@@ -56,7 +57,6 @@ export function QuizNavigation({
   };
 
   const handleResetQuiz = () => {
-    console.log("Reset quiz clicked");
     window.location.reload();
   };
 
@@ -65,15 +65,11 @@ export function QuizNavigation({
   };
 
   const confirmDeleteQuiz = () => {
-    console.log("Delete quiz confirmed");
     setShowDeleteDialog(false);
   };
 
-  const handleShare = () => {
-    console.log("Share clicked");
-  };
+  const handleShare = () => {};
 
-  // Render feedback UI when needed
   if (showFeedbackUI && currentQuestionResult) {
     return (
       <QuizFeedback
@@ -85,13 +81,13 @@ export function QuizNavigation({
         hasNextQuestion={hasNextQuestion}
         onPrevious={onPrevious}
         onNext={onNext}
-        onRetry={onRetry || (() => {})} // Provide default function if undefined
+        onRetry={onRetry || (() => {})}
         onRestartQuiz={handleRestartQuiz}
+        onSubmit={onSubmit}
       />
     );
   }
 
-  // Render main navigation UI
   return (
     <>
       <QuizMainNavigation

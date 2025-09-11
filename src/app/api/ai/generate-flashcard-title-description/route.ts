@@ -86,62 +86,45 @@ export async function POST(request: NextRequest) {
       flashcards[0].meaning;
     const flashcardTypeContext = isVocabularyType ? "vocabulary" : "question";
 
-    const modeContext = isExtractMode
-      ? "extracted from existing content"
-      : "generated based on content analysis";
-
     const prompt = `
-You are an expert educational content curator. Generate an engaging and descriptive title and description for a ${flashcardTypeContext} flashcard set that was ${modeContext}.
+You are an expert educational content curator.
+Generate a JSON response with an engaging title and description for a ${flashcardTypeContext} flashcard set.
 
 CONTEXT:
-- Source content length: ${content.length} characters
-- Number of flashcards: ${flashcards.length}
-- Flashcard type: ${flashcardTypeContext.toUpperCase()}
+- Source length: ${content.length} chars
+- Flashcards: ${flashcards.length}
+- Type: ${flashcardTypeContext.toUpperCase()}
 - Mode: ${isExtractMode ? "Extract" : "Generate"}
-- Target language: ${targetLanguage}
-${filename ? `- Source file: ${filename}` : ""}
+- Language: ${targetLanguage}
+${filename ? `- File: ${filename}` : ""}
 ${category ? `- Category: ${category}` : ""}
 ${flashcardTopics.length > 0 ? `- Topics: ${flashcardTopics.join(", ")}` : ""}
 
-SAMPLE FLASHCARDS:
-${sampleFlashcards.map((q, i) => `${i + 1}. ${q}`).join("\n")}
+SAMPLE FLASHCARDS (examples only):
+${sampleFlashcards
+  .slice(0, 3)
+  .map((q, i) => `${i + 1}. ${q}`)
+  .join("\n")}
 
 CONTENT PREVIEW:
-${content.slice(0, 1000)}...
+${content.slice(0, 500)}...
 
-REQUIREMENTS:
-1. Create a concise, engaging title (max 50 characters)
-2. Write a clear, informative description (30-80 words)
-3. Title should reflect the main topic/subject matter and flashcard type
-4. Description should explain what learners will gain from these ${flashcardTypeContext} flashcards
-5. Use ${targetLanguage === "auto" ? "the same language as the content" : targetLanguage}
-6. Make it appealing for students and educators
-7. Include the scope and learning objectives
-
-RESPONSE FORMAT (JSON):
-{
-  "title": "Engaging flashcard set title",
-  "description": "Comprehensive description explaining what learners will gain from this ${flashcardTypeContext} flashcard set, including key topics covered and learning benefits. Should be educational and motivating."
+RULES:
+- Return JSON: { "title": "...", "description": "..." }
+- Title: ≤ 50 chars, specific to subject & ${flashcardTypeContext}
+- Style depends on flashcard type:
+  - If type = "vocabulary":
+      * Title must start with "Từ vựng về ..."
+      * Title should reflect a broad subject/category (e.g., "Từ vựng về Ẩm thực"), not just one item.
+- Description: 20–50 words, highlight scope, learning value
+- Use target language (${targetLanguage})
+- Style: academic, clear, motivating
+${
+  isVocabularyType
+    ? "- Emphasize language learning, word usage, comprehension"
+    : "- Emphasize knowledge testing, retention, concept mastery"
 }
-
-TITLE GUIDELINES:
-- Be specific about the subject matter and flashcard type (${flashcardTypeContext})
-- Use clear, academic language
-- Avoid generic phrases like "Study Cards" or "Review Set"
-- Include key topics when possible
-- Make it searchable and descriptive
-${isVocabularyType ? "- For vocabulary sets, emphasize language learning and word mastery" : "- For question sets, emphasize knowledge testing and concept mastery"}
-
-DESCRIPTION GUIDELINES:
-- Explain the learning value and scope
-- Mention key concepts or topics covered
-- Highlight the educational benefits
-- Use encouraging, academic tone
-- Include information about difficulty level if apparent
-- Mention the source context if relevant
-${isVocabularyType ? "- For vocabulary: focus on language acquisition, word usage, and comprehension skills" : "- For questions: focus on knowledge retention, concept understanding, and assessment preparation"}
-
-Generate a title and description that will help students understand the value and scope of this ${flashcardTypeContext} flashcard set.`.trim();
+`.trim();
 
     try {
       const response = await fetch(`${OPENROUTER_API_BASE}/chat/completions`, {

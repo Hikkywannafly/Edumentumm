@@ -63,6 +63,40 @@ export function FlashcardEditorContent({
     }
   }, [flashcardSet]);
 
+  // Update form data when AI-generated title/description is available from store
+  useEffect(() => {
+    if (flashcardData?.title && flashcardData?.description) {
+      // Only update if the current values are default/empty or we're in creation mode
+      const isCreatingNew =
+        !flashcardSet ||
+        flashcardSet.title.includes("Generated") ||
+        flashcardSet.title.includes("Flashcards");
+      const hasDefaultTitle =
+        title.includes("Generated") ||
+        title.includes("Flashcards") ||
+        title.trim() === "";
+
+      if (isCreatingNew || hasDefaultTitle) {
+        setTitle(flashcardData.title);
+        setDescription(flashcardData.description);
+      }
+    }
+  }, [flashcardData?.title, flashcardData?.description, flashcardSet, title]);
+
+  // Load flashcards from store if available (for newly generated flashcards)
+  useEffect(() => {
+    if (flashcardData?.flashcards && flashcardData.flashcards.length > 0) {
+      // Only load if we don't have flashcards yet or have default/empty ones
+      const isCreatingNew =
+        !flashcardSet || flashcardSet.flashcards.length === 0;
+      const hasEmptyFlashcards = flashcards.length === 0;
+
+      if (isCreatingNew || hasEmptyFlashcards) {
+        setFlashcards(flashcardData.flashcards);
+      }
+    }
+  }, [flashcardData?.flashcards, flashcardSet, flashcards.length]);
+
   const detectFlashcardType = (): "VOCABULARY" | "QUESTIONS" => {
     // 1. Detect from current editing flashcards first (highest priority)
     if (flashcards.length > 0) {

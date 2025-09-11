@@ -7,6 +7,8 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { cn } from "@/lib/utils";
 import type { QuizQuestionProps } from "@/types/quiz-take";
 import { CheckCircle2, XCircle } from "lucide-react";
+import { useState } from "react";
+import { QuizWarningDialog } from "./quiz-warning-dialog";
 
 type OptionStatus = "default" | "selected" | "correct" | "incorrect";
 
@@ -24,6 +26,12 @@ export function QuizQuestion({
   mode = "QUIZ",
   isAnswered = false,
 }: QuizQuestionProps) {
+  const [showWarning, setShowWarning] = useState(false);
+
+  const handleOptionChange = (optionId: string) => {
+    onAnswerChange(optionId);
+  };
+
   const getOptionStatus = (optionId: string): OptionStatus => {
     if (!showResult) {
       return optionId === selectedOptionId ? "selected" : "default";
@@ -111,7 +119,7 @@ export function QuizQuestion({
       </div>
       <RadioGroup
         value={selectedOptionId || ""}
-        onValueChange={onAnswerChange}
+        onValueChange={handleOptionChange}
         disabled={showResult || (mode === "QUIZ" && isAnswered)}
         className="space-y-3 md:space-y-4"
       >
@@ -161,6 +169,13 @@ export function QuizQuestion({
           );
         })}
       </RadioGroup>
+
+      <QuizWarningDialog
+        open={showWarning}
+        onOpenChange={setShowWarning}
+        onConfirm={() => setShowWarning(false)}
+        mode={mode}
+      />
     </div>
   );
 }

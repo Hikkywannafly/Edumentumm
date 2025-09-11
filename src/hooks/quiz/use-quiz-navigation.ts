@@ -1,10 +1,9 @@
-import type { QuizAnswer, QuizQuestionResult } from "@/types/quiz-take";
+import type { QuizQuestionResult } from "@/types/quiz-take";
 import { useMemo } from "react";
 
 interface UseQuizNavigationProps {
-  currentQuestion: number;
+  currentQuestionIndex: number;
   totalQuestions: number;
-  answers: QuizAnswer[];
   showFeedback: boolean;
   currentQuestionResult: QuizQuestionResult | null;
 }
@@ -18,18 +17,18 @@ interface UseQuizNavigationReturn {
 }
 
 export function useQuizNavigation({
-  currentQuestion,
+  currentQuestionIndex,
   totalQuestions,
-  answers,
   showFeedback,
   currentQuestionResult,
 }: UseQuizNavigationProps): UseQuizNavigationReturn {
   const isAnswered = useMemo(() => {
-    return !!answers[currentQuestion] || !!currentQuestionResult;
-  }, [answers, currentQuestion, currentQuestionResult]);
+    // This will be calculated in the component since we need the question ID
+    return false;
+  }, []);
 
-  const hasNextQuestion = currentQuestion < totalQuestions - 1;
-  const hasPreviousQuestion = currentQuestion > 0;
+  const hasNextQuestion = currentQuestionIndex < totalQuestions - 1;
+  const hasPreviousQuestion = currentQuestionIndex > 0;
   const showFeedbackUI = showFeedback && !!currentQuestionResult;
   const isCorrect = currentQuestionResult?.isCorrect ?? null;
 

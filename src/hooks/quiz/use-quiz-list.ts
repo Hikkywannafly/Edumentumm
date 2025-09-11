@@ -5,7 +5,6 @@ import type { BackendQuizEntity } from "@/types/quiz";
 import type { QuizDisplayData } from "@/types/quiz-display";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-// Query Keys following the project specification
 export const QUIZ_QUERY_KEYS = {
   all: ["quizzes"] as const,
   lists: () => [...QUIZ_QUERY_KEYS.all, "list"] as const,
@@ -51,24 +50,28 @@ interface QuizStatsData {
   totalAttempts: number;
 }
 
-// Convert backend quiz entity to display format
-function convertToDisplayData(backendQuiz: BackendQuizEntity): QuizDisplayData {
-  // Extract tags - handle both string arrays and tag objects
+function convertToDisplayData(backendQuiz: any): QuizDisplayData {
   const tags: (string | any)[] = backendQuiz.tags
-    ? backendQuiz.tags.map((tag) => {
+    ? backendQuiz.tags.map((tag: any) => {
         if (typeof tag === "string") {
           return tag;
         }
-        // For tag objects, preserve the structure for display
+
         return {
-          id: (tag as any).id,
-          name: (tag as any).name || tag,
-          slug: (tag as any).slug,
-          icon: (tag as any).icon,
-          color: (tag as any).color,
-          description: (tag as any).description,
+          id: tag.id,
+          name: tag.name || tag,
+          slug: tag.slug,
+          icon: tag.icon,
+          color: tag.color,
+          description: tag.description,
         };
       })
+    : [];
+
+  const keywords: string[] = backendQuiz.keywords
+    ? Array.isArray(backendQuiz.keywords)
+      ? backendQuiz.keywords
+      : []
     : [];
 
   return {
@@ -77,19 +80,26 @@ function convertToDisplayData(backendQuiz: BackendQuizEntity): QuizDisplayData {
     description: backendQuiz.description || "",
     slug: backendQuiz.slug,
     difficulty: backendQuiz.difficulty,
-    totalQuestions: backendQuiz.totalQuestions,
-    estimatedTime: backendQuiz.estimatedTime,
-    status: backendQuiz.status,
-    visibility: backendQuiz.visibility as "PUBLIC" | "PRIVATE",
+    totalQuestions: backendQuiz.totalQuestions || 0,
+    estimatedTime: backendQuiz.estimatedTime || 0,
+    status: backendQuiz.status || "DRAFT",
+    visibility: (backendQuiz.visibility as "PUBLIC" | "PRIVATE") || "PRIVATE",
     tags,
+    keywords,
     createdAt: backendQuiz.createdAt,
     viewCount: backendQuiz.viewCount || 0,
-    attemptCount: backendQuiz.attemptCount || 0,
+    attemptCount: backendQuiz.totalAttempts || backendQuiz.attemptCount || 0,
+    bestCorrectAnswers: backendQuiz.bestCorrectAnswers || undefined,
+    maxAttempts: backendQuiz.maxAttempts,
+    publishedAt: backendQuiz.publishedAt,
+    lastAttemptAt: backendQuiz.lastAttemptAt,
   };
 }
 
-// Main hook for fetching quiz list with pagination, filtering, and sorting
-export function useQuizList(params: QuizListParams = {}) {
+// Fetch quiz list data from API
+async function fetchQuizList(
+  params: QuizListParams,
+): Promise<QuizListResponse> {
   const {
     page = 0,
     size = 10,
@@ -112,6 +122,52 @@ export function useQuizList(params: QuizListParams = {}) {
     ...(visibility && { visibility }),
   });
 
+  const accessToken = localStorage.getItem("accessToken");
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+
+  if (accessToken) {
+    headers.Authorization = `Bearer ${accessToken}`;
+  }
+
+  const response = await fetch(`/api/quiz?${queryParams}`, {
+    headers,
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch quiz list: ${response.status}`);
+  }
+
+  const result: ApiResponse = await response.json();
+  if (!result.success) {
+    throw new Error(result.data?.toString() || "Failed to fetch quiz list");
+  }
+  const convertedContent = result.data.content.map((quiz: any) => {
+    if ("slug" in quiz && "viewCount" in quiz) {
+      return quiz as QuizDisplayData;
+    }
+    return convertToDisplayData(quiz as BackendQuizEntity);
+  });
+
+  return {
+    ...result.data,
+    content: convertedContent,
+  };
+}
+
+export function useQuizList(params: QuizListParams = {}) {
+  const {
+    page = 0,
+    size = 10,
+    search,
+    difficulty,
+    status,
+    visibility,
+    sortBy = "createdAt",
+    sortDirection = "desc",
+  } = params;
+
   return useQuery<QuizListResponse, Error>({
     queryKey: QUIZ_QUERY_KEYS.list({
       page,
@@ -123,7 +179,90 @@ export function useQuizList(params: QuizListParams = {}) {
       sortBy,
       sortDirection,
     }),
-    queryFn: async (): Promise<QuizListResponse> => {
+    queryFn: () => fetchQuizList(params),
+    refetchOnWindowFocus: false,
+    staleTime: 1 * 60 * 1000,
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+  });
+}
+
+export function usePrefetchQuizList() {
+  const queryClient = useQueryClient();
+  const prefetchQuizDetail = usePrefetchQuizDetail();
+  const prefetchQuizEditor = usePrefetchQuizEditor();
+
+  return async (
+    params: QuizListParams = {},
+    options?: {
+      prefetchDetails?: boolean;
+      prefetchEditor?: boolean;
+    },
+  ) => {
+    const {
+      page = 0,
+      size = 10,
+      search,
+      difficulty,
+      status,
+      visibility,
+      sortBy = "createdAt",
+      sortDirection = "desc",
+    } = params;
+
+    try {
+      await queryClient.prefetchQuery({
+        queryKey: QUIZ_QUERY_KEYS.list({
+          page,
+          size,
+          search,
+          difficulty,
+          status,
+          visibility,
+          sortBy,
+          sortDirection,
+        }),
+        queryFn: () => fetchQuizList(params),
+        staleTime: 1 * 60 * 1000, // 1 minute
+      });
+
+      // If prefetch details or editor is requested, fetch the data to get quiz IDs
+      if (options?.prefetchDetails || options?.prefetchEditor) {
+        try {
+          const data = await fetchQuizList(params);
+          const quizzes = data.content;
+
+          // Prefetch details for each quiz in the list
+          if (options.prefetchDetails) {
+            for (const quiz of quizzes) {
+              prefetchQuizDetail(quiz.id);
+            }
+          }
+
+          // Prefetch editor data for each quiz in the list
+          if (options.prefetchEditor) {
+            for (const quiz of quizzes) {
+              prefetchQuizEditor(String(quiz.id));
+            }
+          }
+        } catch (error) {
+          console.warn("Failed to prefetch quiz details/editor data:", error);
+        }
+      }
+    } catch (error) {
+      console.warn("Failed to prefetch quiz list data:", error);
+    }
+  };
+}
+
+/**
+ * Prefetch hook for quiz detail data (for take quiz page)
+ */
+export function usePrefetchQuizDetail() {
+  const queryClient = useQueryClient();
+
+  return async (id: number) => {
+    try {
       const accessToken = localStorage.getItem("accessToken");
       const headers: Record<string, string> = {
         "Content-Type": "application/json",
@@ -133,38 +272,94 @@ export function useQuizList(params: QuizListParams = {}) {
         headers.Authorization = `Bearer ${accessToken}`;
       }
 
-      const response = await fetch(`/api/quiz?${queryParams}`, {
-        headers,
+      await queryClient.prefetchQuery({
+        queryKey: ["quiz", id],
+        queryFn: async () => {
+          const response = await fetch(`/api/quiz/${id}`, {
+            headers,
+          });
+
+          if (!response.ok) {
+            throw new Error(`Failed to fetch quiz detail: ${response.status}`);
+          }
+
+          const result = await response.json();
+          return result.data;
+        },
+        staleTime: 5 * 60 * 1000, // 5 minutes
       });
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch quiz list: ${response.status}`);
-      }
-
-      const result: ApiResponse = await response.json();
-      if (!result.success) {
-        throw new Error(result.data?.toString() || "Failed to fetch quiz list");
-      }
-      const convertedContent = result.data.content.map((quiz: any) => {
-        if ("slug" in quiz && "viewCount" in quiz) {
-          return quiz as QuizDisplayData;
-        }
-        return convertToDisplayData(quiz as BackendQuizEntity);
-      });
-
-      return {
-        ...result.data,
-        content: convertedContent,
-      };
-    },
-    refetchOnWindowFocus: false,
-    staleTime: 1 * 60 * 1000, // 1 minute
-    retry: 3,
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-  });
+    } catch (error) {
+      console.warn("Failed to prefetch quiz detail:", error);
+    }
+  };
 }
 
-// Hook for fetching quiz statistics
+export function usePrefetchQuizEditor() {
+  const queryClient = useQueryClient();
+
+  return async (id: string) => {
+    try {
+      const accessToken = localStorage.getItem("accessToken");
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+
+      if (accessToken) {
+        headers.Authorization = `Bearer ${accessToken}`;
+      }
+
+      await queryClient.prefetchQuery({
+        queryKey: ["quiz", id],
+        queryFn: async () => {
+          const response = await fetch(`/api/quiz/${id}`, {
+            headers,
+          });
+
+          if (!response.ok) {
+            throw new Error(
+              `Failed to fetch quiz editor data: ${response.status}`,
+            );
+          }
+
+          const result = await response.json();
+
+          let data: any;
+          if (
+            typeof result === "object" &&
+            result !== null &&
+            "success" in result
+          ) {
+            if (!result.success) {
+              throw new Error(result.message || "Failed to load quiz");
+            }
+            data = result.data;
+          } else {
+            // Old structure, data is directly in result
+            data = result;
+          }
+
+          if (!data || typeof data !== "object" || !data.id) {
+            throw new Error("Invalid quiz data received from server");
+          }
+          if (!data.quizData) {
+            data.quizData = { questions: [] };
+          }
+
+          // Ensure questions array exists
+          if (!Array.isArray(data.quizData.questions)) {
+            data.quizData.questions = [];
+          }
+
+          return data;
+        },
+        staleTime: 5 * 60 * 1000, // 5 minutes
+      });
+    } catch (error) {
+      console.warn("Failed to prefetch quiz editor data:", error);
+    }
+  };
+}
+
 export function useQuizStats() {
   return useQuery<QuizStatsData, Error>({
     queryKey: QUIZ_QUERY_KEYS.stats(),
@@ -178,7 +373,6 @@ export function useQuizStats() {
         headers.Authorization = `Bearer ${accessToken}`;
       }
 
-      // Fetch basic stats by getting all quizzes without pagination
       const response = await fetch("/api/quiz?size=1000", {
         headers,
       });
@@ -216,7 +410,6 @@ export function useQuizStats() {
   });
 }
 
-// Hook for deleting a quiz with optimistic updates
 export function useDeleteQuiz() {
   const queryClient = useQueryClient();
 
@@ -242,23 +435,18 @@ export function useDeleteQuiz() {
       }
     },
     onSuccess: (_, quizId) => {
-      // Show success message
       toast({
         title: "Success",
         description: "Quiz deleted successfully",
       });
 
-      // Invalidate and refetch quiz list queries
       queryClient.invalidateQueries({
         queryKey: QUIZ_QUERY_KEYS.lists(),
       });
-
-      // Invalidate quiz stats
       queryClient.invalidateQueries({
         queryKey: QUIZ_QUERY_KEYS.stats(),
       });
 
-      // Remove the specific quiz from cache
       queryClient.removeQueries({
         queryKey: QUIZ_QUERY_KEYS.detail(quizId),
       });
