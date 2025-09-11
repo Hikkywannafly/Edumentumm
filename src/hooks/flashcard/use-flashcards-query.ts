@@ -42,7 +42,7 @@ export function useFlashcardsQuery(
     staleTime: 5 * 60 * 1000, // 5 minutes - keep data fresh but allow caching
     gcTime: 30 * 60 * 1000, // 30 minutes - keep cached data longer
     refetchOnWindowFocus: false,
-    refetchOnMount: false, // Don't refetch if data exists in cache
+    refetchOnMount: true, // Don't refetch if data exists in cache
   });
 
   // Prefetch next page for better UX (optional)
@@ -92,12 +92,14 @@ export function useCreateFlashcard() {
   return useMutation<FlashcardSet, Error, CreateFlashcardSetRequest>({
     mutationFn: (data) => flashcardService.createFlashcardSet(data),
     onSuccess: () => {
-      // Invalidate and refetch flashcard lists
+      // Invalidate and refetch flashcard lists immediately
       queryClient.invalidateQueries({
         queryKey: flashcardQueryKeys.lists(),
+        refetchType: "active", // Only refetch active queries
       });
       queryClient.invalidateQueries({
         queryKey: ["flashcards", "public"],
+        refetchType: "active",
       });
     },
   });
@@ -117,12 +119,14 @@ export function useUpdateFlashcard() {
       // Update the specific flashcard in cache
       queryClient.setQueryData(flashcardQueryKeys.detail(id), updatedFlashcard);
 
-      // Invalidate lists to refresh
+      // Invalidate lists to refresh immediately
       queryClient.invalidateQueries({
         queryKey: flashcardQueryKeys.lists(),
+        refetchType: "active", // Only refetch active queries
       });
       queryClient.invalidateQueries({
         queryKey: ["flashcards", "public"],
+        refetchType: "active",
       });
     },
   });
@@ -140,12 +144,14 @@ export function useDeleteFlashcard() {
         queryKey: flashcardQueryKeys.detail(deletedId),
       });
 
-      // Invalidate lists to refresh
+      // Invalidate lists to refresh immediately
       queryClient.invalidateQueries({
         queryKey: flashcardQueryKeys.lists(),
+        refetchType: "active", // Only refetch active queries
       });
       queryClient.invalidateQueries({
         queryKey: ["flashcards", "public"],
+        refetchType: "active",
       });
     },
   });

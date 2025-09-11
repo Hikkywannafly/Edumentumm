@@ -353,11 +353,11 @@ export default function FlashcardCard({
             <Collapsible open={isAdvancedOpen} onOpenChange={setIsAdvancedOpen}>
               <CollapsibleContent className="mt-4 space-y-4 border-t pt-4">
                 {/* Explanation */}
-                <div className="space-y-3 rounded-lg border border-emerald-200 bg-emerald-50/50 p-4">
+                <div className="space-y-3 rounded-lg border border-emerald-200 bg-emerald-50/50 p-4 dark:border-emerald-800 dark:bg-emerald-900/30">
                   <div className="flex items-center gap-2">
-                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-100">
+                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-800">
                       <svg
-                        className="h-3.5 w-3.5 text-blue-600"
+                        className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
@@ -372,18 +372,19 @@ export default function FlashcardCard({
                     </div>
                     <Label
                       htmlFor="explanation"
-                      className="bg-emerald-50/50 font-medium text-sm"
+                      className="bg-emerald-50/50 font-medium text-sm dark:bg-transparent dark:text-emerald-100"
                     >
                       {t("editPage.explanation")}
                     </Label>
                   </div>
-                  <div className="rounded-md border-emerald-200 bg-white">
+
+                  <div className="rounded-md border border-emerald-200 bg-white dark:border-emerald-700 dark:bg-emerald-950">
                     <TiptapEditor
                       content={flashcard.explanation || ""}
                       onChange={handleExplanationChange}
                       placeholder="Explain why this answer is correct..."
                       showToolbar={true}
-                      className="min-h-[100px] border-none bg-blue-50"
+                      className="min-h-[100px] border-none bg-blue-50 dark:bg-blue-950/40 dark:text-emerald-50"
                     />
                   </div>
                 </div>

@@ -126,35 +126,30 @@ export function useGenerateFlashcardsAI() {
       };
       setFlashcardData(flashcardData);
 
-      // Generate better title with AI (async, non-blocking) - Only for QUESTIONS type
-      // VOCABULARY type already includes title/description from API
-      if (variables.settings?.flashcardType !== "VOCABULARY") {
-        try {
-          const contentForTitle =
-            data.content || data.files?.[0]?.parsedContent || "";
-          const flashcardsForTitle = Array.isArray(data.flashcards)
-            ? data.flashcards
-            : (data.flashcards.flashcards ?? []);
+      // Generate better title with AI (async, non-blocking) - For both QUESTIONS and VOCABULARY types
+      try {
+        const contentForTitle =
+          data.content || data.files?.[0]?.parsedContent || "";
+        const flashcardsForTitle = Array.isArray(data.flashcards)
+          ? data.flashcards
+          : (data.flashcards.flashcards ?? []);
 
-          await titleGenerator.generateTitleDescription(
-            contentForTitle,
-            flashcardsForTitle,
-            {
-              isExtractMode: variables.settings?.generationMode === "EXTRACT",
-              targetLanguage: variables.settings?.language || "vi",
-              filename: data.files?.[0]?.name,
-            },
-          );
-        } catch (error) {
-          console.warn(
-            "⚠️ Failed to generate AI title (using fallback):",
-            error,
-          );
-        }
-      } else {
-        console.log(
-          "📚 Vocabulary flashcards - title/description already included from API",
+        // Always generate AI title/description for better quality
+        await titleGenerator.generateTitleDescription(
+          contentForTitle,
+          flashcardsForTitle,
+          {
+            isExtractMode: variables.settings?.generationMode === "EXTRACT",
+            targetLanguage: variables.settings?.language || "vi",
+            filename: data.files?.[0]?.name,
+            category:
+              variables.settings?.flashcardType === "VOCABULARY"
+                ? "Vocabulary"
+                : undefined,
+          },
         );
+      } catch (error) {
+        console.warn("⚠️ Failed to generate AI title (using fallback):", error);
       }
     },
     onError: (error) => {

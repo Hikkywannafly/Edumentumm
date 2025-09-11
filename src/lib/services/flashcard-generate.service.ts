@@ -98,8 +98,8 @@ export const generateFlashcardsWithAI = async (
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        title: "Generated Vocabulary Flashcards",
-        description: "AI-generated vocabulary flashcards from your content",
+        title: "Vocabulary Flashcards", // Temporary title
+        description: "Generated vocabulary flashcards", // Temporary description
         categoryId: settings.categoryId,
         apiKey: apiKey,
         fileContent: safeContent,
@@ -135,12 +135,39 @@ export const generateFlashcardsWithAI = async (
       explanation: item.explanation,
     }));
 
+    // Generate AI-powered title and description
+    let finalTitle = vocabularyResult.title || "Vocabulary Flashcards";
+    let finalDescription =
+      vocabularyResult.description ||
+      `Generated ${flashcards.length} vocabulary flashcards`;
+
+    try {
+      const titleDescResult = await generateFlashcardTitleDescription(
+        safeContent,
+        flashcards,
+        {
+          isExtractMode: settings?.generationMode === "EXTRACT",
+          targetLanguage: settings?.language,
+          filename: actualFile?.name,
+          category: "Vocabulary",
+        },
+      );
+
+      if (titleDescResult) {
+        finalTitle = titleDescResult.title;
+        finalDescription = titleDescResult.description;
+      }
+    } catch (titleError) {
+      console.warn(
+        "Failed to generate AI title/description for vocabulary, using defaults:",
+        titleError,
+      );
+    }
+
     return {
       id: crypto.randomUUID(),
-      title: vocabularyResult.title || "Vocabulary Flashcards",
-      description:
-        vocabularyResult.description ||
-        `Generated ${flashcards.length} vocabulary flashcards`,
+      title: finalTitle,
+      description: finalDescription,
       flashcards,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -318,12 +345,40 @@ export const extractFlashcardsWithAIHandler = async (
       explanation: item.explanation,
     }));
 
+    // Generate AI-powered title and description for extraction
+    let finalTitle =
+      vocabularyResult.title || "Extracted Vocabulary Flashcards";
+    let finalDescription =
+      vocabularyResult.description ||
+      `Extracted ${flashcards.length} vocabulary flashcards`;
+
+    try {
+      const titleDescResult = await generateFlashcardTitleDescription(
+        content,
+        flashcards,
+        {
+          isExtractMode: true, // This is extraction mode
+          targetLanguage: settings?.language,
+          filename: actualFile?.name,
+          category: "Vocabulary",
+        },
+      );
+
+      if (titleDescResult) {
+        finalTitle = titleDescResult.title;
+        finalDescription = titleDescResult.description;
+      }
+    } catch (titleError) {
+      console.warn(
+        "Failed to generate AI title/description for vocabulary extraction, using defaults:",
+        titleError,
+      );
+    }
+
     return {
       flashcards,
-      title: vocabularyResult.title || "Extracted Vocabulary Flashcards",
-      description:
-        vocabularyResult.description ||
-        `Extracted ${flashcards.length} vocabulary flashcards`,
+      title: finalTitle,
+      description: finalDescription,
     };
   }
 
