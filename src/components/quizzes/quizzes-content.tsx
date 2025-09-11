@@ -2,14 +2,17 @@
 
 import {
   useDeleteQuiz,
+  usePrefetchQuizDetail,
+  usePrefetchQuizEditor,
+  usePrefetchQuizList,
   useQuizList,
   useQuizStats,
 } from "@/hooks/quiz/use-quiz-list";
 import type { QuizDisplayData } from "@/types/quiz-display";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { useState } from "react";
-import ThinLayout from "../layout/thin-layout";
 import WideContainer from "../layout/wide-layout";
 import { Button } from "../ui/button";
 import { Skeleton } from "../ui/skeleton";
@@ -30,6 +33,11 @@ interface QuizFiltersState {
 export function QuizzesContent() {
   const t = useTranslations("Quizzes");
   const router = useRouter();
+
+  // Prefetch hooks
+  const prefetchQuizList = usePrefetchQuizList();
+  const prefetchQuizDetail = usePrefetchQuizDetail();
+  const prefetchQuizEditor = usePrefetchQuizEditor();
 
   // Filter state
   const [filters, setFilters] = useState<QuizFiltersState>({
@@ -64,6 +72,26 @@ export function QuizzesContent() {
   // Delete quiz mutation
   const deleteMutation = useDeleteQuiz();
 
+  // Prefetch next page when current page loads
+  useEffect(() => {
+    if (quizListData && !isFetching) {
+      const totalPages = quizListData.totalPages;
+      if (currentPage < totalPages - 1) {
+        // Prefetch next page
+        prefetchQuizList({
+          page: currentPage + 1,
+          size: pageSize,
+          search: filters.search || undefined,
+          difficulty: filters.difficulty,
+          status: filters.status,
+          visibility: filters.visibility,
+          sortBy: filters.sortBy,
+          sortDirection: filters.sortDirection,
+        });
+      }
+    }
+  }, [quizListData, isFetching, currentPage, filters, prefetchQuizList]);
+
   // Event handlers
   const handleSearch = (query: string) => {
     setFilters((prev) => ({ ...prev, search: query }));
@@ -81,10 +109,14 @@ export function QuizzesContent() {
   };
 
   const handleQuizEdit = (quiz: QuizDisplayData) => {
+    // Prefetch quiz editor data
+    prefetchQuizEditor(String(quiz.id));
     router.push(`/quizzes/${quiz.slug}-${quiz.id}/edit`);
   };
 
   const handleQuizView = (quiz: QuizDisplayData) => {
+    // Prefetch quiz detail data
+    prefetchQuizDetail(quiz.id);
     router.push(`/quizzes/${quiz.slug}-${quiz.id}`);
   };
 
@@ -146,7 +178,7 @@ export function QuizzesContent() {
   // Error state
   if (isError) {
     return (
-      <ThinLayout classNames="flex-1 space-y-6 p-6">
+      <WideContainer classNames="flex-1 space-y-6 p-6">
         <div className="py-12 text-center">
           <h3 className="font-semibold text-destructive text-lg">
             Error loading quizzes
@@ -158,7 +190,7 @@ export function QuizzesContent() {
             Try Again
           </Button>
         </div>
-      </ThinLayout>
+      </WideContainer>
     );
   }
 
@@ -168,7 +200,7 @@ export function QuizzesContent() {
   const totalElements = quizListData?.totalElements || 0;
 
   return (
-    <ThinLayout classNames="flex-1 space-y-6 p-6">
+    <WideContainer classNames="flex-1 space-y-6 p-6">
       {/* Search and Filters */}
       <QuizFilters
         onSearch={handleSearch}
@@ -288,6 +320,6 @@ export function QuizzesContent() {
           createHref="quizzes/create"
         />
       )}
-    </ThinLayout>
+    </WideContainer>
   );
 }

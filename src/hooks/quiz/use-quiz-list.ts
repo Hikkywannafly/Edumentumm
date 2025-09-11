@@ -5,7 +5,6 @@ import type { BackendQuizEntity } from "@/types/quiz";
 import type { QuizDisplayData } from "@/types/quiz-display";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-// Query Keys following the project specification
 export const QUIZ_QUERY_KEYS = {
   all: ["quizzes"] as const,
   lists: () => [...QUIZ_QUERY_KEYS.all, "list"] as const,
@@ -51,9 +50,7 @@ interface QuizStatsData {
   totalAttempts: number;
 }
 
-// Convert backend quiz entity to display format
 function convertToDisplayData(backendQuiz: any): QuizDisplayData {
-  // Extract tags - handle both string arrays and tag objects
   const tags: (string | any)[] = backendQuiz.tags
     ? backendQuiz.tags.map((tag: any) => {
         if (typeof tag === "string") {
@@ -93,7 +90,6 @@ function convertToDisplayData(backendQuiz: any): QuizDisplayData {
     viewCount: backendQuiz.viewCount || 0,
     attemptCount: backendQuiz.totalAttempts || backendQuiz.attemptCount || 0,
     bestCorrectAnswers: backendQuiz.bestCorrectAnswers || undefined,
-    // Additional fields from backend
     maxAttempts: backendQuiz.maxAttempts,
     publishedAt: backendQuiz.publishedAt,
     lastAttemptAt: backendQuiz.lastAttemptAt,
@@ -160,7 +156,6 @@ async function fetchQuizList(
   };
 }
 
-// Main hook for fetching quiz list with pagination, filtering, and sorting
 export function useQuizList(params: QuizListParams = {}) {
   const {
     page = 0,
@@ -186,13 +181,12 @@ export function useQuizList(params: QuizListParams = {}) {
     }),
     queryFn: () => fetchQuizList(params),
     refetchOnWindowFocus: false,
-    staleTime: 1 * 60 * 1000, // 1 minute
+    staleTime: 1 * 60 * 1000,
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 }
 
-// Hook for prefetching quiz list data
 export function usePrefetchQuizList() {
   const queryClient = useQueryClient();
 
@@ -229,7 +223,83 @@ export function usePrefetchQuizList() {
   };
 }
 
-// Hook for fetching quiz statistics
+/**
+ * Prefetch hook for quiz detail data (for take quiz page)
+ */
+export function usePrefetchQuizDetail() {
+  const queryClient = useQueryClient();
+
+  return async (id: number) => {
+    try {
+      const accessToken = localStorage.getItem("accessToken");
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+
+      if (accessToken) {
+        headers.Authorization = `Bearer ${accessToken}`;
+      }
+
+      await queryClient.prefetchQuery({
+        queryKey: ["quiz", id],
+        queryFn: async () => {
+          const response = await fetch(`/api/quiz/${id}`, {
+            headers,
+          });
+
+          if (!response.ok) {
+            throw new Error(`Failed to fetch quiz detail: ${response.status}`);
+          }
+
+          const result = await response.json();
+          return result.data;
+        },
+        staleTime: 5 * 60 * 1000, // 5 minutes
+      });
+    } catch (error) {
+      console.warn("Failed to prefetch quiz detail:", error);
+    }
+  };
+}
+
+export function usePrefetchQuizEditor() {
+  const queryClient = useQueryClient();
+
+  return async (id: string) => {
+    try {
+      const accessToken = localStorage.getItem("accessToken");
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+
+      if (accessToken) {
+        headers.Authorization = `Bearer ${accessToken}`;
+      }
+
+      await queryClient.prefetchQuery({
+        queryKey: QUIZ_QUERY_KEYS.editing(id),
+        queryFn: async () => {
+          const response = await fetch(`/api/quiz/${id}`, {
+            headers,
+          });
+
+          if (!response.ok) {
+            throw new Error(
+              `Failed to fetch quiz editor data: ${response.status}`,
+            );
+          }
+
+          const result = await response.json();
+          return result.data;
+        },
+        staleTime: 5 * 60 * 1000, // 5 minutes
+      });
+    } catch (error) {
+      console.warn("Failed to prefetch quiz editor data:", error);
+    }
+  };
+}
+
 export function useQuizStats() {
   return useQuery<QuizStatsData, Error>({
     queryKey: QUIZ_QUERY_KEYS.stats(),
@@ -243,7 +313,6 @@ export function useQuizStats() {
         headers.Authorization = `Bearer ${accessToken}`;
       }
 
-      // Fetch basic stats by getting all quizzes without pagination
       const response = await fetch("/api/quiz?size=1000", {
         headers,
       });
@@ -281,7 +350,6 @@ export function useQuizStats() {
   });
 }
 
-// Hook for deleting a quiz with optimistic updates
 export function useDeleteQuiz() {
   const queryClient = useQueryClient();
 
@@ -307,23 +375,18 @@ export function useDeleteQuiz() {
       }
     },
     onSuccess: (_, quizId) => {
-      // Show success message
       toast({
         title: "Success",
         description: "Quiz deleted successfully",
       });
 
-      // Invalidate and refetch quiz list queries
       queryClient.invalidateQueries({
         queryKey: QUIZ_QUERY_KEYS.lists(),
       });
-
-      // Invalidate quiz stats
       queryClient.invalidateQueries({
         queryKey: QUIZ_QUERY_KEYS.stats(),
       });
 
-      // Remove the specific quiz from cache
       queryClient.removeQueries({
         queryKey: QUIZ_QUERY_KEYS.detail(quizId),
       });

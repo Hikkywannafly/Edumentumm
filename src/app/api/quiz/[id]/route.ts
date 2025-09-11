@@ -15,7 +15,6 @@ const UpdateQuizSchema = z.object({
   keywords: z.array(z.string()).optional(),
 });
 
-// Helper function to validate quiz ID
 function validateQuizId(id: string): number | null {
   const quizId = Number.parseInt(id);
   return Number.isNaN(quizId) ? null : quizId;
