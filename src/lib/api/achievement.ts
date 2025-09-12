@@ -9,6 +9,19 @@ export interface IPagination {
   hasPrevious: boolean;
 }
 
+export type Summary = {
+  totalUnlocked: number;
+  totalAchievements: number;
+  percentCompleted: number;
+  totalXP: number;
+};
+
+export type SummaryAchievementAPIResponse = {
+  data: Summary;
+  status: string;
+  message: string;
+};
+
 export type AchievementAPIResponse = {
   pagination: IPagination;
   data: Achievement[];
@@ -84,6 +97,13 @@ class AchievementAPI {
       `/user/achievement?${query}`,
     );
     return response;
+  }
+
+  async getSummaryAchievement(): Promise<Summary> {
+    const response = await this.request<SummaryAchievementAPIResponse>(
+      "/user/achievement/summary",
+    );
+    return response.data;
   }
 }
 

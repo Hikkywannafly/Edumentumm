@@ -5,6 +5,7 @@ import {} from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect } from "react";
 import useGetAllAchievement from "../../hooks/achievement/use-get-all-achievement";
+import useGetSummaryAchievement from "../../hooks/achievement/use-get-sumary-achievement";
 import { Skeleton } from "../ui/skeleton";
 import { AchievementCard } from "./achievement-card";
 import AchievementFilter from "./achievement-filter";
@@ -30,6 +31,8 @@ export const AchievementsContent = () => {
     setAchieved,
   } = useGetAllAchievement();
 
+  const { data, loading: loadingSummary } = useGetSummaryAchievement();
+
   const resetPage = useCallback(() => {
     setPage(0);
   }, [setPage]);
@@ -47,14 +50,14 @@ export const AchievementsContent = () => {
   }> = [
     {
       title: t("stats.totalUnlocked.title"),
-      value: "0/26",
+      value: `${data?.totalUnlocked}/${data?.totalAchievements ?? 1}`,
       description: t("stats.totalUnlocked.description"),
       icon: "trophy",
       iconColor: "text-yellow-400",
     },
     {
       title: t("stats.xpEarned.title"),
-      value: "10",
+      value: data?.totalXP.toString() || "0",
       description: t("stats.xpEarned.description"),
       icon: "bolt",
       iconColor: "text-blue-400",
@@ -78,7 +81,7 @@ export const AchievementsContent = () => {
   return (
     <div className="flex-1 space-y-6 p-6">
       <header className="mb-8">
-        {loading ? (
+        {/* {loading ? (
           <div>
             <Skeleton className="mb-2 h-10 w-1/3" />
             <Skeleton className="h-6 w-1/2" />
@@ -92,11 +95,17 @@ export const AchievementsContent = () => {
               {t("description")}
             </p>
           </>
-        )}
+        )} */}
+        <h1 className="mb-2 font-bold text-3xl text-zinc-900 md:text-4xl dark:text-white">
+          {t("title")}
+        </h1>
+        <p className="text-lg text-zinc-600 dark:text-zinc-400">
+          {t("description")}
+        </p>
       </header>
 
       <section className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {loading
+        {loadingSummary
           ? Array.from({ length: 4 }).map((_, i) => (
               <StatsCardSkeleton key={i} />
             ))
@@ -112,7 +121,7 @@ export const AchievementsContent = () => {
             ))}
       </section>
 
-      {loading ? (
+      {loadingSummary ? (
         <div className="flex gap-4">
           <Skeleton className="h-10 w-full rounded-md" />
           <Skeleton className="h-10 w-56 rounded-md" />
