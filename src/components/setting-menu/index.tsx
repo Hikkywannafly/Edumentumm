@@ -89,7 +89,7 @@ export function SettingMenu() {
         align="end"
         forceMount
       >
-        <DropdownMenuLabel className="border-zinc-100 border-b p-4 pb-2 font-normal dark:border-zinc-800">
+        <DropdownMenuLabel className=" border-b p-4 pb-2 font-normal dark:border-zinc-800">
           <div className="flex items-center gap-3">
             <Avatar className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border-4 border-background">
               <AvatarImage
@@ -117,7 +117,6 @@ export function SettingMenu() {
             </div>
           </div>
         </DropdownMenuLabel>
-        <DropdownMenuSeparator />
         <DropdownMenuItem
           className="flex cursor-pointer items-center gap-2 px-4 py-3 transition hover:bg-indigo-50 dark:hover:bg-zinc-800"
           onClick={handleProfileClick}

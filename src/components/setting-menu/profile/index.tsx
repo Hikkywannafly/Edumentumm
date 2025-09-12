@@ -52,13 +52,7 @@ export default function UserProfile() {
   const { attendanceDates } = useProfileAttendance();
 
   function getHeatColor(minutes: number) {
-    if (minutes === 0 && localStorage.getItem("edumentum-theme") === "light") {
-      return "#f3f4f6";
-    }
-    if (minutes === 0 && localStorage.getItem("edumentum-theme") === "dark") {
-      return "#1e293b";
-    }
-    if (minutes < 5) return "#e0e7ff";
+    if (minutes < 5) return "#cfd7e6";
     if (minutes < 10) return "#dbeafe";
     if (minutes < 20) return "#93c5fd";
     if (minutes < 30) return "#60a5fa";
