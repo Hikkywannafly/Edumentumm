@@ -721,5 +721,71 @@
   "Explore": {
     "title": "Khám Phá",
     "description": "Khám phá các bài kiểm tra và thẻ flash được tạo bởi sinh viên khác."
+  },
+  "Notes": {
+    "title": "Ghi chú",
+    "description": "Tạo và quản lý ghi chú với trình soạn thảo dựa trên khối",
+    "stats": {
+      "totalNotes": "Tổng số ghi chú",
+      "recentlyUpdated": "Cập nhật gần đây",
+      "myNotes": "Ghi chú của tôi"
+    },
+    "search": {
+      "placeholder": "Tìm kiếm ghi chú..."
+    },
+    "sort": {
+      "lastModified": "Cập nhật lần cuối",
+      "dateCreated": "Ngày tạo",
+      "title": "Tiêu đề",
+      "desc": "Mới nhất trước",
+      "asc": "Cũ nhất trước"
+    },
+    "actions": {
+      "createNote": "Tạo ghi chú",
+      "retry": "Thử lại"
+    },
+    "emptyState": {
+      "noNotes": "Chưa có ghi chú nào",
+      "noResults": "Không tìm thấy kết quả",
+      "createFirst": "Tạo ghi chú đầu tiên để bắt đầu",
+      "noResultsDescription": "Thử điều chỉnh từ khóa tìm kiếm"
+    },
+    "errors": {
+      "loadFailed": "Không thể tải ghi chú",
+      "failedToLoadNote": "Không thể tải ghi chú",
+      "noteNotFound": "Không tìm thấy ghi chú",
+      "updateFailed": "Không thể cập nhật ghi chú"
+    },
+    "create": {
+      "title": "Tạo ghi chú mới",
+      "button": "Tạo ghi chú",
+      "templates": {
+        "blank": {
+          "title": "Ghi chú trống",
+          "description": "Bắt đầu với một trang trống"
+        },
+        "meeting": {
+          "title": "Ghi chú họp",
+          "description": "Mẫu cho ghi chú cuộc họp"
+        },
+        "daily": {
+          "title": "Nhật ký hàng ngày",
+          "description": "Mẫu cho nhật ký hàng ngày"
+        }
+      }
+    },
+    "editor": {
+      "untitledNote": "Ghi chú không có tiêu đề",
+      "save": "Lưu",
+      "saving": "Đang lưu...",
+      "share": "Chia sẻ",
+      "settings": "Cài đặt",
+      "addTag": "Thêm thẻ...",
+      "addBlock": "Thêm khối",
+      "success": {
+        "noteUpdated": "Đã cập nhật ghi chú",
+        "noteUpdatedDesc": "Ghi chú của bạn đã được lưu thành công"
+      }
+    }
   }
 }

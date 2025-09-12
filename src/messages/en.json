@@ -716,5 +716,71 @@
   "Explore": {
     "title": "Explore",
     "description": "Explore quizzes and flashcards made by other students."
+  },
+  "Notes": {
+    "title": "Notes",
+    "description": "Create and manage your notes with block-based editing",
+    "stats": {
+      "totalNotes": "Total Notes",
+      "recentlyUpdated": "Recently Updated",
+      "myNotes": "My Notes"
+    },
+    "search": {
+      "placeholder": "Search notes..."
+    },
+    "sort": {
+      "lastModified": "Last Modified",
+      "dateCreated": "Date Created",
+      "title": "Title",
+      "desc": "Newest First",
+      "asc": "Oldest First"
+    },
+    "actions": {
+      "createNote": "Create Note",
+      "retry": "Retry"
+    },
+    "emptyState": {
+      "noNotes": "No notes yet",
+      "noResults": "No results found",
+      "createFirst": "Create your first note to get started",
+      "noResultsDescription": "Try adjusting your search terms"
+    },
+    "errors": {
+      "loadFailed": "Failed to load notes",
+      "failedToLoadNote": "Failed to load note",
+      "noteNotFound": "Note not found",
+      "updateFailed": "Failed to update note"
+    },
+    "create": {
+      "title": "Create New Note",
+      "button": "Create Note",
+      "templates": {
+        "blank": {
+          "title": "Blank Note",
+          "description": "Start with a blank page"
+        },
+        "meeting": {
+          "title": "Meeting Notes",
+          "description": "Template for meeting notes"
+        },
+        "daily": {
+          "title": "Daily Journal",
+          "description": "Template for daily journaling"
+        }
+      }
+    },
+    "editor": {
+      "untitledNote": "Untitled Note",
+      "save": "Save",
+      "saving": "Saving...",
+      "share": "Share",
+      "settings": "Settings",
+      "addTag": "Add tag...",
+      "addBlock": "Add a block",
+      "success": {
+        "noteUpdated": "Note updated",
+        "noteUpdatedDesc": "Your note has been saved successfully"
+      }
+    }
   }
 }
