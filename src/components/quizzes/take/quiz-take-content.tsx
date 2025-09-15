@@ -3,10 +3,12 @@
 import { Button } from "@/components/ui/button";
 import { useQuestionResults } from "@/hooks/quiz/use-question-results";
 import { useSubmitQuizAttempt } from "@/hooks/quiz/use-quiz-attempt";
+import { useQuizNavigationLogic } from "@/hooks/quiz/use-quiz-navigation-logic";
+import { useQuizResults } from "@/hooks/quiz/use-quiz-results";
 import type { BackendQuizEntity } from "@/types/quiz";
-import type { QuizAnswer, QuizResult, QuizTakeMode } from "@/types/quiz-take";
+import type { QuizTakeMode } from "@/types/quiz-take";
 import { Loader2 } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback } from "react";
 import { QuizHeader } from "./quiz-header";
 import { QuizNavigation } from "./quiz-navigation";
 import { QuizQuestion } from "./quiz-question";
@@ -18,128 +20,41 @@ interface QuizTakeContentProps {
 }
 
 export function QuizTakeContent({ quiz, mode = "QUIZ" }: QuizTakeContentProps) {
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [answers, setAnswers] = useState<QuizAnswer[]>([]);
-  const [startTime] = useState(Date.now());
-  const [timeSpent, setTimeSpent] = useState(0);
-  const [isCompleted, setIsCompleted] = useState(false);
-  const [result, setResult] = useState<QuizResult | null>(null);
-
-  const { mutateAsync: submitAttempt, isPending: isSubmitting } =
-    useSubmitQuizAttempt();
-
-  useEffect(() => {
-    if (isCompleted) return;
-
-    const interval = setInterval(() => {
-      setTimeSpent(Math.floor((Date.now() - startTime) / 1000));
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [startTime, isCompleted]);
-
   const questions = quiz.quizData?.questions || [];
-  const currentQuestion = questions[currentQuestionIndex];
+
+  const {
+    currentQuestionIndex,
+    answers,
+    isCompleted,
+    setAnswers,
+    setIsCompleted,
+    handleAnswerChange,
+    handleNavigateToQuestion,
+    handlePrevious,
+    handleNext,
+    handleRetake,
+  } = useQuizNavigationLogic({ questions });
 
   const { getQuestionResult } = useQuestionResults({
     questions,
     answers,
   });
 
+  const { calculateResult } = useQuizResults({
+    quiz,
+    questions,
+    answers,
+  });
+
+  const { mutateAsync: submitAttempt, isPending: isSubmitting } =
+    useSubmitQuizAttempt();
+
+  const currentQuestion = questions[currentQuestionIndex];
   const currentQuestionResult = currentQuestion
     ? getQuestionResult(currentQuestion.id)
     : null;
 
   const showFeedback = mode === "QUIZ" && !!currentQuestionResult;
-
-  const handleAnswerChange = useCallback(
-    (optionId: string) => {
-      const questionId = currentQuestion?.id;
-
-      // Ensure we have a valid question ID
-      if (!questionId) return;
-
-      setAnswers((prev) => {
-        const existing = prev.find((a) => a.questionId === questionId);
-        if (existing) {
-          return prev.map((a) =>
-            a.questionId === questionId
-              ? { ...a, selectedOptionId: optionId, timeSpent: timeSpent }
-              : a,
-          );
-        }
-        return [...prev, { questionId, selectedOptionId: optionId, timeSpent }];
-      });
-    },
-    [currentQuestion?.id, timeSpent],
-  );
-
-  const handleNavigateToQuestion = useCallback(
-    (index: number) => {
-      if (index >= 0 && index < questions.length && !isCompleted) {
-        setCurrentQuestionIndex(index);
-      }
-    },
-    [questions.length, isCompleted],
-  );
-
-  const handlePrevious = useCallback(() => {
-    setCurrentQuestionIndex((prev) => {
-      if (prev > 0) {
-        return prev - 1;
-      }
-      return prev;
-    });
-  }, []);
-
-  const handleNext = useCallback(() => {
-    setCurrentQuestionIndex((prev) => {
-      if (prev < questions.length - 1) {
-        return prev + 1;
-      }
-      return prev;
-    });
-  }, [questions.length]);
-
-  const calculateResult = useCallback((): QuizResult => {
-    let correctAnswers = 0;
-    let totalScore = 0;
-    const maxScore =
-      questions?.reduce((sum, q) => sum + (q.points || 1), 0) || 0;
-
-    const detailedAnswers = (questions || []).map((question) => {
-      const userAnswer = answers.find((a) => a.questionId === question.id);
-      const correctOptionId = question.correctAnswer || "";
-      const isCorrect = userAnswer?.selectedOptionId === correctOptionId;
-
-      if (isCorrect) {
-        correctAnswers++;
-        totalScore += question.points || 1;
-      }
-
-      return {
-        questionId: question.id,
-        selectedOptionId: userAnswer?.selectedOptionId || "",
-        correctOptionId,
-        isCorrect,
-        question,
-      };
-    });
-
-    const percentage = maxScore > 0 ? (totalScore / maxScore) * 100 : 0;
-    const passed = percentage >= (quiz.passingScore || 70); // Default to 70% if not set
-
-    return {
-      score: totalScore,
-      maxScore,
-      percentage,
-      correctAnswers,
-      totalQuestions: questions?.length || 0,
-      timeSpent,
-      passed,
-      answers: detailedAnswers,
-    };
-  }, [answers, questions, quiz.passingScore, timeSpent]);
 
   const handleSubmit = useCallback(async () => {
     try {
@@ -148,11 +63,8 @@ export function QuizTakeContent({ quiz, mode = "QUIZ" }: QuizTakeContentProps) {
         answers: answers.map((a) => ({
           questionId: a.questionId,
           selectedOptionIds: [a.selectedOptionId],
-          timeSpent: a.timeSpent,
+          timeSpent: 0, // Set to 0 since we're removing time tracking
         })),
-        startedAt: new Date(startTime).toISOString(),
-        completedAt: new Date().toISOString(),
-        timeSpentSec: timeSpent,
       };
 
       // Submit to backend
@@ -166,33 +78,8 @@ export function QuizTakeContent({ quiz, mode = "QUIZ" }: QuizTakeContentProps) {
         throw new Error("Empty response from server");
       }
 
-      // Convert backend response to frontend format
-      const quizResult: QuizResult = {
-        score: review.score,
-        maxScore: review.maxScore,
-        percentage: review.finalScorePercent,
-        correctAnswers: review.correct,
-        totalQuestions: review.questions?.length || 0,
-        timeSpent: review.timeSpentSec,
-        passed: review.score >= (quiz.passingScore || 70), // Default to 70% if not set
-        answers: (review.questions || []).map((q) => ({
-          questionId: q.questionId,
-          selectedOptionId: q.selectedOptionIds?.[0] || "",
-          correctOptionId: q.correctOptionIds?.[0] || "",
-          isCorrect: q.isCorrect,
-          question: {
-            id: q.questionId,
-            text: q.questionText,
-            type: "MULTIPLE_CHOICE",
-            points: q.pointsPossible,
-            options: q.options || [],
-            correctAnswer: q.correctOptionIds?.[0] || "",
-            explanation: q.explanation,
-          },
-        })),
-      };
-
-      setResult(quizResult);
+      // Set result and mark as completed
+      setAnswers([]); // Clear answers before setting result
       setIsCompleted(true);
     } catch (error: any) {
       console.error("Failed to submit quiz:", error);
@@ -218,27 +105,10 @@ export function QuizTakeContent({ quiz, mode = "QUIZ" }: QuizTakeContentProps) {
       );
 
       // Fallback to local calculation if backend fails
-      const quizResult = calculateResult();
-      setResult(quizResult);
+      setAnswers([]); // Clear answers before setting result
       setIsCompleted(true);
     }
-  }, [
-    answers,
-    calculateResult,
-    quiz.id,
-    quiz.passingScore,
-    startTime,
-    timeSpent,
-    submitAttempt,
-  ]);
-
-  const handleRetake = useCallback(() => {
-    setCurrentQuestionIndex(0);
-    setAnswers([]);
-    setTimeSpent(0);
-    setIsCompleted(false);
-    setResult(null);
-  }, []);
+  }, [answers, quiz.id, submitAttempt, setAnswers, setIsCompleted]);
 
   const handleBackToQuizzes = useCallback(() => {}, []);
 
@@ -273,7 +143,9 @@ export function QuizTakeContent({ quiz, mode = "QUIZ" }: QuizTakeContentProps) {
     );
   }
 
-  if (isCompleted && result) {
+  if (isCompleted) {
+    // Get the result for display
+    const result = calculateResult();
     return (
       <div className="flex-1 p-6">
         <QuizResultComponent
@@ -294,8 +166,6 @@ export function QuizTakeContent({ quiz, mode = "QUIZ" }: QuizTakeContentProps) {
           title={quiz.title}
           currentQuestion={currentQuestionIndex}
           totalQuestions={questions.length}
-          timeSpent={timeSpent}
-          estimatedTime={quiz.estimatedTime}
           mode={mode}
         />
       </div>
@@ -305,11 +175,18 @@ export function QuizTakeContent({ quiz, mode = "QUIZ" }: QuizTakeContentProps) {
             <QuizQuestion
               question={currentQuestion}
               selectedOptionId={currentAnswer?.selectedOptionId}
-              onAnswerChange={handleAnswerChange}
-              showResult={mode === "QUIZ" && !!currentQuestionResult}
+              onAnswerChange={(optionId) =>
+                handleAnswerChange(currentQuestion.id, optionId)
+              }
+              showResult={mode === "QUIZ" ? false : !!currentQuestionResult}
               correctOptionId={currentQuestionResult?.correctAnswer}
               mode={mode}
-              isAnswered={!!currentAnswer}
+              showTextResult={
+                mode === "QUIZ" &&
+                !!currentQuestionResult &&
+                (currentQuestion?.type === "FILL_BLANK" ||
+                  currentQuestion?.type === "FREE_RESPONSE")
+              }
             />
           )}
         </div>

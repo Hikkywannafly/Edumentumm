@@ -10,7 +10,6 @@ import {
   CheckCircle,
   ChevronDown,
   ChevronUp,
-  Clock,
   RotateCcw,
   Target,
   TrendingUp,
@@ -23,12 +22,6 @@ import { useState } from "react";
 export function QuizResult({ result, quiz, onRetake }: QuizResultProps) {
   const router = useRouter();
   const [expandedQuestion, setExpandedQuestion] = useState<number | null>(null);
-
-  const formatTime = (seconds: number) => {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
-  };
 
   const getScoreColor = (percentage: number) => {
     if (percentage >= 90) return "text-green-600";
@@ -60,8 +53,16 @@ export function QuizResult({ result, quiz, onRetake }: QuizResultProps) {
   const getSelectedOptionText = (
     questionId: string,
     selectedOptionId: string,
+    questionType?: string,
   ) => {
     const question = quiz.quizData?.questions?.find((q) => q.id === questionId);
+
+    // For text-based questions, return the actual text answer
+    if (questionType === "FILL_BLANK" || questionType === "FREE_RESPONSE") {
+      return selectedOptionId || "No answer provided";
+    }
+
+    // For multiple choice questions, find the option text
     const option = question?.options?.find(
       (opt) => opt.id === selectedOptionId,
     );
@@ -71,8 +72,16 @@ export function QuizResult({ result, quiz, onRetake }: QuizResultProps) {
   const getCorrectOptionText = (
     questionId: string,
     correctOptionId: string,
+    questionType?: string,
   ) => {
     const question = quiz.quizData?.questions?.find((q) => q.id === questionId);
+
+    // For text-based questions, return the correct answer text
+    if (questionType === "FILL_BLANK" || questionType === "FREE_RESPONSE") {
+      return correctOptionId || "No correct answer defined";
+    }
+
+    // For multiple choice questions, find the option text
     const option = question?.options?.find((opt) => opt.id === correctOptionId);
     return option ? option.text : "Unknown";
   };
@@ -114,7 +123,7 @@ export function QuizResult({ result, quiz, onRetake }: QuizResultProps) {
       </Card>
 
       {/* Statistics */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <Card className="border border-border/50 bg-card/50 backdrop-blur-sm">
           <CardContent className="p-6 text-center">
             <Award className="mx-auto mb-3 h-8 w-8 text-blue-600" />
@@ -134,16 +143,6 @@ export function QuizResult({ result, quiz, onRetake }: QuizResultProps) {
               {result.correctAnswers || 0}/{result.totalQuestions || 0}
             </div>
             <p className="text-muted-foreground text-sm">Correct Answers</p>
-          </CardContent>
-        </Card>
-
-        <Card className="border border-border/50 bg-card/50 backdrop-blur-sm">
-          <CardContent className="p-6 text-center">
-            <Clock className="mx-auto mb-3 h-8 w-8 text-purple-600" />
-            <div className="font-bold text-2xl text-foreground">
-              {formatTime(result.timeSpent || 0)}
-            </div>
-            <p className="text-muted-foreground text-sm">Time Spent</p>
           </CardContent>
         </Card>
       </div>
@@ -247,6 +246,7 @@ export function QuizResult({ result, quiz, onRetake }: QuizResultProps) {
                               {getSelectedOptionText(
                                 answer.questionId,
                                 answer.selectedOptionId,
+                                answer.question?.type,
                               )}
                             </span>
                           </div>
@@ -259,6 +259,7 @@ export function QuizResult({ result, quiz, onRetake }: QuizResultProps) {
                                 {getCorrectOptionText(
                                   answer.questionId,
                                   answer.correctOptionId,
+                                  answer.question?.type,
                                 )}
                               </span>
                             </div>
@@ -288,43 +289,71 @@ export function QuizResult({ result, quiz, onRetake }: QuizResultProps) {
                           <div>
                             <h4 className="font-medium">Options:</h4>
                             <div className="mt-2 space-y-2">
-                              {question?.options?.map((option) => {
-                                const isUserSelected =
-                                  option.id === answer.selectedOptionId;
-                                const isCorrect =
-                                  option.id === answer.correctOptionId;
-
-                                return (
-                                  <div
-                                    key={option.id}
-                                    className={`rounded-md p-2 ${
-                                      isUserSelected
-                                        ? isCorrect
-                                          ? "bg-green-100 dark:bg-green-900/30"
-                                          : "bg-red-100 dark:bg-red-900/30"
-                                        : isCorrect
-                                          ? "bg-green-100 dark:bg-green-900/30"
-                                          : "bg-muted"
-                                    }`}
-                                  >
+                              {question?.type === "FILL_BLANK" ||
+                              question?.type === "FREE_RESPONSE" ? (
+                                <div className="space-y-2">
+                                  <div className="rounded-md bg-muted p-2">
                                     <div className="flex items-center gap-2">
-                                      {isUserSelected && (
-                                        <span className="font-medium">
-                                          {isCorrect
-                                            ? "✓ Your answer"
-                                            : "✗ Your answer"}
-                                        </span>
-                                      )}
-                                      {isCorrect && !isUserSelected && (
-                                        <span className="font-medium text-green-600">
-                                          ✓ Correct answer
-                                        </span>
-                                      )}
-                                      <span>{option.text}</span>
+                                      <span className="font-medium">
+                                        Your answer:
+                                      </span>
+                                      <span>
+                                        {answer.selectedOptionId ||
+                                          "No answer provided"}
+                                      </span>
                                     </div>
                                   </div>
-                                );
-                              })}
+                                  <div className="rounded-md bg-green-100 p-2 dark:bg-green-900/30">
+                                    <div className="flex items-center gap-2">
+                                      <span className="font-medium text-green-600">
+                                        Correct answer:
+                                      </span>
+                                      <span>
+                                        {answer.correctOptionId ||
+                                          "No correct answer defined"}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                              ) : (
+                                question?.options?.map((option) => {
+                                  const isUserSelected =
+                                    option.id === answer.selectedOptionId;
+                                  const isCorrect =
+                                    option.id === answer.correctOptionId;
+
+                                  return (
+                                    <div
+                                      key={option.id}
+                                      className={`rounded-md p-2 ${
+                                        isUserSelected
+                                          ? isCorrect
+                                            ? "bg-green-100 dark:bg-green-900/30"
+                                            : "bg-red-100 dark:bg-red-900/30"
+                                          : isCorrect
+                                            ? "bg-green-100 dark:bg-green-900/30"
+                                            : "bg-muted"
+                                      }`}
+                                    >
+                                      <div className="flex items-center gap-2">
+                                        {isUserSelected && (
+                                          <span className="font-medium">
+                                            {isCorrect
+                                              ? "✓ Your answer"
+                                              : "✗ Your answer"}
+                                          </span>
+                                        )}
+                                        {isCorrect && !isUserSelected && (
+                                          <span className="font-medium text-green-600">
+                                            ✓ Correct answer
+                                          </span>
+                                        )}
+                                        <span>{option.text}</span>
+                                      </div>
+                                    </div>
+                                  );
+                                })
+                              )}
                             </div>
                           </div>
                         </div>

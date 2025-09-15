@@ -7,6 +7,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import type { QuizMainNavigationProps } from "@/types/quiz-take";
 import {
   ArrowRight,
   Edit,
@@ -19,26 +20,15 @@ import {
 import { useState } from "react";
 import { QuizWarningDialog } from "./quiz-warning-dialog";
 
-interface QuizMainNavigationProps {
-  hasPreviousQuestion: boolean;
-  hasNextQuestion: boolean;
-  isAnswered: boolean;
-  mode?: string;
-  onPrevious: () => void;
-  onNext: () => void;
-  onSubmit: () => void;
-  onRestartQuiz: () => void;
-  onEditQuiz: () => void;
-  onResetQuiz: () => void;
-  onDeleteQuiz: () => void;
-  onShare: () => void;
+interface QuizMainNavigationPropsExtended extends QuizMainNavigationProps {
+  isTextInputQuestion?: boolean;
+  isTextInputValid?: boolean;
 }
 
 export function QuizMainNavigation({
   hasPreviousQuestion,
   hasNextQuestion,
   isAnswered,
-  mode = "QUIZ",
   onPrevious,
   onNext,
   onSubmit,
@@ -47,12 +37,17 @@ export function QuizMainNavigation({
   onResetQuiz,
   onDeleteQuiz,
   onShare,
-}: QuizMainNavigationProps) {
+  isTextInputQuestion = false,
+  isTextInputValid = true,
+}: QuizMainNavigationPropsExtended) {
   const [showWarning, setShowWarning] = useState(false);
   const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
 
   const handleNext = () => {
-    if (!isAnswered) {
+    if (isTextInputQuestion && !isTextInputValid) {
+      setPendingAction(() => onNext);
+      setShowWarning(true);
+    } else if (!isAnswered) {
       setPendingAction(() => onNext);
       setShowWarning(true);
     } else {
@@ -61,7 +56,10 @@ export function QuizMainNavigation({
   };
 
   const handleSubmit = () => {
-    if (!isAnswered) {
+    if (isTextInputQuestion && !isTextInputValid) {
+      setPendingAction(() => onSubmit);
+      setShowWarning(true);
+    } else if (!isAnswered) {
       setPendingAction(() => onSubmit);
       setShowWarning(true);
     } else {
@@ -75,6 +73,13 @@ export function QuizMainNavigation({
       pendingAction();
       setPendingAction(null);
     }
+  };
+
+  const getWarningMessage = () => {
+    if (isTextInputQuestion) {
+      return "Please provide an answer before moving to the next question.";
+    }
+    return "Please select an answer before moving to the next question.";
   };
 
   return (
@@ -176,7 +181,7 @@ export function QuizMainNavigation({
         open={showWarning}
         onOpenChange={setShowWarning}
         onConfirm={handleWarningConfirm}
-        mode={mode as "QUIZ" | "EXAM"}
+        customMessage={getWarningMessage()}
       />
     </div>
   );
