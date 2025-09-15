@@ -6,10 +6,10 @@ import type { UpdateStudyGroupFormData } from "../../lib/schemas/group";
 import { useLocalizedNavigation } from "../../lib/utils/navigation";
 
 interface UseUpdateGroupProps {
-  id: string | number;
+  id: string;
   onClose: () => void;
   onGroupUpdate?: (updated: UpdateStudyGroupFormData) => void;
-  onGroupDelete?: (id: number) => void;
+  onGroupDelete?: (id: string) => void;
 }
 
 export function useUpdateGroup({
@@ -24,7 +24,7 @@ export function useUpdateGroup({
   // Update mutation
   const updateMutation = useMutation({
     mutationFn: (data: UpdateStudyGroupFormData) =>
-      groupAPI.updateGroup(data, String(data.id)),
+      groupAPI.updateGroup(data, data.publicId),
     onSuccess: (updated) => {
       if (!updated) {
         toast.error("API returned invalid group data");
@@ -45,12 +45,12 @@ export function useUpdateGroup({
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (groupId: number) => groupAPI.deleteGroup(groupId),
-    onSuccess: (_, groupId) => {
+    mutationFn: (publicId: string) => groupAPI.deleteGroup(publicId),
+    onSuccess: (_, publicId) => {
       toast.success("Group deleted successfully.");
-      onGroupDelete?.(groupId);
+      onGroupDelete?.(publicId);
       queryClient.invalidateQueries({ queryKey: ["myGroups"] });
-      queryClient.removeQueries({ queryKey: ["groupDetail", groupId] });
+      queryClient.removeQueries({ queryKey: ["groupDetail", publicId] });
 
       onClose();
       goGroup();

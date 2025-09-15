@@ -10,7 +10,7 @@ export const createStudyGroupSchema = z.object({
 export type CreateStudyGroupFormData = z.infer<typeof createStudyGroupSchema>;
 
 export const updateStudyGroupSchema = z.object({
-  id: z.number().int().positive("ID must be a positive number"),
+  publicId: z.string().min(6, "Group name must be at least 3 characters"),
   name: z.string().min(6, "Group name must be at least 3 characters"),
   description: z.string().min(10, "Description must be at least 3 characters"),
   memberLimit: z.number().min(1).max(50),

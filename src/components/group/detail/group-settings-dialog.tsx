@@ -27,7 +27,7 @@ interface GroupSettingsDialogProps {
   onClose: () => void;
   group: UpdateStudyGroupFormData;
   onGroupUpdate?: (updated: UpdateStudyGroupFormData) => void;
-  onGroupDelete?: (id: number) => void;
+  onGroupDelete?: (publicId: string) => void;
 }
 
 export default function GroupSettingsDialog({
@@ -49,7 +49,7 @@ export default function GroupSettingsDialog({
 
   const { confirmDelete, setConfirmDelete, updateMutation, deleteMutation } =
     useUpdateGroup({
-      id: group.id,
+      id: group.publicId,
       onClose,
       onGroupUpdate,
       onGroupDelete,
@@ -61,7 +61,7 @@ export default function GroupSettingsDialog({
 
   const handleDelete = (confirm: boolean) => {
     if (confirm) {
-      deleteMutation.mutate(group.id);
+      deleteMutation.mutate(group.publicId);
     }
   };
 
@@ -87,7 +87,7 @@ export default function GroupSettingsDialog({
           onSubmit={handleSubmit(handleUpdate)}
           className="flex flex-col gap-4"
         >
-          <input type="hidden" {...register("id")} />
+          <input type="hidden" {...register("publicId")} />
 
           <div className="flex flex-col gap-2">
             <Label htmlFor="name">Tên nhóm</Label>

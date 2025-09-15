@@ -71,9 +71,9 @@ class GroupAPI {
     return response;
   }
 
-  async getGroupDetailById(groupId: number): Promise<GroupDetailResponse> {
+  async getGroupDetailById(publicId: string): Promise<GroupDetailResponse> {
     const response = await this.request<GetGroupsDetailAPIResponse>(
-      `/user/groups/${groupId}`,
+      `/user/groups/${publicId}`,
       {
         method: "GET",
       },
@@ -90,23 +90,23 @@ class GroupAPI {
     return response.data;
   }
 
-  async joinGroup(groupId: number): Promise<void> {
-    await this.request(`/user/groups/${groupId}/join`, {
+  async joinGroup(publicId: string): Promise<void> {
+    await this.request(`/user/groups/${publicId}/join`, {
       method: "POST",
     });
   }
 
-  async deleteGroup(groupId: number): Promise<void> {
-    await this.request(`/user/groups/${groupId}`, {
+  async deleteGroup(publicId: string): Promise<void> {
+    await this.request(`/user/groups/${publicId}`, {
       method: "DELETE",
     });
   }
 
   async updateGroup(
     createGroup: GroupRequest,
-    id: string,
+    publicId: string,
   ): Promise<GroupResponse> {
-    const response = await this.request<any>(`/user/groups/${id}`, {
+    const response = await this.request<any>(`/user/groups/${publicId}`, {
       method: "PATCH",
       body: JSON.stringify(createGroup),
     });

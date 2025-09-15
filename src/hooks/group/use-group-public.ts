@@ -16,7 +16,7 @@ interface UsePublicGroupsReturn {
   setKeyword: (keyword: string) => void;
   setPage: (page: number) => void;
   isSearching: boolean;
-  removeGroup: (groupId: number) => void;
+  removeGroup: (groupId: string) => void;
 }
 
 export function usePublicGroups(pageSize = 8): UsePublicGroupsReturn {
@@ -43,7 +43,7 @@ export function usePublicGroups(pageSize = 8): UsePublicGroupsReturn {
     placeholderData: keepPreviousData,
   });
 
-  const removeGroup = (groupId: number) => {
+  const removeGroup = (publicId: string) => {
     queryClient.setQueryData<{
       data: GroupResponse[];
       pagination: IPagination;
@@ -51,7 +51,7 @@ export function usePublicGroups(pageSize = 8): UsePublicGroupsReturn {
       old
         ? {
             ...old,
-            data: old.data.filter((g) => g.id !== groupId),
+            data: old.data.filter((g) => g.publicId !== publicId),
           }
         : old,
     );

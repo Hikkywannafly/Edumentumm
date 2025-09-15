@@ -214,7 +214,7 @@ export default function GroupDetailContentV2({ id }: { id: string }) {
 
   const groupSettings = useMemo(
     () => ({
-      id: groupDetail?.id ?? 0,
+      publicId: groupDetail?.publicId ?? "",
       name: groupDetail?.name ?? "",
       description: groupDetail?.description ?? "",
       memberLimit: groupDetail?.memberLimit ?? 0,
@@ -227,7 +227,7 @@ export default function GroupDetailContentV2({ id }: { id: string }) {
     <div className="min-h-screen bg-background p-4 md:p-6">
       {/* Dialogs */}
       <GiftPointsDialog
-        groupId={groupDetail?.id}
+        publicId={groupDetail?.publicId}
         maxPoints={1000}
         open={dialogState.gifts}
         onClose={() => toggleDialog("gifts")}

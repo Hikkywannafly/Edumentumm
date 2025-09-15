@@ -29,9 +29,9 @@ export function useMyGroups() {
     );
   };
 
-  const removeGroup = (groupId: number) => {
+  const removeGroup = (publicId: string) => {
     queryClient.setQueryData<GroupResponse[]>(["myGroups"], (old) =>
-      old ? old.filter((g) => g.id !== groupId) : [],
+      old ? old.filter((g) => g.publicId !== publicId) : [],
     );
   };
 
