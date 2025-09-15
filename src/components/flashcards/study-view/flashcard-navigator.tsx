@@ -6,6 +6,7 @@ import { htmlToText } from "@/lib/utils/text";
 import type { FlashcardSet } from "@/types/flashcard";
 import { ChevronLeft, ChevronRight, RotateCcw } from "lucide-react";
 import { useState } from "react";
+import WideContainer from "../../layout/wide-layout";
 import { FlipCard } from "./flip-card";
 
 interface FlashcardNavigatorProps {
@@ -35,7 +36,7 @@ export function FlashcardNavigator({ flashcardSet }: FlashcardNavigatorProps) {
   };
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6">
+    <WideContainer classNames="mx-auto max-w-4xl space-y-6">
       {/* Header */}
       <div className="flex items-center justify-center">
         <div className="text-center">
@@ -69,25 +70,27 @@ export function FlashcardNavigator({ flashcardSet }: FlashcardNavigatorProps) {
       </Card>
 
       {/* Flashcard with Navigation */}
-      <div className="flex items-center justify-center gap-8">
+      <div className="relative mx-auto max-w-4xl">
         {/* Previous Button */}
         <Button
           variant="outline"
           size="icon"
           onClick={handlePrevious}
           disabled={currentIndex === 0}
-          className="h-12 w-12"
+          className="-translate-y-1/2 -left-20 absolute top-1/2 h-12 w-12"
         >
           <ChevronLeft className="h-6 w-6" />
         </Button>
 
         {/* Flashcard */}
-        <FlipCard
-          key={currentIndex}
-          flashcard={currentFlashcard}
-          onNext={handleNext}
-          onPrevious={handlePrevious}
-        />
+        <div className="flex justify-center">
+          <FlipCard
+            key={currentIndex}
+            flashcard={currentFlashcard}
+            onNext={handleNext}
+            onPrevious={handlePrevious}
+          />
+        </div>
 
         {/* Next Button */}
         <Button
@@ -95,11 +98,11 @@ export function FlashcardNavigator({ flashcardSet }: FlashcardNavigatorProps) {
           size="icon"
           onClick={handleNext}
           disabled={currentIndex === flashcardSet.flashcards.length - 1}
-          className="h-12 w-12"
+          className="-translate-y-1/2 -right-20 absolute top-1/2 h-12 w-12"
         >
           <ChevronRight className="h-6 w-6" />
         </Button>
       </div>
-    </div>
+    </WideContainer>
   );
 }
