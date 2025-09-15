@@ -13,12 +13,13 @@ function getAuthHeaders(request: NextRequest) {
 // PUT /api/todos/[id] - Update a todo
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } },
-) {
+  { params }: { params: Promise<{ id: string }> },
+): Promise<NextResponse> {
   try {
+    const resolvedParams = await params;
     const authHeaders = getAuthHeaders(request);
     const body = await request.json();
-    const todoId = params.id;
+    const todoId = resolvedParams.id;
 
     const response = await axios.put(
       `${API_BASE_URL}/user/todos/${todoId}`,
@@ -52,11 +53,12 @@ export async function PUT(
 // DELETE /api/todos/[id] - Delete a todo
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } },
-) {
+  { params }: { params: Promise<{ id: string }> },
+): Promise<NextResponse> {
   try {
+    const resolvedParams = await params;
     const authHeaders = getAuthHeaders(request);
-    const todoId = params.id;
+    const todoId = resolvedParams.id;
 
     const response = await axios.delete(
       `${API_BASE_URL}/user/todos/${todoId}`,
