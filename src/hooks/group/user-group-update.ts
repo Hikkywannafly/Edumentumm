@@ -7,7 +7,7 @@ import { useLocalizedNavigation } from "../../lib/utils/navigation";
 interface UseUpdateGroupProps {
   onClose: () => void;
   onGroupUpdate?: (updated: UpdateStudyGroupFormData) => void;
-  onGroupDelete?: (id: number) => void;
+  onGroupDelete?: (id: string) => void;
 }
 
 export function useUpdateGroup({
@@ -20,7 +20,7 @@ export function useUpdateGroup({
 
   const handleUpdate = async (data: UpdateStudyGroupFormData) => {
     try {
-      const updated = await groupAPI.updateGroup(data, String(data.id));
+      const updated = await groupAPI.updateGroup(data, data.publicId);
       if (!updated) throw new Error("API returned invalid group data");
       onGroupUpdate?.(updated);
       toast.success("Group updated successfully.");
@@ -35,7 +35,7 @@ export function useUpdateGroup({
     }
   };
 
-  const handleDelete = async (groupId: number) => {
+  const handleDelete = async (groupId: string) => {
     try {
       await groupAPI.deleteGroup(groupId);
       toast.success("Group deleted successfully.");

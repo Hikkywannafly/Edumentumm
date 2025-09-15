@@ -13,11 +13,11 @@ import { useState } from "react";
 interface GiftPointsDialogProps {
   open: boolean;
   onClose: () => void;
-  groupId?: number;
+  publicId?: string;
   maxPoints: number;
   onGiftSubmit?: (payload: {
     points: number;
-    groupId?: number;
+    publicId?: string;
     message: string;
   }) => void;
 }
@@ -25,7 +25,7 @@ interface GiftPointsDialogProps {
 export default function GiftPointsDialog({
   open,
   onClose,
-  groupId,
+  publicId,
   maxPoints = 100,
   onGiftSubmit,
 }: GiftPointsDialogProps) {
@@ -33,7 +33,7 @@ export default function GiftPointsDialog({
   const [message, setMessage] = useState("");
 
   const handleSubmit = () => {
-    onGiftSubmit?.({ points, groupId, message });
+    onGiftSubmit?.({ points, publicId, message });
     onClose();
   };
 

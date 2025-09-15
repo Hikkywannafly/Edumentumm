@@ -1,5 +1,5 @@
 export interface GroupResponse {
-  id: number;
+  publicId: string;
   name: string;
   description: string;
   memberLimit: number;
@@ -41,7 +41,7 @@ export interface UserGroupResponse {
 }
 
 export interface GroupDetailResponse {
-  id: number;
+  publicId: string;
   memberLimit: number;
   ownerId: number;
   ownerName: string;

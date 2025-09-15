@@ -53,9 +53,9 @@ export default function GroupContent() {
   ) =>
     list.length > 0 ? (
       list.map((group) => (
-        <div key={group.id}>
+        <div key={group.publicId}>
           {isMyGroup ? (
-            <LocalizedLink href={`/group/${group.id}`}>
+            <LocalizedLink href={`/group/${group.publicId}`}>
               <StudyGroupCard
                 publicHidden={false}
                 roleHidden={false}
@@ -195,7 +195,7 @@ export default function GroupContent() {
         onClose={() => setSelectedGroup(null)}
         onJoinSuccess={(group) => {
           addGroup(group);
-          removeGroup(group.id);
+          removeGroup(group.publicId);
         }}
       />
     </div>
