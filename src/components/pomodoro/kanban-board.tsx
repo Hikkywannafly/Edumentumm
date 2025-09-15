@@ -10,8 +10,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import type { Task } from "@/contexts/pomodoro-context";
 import { GripVertical, Plus, Trello } from "lucide-react";
-import type { Task } from "./index";
 
 interface KanbanBoardViewProps {
   tasks: Task[];
@@ -26,7 +26,7 @@ export function KanbanBoardView({
   setNewTask,
   addTask,
 }: KanbanBoardViewProps) {
-  const todoTasks = tasks.filter((task) => task.status === "todo");
+  const todoTasks = tasks.filter((task) => task.status === "PENDING");
 
   return (
     <div className="space-y-4">
@@ -82,7 +82,7 @@ export function KanbanBoardView({
                   <div className="flex items-start gap-3">
                     <GripVertical className="h-4 w-4mt-0.5 cursor-grab" />
                     <div className="flex-1">
-                      <div className="font-medium">{task.text}</div>
+                      <div className="font-medium">{task.nameTask}</div>
                       <div className="mt-1 text-sm">Ok</div>
                     </div>
                   </div>

@@ -1,17 +1,24 @@
 "use client";
 
+import {
+  useCreateTodo,
+  useDeleteTodo,
+  useTodos,
+  useToggleTodoCompletion,
+  useUpdateTodo,
+} from "@/hooks/todo/use-todos-query";
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 
 export type TimerMode = "focus" | "shortBreak" | "longBreak";
 export type TimerType = "pomodoro" | "countdown";
 export type ViewMode = "todo" | "kanban";
 
+// Simplified Task interface that matches Todo
 export interface Task {
   id: string;
-  text: string;
-  category: string;
-  completed: boolean;
-  status: "todo" | "inProgress" | "done";
+  nameTask: string;
+  status: "COMPLETED" | "PENDING";
+  createdAt?: string;
 }
 
 interface PomodoroContextType {
@@ -28,6 +35,8 @@ interface PomodoroContextType {
   newTask: string;
   selectedCategory: string;
   viewMode: ViewMode;
+  isLoading: boolean;
+  error: string | null;
 
   // Timer actions
   setTimerType: (type: TimerType) => void;
@@ -44,6 +53,7 @@ interface PomodoroContextType {
   addTask: () => void;
   toggleTaskCompletion: (taskId: string) => void;
   deleteTask: (taskId: string) => void;
+  updateTask: (taskId: string, nameTask: string) => void;
 
   // Mini player actions
   setIsMini: (mini: boolean) => void;
@@ -66,33 +76,20 @@ export function PomodoroProvider({ children }: { children: React.ReactNode }) {
   const [isRunning, setIsRunning] = useState(false);
   const [isMini, setIsMiniState] = useState(false);
 
-  const [tasks, setTasks] = useState<Task[]>([
-    {
-      id: "1",
-      text: "Test",
-      category: "Uncategorized",
-      completed: false,
-      status: "todo",
-    },
-    {
-      id: "2",
-      text: "Test02",
-      category: "Uncategorized",
-      completed: false,
-      status: "todo",
-    },
-    {
-      id: "3",
-      text: "Test1",
-      category: "Uncategorized",
-      completed: false,
-      status: "todo",
-    },
-  ]);
   const [newTask, setNewTaskState] = useState("");
   const [selectedCategory, setSelectedCategoryState] =
     useState("Uncategorized");
   const [viewMode, setViewModeState] = useState<ViewMode>("todo");
+
+  // API hooks for todos
+  const { data: todosData, isLoading, error: todosError } = useTodos();
+  const createTodoMutation = useCreateTodo();
+  const deleteTodoMutation = useDeleteTodo();
+  const toggleCompletionMutation = useToggleTodoCompletion();
+  const updateTodoMutation = useUpdateTodo();
+
+  // Convert API todos to Tasks - now they're already in the right format
+  const tasks: Task[] = todosData || [];
 
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -155,30 +152,39 @@ export function PomodoroProvider({ children }: { children: React.ReactNode }) {
   // Add task
   const addTask = () => {
     if (newTask.trim()) {
-      const task: Task = {
-        id: Date.now().toString(),
-        text: newTask.trim(),
-        category: selectedCategory,
-        completed: false,
-        status: "todo",
-      };
-      setTasks([...tasks, task]);
+      createTodoMutation.mutate({
+        nameTask: newTask.trim(),
+        status: "PENDING",
+      });
       setNewTaskState("");
     }
   };
 
   // Toggle task completion
   const toggleTaskCompletion = (taskId: string) => {
-    setTasks(
-      tasks.map((task) =>
-        task.id === taskId ? { ...task, completed: !task.completed } : task,
-      ),
-    );
+    const task = tasks.find((t) => t.id === taskId);
+    if (task) {
+      toggleCompletionMutation.mutate({
+        todoId: taskId,
+        completed: task.status === "PENDING", // Toggle: if PENDING, make it COMPLETED
+        nameTask: task.nameTask, // Include nameTask as required by backend
+      });
+    }
   };
 
   // Delete task
   const deleteTask = (taskId: string) => {
-    setTasks(tasks.filter((task) => task.id !== taskId));
+    deleteTodoMutation.mutate(taskId);
+  };
+
+  // Update task
+  const updateTask = (taskId: string, nameTask: string) => {
+    updateTodoMutation.mutate({
+      todoId: taskId,
+      todoData: {
+        nameTask: nameTask,
+      },
+    });
   };
 
   // Mini player actions
@@ -234,6 +240,8 @@ export function PomodoroProvider({ children }: { children: React.ReactNode }) {
     newTask,
     selectedCategory,
     viewMode,
+    isLoading,
+    error: todosError?.message || null,
     setTimerType,
     setTimerMode,
     setCountdownMinutes,
@@ -246,6 +254,7 @@ export function PomodoroProvider({ children }: { children: React.ReactNode }) {
     addTask,
     toggleTaskCompletion,
     deleteTask,
+    updateTask,
     setIsMini,
     toggleMini,
     formatTime,
