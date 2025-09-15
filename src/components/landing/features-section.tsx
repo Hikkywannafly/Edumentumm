@@ -41,7 +41,7 @@ export default function FeaturesSection() {
   const t = useTranslations("HomePage");
   const mockStudyGroups: GroupResponse[] = [
     {
-      id: 1,
+      publicId: "1",
       name: "Algorithms Sprint",
       description: "Daily LeetCode discussion and mock interviews.",
       memberLimit: 20,
@@ -53,7 +53,7 @@ export default function FeaturesSection() {
       public: true,
     },
     {
-      id: 2,
+      publicId: "2",
       name: "IELTS 7.0+ Prep",
       description: "Speaking rooms and weekly writing reviews.",
       memberLimit: 30,
@@ -65,7 +65,7 @@ export default function FeaturesSection() {
       public: false,
     },
     {
-      id: 3,
+      publicId: "3",
       name: "Operating Systems",
       description: "Exam-focused study with past papers and quizzes.",
       memberLimit: 25,
@@ -343,7 +343,7 @@ export default function FeaturesSection() {
             <div className="relative h-[350px] w-96">
               {mockStudyGroups.map((group, index) => (
                 <div
-                  key={group.id}
+                  key={group.publicId}
                   className="hover:-translate-y-2 absolute inset-0 transition-all duration-300 hover:z-10"
                   style={{
                     transform: `translate(${index * 50}px, ${index * 60}px)`,
