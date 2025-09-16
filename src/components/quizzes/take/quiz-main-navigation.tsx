@@ -23,6 +23,7 @@ import { QuizWarningDialog } from "./quiz-warning-dialog";
 interface QuizMainNavigationPropsExtended extends QuizMainNavigationProps {
   isTextInputQuestion?: boolean;
   isTextInputValid?: boolean;
+  mode?: string;
 }
 
 export function QuizMainNavigation({
@@ -39,15 +40,26 @@ export function QuizMainNavigation({
   onShare,
   isTextInputQuestion = false,
   isTextInputValid = true,
+  mode, // Destructure mode prop
 }: QuizMainNavigationPropsExtended) {
   const [showWarning, setShowWarning] = useState(false);
   const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
+
+  const getWarningMessage = () => {
+    if (isTextInputQuestion) {
+      return "Please provide an answer before moving to the next question.";
+    }
+    return "Please select an answer before moving to the next question.";
+  };
+
+  // In exam mode, we don't show warnings for unanswered questions
+  const shouldShowWarning = mode !== "EXAM" && !isAnswered;
 
   const handleNext = () => {
     if (isTextInputQuestion && !isTextInputValid) {
       setPendingAction(() => onNext);
       setShowWarning(true);
-    } else if (!isAnswered) {
+    } else if (shouldShowWarning) {
       setPendingAction(() => onNext);
       setShowWarning(true);
     } else {
@@ -59,7 +71,7 @@ export function QuizMainNavigation({
     if (isTextInputQuestion && !isTextInputValid) {
       setPendingAction(() => onSubmit);
       setShowWarning(true);
-    } else if (!isAnswered) {
+    } else if (shouldShowWarning) {
       setPendingAction(() => onSubmit);
       setShowWarning(true);
     } else {
@@ -73,13 +85,6 @@ export function QuizMainNavigation({
       pendingAction();
       setPendingAction(null);
     }
-  };
-
-  const getWarningMessage = () => {
-    if (isTextInputQuestion) {
-      return "Please provide an answer before moving to the next question.";
-    }
-    return "Please select an answer before moving to the next question.";
   };
 
   return (
