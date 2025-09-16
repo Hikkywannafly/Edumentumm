@@ -144,7 +144,6 @@ export function QuizTakeContent({ quiz, mode = "QUIZ" }: QuizTakeContentProps) {
   }
 
   if (isCompleted) {
-    // Get the result for display
     const result = calculateResult();
     return (
       <div className="flex-1 p-6">
