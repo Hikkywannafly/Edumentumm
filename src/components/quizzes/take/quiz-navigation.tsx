@@ -21,6 +21,7 @@ export function QuizNavigation({
   questions = [],
   quizId,
   quiz,
+  mode, // Add mode prop
 }: QuizNavigationProps & { quiz?: any }) {
   // Get the current question ID
   const currentQuestionId = questions[currentQuestion]?.id;
@@ -91,7 +92,6 @@ export function QuizNavigation({
     );
   }, [isTextInputQuestion, answers, currentQuestionId]);
 
-  // Compute the final isAnswered value
   const finalIsAnswered = useMemo(() => {
     return isAnswered && (isTextInputQuestion ? isTextInputValid : true);
   }, [isAnswered, isTextInputQuestion, isTextInputValid]);
@@ -130,6 +130,7 @@ export function QuizNavigation({
         onShare={handleShare}
         isTextInputQuestion={!!isTextInputQuestion}
         isTextInputValid={!!isTextInputValid}
+        mode={mode} // Pass mode prop
       />
       <QuizDeleteDialog
         open={showDeleteDialog}

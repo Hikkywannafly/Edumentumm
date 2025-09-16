@@ -178,12 +178,11 @@ export function QuizTakeContent({ quiz, mode = "QUIZ" }: QuizTakeContentProps) {
               onAnswerChange={(optionId) =>
                 handleAnswerChange(currentQuestion.id, optionId)
               }
-              showResult={mode === "QUIZ" ? false : !!currentQuestionResult}
+              showResult={showFeedback}
               correctOptionId={currentQuestionResult?.correctAnswer}
               mode={mode}
               showTextResult={
-                mode === "QUIZ" &&
-                !!currentQuestionResult &&
+                showFeedback &&
                 (currentQuestion?.type === "FILL_BLANK" ||
                   currentQuestion?.type === "FREE_RESPONSE")
               }
