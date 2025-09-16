@@ -9,10 +9,10 @@ export function QuizHeader({
   title,
   currentQuestion,
   totalQuestions,
-  estimatedTime,
-  timeSpent,
   mode = "QUIZ",
-}: QuizHeaderProps & { mode?: "QUIZ" | "EXAM" }) {
+}: Omit<QuizHeaderProps, "timeSpent" | "estimatedTime"> & {
+  mode?: "QUIZ" | "EXAM";
+}) {
   const handleCopyLink = () => {
     navigator.clipboard.writeText(window.location.href);
   };
@@ -20,12 +20,6 @@ export function QuizHeader({
   const handleRandomQuiz = () => {
     // This would be implemented to navigate to a random quiz
     console.log("Navigate to random quiz");
-  };
-
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
   const getModeDescription = () => {
@@ -83,11 +77,6 @@ export function QuizHeader({
           </Button>
         </div>
       </div>
-      {estimatedTime && (
-        <div className="mt-2 text-center text-muted-foreground text-sm">
-          Time: {formatTime(timeSpent)} / {formatTime(estimatedTime * 60)}
-        </div>
-      )}
       <div className="mt-2 text-center text-muted-foreground text-sm">
         {getModeDescription()}
       </div>

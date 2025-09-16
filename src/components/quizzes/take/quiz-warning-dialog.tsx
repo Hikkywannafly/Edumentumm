@@ -15,20 +15,20 @@ interface QuizWarningDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onConfirm: () => void;
-  mode: "QUIZ" | "EXAM";
+  customMessage?: string;
 }
 
 export function QuizWarningDialog({
   open,
   onOpenChange,
   onConfirm,
-  mode,
+  customMessage,
 }: QuizWarningDialogProps) {
   const getDescription = () => {
-    if (mode === "QUIZ") {
-      return "Please select an answer before moving to the next question.";
-    }
-    return "Please select an answer before moving to the next question.";
+    return (
+      customMessage ||
+      "Please select an answer before moving to the next question."
+    );
   };
 
   return (

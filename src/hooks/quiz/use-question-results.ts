@@ -28,8 +28,25 @@ export function useQuestionResults({
     for (const question of questions) {
       const answer = answers.find((a) => a.questionId === question.id);
       if (answer) {
-        const correctAnswer = question.correctAnswer || "";
-        const isCorrect = answer.selectedOptionId === correctAnswer;
+        let correctAnswer = "";
+        let isCorrect = false;
+
+        if (
+          question.type === "FILL_BLANK" ||
+          question.type === "FREE_RESPONSE"
+        ) {
+          // For text-based questions, compare the actual text content
+          const userText = answer.selectedOptionId?.trim().toLowerCase() || "";
+          const correctText =
+            question.correctAnswer?.trim().toLowerCase() || "";
+          isCorrect = userText === correctText;
+          correctAnswer = question.correctAnswer || "";
+        } else {
+          // For multiple choice questions, compare option IDs
+          correctAnswer = question.correctAnswer || "";
+          isCorrect = answer.selectedOptionId === correctAnswer;
+        }
+
         results[question.id] = {
           isCorrect,
           correctAnswer,

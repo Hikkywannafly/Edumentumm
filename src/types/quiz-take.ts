@@ -50,6 +50,7 @@ export interface QuizQuestionProps {
   selectedOptionId?: string;
   onAnswerChange: (optionId: string) => void;
   showResult?: boolean;
+  showTextResult?: boolean; // Add this new prop
   correctOptionId?: string;
   mode?: QuizTakeMode;
   isAnswered?: boolean;
@@ -68,9 +69,26 @@ export interface QuizNavigationProps {
   showFeedback?: boolean;
   currentQuestionResult?: QuizQuestionResult | null;
   onRetry?: () => void;
-  questions?: any[]; // Add questions prop to access question data
+  questions?: BackendQuestion[]; // Add questions prop to access question data
   quizId?: number; // Add quiz ID for edit/reset/delete functionality
   quiz?: BackendQuizEntity; // Add quiz object to access the slug
+}
+
+export interface QuizMainNavigationProps {
+  hasPreviousQuestion: boolean;
+  hasNextQuestion: boolean;
+  isAnswered: boolean;
+  mode?: string;
+  onPrevious: () => void;
+  onNext: () => void;
+  onSubmit: () => void;
+  onRestartQuiz: () => void;
+  onEditQuiz: () => void;
+  onResetQuiz: () => void;
+  onDeleteQuiz: () => void;
+  onShare: () => void;
+  isTextInputQuestion?: boolean;
+  isTextInputValid?: boolean;
 }
 
 export interface QuizHeaderProps {
@@ -79,6 +97,7 @@ export interface QuizHeaderProps {
   totalQuestions: number;
   timeSpent: number;
   estimatedTime?: number;
+  mode?: QuizTakeMode;
 }
 
 export interface QuizResultProps {

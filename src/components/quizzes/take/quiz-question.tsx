@@ -2,12 +2,14 @@
 
 import { HtmlViewer } from "@/components/shared/editor/html-viewer";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import type { QuizQuestionProps } from "@/types/quiz-take";
 import { CheckCircle2, XCircle } from "lucide-react";
-import { useState } from "react";
+import { useRef } from "react";
 import { QuizWarningDialog } from "./quiz-warning-dialog";
 
 type OptionStatus = "default" | "selected" | "correct" | "incorrect";
@@ -22,18 +24,37 @@ export function QuizQuestion({
   selectedOptionId,
   onAnswerChange,
   showResult = false,
+  showTextResult = false,
   correctOptionId,
-  mode = "QUIZ",
-  isAnswered = false,
 }: QuizQuestionProps) {
-  const [showWarning, setShowWarning] = useState(false);
+  const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleOptionChange = (optionId: string) => {
     onAnswerChange(optionId);
   };
 
+  const handleTextChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
+    const value = e.target.value;
+
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current);
+    }
+
+    debounceTimeoutRef.current = setTimeout(() => {
+      onAnswerChange(value);
+    }, 300);
+  };
+
+  const shouldShowResult =
+    showResult ||
+    (showResult &&
+      showTextResult &&
+      (question.type === "FILL_BLANK" || question.type === "FREE_RESPONSE"));
+
   const getOptionStatus = (optionId: string): OptionStatus => {
-    if (!showResult) {
+    if (!shouldShowResult) {
       return optionId === selectedOptionId ? "selected" : "default";
     }
 
@@ -90,6 +111,97 @@ export function QuizQuestion({
     }
   };
 
+  // Render different input types based on question type
+  const renderQuestionInput = () => {
+    switch (question.type) {
+      case "FILL_BLANK":
+        return (
+          <div className="mt-4 flex flex-col items-center">
+            <Label className="mb-2 font-medium text-lg">Your Answer</Label>
+            <Input
+              type="text"
+              defaultValue={selectedOptionId || ""}
+              onChange={handleTextChange}
+              placeholder="Type your answer here..."
+              className="w-full max-w-md text-lg"
+              disabled={showResult}
+            />
+          </div>
+        );
+
+      case "FREE_RESPONSE":
+        return (
+          <div className="mt-4 flex flex-col items-center">
+            <Label className="mb-2 font-medium text-lg">Your Answer</Label>
+            <Textarea
+              defaultValue={selectedOptionId || ""}
+              onChange={handleTextChange}
+              placeholder="Type your detailed response here..."
+              className="min-h-[120px] w-full max-w-2xl text-lg"
+              disabled={showResult}
+            />
+          </div>
+        );
+
+      default: // MULTIPLE_CHOICE and TRUE_FALSE
+        return (
+          <RadioGroup
+            value={selectedOptionId || ""}
+            onValueChange={handleOptionChange}
+            disabled={showResult}
+            className="space-y-3 md:space-y-4"
+          >
+            {question.options?.map((option, index) => {
+              const letter = String.fromCharCode(65 + index);
+              const status = getOptionStatus(option.id);
+              const icon = getStatusIcon(status);
+              const { containerClasses, letterClasses } =
+                getOptionStyle(status);
+
+              return (
+                <Label
+                  key={option.id}
+                  htmlFor={option.id}
+                  className={cn(
+                    "relative inline-flex w-full select-none items-center justify-start rounded-2xl bg-muted/40 p-2 font-medium text-sm ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.98] sm:text-base md:text-lg lg:text-xl",
+                    containerClasses,
+                  )}
+                >
+                  <div className="flex items-center">
+                    <div
+                      className={cn(
+                        "flex h-8 w-8 items-center justify-center rounded-md font-semibold text-sm",
+                        letterClasses,
+                      )}
+                    >
+                      {letter}.
+                    </div>
+                    <RadioGroupItem
+                      id={option.id}
+                      value={option.id}
+                      className="sr-only"
+                    />
+                  </div>
+                  <div className="flex-1 px-2 py-2">
+                    <HtmlViewer
+                      content={option.text}
+                      className="max-w-none px-2 py-2 text-left text-sm md:text-lg"
+                    />
+                  </div>
+
+                  {icon && (
+                    <span className="-translate-y-1/2 pointer-events-none absolute top-1/2 right-4">
+                      {icon}
+                    </span>
+                  )}
+                </Label>
+              );
+            })}
+          </RadioGroup>
+        );
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="text-center">
@@ -117,64 +229,13 @@ export function QuizQuestion({
           Switch to Type mode
         </Button>
       </div>
-      <RadioGroup
-        value={selectedOptionId || ""}
-        onValueChange={handleOptionChange}
-        disabled={showResult || (mode === "QUIZ" && isAnswered)}
-        className="space-y-3 md:space-y-4"
-      >
-        {question.options?.map((option, index) => {
-          const letter = String.fromCharCode(65 + index);
-          const status = getOptionStatus(option.id);
-          const icon = getStatusIcon(status);
-          const { containerClasses, letterClasses } = getOptionStyle(status);
 
-          return (
-            <Label
-              key={option.id}
-              htmlFor={option.id}
-              className={cn(
-                "relative inline-flex w-full select-none items-center justify-start rounded-2xl bg-muted/40 p-2 font-medium text-sm ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.98] sm:text-base md:text-lg lg:text-xl",
-                containerClasses,
-              )}
-            >
-              <div className="flex items-center">
-                <div
-                  className={cn(
-                    "flex h-8 w-8 items-center justify-center rounded-md font-semibold text-sm",
-                    letterClasses,
-                  )}
-                >
-                  {letter}.
-                </div>
-                <RadioGroupItem
-                  id={option.id}
-                  value={option.id}
-                  className="sr-only"
-                />
-              </div>
-              <div className="flex-1 px-2 py-2">
-                <HtmlViewer
-                  content={option.text}
-                  className="max-w-none px-2 py-2 text-left text-sm md:text-lg"
-                />
-              </div>
-
-              {icon && (
-                <span className="-translate-y-1/2 pointer-events-none absolute top-1/2 right-4">
-                  {icon}
-                </span>
-              )}
-            </Label>
-          );
-        })}
-      </RadioGroup>
+      {renderQuestionInput()}
 
       <QuizWarningDialog
-        open={showWarning}
-        onOpenChange={setShowWarning}
-        onConfirm={() => setShowWarning(false)}
-        mode={mode}
+        open={false}
+        onOpenChange={() => {}}
+        onConfirm={() => {}}
       />
     </div>
   );

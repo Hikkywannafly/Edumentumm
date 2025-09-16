@@ -18,14 +18,13 @@ export function QuizNavigation({
   onNext,
   onPrevious,
   onSubmit,
-  // isCompleted,
-  mode = "QUIZ",
   questions = [],
   quizId,
-  quiz, // Add quiz object to get the slug
+  quiz,
 }: QuizNavigationProps & { quiz?: any }) {
   // Get the current question ID
   const currentQuestionId = questions[currentQuestion]?.id;
+  const currentQuestionType = questions[currentQuestion]?.type;
 
   const { hasNextQuestion, hasPreviousQuestion, showFeedbackUI, isCorrect } =
     useQuizNavigation({
@@ -70,6 +69,33 @@ export function QuizNavigation({
 
   const handleShare = () => {};
 
+  // Check if current question requires text input (for validation)
+  const isTextInputQuestion = useMemo(() => {
+    return (
+      currentQuestionType === "FILL_BLANK" ||
+      currentQuestionType === "FREE_RESPONSE"
+    );
+  }, [currentQuestionType]);
+
+  // Check if text input is valid for text-based questions
+  const isTextInputValid = useMemo(() => {
+    if (!isTextInputQuestion) return true;
+
+    const currentAnswer = answers.find(
+      (a) => a.questionId === currentQuestionId,
+    );
+    return (
+      currentAnswer &&
+      currentAnswer.selectedOptionId &&
+      currentAnswer.selectedOptionId.trim() !== ""
+    );
+  }, [isTextInputQuestion, answers, currentQuestionId]);
+
+  // Compute the final isAnswered value
+  const finalIsAnswered = useMemo(() => {
+    return isAnswered && (isTextInputQuestion ? isTextInputValid : true);
+  }, [isAnswered, isTextInputQuestion, isTextInputValid]);
+
   if (showFeedbackUI && currentQuestionResult) {
     return (
       <QuizFeedback
@@ -93,8 +119,7 @@ export function QuizNavigation({
       <QuizMainNavigation
         hasPreviousQuestion={hasPreviousQuestion}
         hasNextQuestion={hasNextQuestion}
-        isAnswered={isAnswered}
-        mode={mode}
+        isAnswered={!!finalIsAnswered}
         onPrevious={onPrevious}
         onNext={onNext}
         onSubmit={onSubmit}
@@ -103,6 +128,8 @@ export function QuizNavigation({
         onResetQuiz={handleResetQuiz}
         onDeleteQuiz={handleDeleteQuiz}
         onShare={handleShare}
+        isTextInputQuestion={!!isTextInputQuestion}
+        isTextInputValid={!!isTextInputValid}
       />
       <QuizDeleteDialog
         open={showDeleteDialog}
