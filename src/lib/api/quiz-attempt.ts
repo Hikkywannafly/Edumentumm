@@ -27,6 +27,7 @@ export interface AttemptReviewDto {
     order: number;
     questionText: string;
     isCorrect: boolean;
+    correct?: boolean;
     selectedOptionIds: string[];
     correctOptionIds: string[];
     pointsPossible: number;

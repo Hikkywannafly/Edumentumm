@@ -6,8 +6,97 @@ import { useQuizAttemptDetail } from "@/hooks/quiz/use-quiz-attempt-detail";
 import { useQuizDetail } from "@/hooks/quiz/use-quiz-detail";
 import { useLocalizedNavigation } from "@/lib/utils/navigation";
 import { extractIdFromSlug } from "@/utils/index";
-import { ArrowLeft, Calendar, Clock, Trophy } from "lucide-react";
+import {
+  ArrowLeft,
+  Calendar,
+  CheckCircle,
+  Clock,
+  Trophy,
+  XCircle,
+} from "lucide-react";
 import { useParams } from "next/navigation";
+
+interface QuestionResultProps {
+  question: any;
+  index: number;
+}
+
+function QuestionResult({ question, index }: QuestionResultProps) {
+  const isCorrect = question.isCorrect ?? question.correct ?? false;
+  const userAnswerText =
+    question.options
+      .filter((opt: any) => question.selectedOptionIds.includes(opt.id))
+      .map((opt: any) => opt.text)
+      .join(", ") || "No answer provided";
+
+  const correctAnswerText =
+    question.options
+      .filter((opt: any) => question.correctOptionIds.includes(opt.id))
+      .map((opt: any) => opt.text)
+      .join(", ") || "No correct answer defined";
+
+  const showCorrectAnswer = !isCorrect;
+
+  return (
+    <div className="rounded-lg border border-border/50 p-4">
+      <div className="mb-3 flex items-start justify-between">
+        <h3 className="font-semibold">
+          {index + 1}. {question.questionText}
+        </h3>
+        <div className="flex items-center gap-2">
+          {isCorrect ? (
+            <>
+              <CheckCircle className="h-5 w-5 text-green-600" />
+              <span className="rounded bg-green-100 px-2 py-1 font-semibold text-green-800 dark:bg-green-900/30 dark:text-green-400">
+                Correct
+              </span>
+            </>
+          ) : (
+            <>
+              <XCircle className="h-5 w-5 text-red-600" />
+              <span className="rounded bg-red-100 px-2 py-1 font-semibold text-red-800 dark:bg-red-900/30 dark:text-red-400">
+                Incorrect
+              </span>
+            </>
+          )}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <div>
+          <h4 className="mb-2 font-medium text-muted-foreground">
+            Your Answer
+          </h4>
+          <div
+            className={`rounded-lg p-3 ${isCorrect ? " dark: border border border border-border/50 border-border/50-green-200 border-border/50-green-800 bg-green-100 dark:bg-green-900/30" : " dark: border border border border-border/50 border-border/50-red-200 border-border/50-red-800 bg-red-100 dark:bg-red-900/30"}`}
+          >
+            {userAnswerText}
+          </div>
+        </div>
+
+        {showCorrectAnswer && (
+          <div>
+            <h4 className="mb-2 font-medium text-muted-foreground">
+              Correct Answer
+            </h4>
+            <div className="dark: rounded-lg border border border border-border/50 border-border/50-green-200 border-border/50-green-800 bg-green-100 p-3 dark:bg-green-900/30">
+              {correctAnswerText}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {question.explanation && (
+        <div className="mt-4 rounded-lg bg-muted p-3">
+          <h4 className="mb-1 font-medium text-muted-foreground">
+            Explanation
+          </h4>
+          <p>{question.explanation}</p>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export function QuizAttemptDetailContent() {
   const params = useParams();
@@ -103,7 +192,7 @@ export function QuizAttemptDetailContent() {
             </div>
           </div>
 
-          <div className="mb-6 rounded-lg bg-secondary/50 p-4">
+          <div className="mb-6 rounded-lg bg-secondary/50 p-4 shadow-sm">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
                 <div className="font-semibold text-lg">
@@ -132,68 +221,13 @@ export function QuizAttemptDetailContent() {
           </div>
 
           <div className="space-y-6">
-            {attempt.questions.map((question, index) => {
-              return (
-                <div
-                  key={question.questionId}
-                  className="rounded-lg border p-4"
-                >
-                  <div className="mb-3 flex items-start justify-between">
-                    <h3 className="font-semibold">
-                      {index + 1}. {question.questionText}
-                    </h3>
-                    <span
-                      className={`font-semibold ${question.isCorrect ? "text-green-600" : "text-red-600"}`}
-                    >
-                      {question.isCorrect ? "Correct" : "Incorrect"}
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <div>
-                      <h4 className="mb-2 font-medium text-muted-foreground">
-                        Your Answer
-                      </h4>
-                      <div
-                        className={`rounded-lg p-3 ${question.isCorrect ? "bg-green-100 dark:bg-green-900/30" : "bg-red-100 dark:bg-red-900/30"}`}
-                      >
-                        {question.options
-                          .filter((opt) =>
-                            question.selectedOptionIds.includes(opt.id),
-                          )
-                          .map((opt) => opt.text)
-                          .join(", ") || "No answer provided"}
-                      </div>
-                    </div>
-
-                    {!question.isCorrect && (
-                      <div>
-                        <h4 className="mb-2 font-medium text-muted-foreground">
-                          Correct Answer
-                        </h4>
-                        <div className="rounded-lg bg-green-100 p-3 dark:bg-green-900/30">
-                          {question.options
-                            .filter((opt) =>
-                              question.correctOptionIds.includes(opt.id),
-                            )
-                            .map((opt) => opt.text)
-                            .join(", ") || "No correct answer defined"}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {question.explanation && (
-                    <div className="mt-4 rounded-lg bg-muted p-3">
-                      <h4 className="mb-1 font-medium text-muted-foreground">
-                        Explanation
-                      </h4>
-                      <p>{question.explanation}</p>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+            {attempt.questions.map((question: any, index: number) => (
+              <QuestionResult
+                key={question.questionId}
+                question={question}
+                index={index}
+              />
+            ))}
           </div>
 
           <div className="mt-6 flex justify-center">
