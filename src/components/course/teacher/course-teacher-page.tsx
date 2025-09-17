@@ -1,6 +1,6 @@
 import { LocalizedLink } from "@/components/localized-link";
 import { Button } from "@/components/ui/button";
-import { useTeacherCourses } from "@/hooks/course/use-courses";
+import { useTeacherCourses } from "@/hooks/course/use-teacher-courses";
 import {
   CourseStatus,
   type GetTeacherCoursesParams,

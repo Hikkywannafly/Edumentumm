@@ -33,7 +33,7 @@ import {
   useArchiveCourse,
   useDeleteCourse,
   usePublishCourse,
-} from "@/hooks/course/use-courses";
+} from "@/hooks/course/use-teacher-courses";
 import { useToast } from "@/hooks/use-toast";
 import { getLocaleFromPathname } from "@/lib/utils";
 import type { Course } from "@/types/course.type";
@@ -387,7 +387,7 @@ export function TeacherCourseTable({
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <Link
-                        href={`/${locale}/course/teacher/${course.courseId}`}
+                        href={`/${locale}/course/teacher/${course.courseId}/view`}
                       >
                         <DropdownMenuItem>
                           <Eye className="mr-2 h-4 w-4" />

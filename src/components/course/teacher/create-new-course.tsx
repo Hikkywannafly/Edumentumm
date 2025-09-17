@@ -28,7 +28,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/contexts/auth-context";
-import { useCreateCourse } from "@/hooks/course/use-courses";
+import { useCreateCourse } from "@/hooks/course/use-teacher-courses";
 import { toast } from "@/hooks/use-toast";
 import { getLocaleFromPathname } from "@/lib/utils";
 import {

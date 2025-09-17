@@ -29,7 +29,7 @@ export interface CourseUpdateRequest {
   thumbnailUrl?: string;
   price?: number;
   courseStatus?: CourseStatus;
-  courseTagNames?: string[]; // Fixed: should be consistent with CourseCreateRequest
+  courseTagNames?: string[];
 }
 
 export interface ApiResponse<T> {
@@ -52,7 +52,7 @@ export interface CourseTag {
 // Fixed Course interface - removed duplicates and function definitions
 export interface Course {
   id: string;
-  courseId: string; // Keep both for backward compatibility if needed
+  courseId: string;
   title: string;
   shortDescription: string;
   fullDescription?: string;
@@ -62,7 +62,7 @@ export interface Course {
   price: number;
   teacher: TeacherSummary;
   courseTags: CourseTag[];
-  courseTagNames?: string[]; // For easier access to tag names
+  courseTagNames?: string[];
   totalEnrollments: number;
   totalLessons?: number;
   averageRating: number;
@@ -86,8 +86,8 @@ export interface CourseSummary {
 export interface ICourseFilter {
   search: string;
   tags: string[];
-  level: string[];
-  sortBy: "price" | "popular" | "level";
+  level: CourseLevel[];
+  sortBy: "price" | "popular" | "level" | "createdAt" | "updatedAt";
 }
 
 export interface Lesson {

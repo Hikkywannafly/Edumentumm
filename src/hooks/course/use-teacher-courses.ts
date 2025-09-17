@@ -17,7 +17,7 @@ const API_BASE_URL =
 // Backend response structure for teacher courses
 interface TeacherCoursesApiResponse {
   status: string;
-  data: Course[]; // Backend returns array directly
+  data: Course[];
   pagination: {
     currentPage: number;
     totalPages: number;
@@ -37,6 +37,14 @@ class ApiError extends Error {
   }
 }
 
+// Utility function to validate courseId
+const validateCourseId = (courseId: string | undefined): string => {
+  if (!courseId || courseId === "undefined" || courseId === "null") {
+    throw new ApiError(400, "Invalid course ID provided");
+  }
+  return courseId;
+};
+
 // API Functions
 const createCourse = async (
   courseData: CourseCreateRequest,
@@ -44,7 +52,7 @@ const createCourse = async (
 ): Promise<Course> => {
   const dataWithPrice = {
     ...courseData,
-    price: courseData.price ? courseData.price.toFixed(2) : "0.00",
+    price: courseData.price ? Number(courseData.price) : 0,
   };
 
   const response = await fetch(`${API_BASE_URL}/teacher/courses`, {
@@ -73,10 +81,10 @@ const getTeacherCourses = async (
   token: string,
 ): Promise<PaginatedResponse<Course>> => {
   const {
-    courseStatus = CourseStatus.PUBLISHED,
+    courseStatus = CourseStatus.DRAFT,
     page = 0,
     size = 6,
-    sortBy = "createdAt",
+    sortBy = "updatedAt",
     sortDir = "desc",
   } = params;
 
@@ -93,6 +101,7 @@ const getTeacherCourses = async (
     {
       headers: {
         Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
       },
     },
   );
@@ -105,12 +114,10 @@ const getTeacherCourses = async (
     );
   }
 
-  // Parse the actual backend response structure
   const apiResponse: TeacherCoursesApiResponse = await response.json();
 
-  // Convert to PaginatedResponse format that frontend expects
   const paginatedResponse: PaginatedResponse<Course> = {
-    content: apiResponse.data, // Backend returns courses array in data field
+    content: apiResponse.data,
     totalElements: apiResponse.pagination.totalElements,
     totalPages: apiResponse.pagination.totalPages,
     size: size,
@@ -125,15 +132,21 @@ const getTeacherCourses = async (
   return paginatedResponse;
 };
 
-const getCourseDetail = async (
+const getTeacherCourseDetail = async (
   courseId: string,
   token: string,
 ): Promise<TeacherCourseDetailDto> => {
-  const response = await fetch(`${API_BASE_URL}/teacher/courses/${courseId}`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
+  const validatedCourseId = validateCourseId(courseId);
+
+  const response = await fetch(
+    `${API_BASE_URL}/teacher/courses/${validatedCourseId}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
     },
-  });
+  );
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
@@ -152,19 +165,24 @@ const updateCourse = async (
   courseData: CourseUpdateRequest,
   token: string,
 ): Promise<Course> => {
+  const validatedCourseId = validateCourseId(courseId);
+
   const dataWithPrice = {
     ...courseData,
-    price: courseData.price ? courseData.price.toFixed(2) : undefined,
+    price: courseData.price ? Number(courseData.price) : undefined,
   };
 
-  const response = await fetch(`${API_BASE_URL}/teacher/courses/${courseId}`, {
-    method: "PATCH",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
+  const response = await fetch(
+    `${API_BASE_URL}/teacher/courses/${validatedCourseId}`,
+    {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(dataWithPrice),
     },
-    body: JSON.stringify(dataWithPrice),
-  });
+  );
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
@@ -182,8 +200,10 @@ const publishCourse = async (
   courseId: string,
   token: string,
 ): Promise<Course> => {
+  const validatedCourseId = validateCourseId(courseId);
+
   const response = await fetch(
-    `${API_BASE_URL}/teacher/courses/${courseId}/publish`,
+    `${API_BASE_URL}/teacher/courses/${validatedCourseId}/publish`,
     {
       method: "PATCH",
       headers: {
@@ -209,8 +229,10 @@ const archiveCourse = async (
   courseId: string,
   token: string,
 ): Promise<Course> => {
+  const validatedCourseId = validateCourseId(courseId);
+
   const response = await fetch(
-    `${API_BASE_URL}/teacher/courses/${courseId}/archive`,
+    `${API_BASE_URL}/teacher/courses/${validatedCourseId}/archive`,
     {
       method: "PATCH",
       headers: {
@@ -233,12 +255,18 @@ const archiveCourse = async (
 };
 
 const deleteCourse = async (courseId: string, token: string): Promise<void> => {
-  const response = await fetch(`${API_BASE_URL}/teacher/courses/${courseId}`, {
-    method: "DELETE",
-    headers: {
-      Authorization: `Bearer ${token}`,
+  const validatedCourseId = validateCourseId(courseId);
+
+  const response = await fetch(
+    `${API_BASE_URL}/teacher/courses/${validatedCourseId}`,
+    {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
     },
-  });
+  );
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
@@ -274,7 +302,7 @@ export const useTeacherCourses = (params: GetTeacherCoursesParams = {}) => {
   const { accessToken, user, hasRole } = useAuth();
 
   return useQuery({
-    queryKey: ["teacher-courses", JSON.stringify(params)],
+    queryKey: ["teacher-courses", params],
     queryFn: () => {
       if (!accessToken || !user || !hasRole) {
         throw new ApiError(401, "Authentication required");
@@ -284,7 +312,6 @@ export const useTeacherCourses = (params: GetTeacherCoursesParams = {}) => {
     enabled: !!accessToken && !!user && hasRole,
     staleTime: 5 * 60 * 1000, // 5 minutes
     retry: (failureCount, error) => {
-      // Don't retry on auth errors
       if (error instanceof ApiError && error.status === 401) {
         return false;
       }
@@ -293,18 +320,35 @@ export const useTeacherCourses = (params: GetTeacherCoursesParams = {}) => {
   });
 };
 
-export const useCourseDetail = (courseId: string) => {
+export const useTeacherCourseDetail = (courseId: string | undefined) => {
   const { accessToken, user, hasRole } = useAuth();
 
   return useQuery({
-    queryKey: ["course-detail", courseId],
+    queryKey: ["teacher-course-detail", courseId],
     queryFn: () => {
       if (!accessToken || !user || !hasRole) {
         throw new ApiError(401, "Authentication required");
       }
-      return getCourseDetail(courseId, accessToken);
+      if (!courseId || courseId === "undefined") {
+        throw new ApiError(400, "Course ID is required");
+      }
+      return getTeacherCourseDetail(courseId, accessToken);
     },
-    enabled: !!accessToken && !!user && hasRole && !!courseId,
+    enabled:
+      !!accessToken &&
+      !!user &&
+      hasRole &&
+      !!courseId &&
+      courseId !== "undefined",
+    retry: (failureCount, error) => {
+      if (
+        error instanceof ApiError &&
+        (error.status === 401 || error.status === 400)
+      ) {
+        return false;
+      }
+      return failureCount < 3;
+    },
   });
 };
 
@@ -316,7 +360,10 @@ export const useUpdateCourse = () => {
     mutationFn: ({
       courseId,
       courseData,
-    }: { courseId: string; courseData: CourseUpdateRequest }) => {
+    }: {
+      courseId: string;
+      courseData: CourseUpdateRequest;
+    }) => {
       if (!accessToken || !user || !hasRole) {
         throw new ApiError(401, "Authentication required");
       }
@@ -324,7 +371,9 @@ export const useUpdateCourse = () => {
     },
     onSuccess: (_, { courseId }) => {
       queryClient.invalidateQueries({ queryKey: ["teacher-courses"] });
-      queryClient.invalidateQueries({ queryKey: ["course-detail", courseId] });
+      queryClient.invalidateQueries({
+        queryKey: ["teacher-course-detail", courseId],
+      });
     },
   });
 };
