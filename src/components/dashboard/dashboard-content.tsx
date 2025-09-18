@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useFlashcardPrefetch } from "@/hooks/flashcard/use-flashcard-prefecth";
 import { useQuizPrefetch } from "@/hooks/quiz/use-quiz-prefetch";
 import {
   Activity,
@@ -19,6 +20,9 @@ export default function DashboardContent() {
 
   // Prefetch quiz data when dashboard loads
   useQuizPrefetch();
+
+  // Prefetch flashcard data when dashboard loads
+  useFlashcardPrefetch();
 
   return (
     <div className="container mx-auto space-y-6 p-6">

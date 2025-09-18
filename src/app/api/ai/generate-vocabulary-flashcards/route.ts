@@ -125,7 +125,7 @@ export async function POST(request: NextRequest) {
     const response = await axios.post(
       `${OPENROUTER_API_BASE}/chat/completions`,
       {
-        model: "google/gemini-2.5-flash",
+        model: "google/gemini-2.0-flash-exp:free",
         messages: [{ role: "user", content: prompt }],
         temperature: 0.3,
         max_tokens: 4000,

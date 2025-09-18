@@ -1,5 +1,6 @@
 "use client";
 
+import { usePublicFlashcardDetailsPrefetch } from "@/hooks/flashcard/use-flashcard-prefecth";
 import { usePublicFlashcards } from "@/hooks/flashcard/use-flashcards-query";
 import { useState } from "react";
 import { FlashcardSkeletonGrid } from "../flashcards/flashcard-skeleton";
@@ -24,6 +25,15 @@ export default function ExploreContent() {
     isLoading,
     error,
   } = usePublicFlashcards(activeTab === "flashcards" ? apiPage : 0, pageSize);
+
+  usePublicFlashcardDetailsPrefetch({
+    enabled: activeTab === "flashcards",
+    prefetchOnPageLoad: true,
+    prefetchDelay: 500,
+    batchSize: 3,
+    page: activeTab === "flashcards" ? apiPage : 0,
+    size: pageSize,
+  });
 
   // Extract data with fallbacks
   const flashcardSets = flashcardsResponse?.data || [];
@@ -55,14 +65,6 @@ export default function ExploreContent() {
       // No need to manually call refetch with parameters
     }
   };
-
-  console.log("Explore Content Debug:", {
-    activeTab,
-    flashcardSets: flashcardSets.length,
-    pagination,
-    isLoading,
-    error,
-  });
 
   const mockQuizData = [
     { title: "Debt Instruments and Valuation Quiz", questions: 10, daysAgo: 9 },
