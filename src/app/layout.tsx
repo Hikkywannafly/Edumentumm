@@ -41,7 +41,7 @@ export default function RootLayout({
       <body
         className={`${inter.variable} bg-background font-sans text-foreground antialiased`}
       >
-        <NextTopLoader />
+        <NextTopLoader showForHashAnchor={false} />
         <ReactQueryProvider>
           <ThemeProvider>
             <GoogleOAuthProvider clientId={process.env.GOOGLE_CLIENT_ID || ""}>
