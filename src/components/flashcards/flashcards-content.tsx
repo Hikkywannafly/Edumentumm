@@ -11,6 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useFlashcardPageDetailsPrefetch } from "@/hooks/flashcard/use-flashcard-prefecth";
 import { useFlashcardTotalStats } from "@/hooks/flashcard/use-flashcard-total-stats";
 import { useFlashcardsQuery } from "@/hooks/flashcard/use-flashcards-query";
 import { useDebounce } from "@/hooks/use-debounce";
@@ -97,6 +98,18 @@ export function FlashcardsContent() {
     refetch,
     isFetching,
   } = useFlashcardsQuery(apiPage, pageSize, searchQuery, sortBy);
+
+  // Prefetch all flashcards detail for instant Study/Edit buttons
+  useFlashcardPageDetailsPrefetch({
+    page: apiPage,
+    size: pageSize,
+    search: searchQuery,
+    sortBy: sortBy,
+    enabled: true,
+    prefetchOnPageLoad: true,
+    prefetchDelay: 800,
+    batchSize: 2,
+  });
 
   // Get total stats across all flashcards
   const { data: totalStats } = useFlashcardTotalStats();
@@ -290,7 +303,7 @@ export function FlashcardsContent() {
           <CardContent className="p-4">
             <div className="space-y-2">
               <p className="font-medium text-muted-foreground text-sm">
-                {t("stats.averageScore")}
+                {t("flashcardCard.completed")}
               </p>
               <p className="font-bold text-2xl">{stats.averageScore}%</p>
             </div>

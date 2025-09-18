@@ -545,7 +545,7 @@
     "flashcardCard": {
       "cards": "cards",
       "studied": "studied",
-      "averageScore": "Average Score",
+      "completed": "Flashcard Completed",
       "studyDeck": "Study Deck",
       "lastStudied": "Last studied"
     },

@@ -545,7 +545,7 @@
     "flashcardCard": {
       "cards": "thẻ",
       "studied": "đã học",
-      "averageScore": "Điểm trung bình",
+      "completed": "Đã hoàn thành",
       "studyDeck": "Học bộ thẻ",
       "lastStudied": "Lần học cuối"
     },
