@@ -10,9 +10,18 @@ const UpdateQuizSchema = z.object({
   metadata: z
     .object({
       tags: z.array(z.string()).optional(),
+      estimated_time: z.number().optional(),
     })
     .optional(),
   keywords: z.array(z.string()).optional(),
+  visibility: z.enum(["PRIVATE", "PUBLIC", "UNLISTED", "PREMIUM"]).optional(),
+  status: z.enum(["DRAFT", "PUBLISHED", "ARCHIVED"]).optional(),
+  isPremium: z.boolean().optional(),
+  isFeatured: z.boolean().optional(),
+  isTrending: z.boolean().optional(),
+  estimatedTime: z.number().optional(),
+  passingScore: z.number().optional(),
+  maxAttempts: z.number().optional(),
 });
 
 function validateQuizId(id: string): number | null {
@@ -137,6 +146,39 @@ export async function PUT(
       updatePayload.keywords = validated.data.keywords;
     }
 
+    // Handle visibility and status
+    if (validated.data.visibility !== undefined) {
+      updatePayload.visibility = validated.data.visibility;
+    }
+
+    if (validated.data.status !== undefined) {
+      updatePayload.status = validated.data.status;
+    }
+
+    if (validated.data.isPremium !== undefined) {
+      updatePayload.isPremium = validated.data.isPremium;
+    }
+
+    if (validated.data.isFeatured !== undefined) {
+      updatePayload.isFeatured = validated.data.isFeatured;
+    }
+
+    if (validated.data.isTrending !== undefined) {
+      updatePayload.isTrending = validated.data.isTrending;
+    }
+
+    if (validated.data.estimatedTime !== undefined) {
+      updatePayload.estimatedTime = validated.data.estimatedTime;
+    }
+
+    if (validated.data.passingScore !== undefined) {
+      updatePayload.passingScore = validated.data.passingScore;
+    }
+
+    if (validated.data.maxAttempts !== undefined) {
+      updatePayload.maxAttempts = validated.data.maxAttempts;
+    }
+
     const response = await apiClient.put(
       `/student/quizzes/${quizId}`,
       updatePayload,
@@ -232,6 +274,44 @@ export async function PATCH(
     // Handle keywords if provided
     if (validated.data.keywords !== undefined) {
       updatePayload.keywords = validated.data.keywords;
+    }
+
+    // Handle visibility and status
+    if (validated.data.visibility !== undefined) {
+      updatePayload.visibility = validated.data.visibility;
+    }
+
+    if (validated.data.status !== undefined) {
+      updatePayload.status = validated.data.status;
+    }
+
+    if (validated.data.isPremium !== undefined) {
+      updatePayload.isPremium = validated.data.isPremium;
+    }
+
+    if (validated.data.isFeatured !== undefined) {
+      updatePayload.isFeatured = validated.data.isFeatured;
+    }
+
+    if (validated.data.isTrending !== undefined) {
+      updatePayload.isTrending = validated.data.isTrending;
+    }
+
+    if (validated.data.estimatedTime !== undefined) {
+      updatePayload.estimatedTime = validated.data.estimatedTime;
+    }
+
+    if (validated.data.passingScore !== undefined) {
+      updatePayload.passingScore = validated.data.passingScore;
+    }
+
+    if (validated.data.maxAttempts !== undefined) {
+      updatePayload.maxAttempts = validated.data.maxAttempts;
+    }
+
+    // Handle metadata fields
+    if (validated.data.metadata?.estimated_time !== undefined) {
+      updatePayload.estimatedTime = validated.data.metadata.estimated_time;
     }
 
     console.log("PATCH Quiz update payload:", updatePayload);

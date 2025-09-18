@@ -298,7 +298,28 @@
       "settings": "Cài đặt",
       "quizInfo": "Thông tin quiz",
       "deleteQuiz": "Xóa quiz",
-      "backToTop": "Quay lại đầu trang"
+      "backToTop": "Quay lại đầu trang",
+      "apply": "Áp dụng"
+    },
+    "editorSettings": {
+      "title": "Cài đặt Quiz",
+      "description": "Cấu hình cài đặt quiz của bạn",
+      "visibility": "Hiển thị",
+      "status": "Trạng thái",
+      "private": "Riêng tư",
+      "public": "Công khai",
+      "unlisted": "Không công khai",
+      "premium": "Cao cấp",
+      "draft": "Nháp",
+      "published": "Đã xuất bản",
+      "archived": "Đã lưu trữ",
+      "estimatedTime": "Thời gian ước tính (phút)",
+      "passingScore": "Điểm đậu (%)",
+      "maxAttempts": "Số lần thử tối đa (0 = không giới hạn)",
+      "isPremium": "Chỉ dành cho thành viên cao cấp",
+      "isFeatured": "Nổi bật",
+      "isTrending": "Xu hướng",
+      "cancel": "Hủy"
     },
     "yourQuizzes": "Bài kiểm tra của bạn",
     "quizCard": {
