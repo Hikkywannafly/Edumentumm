@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import type { BackendQuestion } from "@/types/quiz";
 import type { QuizResult } from "@/types/quiz-take";
 import { CheckCircle, ChevronDown, ChevronUp, XCircle } from "lucide-react";
+import { useMemo } from "react";
 
 interface QuestionItemProps {
   answer: QuizResult["answers"][0];
@@ -33,8 +34,54 @@ export function QuestionItem({
   getSelectedOptionText,
   getCorrectOptionText,
 }: QuestionItemProps) {
+  // Memoize the text for selected and correct answers to avoid recalculation
+  const selectedAnswerText = useMemo(
+    () =>
+      getSelectedOptionText(
+        answer.questionId,
+        answer.selectedOptionId,
+        answer.question?.type,
+      ),
+    [
+      answer.questionId,
+      answer.selectedOptionId,
+      answer.question?.type,
+      getSelectedOptionText,
+    ],
+  );
+
+  const correctAnswerText = useMemo(
+    () =>
+      getCorrectOptionText(
+        answer.questionId,
+        answer.correctOptionId,
+        answer.question?.type,
+      ),
+    [
+      answer.questionId,
+      answer.correctOptionId,
+      answer.question?.type,
+      getCorrectOptionText,
+    ],
+  );
+
+  // Determine if this is a text-based question
+  const isTextBasedQuestion = useMemo(
+    () => question?.type === "FILL_BLANK" || question?.type === "FREE_RESPONSE",
+    [question?.type],
+  );
+
+  // Check if the selected answer matches any option
+  const isSelectedAnswerMatchingOption = useMemo(
+    () =>
+      question?.options &&
+      answer.selectedOptionId &&
+      question.options.some((opt) => opt.id === answer.selectedOptionId),
+    [question?.options, answer.selectedOptionId],
+  );
+
   return (
-    <Card className="rounded-xl border border-border/50 shadow-sm transition-all hover:shadow-md">
+    <Card className="rounded-xl border border-border/50 transition-all">
       <CardContent className="p-4">
         <div
           className="flex cursor-pointer items-start justify-between"
@@ -69,11 +116,7 @@ export function QuestionItem({
                 <span
                   className={`font-medium ${answer.isCorrect ? "text-green-600" : "text-red-600"}`}
                 >
-                  {getSelectedOptionText(
-                    answer.questionId,
-                    answer.selectedOptionId,
-                    answer.question?.type,
-                  )}
+                  {selectedAnswerText}
                 </span>
               </div>
               {!answer.isCorrect && (
@@ -82,11 +125,7 @@ export function QuestionItem({
                     Correct answer:
                   </span>{" "}
                   <span className="font-medium text-green-600">
-                    {getCorrectOptionText(
-                      answer.questionId,
-                      answer.correctOptionId,
-                      answer.question?.type,
-                    )}
+                    {correctAnswerText}
                   </span>
                 </div>
               )}
@@ -116,8 +155,7 @@ export function QuestionItem({
               <div>
                 <h4 className="font-bold text-muted-foreground">Options:</h4>
                 <div className="mt-3 space-y-3">
-                  {question?.type === "FILL_BLANK" ||
-                  question?.type === "FREE_RESPONSE" ? (
+                  {isTextBasedQuestion ? (
                     <div className="space-y-3">
                       <div className="rounded-lg bg-muted p-4">
                         <div className="flex items-center gap-2">
@@ -125,7 +163,7 @@ export function QuestionItem({
                             Your answer:
                           </span>
                           <span className="font-medium">
-                            {answer.selectedOptionId || "No answer provided"}
+                            {selectedAnswerText}
                           </span>
                         </div>
                       </div>
@@ -135,8 +173,7 @@ export function QuestionItem({
                             Correct answer:
                           </span>
                           <span className="font-medium">
-                            {answer.correctOptionId ||
-                              "No correct answer defined"}
+                            {correctAnswerText}
                           </span>
                         </div>
                       </div>
@@ -181,6 +218,21 @@ export function QuestionItem({
                       );
                     })
                   )}
+
+                  {/* Show the actual selected answer if it doesn't match any option */}
+                  {!isSelectedAnswerMatchingOption &&
+                    answer.selectedOptionId && (
+                      <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4 dark:border-yellow-800 dark:bg-yellow-900/20">
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-yellow-600">
+                            Selected (not matching options):
+                          </span>
+                          <span className="font-medium">
+                            {answer.selectedOptionId}
+                          </span>
+                        </div>
+                      </div>
+                    )}
                 </div>
               </div>
             </div>

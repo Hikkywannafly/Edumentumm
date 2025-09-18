@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { BackendQuizEntity } from "@/types/quiz";
 import type { QuizResult } from "@/types/quiz-take";
 import { BookOpen, CheckCircle, CircleX } from "lucide-react";
+import { useMemo } from "react";
 import { QuestionItem } from "../question-item";
 
 interface AnswerReviewSectionProps {
@@ -34,6 +35,58 @@ export function AnswerReviewSection({
   getSelectedOptionText,
   getCorrectOptionText,
 }: AnswerReviewSectionProps) {
+  // Memoize filtered answers to avoid recalculation on each render
+  const correctAnswers = useMemo(
+    () => result.answers.filter((a) => a.isCorrect),
+    [result.answers],
+  );
+
+  const incorrectAnswers = useMemo(
+    () => result.answers.filter((a) => !a.isCorrect),
+    [result.answers],
+  );
+
+  // Helper function to render accordion items
+  const renderAccordionItems = (answers: typeof result.answers) => {
+    return answers.map((answer, index) => {
+      const question = quiz.quizData?.questions?.find(
+        (q: any) => q.id === answer.questionId,
+      );
+
+      return (
+        <AccordionItem
+          key={answer.questionId}
+          value={`question-${index}`}
+          className="rounded-lg border"
+        >
+          <AccordionTrigger className="rounded-lg border: border-border/50 px-4 py-4 hover:no-underline">
+            <div className="flex w-full items-center gap-4">
+              {answer.isCorrect ? (
+                <CheckCircle className="!text-green-500 shrink-0" />
+              ) : (
+                <CircleX className="shrink-0 text-red-500" />
+              )}
+              <div className="prose prose-sm md:prose-lg !md:prose-sm !prose-sm block max-w-none text-start">
+                <p>{question?.text || "Unknown question"}</p>
+              </div>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="border-border/50 border-t p-4">
+            <QuestionItem
+              answer={answer}
+              question={question}
+              index={index}
+              isExpanded={true}
+              onToggleExpansion={() => {}}
+              getSelectedOptionText={getSelectedOptionText}
+              getCorrectOptionText={getCorrectOptionText}
+            />
+          </AccordionContent>
+        </AccordionItem>
+      );
+    });
+  };
+
   return (
     <Card className="rounded-xl bg-card/50 backdrop-blur-sm">
       <CardHeader className="p-6">
@@ -48,135 +101,29 @@ export function AnswerReviewSection({
             </TabsTrigger>
             <TabsTrigger value="correct" className="flex items-center gap-2">
               <CheckCircle className="size-4 text-green-500" />
-              <span>Correct ({result.correctAnswers})</span>
+              <span>Correct ({correctAnswers.length})</span>
             </TabsTrigger>
             <TabsTrigger value="incorrect" className="flex items-center gap-2">
               <CircleX className="size-4 text-red-500" />
-              <span>
-                Incorrect ({result.totalQuestions - result.correctAnswers})
-              </span>
+              <span>Incorrect ({incorrectAnswers.length})</span>
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="all" className="mt-4">
             <Accordion type="single" collapsible className="space-y-2">
-              {result.answers.map((answer, index) => {
-                const question = quiz.quizData?.questions?.find(
-                  (q: any) => q.id === answer.questionId,
-                );
-
-                return (
-                  <AccordionItem
-                    key={answer.questionId}
-                    value={`question-${index}`}
-                    className="rounded-lg border"
-                  >
-                    <AccordionTrigger className="rounded-lg bg-secondary/50 px-4 py-4 hover:no-underline">
-                      <div className="flex w-full items-center gap-4">
-                        {answer.isCorrect ? (
-                          <CheckCircle className="!text-green-500 shrink-0" />
-                        ) : (
-                          <CircleX className="shrink-0 text-red-500" />
-                        )}
-                        <div className="prose prose-sm md:prose-lg !md:prose-sm !prose-sm block max-w-none text-start">
-                          <p>{question?.text || "Unknown question"}</p>
-                        </div>
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="border-border/50 border-t p-4">
-                      <QuestionItem
-                        answer={answer}
-                        question={question}
-                        index={index}
-                        isExpanded={true}
-                        onToggleExpansion={() => {}}
-                        getSelectedOptionText={getSelectedOptionText}
-                        getCorrectOptionText={getCorrectOptionText}
-                      />
-                    </AccordionContent>
-                  </AccordionItem>
-                );
-              })}
+              {renderAccordionItems(result.answers)}
             </Accordion>
           </TabsContent>
 
           <TabsContent value="correct" className="mt-4">
             <Accordion type="single" collapsible className="space-y-2">
-              {result.answers
-                .filter((a) => a.isCorrect)
-                .map((answer, index) => {
-                  const question = quiz.quizData?.questions?.find(
-                    (q: any) => q.id === answer.questionId,
-                  );
-
-                  return (
-                    <AccordionItem
-                      key={answer.questionId}
-                      value={`question-${index}`}
-                      className="rounded-lg border"
-                    >
-                      <AccordionTrigger className="rounded-lg bg-secondary/50 px-4 py-4 hover:no-underline">
-                        <div className="flex w-full items-center gap-4">
-                          <CheckCircle className="!text-green-500 shrink-0" />
-                          <div className="prose prose-sm md:prose-lg !md:prose-sm !prose-sm block max-w-none text-start">
-                            <p>{question?.text || "Unknown question"}</p>
-                          </div>
-                        </div>
-                      </AccordionTrigger>
-                      <AccordionContent className="border-border/50 border-t p-4">
-                        <QuestionItem
-                          answer={answer}
-                          question={question}
-                          index={index}
-                          isExpanded={true}
-                          onToggleExpansion={() => {}}
-                          getSelectedOptionText={getSelectedOptionText}
-                          getCorrectOptionText={getCorrectOptionText}
-                        />
-                      </AccordionContent>
-                    </AccordionItem>
-                  );
-                })}
+              {renderAccordionItems(correctAnswers)}
             </Accordion>
           </TabsContent>
 
           <TabsContent value="incorrect" className="mt-4">
             <Accordion type="single" collapsible className="space-y-2">
-              {result.answers
-                .filter((a) => !a.isCorrect)
-                .map((answer, index) => {
-                  const question = quiz.quizData?.questions?.find(
-                    (q: any) => q.id === answer.questionId,
-                  );
-
-                  return (
-                    <AccordionItem
-                      key={answer.questionId}
-                      value={`question-${index}`}
-                      className="rounded-lg border"
-                    >
-                      <AccordionTrigger className="rounded-lg bg-secondary/50 px-4 py-4 hover:no-underline">
-                        <div className="flex w-full items-center gap-4">
-                          <CircleX className="shrink-0 text-red-500" />
-                          <div className="prose prose-sm md:prose-lg !md:prose-sm !prose-sm block max-w-none text-start">
-                            <p>{question?.text || "Unknown question"}</p>
-                          </div>
-                        </div>
-                      </AccordionTrigger>
-                      <AccordionContent className="border-border/50 border-t p-4">
-                        <QuestionItem
-                          answer={answer}
-                          question={question}
-                          index={index}
-                          isExpanded={true}
-                          onToggleExpansion={() => {}}
-                          getSelectedOptionText={getSelectedOptionText}
-                          getCorrectOptionText={getCorrectOptionText}
-                        />
-                      </AccordionContent>
-                    </AccordionItem>
-                  );
-                })}
+              {renderAccordionItems(incorrectAnswers)}
             </Accordion>
           </TabsContent>
         </Tabs>

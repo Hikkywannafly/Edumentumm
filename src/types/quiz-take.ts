@@ -5,16 +5,7 @@ export type QuizTakeMode = "QUIZ" | "EXAM";
 export interface QuizAnswer {
   questionId: string;
   selectedOptionId: string;
-  timeSpent: number; // in seconds
-}
-
-export interface QuizAttempt {
-  quizId: number;
-  startTime: string;
-  answers: QuizAnswer[];
-  currentQuestionIndex: number;
-  isCompleted: boolean;
-  totalTimeSpent: number;
+  timeSpent: string; // Changed from number to string to fix backend casting error
 }
 
 export interface QuizResult {
@@ -38,11 +29,6 @@ export interface QuizQuestionResult {
   isCorrect: boolean;
   correctAnswer: string;
   explanation?: string;
-}
-
-export interface QuizTakeProps {
-  quiz: BackendQuizEntity;
-  mode?: QuizTakeMode;
 }
 
 export interface QuizQuestionProps {
@@ -95,8 +81,6 @@ export interface QuizHeaderProps {
   title: string;
   currentQuestion: number;
   totalQuestions: number;
-  timeSpent: number;
-  estimatedTime?: number;
   mode?: QuizTakeMode;
 }
 

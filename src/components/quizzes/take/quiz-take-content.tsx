@@ -4,11 +4,12 @@ import { Button } from "@/components/ui/button";
 import { useQuestionResults } from "@/hooks/quiz/use-question-results";
 import { useSubmitQuizAttempt } from "@/hooks/quiz/use-quiz-attempt";
 import { useQuizNavigationLogic } from "@/hooks/quiz/use-quiz-navigation-logic";
+import { useQuizProgress } from "@/hooks/quiz/use-quiz-progress";
 import { useQuizResults } from "@/hooks/quiz/use-quiz-results";
 import type { BackendQuizEntity } from "@/types/quiz";
 import type { QuizTakeMode } from "@/types/quiz-take";
 import { Loader2 } from "lucide-react";
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import { QuizHeader } from "./quiz-header";
 import { QuizNavigation } from "./quiz-navigation";
 import { QuizQuestion } from "./quiz-question";
@@ -26,6 +27,7 @@ export function QuizTakeContent({ quiz, mode = "QUIZ" }: QuizTakeContentProps) {
     currentQuestionIndex,
     answers,
     isCompleted,
+    setCurrentQuestionIndex,
     setAnswers,
     setIsCompleted,
     handleAnswerChange,
@@ -33,7 +35,32 @@ export function QuizTakeContent({ quiz, mode = "QUIZ" }: QuizTakeContentProps) {
     handlePrevious,
     handleNext,
     handleRetake,
+    getTotalTimeSpent,
   } = useQuizNavigationLogic({ questions });
+
+  // Use the quiz progress hook
+  useQuizProgress({
+    quizId: quiz.id.toString(),
+    currentQuestionIndex,
+    answers,
+  });
+
+  // Load progress from localStorage on mount
+  useEffect(() => {
+    try {
+      const savedProgress = localStorage.getItem(`quiz-progress-${quiz.id}`);
+      if (savedProgress) {
+        const progress = JSON.parse(savedProgress);
+        // Only restore if it's recent (less than 1 hour old)
+        if (Date.now() - progress.timestamp < 3600000) {
+          setCurrentQuestionIndex(progress.currentQuestionIndex);
+          setAnswers(progress.answers);
+        }
+      }
+    } catch (error) {
+      console.warn("Failed to load quiz progress:", error);
+    }
+  }, [quiz.id, setCurrentQuestionIndex, setAnswers]);
 
   const { getQuestionResult } = useQuestionResults({
     questions,
@@ -58,57 +85,33 @@ export function QuizTakeContent({ quiz, mode = "QUIZ" }: QuizTakeContentProps) {
 
   const handleSubmit = useCallback(async () => {
     try {
-      // Prepare data for submission
+      const totalTimeSpent = getTotalTimeSpent();
       const submitData = {
         answers: answers.map((a) => ({
           questionId: a.questionId,
           selectedOptionIds: [a.selectedOptionId],
-          timeSpent: 0, // Set to 0 since we're removing time tracking
+          timeSpent: a.timeSpent, // Use actual time spent per question
         })),
+        totalTimeSpent: totalTimeSpent, // Include total time in submission as a workaround
       };
 
-      // Submit to backend
       const review = await submitAttempt({ quizId: quiz.id, data: submitData });
-
-      // Log the review response for debugging
-      console.log("Quiz submission response:", review);
-
-      // Validate the review response
       if (!review) {
         throw new Error("Empty response from server");
       }
-
-      // Set result and mark as completed
-      setAnswers([]); // Clear answers before setting result
       setIsCompleted(true);
+      // Clear progress on successful submission
+      localStorage.removeItem(`quiz-progress-${quiz.id}`);
     } catch (error: any) {
       console.error("Failed to submit quiz:", error);
 
-      if (error.response) {
-        console.error("Error response:", error.response);
-        // The request was made and the server responded with a status code
-        // that falls out of the range of 2xx
-        console.error("Error data:", error.response.data);
-        console.error("Error status:", error.response.status);
-        console.error("Error headers:", error.response.headers);
-      } else if (error.request) {
-        // The request was made but no response was received
-        console.error("Error request:", error.request);
-      } else {
-        // Something happened in setting up the request that triggered an Error
-        console.error("Error message:", error.message);
-      }
-
-      // Show user-friendly error message
       alert(
         "Failed to submit quiz. Please try again. Check console for details.",
       );
 
-      // Fallback to local calculation if backend fails
-      setAnswers([]); // Clear answers before setting result
       setIsCompleted(true);
     }
-  }, [answers, quiz.id, submitAttempt, setAnswers, setIsCompleted]);
+  }, [answers, quiz.id, submitAttempt, setIsCompleted, getTotalTimeSpent]);
 
   const handleBackToQuizzes = useCallback(() => {}, []);
 
@@ -144,7 +147,8 @@ export function QuizTakeContent({ quiz, mode = "QUIZ" }: QuizTakeContentProps) {
   }
 
   if (isCompleted) {
-    const result = calculateResult();
+    const totalTimeSpent = getTotalTimeSpent();
+    const result = calculateResult(totalTimeSpent);
     return (
       <div className="flex-1 p-6">
         <QuizResultComponent
@@ -213,8 +217,6 @@ export function QuizTakeContent({ quiz, mode = "QUIZ" }: QuizTakeContentProps) {
         }}
         quiz={quiz}
       />
-
-      {/* Submission loading overlay */}
       {isSubmitting && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="flex flex-col items-center gap-4 rounded-lg bg-white p-6 dark:bg-gray-800">

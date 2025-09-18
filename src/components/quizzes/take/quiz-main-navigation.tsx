@@ -20,12 +20,6 @@ import {
 import { useState } from "react";
 import { QuizWarningDialog } from "./quiz-warning-dialog";
 
-interface QuizMainNavigationPropsExtended extends QuizMainNavigationProps {
-  isTextInputQuestion?: boolean;
-  isTextInputValid?: boolean;
-  mode?: string;
-}
-
 export function QuizMainNavigation({
   hasPreviousQuestion,
   hasNextQuestion,
@@ -41,7 +35,11 @@ export function QuizMainNavigation({
   isTextInputQuestion = false,
   isTextInputValid = true,
   mode, // Destructure mode prop
-}: QuizMainNavigationPropsExtended) {
+}: QuizMainNavigationProps & {
+  isTextInputQuestion?: boolean;
+  isTextInputValid?: boolean;
+  mode?: string;
+}) {
   const [showWarning, setShowWarning] = useState(false);
   const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
 
