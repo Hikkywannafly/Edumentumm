@@ -27,18 +27,20 @@ export function QuizNavigation({
   const currentQuestionId = questions[currentQuestion]?.id;
   const currentQuestionType = questions[currentQuestion]?.type;
 
-  const { hasNextQuestion, hasPreviousQuestion, showFeedbackUI, isCorrect } =
-    useQuizNavigation({
-      currentQuestionIndex: currentQuestion,
-      totalQuestions,
-      showFeedback,
-      currentQuestionResult: currentQuestionResult ?? null,
-    });
-
-  const isAnswered = useMemo(() => {
-    if (!currentQuestionId) return false;
-    return answers.some((a) => a.questionId === currentQuestionId);
-  }, [answers, currentQuestionId]);
+  const {
+    hasNextQuestion,
+    hasPreviousQuestion,
+    showFeedbackUI,
+    isCorrect,
+    isAnswered,
+  } = useQuizNavigation({
+    currentQuestionIndex: currentQuestion,
+    totalQuestions,
+    showFeedback,
+    currentQuestionResult: currentQuestionResult ?? null,
+    answers, // Pass answers array
+    currentQuestionId, // Pass current question ID
+  });
 
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 

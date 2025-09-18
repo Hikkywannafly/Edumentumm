@@ -10,7 +10,6 @@ import { cn } from "@/lib/utils";
 import type { QuizQuestionProps } from "@/types/quiz-take";
 import { CheckCircle2, XCircle } from "lucide-react";
 import { useRef } from "react";
-import { QuizWarningDialog } from "./quiz-warning-dialog";
 
 type OptionStatus = "default" | "selected" | "correct" | "incorrect";
 
@@ -231,12 +230,6 @@ export function QuizQuestion({
       </div>
 
       {renderQuestionInput()}
-
-      <QuizWarningDialog
-        open={false}
-        onOpenChange={() => {}}
-        onConfirm={() => {}}
-      />
     </div>
   );
 }

@@ -68,7 +68,7 @@ function QuestionResult({ question, index }: QuestionResultProps) {
             Your Answer
           </h4>
           <div
-            className={`rounded-lg p-3 ${isCorrect ? " dark: border border border border-border/50 border-border/50-green-200 border-border/50-green-800 bg-green-100 dark:bg-green-900/30" : " dark: border border border border-border/50 border-border/50-red-200 border-border/50-red-800 bg-red-100 dark:bg-red-900/30"}`}
+            className={`rounded-lg p-3 ${isCorrect ? " dark: border border-border/50 border-border/50-green-200 border-border/50-green-800 bg-green-100 dark:bg-green-900/30" : " dark: border border border border-border/50 border-border/50-red-200 border-border/50-red-800 bg-red-100 dark:bg-red-900/30"}`}
           >
             {userAnswerText}
           </div>
@@ -79,12 +79,19 @@ function QuestionResult({ question, index }: QuestionResultProps) {
             <h4 className="mb-2 font-medium text-muted-foreground">
               Correct Answer
             </h4>
-            <div className="dark: rounded-lg border border border border-border/50 border-border/50-green-200 border-border/50-green-800 bg-green-100 p-3 dark:bg-green-900/30">
+            <div className="dark: rounded-lg border border-border/50 border-border/50-green-200 border-border/50-green-800 bg-green-100 p-3 dark:bg-green-900/30">
               {correctAnswerText}
             </div>
           </div>
         )}
       </div>
+
+      {/* Display time spent on this question if available */}
+      {question.timeSpent && (
+        <div className="mt-3 text-muted-foreground text-sm">
+          Time spent: {question.timeSpent} seconds
+        </div>
+      )}
 
       {question.explanation && (
         <div className="mt-4 rounded-lg bg-muted p-3">
@@ -170,7 +177,6 @@ export function QuizAttemptDetailContent() {
       </div>
     );
   }
-
   return (
     <div className="flex min-h-screen flex-col">
       <div className="flex-1">

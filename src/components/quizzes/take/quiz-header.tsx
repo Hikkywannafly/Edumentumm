@@ -10,9 +10,7 @@ export function QuizHeader({
   currentQuestion,
   totalQuestions,
   mode = "QUIZ",
-}: Omit<QuizHeaderProps, "timeSpent" | "estimatedTime"> & {
-  mode?: "QUIZ" | "EXAM";
-}) {
+}: QuizHeaderProps) {
   const handleCopyLink = () => {
     navigator.clipboard.writeText(window.location.href);
   };

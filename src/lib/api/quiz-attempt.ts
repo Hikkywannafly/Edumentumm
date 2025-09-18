@@ -5,8 +5,9 @@ export interface SubmitAttemptRequest {
   answers: Array<{
     questionId: string;
     selectedOptionIds: string[];
-    timeSpent: number;
+    timeSpent: string; // Changed from number to string to fix backend casting error
   }>;
+  totalTimeSpent?: number; // Add optional total time field as a workaround
 }
 
 // Response structure for attempt review
@@ -32,6 +33,7 @@ export interface AttemptReviewDto {
     correctOptionIds: string[];
     pointsPossible: number;
     pointsEarned: number;
+    timeSpent: string; // Add timeSpent field for per-question time tracking
     explanation: string;
     options: Array<{
       id: string;

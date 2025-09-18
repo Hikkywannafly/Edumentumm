@@ -24,44 +24,55 @@ export function QuizResultConsolidated({
   onRetake,
   onBackToQuizzes,
 }: QuizResultConsolidatedProps) {
+  // Function to scroll to the answer review section
+  const handleReviewAllResults = () => {
+    const element = document.getElementById("answer-review-section");
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
   return (
-    <ThinLayout classNames="relative w-full flex-1 px-4 pb-32 sm:max-w-2xl sm:px-6 sm:pb-24 md:max-w-3xl md:pb-20 lg:max-w-4xl lg:px-8">
+    <ThinLayout classNames="w-full flex-1 px-4  sm:max-w-2xl sm:px-6 sm:pb-24 md:max-w-3xl md:pb-20 lg:max-w-4xl lg:px-8">
       <div className="mt-5 space-y-8 pb-64">
         <PassFailStatus result={result} quiz={quiz} />
         <QuizStatistics result={result} />
         <ProgressSection result={result} />
         <PersonalizedFeedback result={result} quiz={quiz} />
-        <AnswerReviewSection
-          result={result}
-          quiz={quiz}
-          getSelectedOptionText={(
-            questionId: string,
-            selectedOptionId: string,
-            questionType?: string,
-          ) =>
-            getSelectedOptionText(
-              questionId,
-              selectedOptionId,
-              questionType,
-              quiz,
-            )
-          }
-          getCorrectOptionText={(
-            questionId: string,
-            correctOptionId: string,
-            questionType?: string,
-          ) =>
-            getCorrectOptionText(
-              questionId,
-              correctOptionId,
-              questionType,
-              quiz,
-            )
-          }
-        />
+        <div id="answer-review-section">
+          <AnswerReviewSection
+            result={result}
+            quiz={quiz}
+            getSelectedOptionText={(
+              questionId: string,
+              selectedOptionId: string,
+              questionType?: string,
+            ) =>
+              getSelectedOptionText(
+                questionId,
+                selectedOptionId,
+                questionType,
+                quiz,
+              )
+            }
+            getCorrectOptionText={(
+              questionId: string,
+              correctOptionId: string,
+              questionType?: string,
+            ) =>
+              getCorrectOptionText(
+                questionId,
+                correctOptionId,
+                questionType,
+                quiz,
+              )
+            }
+          />
+        </div>
         <ResultActionButtons
           onRetake={onRetake}
           onBackToQuizzes={onBackToQuizzes}
+          onReviewAllResults={handleReviewAllResults} // Pass the new prop
         />
       </div>
     </ThinLayout>
