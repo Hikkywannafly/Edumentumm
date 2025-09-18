@@ -100,7 +100,6 @@ export default function QuizTakePage() {
     );
   }
 
-  // Main quiz taking interface
   return (
     <DashboardLayout>
       <div className="flex min-h-screen flex-col">

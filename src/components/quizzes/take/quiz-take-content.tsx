@@ -1,15 +1,18 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { useQuizNavigationContext } from "@/contexts/quiz-navigation-context";
 import { useQuestionResults } from "@/hooks/quiz/use-question-results";
 import { useSubmitQuizAttempt } from "@/hooks/quiz/use-quiz-attempt";
 import { useQuizNavigationLogic } from "@/hooks/quiz/use-quiz-navigation-logic";
 import { useQuizProgress } from "@/hooks/quiz/use-quiz-progress";
 import { useQuizResults } from "@/hooks/quiz/use-quiz-results";
+import { useLocalizedNavigation } from "@/lib/utils/navigation";
 import type { BackendQuizEntity } from "@/types/quiz";
 import type { QuizTakeMode } from "@/types/quiz-take";
 import { Loader2 } from "lucide-react";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { QuizExitConfirmationDialog } from "./quiz-exit-confirmation-dialog";
 import { QuizHeader } from "./quiz-header";
 import { QuizNavigation } from "./quiz-navigation";
 import { QuizQuestion } from "./quiz-question";
@@ -22,6 +25,9 @@ interface QuizTakeContentProps {
 
 export function QuizTakeContent({ quiz, mode = "QUIZ" }: QuizTakeContentProps) {
   const questions = quiz.quizData?.questions || [];
+  const [showExitDialog, setShowExitDialog] = useState(false);
+  const { goBack } = useLocalizedNavigation();
+  const { setIsQuizInProgress, setQuizHasAnswers } = useQuizNavigationContext();
 
   const {
     currentQuestionIndex,
@@ -38,12 +44,70 @@ export function QuizTakeContent({ quiz, mode = "QUIZ" }: QuizTakeContentProps) {
     getTotalTimeSpent,
   } = useQuizNavigationLogic({ questions });
 
+  // Update quiz navigation context
+  useEffect(() => {
+    setIsQuizInProgress(true);
+    setQuizHasAnswers(answers.length > 0);
+
+    // Cleanup function to reset context when component unmounts
+    return () => {
+      setIsQuizInProgress(false);
+      setQuizHasAnswers(false);
+    };
+  }, [answers.length, setIsQuizInProgress, setQuizHasAnswers]);
+
   // Use the quiz progress hook
   useQuizProgress({
     quizId: quiz.id.toString(),
     currentQuestionIndex,
     answers,
   });
+
+  // Handle browser back/refresh/close
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      // Only show warning if quiz is not completed and user has answered at least one question
+      if (!isCompleted && answers.length > 0) {
+        e.preventDefault();
+        e.returnValue =
+          "You have unsaved progress. Are you sure you want to leave?";
+        return "You have unsaved progress. Are you sure you want to leave?";
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [isCompleted, answers.length]);
+
+  // Handle manual exit (back button, navigation, etc.)
+  const handleExitQuiz = useCallback(() => {
+    // Only show warning if quiz is not completed and user has answered at least one question
+    if (!isCompleted && answers.length > 0) {
+      setShowExitDialog(true);
+    } else {
+      // If no answers or already completed, just go back
+      goBack();
+    }
+  }, [isCompleted, answers.length, goBack]);
+
+  const confirmExitQuiz = useCallback(() => {
+    // Save progress before exiting
+    try {
+      const progress = {
+        currentQuestionIndex,
+        answers,
+        timestamp: Date.now(),
+      };
+      localStorage.setItem(
+        `quiz-progress-${quiz.id}`,
+        JSON.stringify(progress),
+      );
+    } catch (error) {
+      console.warn("Failed to save quiz progress:", error);
+    }
+    setShowExitDialog(false);
+    goBack();
+  }, [currentQuestionIndex, answers, quiz.id, goBack]);
 
   // Load progress from localStorage on mount
   useEffect(() => {
@@ -113,7 +177,9 @@ export function QuizTakeContent({ quiz, mode = "QUIZ" }: QuizTakeContentProps) {
     }
   }, [answers, quiz.id, submitAttempt, setIsCompleted, getTotalTimeSpent]);
 
-  const handleBackToQuizzes = useCallback(() => {}, []);
+  const handleBackToQuizzes = useCallback(() => {
+    handleExitQuiz();
+  }, [handleExitQuiz]);
 
   const currentAnswer = answers.find(
     (a) => a.questionId === currentQuestion?.id,
@@ -225,6 +291,12 @@ export function QuizTakeContent({ quiz, mode = "QUIZ" }: QuizTakeContentProps) {
           </div>
         </div>
       )}
+      <QuizExitConfirmationDialog
+        isOpen={showExitDialog}
+        onClose={() => setShowExitDialog(false)}
+        onConfirm={confirmExitQuiz}
+        onCancel={() => setShowExitDialog(false)}
+      />
     </div>
   );
 }

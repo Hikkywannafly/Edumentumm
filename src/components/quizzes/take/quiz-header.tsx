@@ -3,7 +3,7 @@
 import { HtmlViewer } from "@/components/shared/editor/html-viewer";
 import { Button } from "@/components/ui/button";
 import type { QuizHeaderProps } from "@/types/quiz-take";
-import { Copy, Dices } from "lucide-react";
+import { Copy, Dices, X } from "lucide-react";
 
 export function QuizHeader({
   title,
@@ -18,6 +18,11 @@ export function QuizHeader({
   const handleRandomQuiz = () => {
     // This would be implemented to navigate to a random quiz
     console.log("Navigate to random quiz");
+  };
+
+  const handleExitQuiz = () => {
+    // This will be handled by the navigation guard
+    window.history.back();
   };
 
   const getModeDescription = () => {
@@ -57,6 +62,14 @@ export function QuizHeader({
           {currentQuestion + 1} / {totalQuestions}
         </div>
         <div className="flex gap-2">
+          <Button
+            className="inline-flex size-10 shrink-0 select-none items-center justify-center rounded-2xl border border-input font-medium text-sm ring-offset-background transition hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+            onClick={handleExitQuiz}
+            variant="outline"
+            size="icon"
+          >
+            <X className="size-4" />
+          </Button>
           <Button
             className="inline-flex size-10 shrink-0 select-none items-center justify-center rounded-2xl border border-input font-medium text-sm ring-offset-background transition hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
             onClick={handleRandomQuiz}
