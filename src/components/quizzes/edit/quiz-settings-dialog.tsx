@@ -21,13 +21,13 @@ import {
 import { Switch } from "@/components/ui/switch";
 import type { GeneratedQuiz } from "@/types/quiz";
 import { useTranslations } from "next-intl";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface QuizSettingsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   quiz: GeneratedQuiz | null;
-  onSave: (settings: any) => void;
+  onSave: (settings: any) => Promise<void>;
   isSaving?: boolean;
 }
 
@@ -40,6 +40,9 @@ export function QuizSettingsDialog({
 }: QuizSettingsDialogProps) {
   const t = useTranslations("Quizzes.editorSettings");
   const tEditor = useTranslations("Quizzes.editor");
+  const lastQuizRef = useRef<GeneratedQuiz | null>(null);
+
+  console.log("QuizSettingsDialog rendered with:", { open, quiz });
 
   // Initialize state with quiz data
   const [settings, setSettings] = useState({
@@ -58,7 +61,9 @@ export function QuizSettingsDialog({
 
   // Update state when quiz data changes
   useEffect(() => {
-    if (quiz) {
+    if (open && quiz && quiz !== lastQuizRef.current) {
+      console.log("Updating dialog with new quiz data:", quiz);
+      lastQuizRef.current = quiz;
       const newSettings = {
         visibility: quiz.settings?.visibility || "PRIVATE",
         status: quiz.settings?.status || "DRAFT",
@@ -73,16 +78,17 @@ export function QuizSettingsDialog({
         maxAttempts: quiz.settings?.maxAttempts?.toString() || "0",
       };
 
+      console.log("New settings for dialog:", newSettings);
       setSettings(newSettings);
       setOriginalSettings(newSettings);
     }
-  }, [quiz]);
+  }, [open, quiz]);
 
   // Check if there are changes in settings
   const hasChanges = () => {
     if (!originalSettings) return false;
 
-    return (
+    const hasChangesResult =
       settings.visibility !== originalSettings.visibility ||
       settings.status !== originalSettings.status ||
       settings.isPremium !== originalSettings.isPremium ||
@@ -90,11 +96,19 @@ export function QuizSettingsDialog({
       settings.isTrending !== originalSettings.isTrending ||
       settings.estimatedTime !== originalSettings.estimatedTime ||
       settings.passingScore !== originalSettings.passingScore ||
-      settings.maxAttempts !== originalSettings.maxAttempts
-    );
+      settings.maxAttempts !== originalSettings.maxAttempts;
+
+    console.log("Checking for changes:", {
+      current: settings,
+      original: originalSettings,
+      hasChanges: hasChangesResult,
+    });
+
+    return hasChangesResult;
   };
 
-  const handleApply = () => {
+  const handleApply = async () => {
+    console.log("Applying settings:", settings);
     // Create a flat structure that matches what the API expects
     const updatedSettings: any = {
       visibility: settings.visibility,
@@ -115,10 +129,45 @@ export function QuizSettingsDialog({
       };
     }
 
-    onSave(updatedSettings);
-    // Close the dialog after applying
-    onOpenChange(false);
+    try {
+      await onSave(updatedSettings);
+      console.log("Settings saved successfully");
+      // Update the original settings to reflect the saved values
+      setOriginalSettings({ ...settings });
+    } catch (error) {
+      console.error("Failed to save settings:", error);
+      // Re-throw to be caught by the parent
+      throw error;
+    }
+
+    // Add a small delay to ensure cache is updated before closing
+    setTimeout(() => {
+      // Close the dialog after applying
+      onOpenChange(false);
+    }, 100);
   };
+
+  // Add a reset function to reset the dialog state when it opens
+  useEffect(() => {
+    if (open && quiz) {
+      const newSettings = {
+        visibility: quiz.settings?.visibility || "PRIVATE",
+        status: quiz.settings?.status || "DRAFT",
+        isPremium: quiz.settings?.isPremium || false,
+        isFeatured: quiz.settings?.isFeatured || false,
+        isTrending: quiz.settings?.isTrending || false,
+        estimatedTime:
+          quiz.settings?.estimatedTime?.toString() ||
+          quiz.metadata?.estimated_time?.toString() ||
+          "10",
+        passingScore: quiz.settings?.passingScore?.toString() || "70",
+        maxAttempts: quiz.settings?.maxAttempts?.toString() || "0",
+      };
+
+      setSettings(newSettings);
+      setOriginalSettings(newSettings);
+    }
+  }, [open, quiz]);
 
   const handleChange = (field: string, value: string | boolean) => {
     setSettings((prev) => ({

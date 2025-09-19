@@ -2,7 +2,9 @@
 
 import ThinLayout from "@/components/layout/thin-layout";
 import { useQuizEditor } from "@/hooks/quiz/use-quiz-editor";
+import { useQuizSettingsSaver } from "@/hooks/quiz/use-quiz-settings-saver";
 import { extractIdFromSlug } from "@/utils/index";
+import { useQueryClient } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -19,6 +21,7 @@ export function QuizEditorContent() {
   const params = useParams();
   const quizId = params.slug as string;
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const queryClient = useQueryClient();
 
   const {
     quiz,
@@ -35,6 +38,11 @@ export function QuizEditorContent() {
     hasUnsavedChanges,
     changedFields,
   } = useQuizEditor(extractIdFromSlug(quizId));
+
+  // Use the settings saver hook
+  const { saveSettings, isSaving: isSettingsSaving } = useQuizSettingsSaver(
+    extractIdFromSlug(quizId),
+  );
 
   // Extract commonly used values
   const currentTitle = quiz?.title || "";
@@ -81,12 +89,27 @@ export function QuizEditorContent() {
     }
   };
 
-  const handleSaveSettings = (settings: any) => {
+  // Handler to save settings directly to backend
+  const handleSaveSettings = async (settings: any) => {
     try {
-      updateQuiz(settings);
+      // Save settings to backend
+      const result = await saveSettings(settings);
+      toast.success("Quiz settings saved successfully!");
+
+      // Invalidate the quiz queries to force a refresh from the backend
+      // This ensures that when the dialog reopens, it has the latest data
+      await queryClient.invalidateQueries({
+        queryKey: ["quiz", extractIdFromSlug(quizId)],
+      });
+      await queryClient.invalidateQueries({
+        queryKey: ["quiz-editing", extractIdFromSlug(quizId)],
+      });
+
+      return result;
     } catch (error) {
-      console.error("Failed to update settings:", error);
-      toast.error("Failed to update settings. Please try again.");
+      console.error("Failed to save settings:", error);
+      toast.error("Failed to save settings. Please try again.");
+      throw error;
     }
   };
 
@@ -300,7 +323,7 @@ export function QuizEditorContent() {
         onOpenChange={setIsSettingsOpen}
         quiz={quiz}
         onSave={handleSaveSettings}
-        isSaving={isSaving}
+        isSaving={isSettingsSaving}
       />
     </ThinLayout>
   );

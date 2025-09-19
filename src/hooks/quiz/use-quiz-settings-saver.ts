@@ -59,19 +59,57 @@ export function useQuizSettingsSaver(quizId: string) {
           throw new Error(errorMessage);
         }
         toast.success(result.message || "Quiz settings saved successfully");
-        return result.data;
+        // Return the data part of the response which contains the updated quiz data
+        return result.data || payload;
       }
 
       toast.success("Quiz settings saved successfully");
-      return result;
+      // If no specific result structure, return the payload we sent
+      console.log("Returning payload:", payload);
+      return result || payload;
     },
-    onSuccess: (data) => {
-      updateCacheWithQuizData(queryClient, quizId, data);
+    onSuccess: async (data) => {
+      console.log("Settings save successful, data:", data);
+      // After saving settings, fetch the updated quiz data to ensure cache is consistent
+      try {
+        const accessToken = localStorage.getItem("accessToken");
+        const headers: Record<string, string> = {
+          "Content-Type": "application/json",
+        };
+
+        if (accessToken) {
+          headers.Authorization = `Bearer ${accessToken}`;
+        }
+
+        const response = await fetch(`/api/quiz/${quizId}`, {
+          method: "GET",
+          headers,
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          console.log("Fetched updated quiz data:", result);
+          if (result.success && result.data) {
+            updateCacheWithQuizData(queryClient, quizId, result.data);
+          } else {
+            // Fallback to the data we got from the save operation
+            updateCacheWithQuizData(queryClient, quizId, data);
+          }
+        } else {
+          console.log("Failed to fetch updated quiz data, using save result");
+          // Fallback to the data we got from the save operation
+          updateCacheWithQuizData(queryClient, quizId, data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch updated quiz data:", error);
+        // Fallback to the data we got from the save operation
+        updateCacheWithQuizData(queryClient, quizId, data);
+      }
     },
   });
 
   const saveSettings = async (settings: any) => {
-    await saveSettingsMutation.mutateAsync(settings);
+    return await saveSettingsMutation.mutateAsync(settings);
   };
 
   return {
