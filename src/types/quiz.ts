@@ -105,6 +105,14 @@ export interface QuizSettings {
   fileProcessingMode?: FileProcessingMode;
   useAI?: boolean;
   autoSave?: boolean;
+  // Additional properties for quiz management
+  status?: QuizStatus;
+  isPremium?: boolean;
+  isFeatured?: boolean;
+  isTrending?: boolean;
+  estimatedTime?: number;
+  maxAttempts?: number;
+  passingScore?: number;
 }
 
 // ===== SOURCE INFORMATION =====

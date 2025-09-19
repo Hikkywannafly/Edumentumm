@@ -238,7 +238,29 @@
       "creating": "Creating...",
       "settings": "Settings",
       "quizInfo": "Quiz Info",
-      "deleteQuiz": "Delete Quiz"
+      "deleteQuiz": "Delete Quiz",
+      "backToTop": "Back to Top",
+      "apply": "Apply"
+    },
+    "editorSettings": {
+      "title": "Quiz Settings",
+      "description": "Configure your quiz settings",
+      "visibility": "Visibility",
+      "status": "Status",
+      "private": "Private",
+      "public": "Public",
+      "unlisted": "Unlisted",
+      "premium": "Premium",
+      "draft": "Draft",
+      "published": "Published",
+      "archived": "Archived",
+      "estimatedTime": "Estimated Time (minutes)",
+      "passingScore": "Passing Score (%)",
+      "maxAttempts": "Max Attempts (0 = unlimited)",
+      "isPremium": "Premium Only",
+      "isFeatured": "Featured",
+      "isTrending": "Trending",
+      "cancel": "Cancel"
     },
     "yourQuizzes": "Your Quizzes",
     "quizCard": {

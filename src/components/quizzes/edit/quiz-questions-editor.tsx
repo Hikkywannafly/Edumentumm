@@ -20,7 +20,7 @@ interface QuizQuestionsEditorProps {
 }
 
 export function QuizQuestionsEditor({
-  questions,
+  questions = [], // Default to empty array
   onAddQuestion,
   onAddQuestionAfter,
   onUpdateQuestion,
@@ -53,12 +53,15 @@ export function QuizQuestionsEditor({
     onAddQuestionAfter(afterIndex);
   };
 
+  // Ensure questions is always an array
+  const safeQuestions = Array.isArray(questions) ? questions : [];
+
   return (
     <Card className="border-none">
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle>
-            {t("questions")} ({questions.length})
+            {t("questions")} ({safeQuestions.length})
           </CardTitle>
           <Button onClick={handleAddQuestion} size="sm">
             <Plus className="mr-2 h-4 w-4" />
@@ -69,7 +72,7 @@ export function QuizQuestionsEditor({
       <CardContent>
         <div className="space-y-4">
           <AnimatePresence mode="popLayout">
-            {questions.map((question, index) => (
+            {safeQuestions.map((question, index) => (
               <motion.div
                 key={question.id}
                 initial={{ opacity: 0, y: 20, scale: 0.95 }}
@@ -111,7 +114,7 @@ export function QuizQuestionsEditor({
                   onMoveDown={onMoveQuestionDown}
                   onAddQuestion={handleAddQuestionAfter}
                   canMoveUp={index > 0}
-                  canMoveDown={index < questions.length - 1}
+                  canMoveDown={index < safeQuestions.length - 1}
                   questionIndex={index}
                 />
               </motion.div>
@@ -119,7 +122,7 @@ export function QuizQuestionsEditor({
           </AnimatePresence>
         </div>
 
-        {questions.length === 0 && (
+        {safeQuestions.length === 0 && (
           <div className="py-8 text-center text-muted-foreground">
             {t("noQuestions")}
           </div>
