@@ -170,6 +170,7 @@ export function updateCacheWithQuizData(
   quizId: string,
   data: any,
 ) {
+  console.log("Updating cache with data:", data);
   const currentQuiz = queryClient.getQueryData(["quiz-editing", quizId]) as
     | GeneratedQuiz
     | undefined;
@@ -179,28 +180,43 @@ export function updateCacheWithQuizData(
   if (data) {
     if (data.id && data.title) {
       updatedQuizData = convertBackendQuiz(data);
+      console.log("Converted backend quiz data:", updatedQuizData);
     } else if (currentQuiz) {
+      // For partial updates (like settings), properly merge the data
       updatedQuizData = {
         ...currentQuiz,
         ...data,
         settings: {
           ...currentQuiz.settings,
-          ...data.settings,
+          // Handle top-level settings fields that come from the backend response
+          visibility: data.visibility ?? currentQuiz.settings?.visibility,
+          status: data.status ?? currentQuiz.settings?.status,
+          isPremium: data.isPremium ?? currentQuiz.settings?.isPremium,
+          isFeatured: data.isFeatured ?? currentQuiz.settings?.isFeatured,
+          isTrending: data.isTrending ?? currentQuiz.settings?.isTrending,
+          estimatedTime:
+            data.estimatedTime ?? currentQuiz.settings?.estimatedTime,
+          passingScore: data.passingScore ?? currentQuiz.settings?.passingScore,
+          maxAttempts: data.maxAttempts ?? currentQuiz.settings?.maxAttempts,
         },
-
-        metadata: {
-          ...currentQuiz.metadata,
-          ...data.metadata,
-        },
+        metadata: data.metadata
+          ? {
+              ...currentQuiz.metadata,
+              ...data.metadata,
+            }
+          : currentQuiz.metadata,
       };
+      console.log("Merged partial update data:", updatedQuizData);
     }
   } else if (currentQuiz) {
     updatedQuizData = currentQuiz;
   }
 
   if (updatedQuizData) {
+    console.log("Setting updated quiz data in cache:", updatedQuizData);
     queryClient.setQueryData(["quiz", quizId], updatedQuizData);
     queryClient.setQueryData(["quiz-editing", quizId], updatedQuizData);
+    console.log("Cache updated for both query keys");
   }
 
   queryClient.invalidateQueries({ queryKey: ["quizzes"] });
