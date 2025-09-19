@@ -3,7 +3,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/contexts/auth-context";
 import { AlertTriangle } from "lucide-react";
-import { CourseStudentPage } from "./student/course-student-page";
+import CourseStudentPage from "./student/course-student-page";
 import { CourseTeacherPage } from "./teacher/course-teacher-page";
 
 export default function CourseContent() {

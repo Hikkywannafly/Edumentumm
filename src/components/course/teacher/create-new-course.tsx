@@ -37,7 +37,15 @@ import {
   CourseStatus,
 } from "@/types/course.type";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AlertCircle, ArrowLeft, Loader2, X } from "lucide-react";
+import {
+  AlertCircle,
+  ArrowLeft,
+  ImageIcon,
+  Loader2,
+  UploadCloud,
+  X,
+} from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { usePathname } from "next/navigation";
@@ -58,7 +66,8 @@ const formSchema = z.object({
   courseLevel: z.nativeEnum(CourseLevel, {
     message: "Course level is required",
   }),
-  thumbnailUrl: z.string().url("Invalid URL").optional().or(z.literal("")),
+  thumbnailUrl: z.string().optional(),
+  thumbnailFile: z.instanceof(File).optional(),
   price: z.number().min(0, "Price must be non-negative").optional(),
   courseStatus: z.nativeEnum(CourseStatus, {
     message: "Course status is required",
@@ -70,6 +79,7 @@ type FormData = z.infer<typeof formSchema>;
 export function CreateNewCourse() {
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
+  const [thumbnailPreview, setThumbnailPreview] = useState<string>("");
   const router = useRouter();
   const pathname = usePathname();
   const locale = getLocaleFromPathname(pathname);
@@ -129,12 +139,42 @@ export function CreateNewCourse() {
     }
   };
 
+  const handleThumbnailUpload = async (file: File): Promise<string> => {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/upload/image`,
+        {
+          method: "POST",
+          body: formData,
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to upload image");
+      }
+
+      const data = await response.json();
+      return data.url;
+    } catch (_error) {
+      throw new Error("Failed to upload image");
+    }
+  };
+
   const onSubmit = async (data: FormData) => {
     try {
+      let thumbnailUrl = data.thumbnailUrl;
+
+      if (data.thumbnailFile) {
+        thumbnailUrl = await handleThumbnailUpload(data.thumbnailFile);
+      }
+
       const courseData: CourseCreateRequest = {
         ...data,
         courseTagNames: tags,
-        thumbnailUrl: data.thumbnailUrl || undefined,
+        thumbnailUrl: thumbnailUrl || undefined,
         fullDescription: data.fullDescription || undefined,
       };
 
@@ -349,16 +389,96 @@ export function CreateNewCourse() {
 
                 <FormField
                   control={form.control}
-                  name="thumbnailUrl"
+                  name="thumbnailFile"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Course Thumbnail URL</FormLabel>
+                      <FormLabel>Course Thumbnail</FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder="https://example.com/course-thumbnail.jpg"
-                          disabled={isLoading}
-                          {...field}
-                        />
+                        <div className="space-y-4">
+                          <div className="flex items-center gap-4">
+                            <div
+                              className="relative flex h-40 w-40 cursor-pointer items-center justify-center rounded-lg border border-gray-300 border-dashed hover:border-gray-400"
+                              onClick={() =>
+                                document
+                                  .getElementById("thumbnail-upload")
+                                  ?.click()
+                              }
+                            >
+                              {thumbnailPreview ? (
+                                <Image
+                                  src={thumbnailPreview}
+                                  alt="Thumbnail preview"
+                                  fill
+                                  className="rounded-lg object-cover"
+                                />
+                              ) : (
+                                <div className="text-center">
+                                  <ImageIcon className="mx-auto h-8 w-8 text-gray-400" />
+                                  <span className="mt-2 block text-gray-600 text-sm">
+                                    Upload thumbnail
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex-1">
+                              <input
+                                id="thumbnail-upload"
+                                type="file"
+                                className="hidden"
+                                accept="image/*"
+                                name={field.name}
+                                ref={field.ref}
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) {
+                                    field.onChange(file);
+                                    const reader = new FileReader();
+                                    reader.onloadend = () => {
+                                      setThumbnailPreview(
+                                        reader.result as string,
+                                      );
+                                    };
+                                    reader.readAsDataURL(file);
+                                  }
+                                }}
+                              />
+                              <div className="space-y-1">
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  className="w-full"
+                                  onClick={() =>
+                                    document
+                                      .getElementById("thumbnail-upload")
+                                      ?.click()
+                                  }
+                                >
+                                  <UploadCloud className="mr-2 h-4 w-4" />
+                                  Select Image
+                                </Button>
+                                <p className="text-gray-500 text-xs">
+                                  Recommended size: 1280x720px. Max file size:
+                                  5MB
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                          {thumbnailPreview && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="text-destructive"
+                              onClick={() => {
+                                field.onChange(undefined);
+                                setThumbnailPreview("");
+                              }}
+                            >
+                              <X className="mr-2 h-4 w-4" />
+                              Remove Image
+                            </Button>
+                          )}
+                        </div>
                       </FormControl>
                       <FormMessage />
                     </FormItem>

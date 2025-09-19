@@ -52,7 +52,7 @@ export interface CourseTag {
 // Fixed Course interface - removed duplicates and function definitions
 export interface Course {
   id: string;
-  courseId: string;
+  courseId: number;
   title: string;
   shortDescription: string;
   fullDescription?: string;
@@ -81,6 +81,15 @@ export interface CourseSummary {
   totalEnrollments: number;
   averageRating: number;
   createdAt: string;
+}
+
+export interface FilterOptions {
+  level?: CourseLevel;
+  minPrice?: number;
+  maxPrice?: number;
+  search?: string;
+  page?: number;
+  size?: number;
 }
 
 export interface ICourseFilter {

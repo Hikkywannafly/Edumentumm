@@ -1,14 +1,20 @@
-import { LocalizedLink } from "@/components/localized-link";
+"use client";
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
+  CardDescription,
   CardFooter,
   CardHeader,
+  CardTitle,
 } from "@/components/ui/card";
 import type { Course } from "@/types/course.type";
-import { Clock, Star, Users } from "lucide-react";
+import { StarIcon } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { useState } from "react";
 
 interface CourseCardProps {
   course: Course;
@@ -18,170 +24,95 @@ const DEFAULT_THUMBNAIL_URL =
   "https://sr12121.newzenler.com/images/default-course-thumbnail.png";
 
 export function CourseCard({ course }: CourseCardProps) {
-  const getLevelText = (level: string) => {
-    switch (level) {
-      case "BEGINNER":
-        return "Beginner";
-      case "INTERMEDIATE":
-        return "Intermediate";
-      case "ADVANCED":
-        return "Advanced";
-      default:
-        return level;
-    }
+  const [imageError, setImageError] = useState(false);
+  const [imageLoading, setImageLoading] = useState(true);
+
+  const {
+    id,
+    courseId,
+    title,
+    shortDescription,
+    courseLevel,
+    averageRating = 0,
+    price = 0,
+    totalEnrollments = 0,
+    thumbnailUrl = DEFAULT_THUMBNAIL_URL,
+  } = course;
+
+  // Use courseId if id is not available
+  const courseIdentifier = id || courseId;
+
+  const handleImageError = () => {
+    setImageError(true);
+    setImageLoading(false);
   };
 
-  const getLevelColor = (level: string) => {
-    switch (level) {
-      case "BEGINNER":
-        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300";
-      case "INTERMEDIATE":
-        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300";
-      case "ADVANCED":
-        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300";
-      default:
-        return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300";
-    }
+  const handleImageLoad = () => {
+    setImageLoading(false);
+    setImageError(false);
   };
-
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(price);
-  };
-
-  const renderStars = (rating: number) => {
-    const stars = [];
-    const fullStars = Math.floor(rating);
-    const hasHalfStar = rating % 1 !== 0;
-
-    for (let i = 0; i < fullStars; i++) {
-      stars.push(
-        <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />,
-      );
-    }
-
-    if (hasHalfStar) {
-      stars.push(
-        <div key="half" className="relative">
-          <Star className="h-4 w-4 text-gray-300" />
-          <div
-            className="absolute inset-0 overflow-hidden"
-            style={{ width: "50%" }}
-          >
-            <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-          </div>
-        </div>,
-      );
-    }
-
-    const remainingStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
-    for (let i = 0; i < remainingStars; i++) {
-      stars.push(<Star key={`empty-${i}`} className="h-4 w-4 text-gray-300" />);
-    }
-
-    return stars;
-  };
-
-  // Get tags from either courseTagNames or courseTags
-  const getTags = () => {
-    if (course.courseTagNames && course.courseTagNames.length > 0) {
-      return course.courseTagNames;
-    }
-    if (course.courseTags && course.courseTags.length > 0) {
-      return course.courseTags.map((tag) => tag.name);
-    }
-    return [];
-  };
-
-  const tags = getTags();
 
   return (
-    <Card className="flex h-full flex-col overflow-hidden transition-shadow hover:shadow-lg">
-      {/* Thumbnail */}
-      <div className="relative aspect-video overflow-hidden">
-        <img
-          src={course.thumbnailUrl || DEFAULT_THUMBNAIL_URL}
-          alt={course.title}
-          className="absolute inset-0 h-full w-full object-cover"
-          onError={(e) => {
-            (e.target as HTMLImageElement).src = DEFAULT_THUMBNAIL_URL;
-          }}
-        />
-        <div className="absolute top-3 left-3">
-          <Badge className={getLevelColor(course.courseLevel)}>
-            {getLevelText(course.courseLevel)}
-          </Badge>
-        </div>
-      </div>
-
-      {/* Content */}
-      <CardHeader className="flex-1">
-        <div className="mb-2 flex flex-wrap gap-1">
-          {tags.slice(0, 2).map((tag, index) => (
-            <Badge
-              key={`${tag}-${index}`}
-              variant="secondary"
-              className="text-xs"
-            >
-              {tag}
-            </Badge>
-          ))}
-          {tags.length > 2 && (
-            <Badge variant="outline" className="text-xs">
-              +{tags.length - 2}
-            </Badge>
-          )}
-        </div>
-
-        <h3 className="line-clamp-2 font-semibold text-lg">{course.title}</h3>
-
-        <p className="line-clamp-2 text-muted-foreground text-sm">
-          {course.shortDescription}
-        </p>
-      </CardHeader>
-
-      <CardContent className="pt-0">
-        {/* Rating */}
-        {course.averageRating > 0 && (
-          <div className="mb-3 flex items-center gap-2">
-            <div className="flex items-center gap-1">
-              {renderStars(course.averageRating)}
-            </div>
-            <span className="font-medium text-sm">
-              {course.averageRating.toFixed(1)}
-            </span>
-            <span className="text-muted-foreground text-sm">
-              ({course.totalEnrollments} enrolled)
-            </span>
+    <Card className="flex h-full flex-col overflow-hidden">
+      <div className="relative aspect-video w-full overflow-hidden bg-gray-100">
+        {imageLoading && (
+          <div className="absolute inset-0 flex animate-pulse items-center justify-center bg-gray-200">
+            <div className="text-gray-500">Loading...</div>
           </div>
         )}
 
-        {/* Course Stats */}
-        <div className="mb-3 flex items-center gap-4 text-muted-foreground text-sm">
-          <div className="flex items-center gap-1">
-            <Users className="h-4 w-4" />
-            <span>{course.totalEnrollments}</span>
+        {imageError ? (
+          <div className="absolute inset-0 flex items-center justify-center bg-gray-200">
+            <div className="text-center text-gray-500">
+              <div className="mb-2 text-2xl">📚</div>
+              <div className="text-sm">No Image</div>
+            </div>
           </div>
+        ) : (
+          <Image
+            src={thumbnailUrl || DEFAULT_THUMBNAIL_URL}
+            alt={title}
+            fill
+            className={`object-cover transition-transform duration-300 hover:scale-105 ${
+              imageLoading ? "opacity-0" : "opacity-100"
+            }`}
+            onError={handleImageError}
+            onLoad={handleImageLoad}
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            priority={false}
+          />
+        )}
+      </div>
+
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <Badge variant="outline">{courseLevel}</Badge>
           <div className="flex items-center gap-1">
-            <Clock className="h-4 w-4" />
-            <span>{(course.totalLessons || 10) * 15} min</span>
+            <StarIcon className="h-4 w-4 text-yellow-400" />
+            <span className="text-sm">
+              {averageRating ? averageRating.toFixed(1) : "0.0"}
+            </span>
           </div>
         </div>
+        <CardTitle className="line-clamp-2">{title}</CardTitle>
+        <CardDescription className="line-clamp-2">
+          {shortDescription}
+        </CardDescription>
+      </CardHeader>
 
-        {/* Price */}
-        <div className="flex items-center gap-2">
-          <span className="font-bold text-primary text-xl">
-            {formatPrice(course.price)}
-          </span>
+      <CardContent className="flex-grow">
+        <div className="text-muted-foreground text-sm">
+          {totalEnrollments} students enrolled
         </div>
       </CardContent>
 
-      <CardFooter className="pt-0">
-        <LocalizedLink href={`/course/${course.id}`} className="w-full">
-          <Button className="w-full">View Details</Button>
-        </LocalizedLink>
+      <CardFooter className="flex items-center justify-between">
+        <div className="font-semibold text-lg">
+          {price === 0 ? "Free" : `$${price.toFixed(2)}`}
+        </div>
+        <Button asChild>
+          <Link href={`/courses/${courseIdentifier}`}>View Details</Link>
+        </Button>
       </CardFooter>
     </Card>
   );
