@@ -10,11 +10,9 @@ import { useParams } from "next/navigation";
 
 export function CourseDetail() {
   const params = useParams();
-  const {
-    data: course,
-    isLoading,
-    error,
-  } = useCourseDetail(params.id as string);
+  const id = params.id ? Number(params.id) : undefined;
+
+  const { data: course, isLoading, error } = useCourseDetail(id as number);
 
   if (isLoading) {
     return (

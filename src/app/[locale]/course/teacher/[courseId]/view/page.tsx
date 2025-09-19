@@ -4,7 +4,7 @@ import { PageHeader } from "@/components/layout/page-header";
 
 export default function ViewCoursePage({
   params,
-}: { params: { courseId: string } }) {
+}: { params: { courseId: number } }) {
   const { courseId } = params;
 
   return (

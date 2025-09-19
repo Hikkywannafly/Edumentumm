@@ -51,7 +51,7 @@ export interface CourseTag {
 
 // Fixed Course interface - removed duplicates and function definitions
 export interface Course {
-  id: string;
+  id: number;
   courseId: number;
   title: string;
   shortDescription: string;
@@ -71,7 +71,7 @@ export interface Course {
 }
 
 export interface CourseSummary {
-  courseId: string;
+  courseId: number;
   title: string;
   shortDescription: string;
   courseLevel: CourseLevel;
@@ -101,7 +101,7 @@ export interface ICourseFilter {
 
 export interface Lesson {
   id: string;
-  courseId: string;
+  courseId: number;
   title: string;
   description: string;
   order: number;
@@ -113,7 +113,7 @@ export interface Lesson {
 // Additional interfaces for backend responses
 export interface LessonResponseDto {
   id: string;
-  courseId: string;
+  courseId: number;
   title: string;
   description: string;
   orderIndex: number;
@@ -126,7 +126,7 @@ export interface LessonResponseDto {
 
 export interface ExerciseResponseDto {
   id: string;
-  courseId: string;
+  courseId: number;
   title: string;
   description: string;
   orderIndex: number;
@@ -136,7 +136,7 @@ export interface ExerciseResponseDto {
 
 export interface ResourceResponseDto {
   id: string;
-  courseId: string;
+  courseId: number;
   title: string;
   description: string;
   resourceUrl: string;
@@ -149,7 +149,7 @@ export interface ResourceResponseDto {
 export interface RatingResponseDto {
   id: string;
   studentId: string;
-  courseId: string;
+  courseId: number;
   rating: number;
   comment?: string;
   createdAt: string;
@@ -164,6 +164,18 @@ export interface TeacherCourseDetailDto {
   totalEnrollments: number;
   averageRating: number;
   recentRatings: RatingResponseDto[];
+}
+
+export interface GetStudentCoursesParams {
+  keyword?: string;
+  level?: CourseLevel;
+  minPrice?: number;
+  maxPrice?: number;
+  page?: number;
+  size?: number;
+  sortBy?: string;
+  sortDir?: "asc" | "desc";
+  tagNames?: string[];
 }
 
 export interface EnrolledStudentCourseDetailDto {

@@ -33,7 +33,7 @@ import {
 import { useRouter } from "next/navigation";
 
 interface TeacherCourseViewProps {
-  courseId: string;
+  courseId: number;
 }
 
 export function TeacherCourseView({ courseId }: TeacherCourseViewProps) {
