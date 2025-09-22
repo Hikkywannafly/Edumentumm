@@ -1,6 +1,7 @@
 import { noteAPI } from "@/lib/api/note";
 import { useNoteStore } from "@/stores/note-store";
 import type {
+  BlockContent,
   BlockData,
   CreateBlockRequest,
   ReorderBlocksRequest,
@@ -49,29 +50,60 @@ export function useAddBlock() {
 
 export function useUpdateBlock() {
   const queryClient = useQueryClient();
-  const { setError, setDirty } = useNoteStore();
+  const { setError, setDirty, updateBlock } = useNoteStore();
+
+  // Map backend block type strings to frontend BlockType
+  const mapBackendTypeToFrontend = (backendType: string): string => {
+    const typeMap: Record<string, string> = {
+      TEXT: "paragraph",
+      HEADING: "heading_1", // Default to heading_1, could be refined later
+      CODE: "code",
+      QUOTE: "quote",
+      LIST: "bulleted_list_item",
+      IMAGE: "image",
+    };
+    return typeMap[backendType] || "paragraph";
+  };
 
   return useMutation({
     mutationFn: async ({
       blockId,
       blockData,
-      noteId: _,
+      noteId,
     }: {
       blockId: number;
       blockData: UpdateBlockRequest;
       noteId: number;
     }): Promise<BlockData> => {
-      return noteAPI.updateBlock(blockId, blockData);
+      console.log(`Updating block ${blockId} in note ${noteId}`);
+      const result = await noteAPI.updateBlock(blockId, blockData);
+
+      // Convert backend response to frontend format
+      let content: BlockContent;
+      if (typeof result.content === "string") {
+        content = { text: result.content };
+      } else {
+        content = result.content;
+      }
+
+      const updatedBlock: BlockData = {
+        id: result.id,
+        type: mapBackendTypeToFrontend(result.type) as any,
+        content: content,
+        orderIndex: result.orderIndex,
+      };
+
+      return updatedBlock;
     },
-    onSuccess: (updatedBlock, { blockId }) => {
+    onSuccess: (updatedBlock, { blockId, noteId }) => {
       // Update store
-      // updateBlock(noteId, blockId, updatedBlock);
+      updateBlock(noteId, blockId, updatedBlock);
 
       // Update cache
       queryClient.setQueryData(noteQueryKeys.block(blockId), updatedBlock);
 
-      // Invalidate note detail
-      // queryClient.invalidateQueries({ queryKey: noteQueryKeys.detail(noteId) });
+      // Invalidate note detail to refresh
+      queryClient.invalidateQueries({ queryKey: noteQueryKeys.detail(noteId) });
 
       setError(null);
       setDirty(false);
@@ -213,7 +245,7 @@ export function useBlockOperations() {
   ) => {
     return addBlock.mutateAsync({
       noteId,
-      blockData: noteAPI.createHeadingBlock(text, level, orderIndex),
+      blockData: noteAPI.createHeadingBlock(level, text, orderIndex),
     });
   };
 
@@ -225,7 +257,7 @@ export function useBlockOperations() {
   ) => {
     return addBlock.mutateAsync({
       noteId,
-      blockData: noteAPI.createTodoBlock(text, checked, orderIndex),
+      blockData: noteAPI.createToDoBlock(text, checked, orderIndex),
     });
   };
 

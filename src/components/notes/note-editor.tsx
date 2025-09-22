@@ -18,7 +18,6 @@ import type {
   BlockType,
   CreateBlockRequest,
   NoteData,
-  UpdateBlockRequest,
   UpdateNoteRequest,
 } from "@/types/note";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -107,19 +106,6 @@ export function NoteEditor({ note, onSave }: NoteEditorProps) {
     },
   });
 
-  const updateBlockMutation = useMutation({
-    mutationFn: ({
-      blockId,
-      blockData,
-    }: {
-      blockId: number;
-      blockData: UpdateBlockRequest;
-    }) => noteAPI.updateBlock(blockId, blockData),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["note", note.id] });
-    },
-  });
-
   const deleteBlockMutation = useMutation({
     mutationFn: (blockId: number) => noteAPI.deleteBlock(blockId),
     onSuccess: () => {
@@ -129,16 +115,49 @@ export function NoteEditor({ note, onSave }: NoteEditorProps) {
 
   const handleSave = async () => {
     try {
-      // Update note metadata first
-      const updateData: UpdateNoteRequest = {
-        title: title.trim(),
-        tags,
-      };
+      // Step 1: Update note metadata ONLY (title, tags)
+      try {
+        const noteMetadata: UpdateNoteRequest = {
+          title: title.trim(),
+          tags,
+          type: note.type, // Giữ nguyên lowercase type
+        };
 
-      await updateNoteMutation.mutateAsync(updateData);
+        // Nếu là markdown note, cập nhật content
+        if (note.type === "markdown") {
+          const markdownContent = blocks
+            .map((block) => block.content?.text || "")
+            .join("\n\n");
+          noteMetadata.content = markdownContent;
+        }
 
-      // Save blocks
-      await saveBlocks();
+        console.log("Step 1: Updating note metadata:", noteMetadata);
+        await updateNoteMutation.mutateAsync(noteMetadata);
+        console.log("✅ Note metadata updated successfully");
+      } catch (error) {
+        console.error("❌ Failed to update note metadata:", error);
+        throw new Error(
+          `Failed to update note metadata: ${
+            error instanceof Error ? error.message : "Unknown error"
+          }`,
+        );
+      }
+
+      // Step 2: Với block notes, lưu blocks riêng biệt
+      if (note.type === "block") {
+        try {
+          console.log("Step 2: Updating blocks separately...");
+          await saveBlocks();
+          console.log("✅ Blocks updated successfully");
+        } catch (error) {
+          console.error("❌ Failed to update blocks:", error);
+          throw new Error(
+            `Failed to update blocks: ${
+              error instanceof Error ? error.message : "Unknown error"
+            }`,
+          );
+        }
+      }
 
       toast({
         title: tSuccess("noteUpdated"),
@@ -147,6 +166,7 @@ export function NoteEditor({ note, onSave }: NoteEditorProps) {
       onSave?.();
       setIsEditing(false);
     } catch (error) {
+      console.error("💥 Save error:", error);
       toast({
         title: tErrors("updateFailed"),
         description: error instanceof Error ? error.message : "Unknown error",
@@ -156,55 +176,119 @@ export function NoteEditor({ note, onSave }: NoteEditorProps) {
   };
 
   const saveBlocks = async () => {
-    // Get original blocks from note
     const originalBlocks = note.blocks || [];
+    console.log("📝 Original blocks:", originalBlocks);
+    console.log("📝 Current blocks:", blocks);
 
+    const errors: string[] = [];
+
+    // Step 1: Create new blocks và update existing blocks
     for (let i = 0; i < blocks.length; i++) {
       const block = blocks[i];
       const originalBlock = originalBlocks.find((b) => b.id === block.id);
 
-      if (!block.id) {
-        // New block - create it
-        const blockData: CreateBlockRequest = {
-          type: block.type,
-          content: block.content,
-          plainText: block.content.text || "",
-          orderIndex: i,
-          parentBlockId: block.parentBlockId || null,
-          properties: block.properties || {},
-        };
+      try {
+        if (!block.id) {
+          // New block - create it
+          console.log("➕ Creating new block:", block);
+          const blockData: CreateBlockRequest = {
+            type: block.type, // Use frontend block type directly
+            content: block.content || { text: "" }, // Send full content object
+            orderIndex: i,
+          };
 
-        await addBlockMutation.mutateAsync({ noteId: note.id, blockData });
-      } else if (
-        originalBlock &&
-        (originalBlock.content.text !== block.content.text ||
-          originalBlock.type !== block.type ||
-          originalBlock.orderIndex !== i)
-      ) {
-        // Existing block - update it
-        const blockData: UpdateBlockRequest = {
-          type: block.type,
-          content: block.content,
-          plainText: block.content.text || "",
-          orderIndex: i,
-          parentBlockId: block.parentBlockId || null,
-          properties: block.properties || {},
-        };
+          const result = await addBlockMutation.mutateAsync({
+            noteId: note.id,
+            blockData,
+          });
+          console.log("✅ Created block:", result);
+        } else if (originalBlock) {
+          // Check if block needs update
+          const originalContentText = originalBlock.content?.text || "";
+          const currentContentText = block.content?.text || "";
 
-        await updateBlockMutation.mutateAsync({ blockId: block.id, blockData });
+          const needsUpdate =
+            originalContentText !== currentContentText ||
+            originalBlock.type !== block.type ||
+            originalBlock.orderIndex !== i;
+
+          if (needsUpdate) {
+            console.log("✏️ Updating block:", block.id, "Changes:", {
+              contentChanged: originalContentText !== currentContentText,
+              typeChanged: originalBlock.type !== block.type,
+              orderChanged: originalBlock.orderIndex !== i,
+            });
+
+            // Since individual block update endpoint returns 403,
+            // we'll use delete + create approach as a workaround
+            console.log("🔄 Using delete+create workaround for block update");
+
+            try {
+              // First delete the existing block
+              console.log("�️ Deleting existing block:", block.id);
+              await deleteBlockMutation.mutateAsync(block.id);
+              console.log("✅ Deleted existing block:", block.id);
+
+              // Then create a new block with updated content
+              const blockData: CreateBlockRequest = {
+                type: block.type, // Use frontend block type directly
+                content: block.content || { text: currentContentText }, // Send full content object
+                orderIndex: i,
+              };
+
+              const result = await addBlockMutation.mutateAsync({
+                noteId: note.id,
+                blockData,
+              });
+              console.log("✅ Created new block:", result);
+            } catch (recreateError) {
+              console.log(
+                "🔄 Delete+create approach also failed:",
+                recreateError,
+              );
+              throw new Error(
+                `Failed to update block ${block.id} using delete+create approach`,
+              );
+            }
+          } else {
+            console.log("⏭️ Block", block.id, "unchanged, skipping");
+          }
+        }
+      } catch (error) {
+        const blockError = `Block ${block.id || "new"} at position ${i}: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`;
+        console.error("❌", blockError);
+        errors.push(blockError);
       }
     }
 
-    // Delete blocks that were removed
+    // Step 2: Delete removed blocks
     const currentBlockIds = blocks.filter((b) => b.id).map((b) => b.id);
     const blocksToDelete = originalBlocks.filter(
       (b) => b.id && !currentBlockIds.includes(b.id),
     );
 
+    console.log("🗑️ Blocks to delete:", blocksToDelete);
     for (const blockToDelete of blocksToDelete) {
       if (blockToDelete.id) {
-        await deleteBlockMutation.mutateAsync(blockToDelete.id);
+        try {
+          console.log("🗑️ Deleting block:", blockToDelete.id);
+          await deleteBlockMutation.mutateAsync(blockToDelete.id);
+          console.log("✅ Deleted block:", blockToDelete.id);
+        } catch (error) {
+          const deleteError = `Failed to delete block ${blockToDelete.id}: ${
+            error instanceof Error ? error.message : "Unknown error"
+          }`;
+          console.error("❌", deleteError);
+          errors.push(deleteError);
+        }
       }
+    }
+
+    // Throw aggregated errors if any
+    if (errors.length > 0) {
+      throw new Error(`Block operations failed:\n${errors.join("\n")}`);
     }
   };
 
@@ -285,7 +369,7 @@ export function NoteEditor({ note, onSave }: NoteEditorProps) {
           <div className="flex items-center gap-2">
             <span className="text-2xl">📝</span>
             <h1 className="font-semibold text-lg text-muted-foreground">
-              {note.ownerName}'s Note
+              Note
             </h1>
           </div>
 
@@ -324,16 +408,7 @@ export function NoteEditor({ note, onSave }: NoteEditorProps) {
 
       {/* Content */}
       <div className="p-6">
-        {/* Cover Image */}
-        {note.coverUrl && (
-          <div className="mb-8">
-            <img
-              src={note.coverUrl}
-              alt="Cover"
-              className="h-48 w-full rounded-lg object-cover"
-            />
-          </div>
-        )}
+        {/* Remove cover image section as it's not in NoteData */}
 
         {/* Title */}
         <div className="mb-6">

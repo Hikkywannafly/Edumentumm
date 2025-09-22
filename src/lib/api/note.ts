@@ -1,15 +1,14 @@
 import type {
-  AddCollaboratorRequest,
   ApiError,
-  BackendNotesResponse,
-  BlockData,
-  Comment,
+  ApiResponse,
+  BlockRequest,
+  BlockResponse,
   CreateBlockRequest,
-  CreateCommentRequest,
   CreateNoteRequest,
   NoteData,
   NoteFilter,
   NotesListResponse,
+  PaginatedResponse,
   ReorderBlocksRequest,
   UpdateBlockRequest,
   UpdateNoteRequest,
@@ -21,6 +20,29 @@ const API_BASE_URL =
 class NoteAPI {
   private getAuthHeaders() {
     const accessToken = localStorage.getItem("accessToken");
+    console.log(
+      "Getting access token from localStorage:",
+      accessToken ? "Found" : "Not found",
+    );
+    console.log("Token length:", accessToken?.length);
+    console.log(`Token starts with: ${accessToken?.substring(0, 20)}...`);
+
+    // Check if token might be expired by decoding JWT payload
+    if (accessToken) {
+      try {
+        const payload = JSON.parse(atob(accessToken.split(".")[1]));
+        const expiry = new Date(payload.exp * 1000);
+        const now = new Date();
+        console.log("Token expiry:", expiry.toISOString());
+        console.log("Current time:", now.toISOString());
+        console.log("Token expired:", expiry < now);
+        console.log("Current user ID from token:", payload.userId);
+        console.log("Current user email from token:", payload.sub);
+      } catch (e) {
+        console.log("Could not decode token:", e);
+      }
+    }
+
     if (!accessToken) {
       throw new Error("No access token found. Please login first.");
     }
@@ -36,128 +58,273 @@ class NoteAPI {
   ): Promise<T> {
     if (!response.ok) {
       let errorMessage = `${operation} failed: ${response.status}`;
+      let errorDetails = "";
 
       try {
         const errorData: ApiError = await response.json();
         errorMessage = errorData.message || errorMessage;
+        errorDetails = JSON.stringify(errorData, null, 2);
+        console.error(`❌ ${operation} Error Details:`, errorDetails);
+
+        // Special handling for permission errors
+        if (response.status === 403) {
+          console.error(
+            "🚫 Permission Error: User may not have EDIT permission for this resource",
+          );
+        }
       } catch {
-        const textError = await response.text();
-        errorMessage = textError || errorMessage;
+        // If JSON parsing fails, don't try to read the stream again
+        errorMessage = `${operation} failed: ${response.status} ${response.statusText}`;
+        console.error(
+          `❌ ${operation} Raw Error: ${response.status} ${response.statusText}`,
+        );
       }
 
       throw new Error(errorMessage);
     }
 
-    const jsonData = await response.json();
-    return jsonData;
+    // Handle responses that shouldn't have content (like DELETE 204)
+    if (
+      response.status === 204 ||
+      response.headers.get("content-length") === "0"
+    ) {
+      return null as T;
+    }
+
+    try {
+      const text = await response.text();
+      if (!text) {
+        return null as T;
+      }
+      return JSON.parse(text);
+    } catch {
+      throw new Error(`Failed to parse response for ${operation}`);
+    }
   }
 
-  private buildQueryParams(filter?: NoteFilter): string {
-    if (!filter) return "";
-
+  // 1. Lấy danh sách Notes
+  async getNotes(filter: NoteFilter = {}): Promise<NotesListResponse> {
     const params = new URLSearchParams();
 
     if (filter.page !== undefined)
       params.append("page", filter.page.toString());
     if (filter.size !== undefined)
       params.append("size", filter.size.toString());
-    if (filter.sortBy) params.append("sortBy", filter.sortBy);
-    if (filter.sortDir) params.append("sortDir", filter.sortDir);
-    if (filter.query) params.append("search", filter.query);
+    if (filter.query) params.append("query", filter.query);
     if (filter.ownerId) params.append("ownerId", filter.ownerId.toString());
     if (filter.tag) params.append("tag", filter.tag);
 
-    return params.toString() ? `?${params.toString()}` : "";
-  }
-
-  // ===== NOTES MANAGEMENT =====
-
-  /**
-   * Get list of notes with filtering and pagination
-   */
-  async getNotes(filter?: NoteFilter): Promise<NotesListResponse> {
-    const queryParams = this.buildQueryParams(filter);
+    const queryParams = params.toString() ? `?${params.toString()}` : "";
     const url = `${API_BASE_URL}/user/notes${queryParams}`;
 
     const response = await fetch(url, {
+      method: "GET",
       headers: this.getAuthHeaders(),
     });
 
-    const backendResponse = await this.handleResponse<BackendNotesResponse>(
-      response,
-      "Get notes",
-    );
+    const backendResponse: PaginatedResponse<NoteData> =
+      await this.handleResponse(response, "Get notes");
 
-    // Transform backend response to frontend expected format
+    // Transform backend response to frontend format
     return {
       content: backendResponse.data,
-      page: backendResponse.pagination.currentPage,
-      size: backendResponse.pagination.pageSize,
-      totalElements: backendResponse.pagination.totalElements,
-      totalPages: backendResponse.pagination.totalPages,
-      first: !backendResponse.pagination.hasPrevious,
-      last: !backendResponse.pagination.hasNext,
+      page: backendResponse.currentPage,
+      size: backendResponse.pageSize,
+      totalElements: backendResponse.totalElements,
+      totalPages: backendResponse.totalPages,
+      first: backendResponse.currentPage === 0,
+      last: backendResponse.currentPage === backendResponse.totalPages - 1,
     };
-  } /**
-   * Get a single note by ID
-   */
+  }
+
+  // 2. Lấy Note theo ID
   async getNoteById(noteId: number): Promise<NoteData> {
-    const response = await fetch(`${API_BASE_URL}/user/notes/${noteId}`, {
+    console.log("Getting note by ID:", noteId);
+    const url = `${API_BASE_URL}/user/notes/${noteId}`;
+    console.log("Request URL:", url);
+
+    const response = await fetch(url, {
+      method: "GET",
       headers: this.getAuthHeaders(),
     });
 
-    return this.handleResponse<NoteData>(response, "Get note");
+    console.log("Raw response:", response.status, response.statusText);
+
+    if (response.status === 404) {
+      throw new Error(`Note with ID ${noteId} not found`);
+    }
+
+    const rawResponse = await this.handleResponse(response, "Get note by ID");
+
+    console.log("Raw response data:", rawResponse);
+
+    // Check if response is wrapped in ApiResponse format
+    if (
+      rawResponse &&
+      typeof rawResponse === "object" &&
+      "data" in rawResponse
+    ) {
+      console.log("Response has .data property:", rawResponse.data);
+      const noteData = (rawResponse as any).data;
+      if (!noteData) {
+        throw new Error(`Note with ID ${noteId} not found in response data`);
+      }
+      return noteData;
+    }
+
+    console.log("Response is direct NoteData:", rawResponse);
+    if (!rawResponse) {
+      throw new Error(`Note with ID ${noteId} not found - empty response`);
+    }
+    return rawResponse as NoteData;
   }
 
-  /**
-   * Create a new note
-   */
-  async createNote(data: CreateNoteRequest): Promise<NoteData> {
+  // 3. Tạo Note mới
+  async createNote(noteData: CreateNoteRequest): Promise<NoteData> {
     const response = await fetch(`${API_BASE_URL}/user/notes`, {
       method: "POST",
       headers: this.getAuthHeaders(),
-      body: JSON.stringify(data),
+      body: JSON.stringify(noteData),
     });
 
-    return this.handleResponse<NoteData>(response, "Create note");
+    const apiResponse: ApiResponse<NoteData> = await this.handleResponse(
+      response,
+      "Create note",
+    );
+
+    return apiResponse.data;
   }
 
-  /**
-   * Update an existing note
-   */
-  async updateNote(noteId: number, data: UpdateNoteRequest): Promise<NoteData> {
+  // 4. Cập nhật Note
+  async updateNote(
+    noteId: number,
+    noteData: UpdateNoteRequest,
+  ): Promise<NoteData> {
+    console.log("🔄 Updating note:", noteId, "with data:", noteData);
+
+    // Debug auth headers
+    const headers = this.getAuthHeaders();
+    console.log("📋 Request headers:", {
+      Authorization: `${headers.Authorization.substring(0, 30)}...`,
+      "Content-Type": headers["Content-Type"],
+    });
+
+    // First, check if we can get the note (to verify ownership)
+    try {
+      const existingNote = await this.getNoteById(noteId);
+      console.log("📝 Existing note info:", {
+        id: existingNote.id,
+        title: existingNote.title,
+        ownerId: existingNote.ownerId,
+        type: existingNote.type,
+      });
+
+      // Check current user from token and localStorage
+      const accessToken = localStorage.getItem("accessToken");
+      const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
+
+      let currentUserId = null;
+
+      // Try to get user ID from localStorage first (user.userId according to schema)
+      if (currentUser.userId && typeof currentUser.userId === "number") {
+        currentUserId = currentUser.userId;
+      } else if (currentUser.id && typeof currentUser.id === "number") {
+        currentUserId = currentUser.id;
+      } else if (accessToken) {
+        // If not found in localStorage, try to decode from token
+        try {
+          const payload = JSON.parse(atob(accessToken.split(".")[1]));
+          // Try different possible field names in token
+          currentUserId =
+            payload.id || payload.userId || payload.user_id || payload.sub;
+
+          // If still not found, maybe it's in a nested object
+          if (!currentUserId && payload.user) {
+            currentUserId = payload.user.id || payload.user.userId;
+          }
+
+          // Convert string numbers to number
+          if (
+            typeof currentUserId === "string" &&
+            !Number.isNaN(Number(currentUserId))
+          ) {
+            currentUserId = Number(currentUserId);
+          }
+        } catch (e) {
+          console.log("Could not decode token:", e);
+        }
+      }
+
+      console.log("👤 Current user ID:", currentUserId);
+      console.log("👤 Current user from localStorage:", currentUser);
+      console.log("🏠 Note owner ID:", existingNote.ownerId);
+      console.log("✅ Can edit?", existingNote.ownerId === currentUserId);
+    } catch (error) {
+      console.log("❌ Could not verify note ownership:", error);
+    }
+
+    console.log("📡 Final request body:", JSON.stringify(noteData, null, 2));
+
     const response = await fetch(`${API_BASE_URL}/user/notes/${noteId}`, {
       method: "PUT",
-      headers: this.getAuthHeaders(),
-      body: JSON.stringify(data),
+      headers,
+      body: JSON.stringify(noteData),
     });
 
-    return this.handleResponse<NoteData>(response, "Update note");
+    console.log(
+      "📡 Update response status:",
+      response.status,
+      response.statusText,
+    ); // For debugging 403 errors, try to get response body
+    if (response.status === 403) {
+      const clonedResponse = response.clone();
+      try {
+        const errorBody = await clonedResponse.text();
+        console.log("403 Error response body:", errorBody);
+
+        // If token expired, suggest refresh
+        console.log(
+          "🔄 Suggestion: Token might be expired. Try refreshing the page or re-login.",
+        );
+      } catch (e) {
+        console.log("Could not read 403 error body:", e);
+      }
+    }
+
+    const rawResponse = await this.handleResponse(response, "Update note");
+
+    console.log("Update raw response:", rawResponse);
+
+    // Check if response is wrapped in ApiResponse format
+    if (
+      rawResponse &&
+      typeof rawResponse === "object" &&
+      "data" in rawResponse
+    ) {
+      console.log("Update response has .data property:", rawResponse.data);
+      return (rawResponse as any).data;
+    }
+
+    console.log("Update response is direct NoteData:", rawResponse);
+    return rawResponse as NoteData;
   }
 
-  /**
-   * Delete a note
-   */
+  // 5. Xóa Note
   async deleteNote(noteId: number): Promise<void> {
     const response = await fetch(`${API_BASE_URL}/user/notes/${noteId}`, {
       method: "DELETE",
       headers: this.getAuthHeaders(),
     });
 
-    if (!response.ok) {
-      throw new Error(`Delete note failed: ${response.status}`);
-    }
+    await this.handleResponse(response, "Delete note");
   }
 
-  // ===== BLOCKS MANAGEMENT =====
-
-  /**
-   * Add a new block to a note
-   */
+  // 6. Thêm Block vào Note
   async addBlock(
     noteId: number,
     blockData: CreateBlockRequest,
-  ): Promise<BlockData> {
+  ): Promise<BlockResponse> {
+    console.log("Adding block to note:", noteId, "with data:", blockData);
     const response = await fetch(
       `${API_BASE_URL}/user/notes/${noteId}/blocks`,
       {
@@ -167,31 +334,86 @@ class NoteAPI {
       },
     );
 
-    return this.handleResponse<BlockData>(response, "Add block");
+    console.log("Add block response status:", response.status);
+
+    const rawResponse = await this.handleResponse(response, "Add block");
+
+    console.log("Add block raw response:", rawResponse);
+
+    // Check if response is wrapped in ApiResponse format
+    if (
+      rawResponse &&
+      typeof rawResponse === "object" &&
+      "data" in rawResponse
+    ) {
+      return (rawResponse as any).data;
+    }
+
+    return rawResponse as BlockResponse;
   }
 
-  /**
-   * Update an existing block
-   */
+  // 7. Cập nhật Block
   async updateBlock(
     blockId: number,
     blockData: UpdateBlockRequest,
-  ): Promise<BlockData> {
+  ): Promise<BlockResponse> {
+    console.log("Updating block:", blockId, "with data:", blockData);
+
+    // Log current user for debugging permissions
+    const accessToken = localStorage.getItem("accessToken");
+    if (accessToken) {
+      try {
+        const payload = JSON.parse(atob(accessToken.split(".")[1]));
+        console.log("🔍 Debug - Current user ID:", payload.userId);
+        console.log("🔍 Debug - Current user email:", payload.sub);
+      } catch (e) {
+        console.log("Could not decode token for debug:", e);
+      }
+    }
+
+    // Test if we can GET the block first (for debugging)
+    try {
+      console.log("🧪 Testing GET block access first...");
+      const testResponse = await fetch(
+        `${API_BASE_URL}/user/notes/blocks/${blockId}`,
+        {
+          method: "GET",
+          headers: this.getAuthHeaders(),
+        },
+      );
+      console.log("🧪 GET block response status:", testResponse.status);
+    } catch (e) {
+      console.log("🧪 GET block test failed:", e);
+    }
+
     const response = await fetch(
       `${API_BASE_URL}/user/notes/blocks/${blockId}`,
       {
-        method: "PUT",
+        method: "PUT", // Use PUT according to documentation
         headers: this.getAuthHeaders(),
         body: JSON.stringify(blockData),
       },
     );
 
-    return this.handleResponse<BlockData>(response, "Update block");
+    console.log("Update block response status:", response.status);
+
+    const rawResponse = await this.handleResponse(response, "Update block");
+
+    console.log("Update block raw response:", rawResponse);
+
+    // Check if response is wrapped in ApiResponse format
+    if (
+      rawResponse &&
+      typeof rawResponse === "object" &&
+      "data" in rawResponse
+    ) {
+      return (rawResponse as any).data;
+    }
+
+    return rawResponse as BlockResponse;
   }
 
-  /**
-   * Delete a block
-   */
+  // 8. Xóa Block
   async deleteBlock(blockId: number): Promise<void> {
     const response = await fetch(
       `${API_BASE_URL}/user/notes/blocks/${blockId}`,
@@ -201,173 +423,84 @@ class NoteAPI {
       },
     );
 
-    if (!response.ok) {
-      throw new Error(`Delete block failed: ${response.status}`);
-    }
+    await this.handleResponse(response, "Delete block");
   }
 
-  /**
-   * Reorder blocks in a note
-   */
-  async reorderBlocks(blockOrders: ReorderBlocksRequest): Promise<void> {
-    const response = await fetch(`${API_BASE_URL}/user/notes/blocks/reorder`, {
-      method: "POST",
-      headers: this.getAuthHeaders(),
-      body: JSON.stringify(blockOrders),
+  // 9. Sắp xếp lại Blocks
+  async reorderBlocks(reorderData: ReorderBlocksRequest): Promise<void> {
+    const response = await fetch(
+      `${API_BASE_URL}/user/notes/${reorderData.noteId}/blocks/reorder`,
+      {
+        method: "PATCH",
+        headers: this.getAuthHeaders(),
+        body: JSON.stringify(reorderData),
+      },
+    );
+
+    await this.handleResponse(response, "Reorder blocks");
+  }
+
+  // Helper methods
+  async createMarkdownNote(
+    title: string,
+    content: string,
+    tags: string[] = [],
+  ): Promise<NoteData> {
+    return this.createNote({
+      title,
+      type: "markdown",
+      content,
+      tags,
     });
-
-    if (!response.ok) {
-      throw new Error(`Reorder blocks failed: ${response.status}`);
-    }
   }
 
-  // ===== COLLABORATION =====
-
-  /**
-   * Add a collaborator to a note
-   */
-  async addCollaborator(
-    noteId: number,
-    collaboratorData: AddCollaboratorRequest,
-  ): Promise<void> {
-    const response = await fetch(
-      `${API_BASE_URL}/user/notes/${noteId}/collaborators`,
-      {
-        method: "POST",
-        headers: this.getAuthHeaders(),
-        body: JSON.stringify(collaboratorData),
-      },
-    );
-
-    if (!response.ok) {
-      throw new Error(`Add collaborator failed: ${response.status}`);
-    }
+  async createBlockNote(
+    title: string,
+    blocks: BlockRequest[] = [],
+    tags: string[] = [],
+  ): Promise<NoteData> {
+    return this.createNote({
+      title,
+      type: "block",
+      blocks,
+      tags,
+    });
   }
 
-  /**
-   * Remove a collaborator from a note
-   */
-  async removeCollaborator(noteId: number, userId: number): Promise<void> {
-    const response = await fetch(
-      `${API_BASE_URL}/user/notes/${noteId}/collaborators/${userId}`,
-      {
-        method: "DELETE",
-        headers: this.getAuthHeaders(),
-      },
-    );
-
-    if (!response.ok) {
-      throw new Error(`Remove collaborator failed: ${response.status}`);
-    }
-  }
-
-  // ===== COMMENTS =====
-
-  /**
-   * Add a comment to a note
-   */
-  async addComment(
-    noteId: number,
-    commentData: CreateCommentRequest,
-  ): Promise<Comment> {
-    const response = await fetch(
-      `${API_BASE_URL}/user/notes/${noteId}/comments`,
-      {
-        method: "POST",
-        headers: this.getAuthHeaders(),
-        body: JSON.stringify(commentData),
-      },
-    );
-
-    return this.handleResponse<Comment>(response, "Add comment");
-  }
-
-  /**
-   * Delete a comment
-   */
-  async deleteComment(commentId: number): Promise<void> {
-    const response = await fetch(
-      `${API_BASE_URL}/user/notes/comments/${commentId}`,
-      {
-        method: "DELETE",
-        headers: this.getAuthHeaders(),
-      },
-    );
-
-    if (!response.ok) {
-      throw new Error(`Delete comment failed: ${response.status}`);
-    }
-  }
-
-  // ===== UTILITY METHODS =====
-
-  /**
-   * Test connection to the API
-   */
-  async testConnection(): Promise<boolean> {
-    try {
-      const response = await fetch(`${API_BASE_URL}/user/notes?page=0&size=1`, {
-        headers: this.getAuthHeaders(),
-      });
-      return response.ok;
-    } catch {
-      return false;
-    }
-  }
-
-  /**
-   * Extract plain text from block content
-   */
-  extractPlainText(content: any): string {
-    if (typeof content === "string") return content;
-    if (content.text) return content.text;
-    if (content.code) return content.code;
-    return "";
-  }
-
-  /**
-   * Create a basic paragraph block
-   */
+  // Block factory methods
   createParagraphBlock(text: string, orderIndex: number): CreateBlockRequest {
     return {
       type: "paragraph",
       content: {
         text,
-        formatting: {},
+        formatting: {
+          bold: false,
+          italic: false,
+        },
       },
-      plainText: text,
       orderIndex,
-      parentBlockId: null,
-      properties: {},
     };
   }
 
-  /**
-   * Create a heading block
-   */
   createHeadingBlock(
-    text: string,
     level: 1 | 2 | 3,
+    text: string,
     orderIndex: number,
   ): CreateBlockRequest {
-    const type = `heading_${level}` as const;
     return {
-      type,
+      type: `heading_${level}` as "heading_1" | "heading_2" | "heading_3",
       content: {
         text,
-        formatting: {},
+        formatting: {
+          bold: false,
+          italic: false,
+        },
       },
-      plainText: text,
       orderIndex,
-      parentBlockId: null,
-      properties: {},
     };
   }
 
-  /**
-   * Create a to-do block
-   */
-  createTodoBlock(
+  createToDoBlock(
     text: string,
     checked: boolean,
     orderIndex: number,
@@ -376,16 +509,27 @@ class NoteAPI {
       type: "to_do",
       content: {
         text,
-        formatting: {},
-      },
-      plainText: text,
-      orderIndex,
-      parentBlockId: null,
-      properties: {
         checked,
+        formatting: {
+          bold: false,
+          italic: false,
+        },
       },
+      orderIndex,
     };
+  }
+  async testConnection(): Promise<boolean> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/user/notes?page=0&size=1`, {
+        method: "GET",
+        headers: this.getAuthHeaders(),
+      });
+      return response.ok;
+    } catch {
+      return false;
+    }
   }
 }
 
 export const noteAPI = new NoteAPI();
+export default noteAPI;

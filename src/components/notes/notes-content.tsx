@@ -100,10 +100,8 @@ export function NotesContent() {
       page: apiPage,
       size: pageSize,
       query: searchQuery,
-      sortBy,
-      sortDir: sortDir as "asc" | "desc",
     });
-  }, [apiPage, searchQuery, sortBy, sortDir, setFilter]);
+  }, [apiPage, searchQuery, setFilter]);
 
   // Fetch notes
   const {
@@ -414,7 +412,7 @@ function NoteCard({
   const pathname = usePathname();
 
   const handleClick = () => {
-    router.push(`${pathname}/${note.id}`);
+    router.push(`${pathname}/edit/${note.id}`);
   };
 
   const getPreview = (blocks: any[]) => {
@@ -443,7 +441,9 @@ function NoteCard({
             <div className="flex-1">
               <h3 className="truncate font-semibold text-lg">{note.title}</h3>
               <p className="mt-1 line-clamp-2 text-muted-foreground text-sm">
-                {getPreview(note.blocks)}
+                {note.type === "markdown"
+                  ? note.content?.slice(0, 150) || "No content"
+                  : getPreview(note.blocks || [])}
               </p>
               <div className="mt-2 flex items-center gap-4 text-muted-foreground text-xs">
                 <span className="flex items-center gap-1">
@@ -461,9 +461,7 @@ function NoteCard({
               </div>
             </div>
             <div className="ml-4 flex flex-col items-end gap-2">
-              <Badge variant={note.isPublic ? "default" : "secondary"}>
-                {note.isPublic ? "Public" : "Private"}
-              </Badge>
+              <Badge variant="secondary">Private</Badge>
             </div>
           </div>
         </CardContent>
@@ -480,13 +478,13 @@ function NoteCard({
         <div className="space-y-3">
           <div className="flex items-start justify-between">
             <h3 className="line-clamp-2 font-semibold text-lg">{note.title}</h3>
-            <Badge variant={note.isPublic ? "default" : "secondary"}>
-              {note.isPublic ? "Public" : "Private"}
-            </Badge>
+            <Badge variant="secondary">Private</Badge>
           </div>
 
           <p className="line-clamp-3 text-muted-foreground text-sm">
-            {getPreview(note.blocks)}
+            {note.type === "markdown"
+              ? note.content?.slice(0, 150) || "No content"
+              : getPreview(note.blocks || [])}
           </p>
 
           <div className="flex items-center justify-between text-muted-foreground text-xs">

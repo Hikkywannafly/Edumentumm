@@ -1,4 +1,6 @@
-import type { BlockData, NoteData, NoteFilter } from "@/types/note";
+import { noteAPI } from "@/lib/api/note";
+import type { BlockData, NoteData, NoteFilter, NoteType } from "@/types/note";
+import { isBlockNote } from "@/types/note";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
@@ -24,14 +26,25 @@ interface NoteState {
   sidebarCollapsed: boolean;
   selectedTags: string[];
 
-  // Actions - Notes
+  // Actions - Notes CRUD with API
+  fetchNotes: () => Promise<void>;
+  createNewNote: (noteData: {
+    title: string;
+    type: NoteType;
+    content?: string;
+  }) => Promise<NoteData | null>;
+  updateCurrentNote: (updates: Partial<NoteData>) => Promise<void>;
+  deleteNoteById: (noteId: number) => Promise<void>;
+  fetchNoteById: (noteId: number) => Promise<void>;
+
+  // Actions - Notes local state
   setNotes: (notes: NoteData[]) => void;
   addNote: (note: NoteData) => void;
   updateNote: (id: number, updates: Partial<NoteData>) => void;
   removeNote: (id: number) => void;
   setCurrentNote: (note: NoteData | null) => void;
 
-  // Actions - Blocks
+  // Actions - Blocks local state
   addBlock: (noteId: number, block: BlockData) => void;
   updateBlock: (
     noteId: number,
@@ -40,6 +53,15 @@ interface NoteState {
   ) => void;
   removeBlock: (noteId: number, blockId: number) => void;
   reorderBlocks: (noteId: number, newBlockOrder: BlockData[]) => void;
+
+  // Actions - Block operations with API
+  addBlockToNote: (noteId: number, blockData: any) => Promise<void>;
+  updateNoteBlock: (
+    noteId: number,
+    blockId: number,
+    updates: any,
+  ) => Promise<void>;
+  removeBlockFromNote: (noteId: number, blockId: number) => Promise<void>;
 
   // Actions - UI state
   setLoading: (loading: boolean) => void;
@@ -66,8 +88,6 @@ interface NoteState {
 const defaultFilter: NoteFilter = {
   page: 0,
   size: 20,
-  sortBy: "updatedAt",
-  sortDir: "desc",
 };
 
 export const useNoteStore = create<NoteState>()(
@@ -86,7 +106,229 @@ export const useNoteStore = create<NoteState>()(
       sidebarCollapsed: false,
       selectedTags: [],
 
-      // Notes actions
+      // API Methods
+      fetchNotes: async () => {
+        set({ isLoading: true, error: null });
+        try {
+          const response = await noteAPI.getNotes();
+          set({ notes: response.content, isLoading: false });
+        } catch (error) {
+          set({
+            error:
+              error instanceof Error ? error.message : "Failed to fetch notes",
+            isLoading: false,
+          });
+        }
+      },
+
+      createNewNote: async (noteData) => {
+        set({ isLoading: true, error: null });
+        try {
+          const newNote = await noteAPI.createNote({
+            title: noteData.title,
+            type: noteData.type,
+            ...(noteData.content && { content: noteData.content }),
+          });
+          set((state) => ({
+            notes: [newNote, ...state.notes],
+            currentNote: newNote,
+            isLoading: false,
+          }));
+          return newNote;
+        } catch (error) {
+          set({
+            error:
+              error instanceof Error ? error.message : "Failed to create note",
+            isLoading: false,
+          });
+          return null;
+        }
+      },
+
+      updateCurrentNote: async (updates) => {
+        const currentNote = useNoteStore.getState().currentNote;
+        if (!currentNote) return;
+
+        set({ isLoading: true, error: null });
+        try {
+          const updatedNote = await noteAPI.updateNote(currentNote.id, updates);
+          set((state) => ({
+            notes: state.notes.map((note) =>
+              note.id === currentNote.id ? updatedNote : note,
+            ),
+            currentNote: updatedNote,
+            isDirty: false,
+            isLoading: false,
+          }));
+        } catch (error) {
+          set({
+            error:
+              error instanceof Error ? error.message : "Failed to update note",
+            isLoading: false,
+          });
+        }
+      },
+
+      deleteNoteById: async (noteId) => {
+        set({ isLoading: true, error: null });
+        try {
+          await noteAPI.deleteNote(noteId);
+          set((state) => ({
+            notes: state.notes.filter((note) => note.id !== noteId),
+            currentNote:
+              state.currentNote?.id === noteId ? null : state.currentNote,
+            isLoading: false,
+          }));
+        } catch (error) {
+          set({
+            error:
+              error instanceof Error ? error.message : "Failed to delete note",
+            isLoading: false,
+          });
+        }
+      },
+
+      fetchNoteById: async (noteId) => {
+        set({ isLoading: true, error: null });
+        try {
+          const note = await noteAPI.getNoteById(noteId);
+          set({ currentNote: note, isLoading: false });
+        } catch (error) {
+          set({
+            error:
+              error instanceof Error ? error.message : "Failed to fetch note",
+            isLoading: false,
+          });
+        }
+      },
+
+      addBlockToNote: async (noteId, blockData) => {
+        set({ isLoading: true, error: null });
+        try {
+          const newBlock = await noteAPI.addBlock(noteId, blockData);
+          set((state) => {
+            const updatedNotes = state.notes.map((note) => {
+              if (note.id === noteId && isBlockNote(note)) {
+                return {
+                  ...note,
+                  blocks: [...note.blocks, newBlock],
+                };
+              }
+              return note;
+            });
+
+            const updatedCurrentNote =
+              state.currentNote?.id === noteId && isBlockNote(state.currentNote)
+                ? {
+                    ...state.currentNote,
+                    blocks: [...state.currentNote.blocks, newBlock],
+                  }
+                : state.currentNote;
+
+            return {
+              notes: updatedNotes,
+              currentNote: updatedCurrentNote,
+              isLoading: false,
+            };
+          });
+        } catch (error) {
+          set({
+            error:
+              error instanceof Error ? error.message : "Failed to add block",
+            isLoading: false,
+          });
+        }
+      },
+
+      updateNoteBlock: async (noteId, blockId, updates) => {
+        set({ isLoading: true, error: null });
+        try {
+          const updatedBlock = await noteAPI.updateBlock(blockId, updates);
+          set((state) => {
+            const updateBlockInArray = (blocks: BlockData[]) =>
+              blocks.map((block) =>
+                block.id === blockId ? updatedBlock : block,
+              );
+
+            const updatedNotes = state.notes.map((note) => {
+              if (note.id === noteId && isBlockNote(note)) {
+                return {
+                  ...note,
+                  blocks: updateBlockInArray(note.blocks),
+                };
+              }
+              return note;
+            });
+
+            const updatedCurrentNote =
+              state.currentNote?.id === noteId && isBlockNote(state.currentNote)
+                ? {
+                    ...state.currentNote,
+                    blocks: updateBlockInArray(state.currentNote.blocks),
+                  }
+                : state.currentNote;
+
+            return {
+              notes: updatedNotes,
+              currentNote: updatedCurrentNote,
+              isLoading: false,
+            };
+          });
+        } catch (error) {
+          set({
+            error:
+              error instanceof Error ? error.message : "Failed to update block",
+            isLoading: false,
+          });
+        }
+      },
+
+      removeBlockFromNote: async (noteId, blockId) => {
+        set({ isLoading: true, error: null });
+        try {
+          await noteAPI.deleteBlock(blockId);
+          set((state) => {
+            const filterBlocks = (blocks: BlockData[]) =>
+              blocks.filter((block) => block.id !== blockId);
+
+            const updatedNotes = state.notes.map((note) => {
+              if (note.id === noteId && isBlockNote(note)) {
+                return {
+                  ...note,
+                  blocks: filterBlocks(note.blocks),
+                };
+              }
+              return note;
+            });
+
+            const updatedCurrentNote =
+              state.currentNote?.id === noteId && isBlockNote(state.currentNote)
+                ? {
+                    ...state.currentNote,
+                    blocks: filterBlocks(state.currentNote.blocks),
+                  }
+                : state.currentNote;
+
+            return {
+              notes: updatedNotes,
+              currentNote: updatedCurrentNote,
+              selectedBlockId:
+                state.selectedBlockId === blockId
+                  ? null
+                  : state.selectedBlockId,
+              isLoading: false,
+            };
+          });
+        } catch (error) {
+          set({
+            error:
+              error instanceof Error ? error.message : "Failed to remove block",
+            isLoading: false,
+          });
+        }
+      },
+
+      // Local state methods
       setNotes: (notes) => set({ notes }),
 
       addNote: (note) =>
@@ -119,26 +361,24 @@ export const useNoteStore = create<NoteState>()(
           isDirty: false,
         }),
 
-      // Block actions
+      // Block actions - only for block notes
       addBlock: (noteId, block) =>
         set((state) => {
           const updatedNotes = state.notes.map((note) => {
-            if (note.id === noteId) {
+            if (note.id === noteId && isBlockNote(note)) {
               return {
                 ...note,
                 blocks: [...note.blocks, block],
-                totalBlocks: (note.totalBlocks ?? 0) + 1,
               };
             }
             return note;
           });
 
           const updatedCurrentNote =
-            state.currentNote?.id === noteId
+            state.currentNote?.id === noteId && isBlockNote(state.currentNote)
               ? {
                   ...state.currentNote,
                   blocks: [...state.currentNote.blocks, block],
-                  totalBlocks: (state.currentNote.totalBlocks ?? 0) + 1,
                 }
               : state.currentNote;
 
@@ -157,7 +397,7 @@ export const useNoteStore = create<NoteState>()(
             );
 
           const updatedNotes = state.notes.map((note) => {
-            if (note.id === noteId) {
+            if (note.id === noteId && isBlockNote(note)) {
               return {
                 ...note,
                 blocks: updateBlockInArray(note.blocks),
@@ -167,7 +407,7 @@ export const useNoteStore = create<NoteState>()(
           });
 
           const updatedCurrentNote =
-            state.currentNote?.id === noteId
+            state.currentNote?.id === noteId && isBlockNote(state.currentNote)
               ? {
                   ...state.currentNote,
                   blocks: updateBlockInArray(state.currentNote.blocks),
@@ -187,25 +427,20 @@ export const useNoteStore = create<NoteState>()(
             blocks.filter((block) => block.id !== blockId);
 
           const updatedNotes = state.notes.map((note) => {
-            if (note.id === noteId) {
+            if (note.id === noteId && isBlockNote(note)) {
               return {
                 ...note,
                 blocks: filterBlocks(note.blocks),
-                totalBlocks: Math.max(0, (note.totalBlocks ?? 0) - 1),
               };
             }
             return note;
           });
 
           const updatedCurrentNote =
-            state.currentNote?.id === noteId
+            state.currentNote?.id === noteId && isBlockNote(state.currentNote)
               ? {
                   ...state.currentNote,
                   blocks: filterBlocks(state.currentNote.blocks),
-                  totalBlocks: Math.max(
-                    0,
-                    (state.currentNote.totalBlocks ?? 0) - 1,
-                  ),
                 }
               : state.currentNote;
 
@@ -221,7 +456,7 @@ export const useNoteStore = create<NoteState>()(
       reorderBlocks: (noteId, newBlockOrder) =>
         set((state) => {
           const updatedNotes = state.notes.map((note) => {
-            if (note.id === noteId) {
+            if (note.id === noteId && isBlockNote(note)) {
               return {
                 ...note,
                 blocks: newBlockOrder,
@@ -231,7 +466,7 @@ export const useNoteStore = create<NoteState>()(
           });
 
           const updatedCurrentNote =
-            state.currentNote?.id === noteId
+            state.currentNote?.id === noteId && isBlockNote(state.currentNote)
               ? {
                   ...state.currentNote,
                   blocks: newBlockOrder,

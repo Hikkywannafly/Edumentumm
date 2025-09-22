@@ -25,10 +25,13 @@ export default function NoteCreatePage() {
   const newNote = {
     id: 0, // Temporary ID for new note
     title: "",
+    type: "block" as const,
     ownerId: 0,
     isDeleted: false,
     blocks: [],
     tags: [],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   };
 
   return (

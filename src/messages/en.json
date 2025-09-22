@@ -737,7 +737,8 @@
     },
     "actions": {
       "createNote": "Create Note",
-      "retry": "Retry"
+      "retry": "Retry",
+      "backToNotes": "Back to Notes"
     },
     "emptyState": {
       "noNotes": "No notes yet",
@@ -768,6 +769,10 @@
           "description": "Template for daily journaling"
         }
       }
+    },
+    "edit": {
+      "title": "Edit Note",
+      "untitledNote": "Untitled Note"
     },
     "editor": {
       "untitledNote": "Untitled Note",

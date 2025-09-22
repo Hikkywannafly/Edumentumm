@@ -1,17 +1,26 @@
-// Note Types based on Backend API
+// Note Types based on Backend API Documentation
+
+// Note Type Enum
+export type NoteType = "markdown" | "block";
+
+// Block Type Enum - Updated từ documentation
 export type BlockType =
+  // Text & Heading
   | "paragraph"
   | "heading_1"
   | "heading_2"
   | "heading_3"
+  // List & Todo
   | "bulleted_list_item"
   | "numbered_list_item"
   | "to_do"
   | "toggle"
+  // Formatting
   | "quote"
   | "callout"
   | "divider"
   | "code"
+  // Media & Data
   | "table"
   | "table_row"
   | "image"
@@ -19,11 +28,13 @@ export type BlockType =
   | "file"
   | "bookmark"
   | "embed"
+  // Advanced / Database
   | "page"
   | "database_table"
   | "database_board"
   | "database_calendar"
   | "database_gallery"
+  // Inline Embed
   | "equation"
   | "mention_user"
   | "mention_page"
@@ -50,8 +61,31 @@ export interface InlineFormatting {
   color?: string; // For HIGHLIGHT type
 }
 
+// Block Content Structures - Updated theo documentation
 export interface BlockContent {
+  // Text content cho các text blocks
   text?: string;
+
+  // Image block content
+  url?: string;
+  caption?: string;
+  alt?: string;
+
+  // Code block content
+  language?: string;
+
+  // Quote block content
+  author?: string;
+
+  // To-do block content
+  checked?: boolean;
+
+  // Table content
+  rows?: {
+    cells: { text: string; formatting?: any }[];
+  }[];
+
+  // Legacy formatting support
   formatting?: {
     bold?: boolean;
     italic?: boolean;
@@ -60,28 +94,33 @@ export interface BlockContent {
     code?: boolean;
     color?: string;
   };
-  // For specific block types
-  url?: string; // For image, video, file
-  caption?: string; // For image, video
-  code?: string; // For code block
-  language?: string; // For code block
-  rows?: {
-    // For table block
-    cells: { text: string; formatting?: any }[];
-  }[];
 }
 
+// Block Object - Updated theo documentation
 export interface BlockData {
   id?: number;
   type: BlockType;
   content: BlockContent;
   orderIndex: number;
-  parentBlockId?: number | null;
-  properties?: Record<string, any>;
   noteId?: number;
   createdAt?: string;
   updatedAt?: string;
-  children?: BlockData[]; // For nested blocks
+  isDeleted?: boolean;
+}
+
+// Block Request DTO
+export interface BlockRequest {
+  type: BlockType;
+  orderIndex: number;
+  content: BlockContent;
+}
+
+// Block Response DTO (from Backend API)
+export interface BlockResponse {
+  id: number;
+  type: string; // Backend returns string enum like "TEXT", "HEADING", etc.
+  orderIndex: number;
+  content: string | BlockContent; // Backend may return string or object depending on endpoint
 }
 
 export interface Collaborator {
@@ -105,92 +144,78 @@ export interface Comment {
   replies?: Comment[];
 }
 
+// Tag Object
+export interface Tag {
+  id: number;
+  tagName: string;
+}
+
+// Note Object - Updated theo documentation
 export interface NoteData {
   id: number;
   title: string;
-  icon?: string | null;
-  coverUrl?: string | null;
+  type: NoteType;
+  content?: string; // Chỉ có khi type = "markdown"
   ownerId: number;
-  ownerName?: string;
-  ownerEmail?: string;
   isDeleted: boolean;
-  isPublic?: boolean | null;
-  isTemplate?: boolean | null;
-  parentId?: number | null;
-  createdAt?: string | null;
-  updatedAt?: string | null;
-  blocks: BlockData[];
-  collaborators?: Collaborator[] | null;
+  blocks?: BlockData[]; // Chỉ có khi type = "block"
   tags: string[];
-  childPages?: NoteData[] | null;
-  currentUserPermission?: NotePermission | null;
-  totalBlocks?: number | null;
-  totalComments?: number | null;
-  totalCollaborators?: number | null;
+  createdAt: string; // ISO 8601 format
+  updatedAt: string; // ISO 8601 format
 }
 
-// API Request/Response Types
+// Request/Response DTOs - Updated theo documentation
+
 export interface CreateNoteRequest {
-  title: string;
-  icon?: string;
-  coverUrl?: string;
-  parentId?: number | null;
-  isPublic?: boolean;
-  isTemplate?: boolean;
-  tags?: string[];
-  initialBlocks?: Omit<
-    BlockData,
-    "id" | "noteId" | "createdAt" | "updatedAt"
-  >[];
+  title: string; // Required, không được rỗng
+  type?: NoteType; // Optional, mặc định "block"
+  content?: string; // Optional, dùng cho markdown
+  blocks?: BlockRequest[]; // Optional, dùng cho block
+  tags?: string[]; // Optional
 }
 
 export interface UpdateNoteRequest {
-  title?: string;
-  icon?: string;
-  coverUrl?: string;
-  parentId?: number | null;
-  isPublic?: boolean;
-  isTemplate?: boolean;
-  tags?: string[];
+  title?: string; // Optional
+  type?: NoteType; // Optional, có thể chuyển đổi giữa markdown và block
+  content?: string; // Optional, dùng cho markdown
+  blocks?: BlockRequest[]; // Optional, dùng cho block
+  tags?: string[]; // Optional
 }
 
-export interface CreateBlockRequest {
-  type: BlockType;
-  content: BlockContent;
-  plainText: string;
-  orderIndex: number;
-  parentBlockId?: number | null;
-  properties?: Record<string, any>;
+// API Response Types
+export interface ApiResponse<T> {
+  status: number;
+  message: string;
+  data: T;
 }
 
-export interface UpdateBlockRequest {
-  type?: BlockType;
-  content?: BlockContent;
-  plainText?: string;
-  orderIndex?: number;
-  parentBlockId?: number | null;
-  properties?: Record<string, any>;
+export interface PaginatedResponse<T> extends ApiResponse<T[]> {
+  totalElements: number;
+  totalPages: number;
+  currentPage: number;
+  pageSize: number;
 }
 
+// Type Guards - Helper functions
+export function isMarkdownNote(
+  note: NoteData,
+): note is NoteData & { content: string; type: "markdown" } {
+  return note.type === "markdown";
+}
+
+export function isBlockNote(
+  note: NoteData,
+): note is NoteData & { blocks: BlockData[]; type: "block" } {
+  return note.type === "block";
+}
+
+// Block Management Request Types
 export interface ReorderBlocksRequest {
-  blockOrders: {
-    blockId: number;
-    orderIndex: number;
-  }[];
+  noteId: number;
+  orderedBlockIds: number[];
 }
 
-export interface AddCollaboratorRequest {
-  userEmail: string;
-  permission: NotePermission;
-}
-
-export interface CreateCommentRequest {
-  content: string;
-  blockId?: number;
-  parentCommentId?: number;
-}
-
-// Backend API Response Types
+// Legacy Support - Backend Response Types
 export interface BackendNotesResponse {
   data: NoteData[];
   pagination: {
@@ -216,8 +241,6 @@ export interface NotesListResponse {
 export interface NoteFilter {
   page?: number;
   size?: number;
-  sortBy?: string;
-  sortDir?: "asc" | "desc";
   query?: string;
   ownerId?: number;
   tag?: string;
@@ -225,8 +248,20 @@ export interface NoteFilter {
 
 // Error Response Type
 export interface ApiError {
-  status: string;
+  status: number;
   message: string;
-  timestamp: string;
-  path: string;
+  error?: string;
 }
+
+// Type aliases for API requests (corrected based on actual backend format)
+export type CreateBlockRequest = {
+  type: BlockType; // Frontend block type like "paragraph", "heading_1", etc.
+  content: BlockContent; // Backend expects object, not string
+  orderIndex: number;
+};
+
+export type UpdateBlockRequest = {
+  type: BlockType; // Frontend block type like "paragraph", "heading_1", etc.
+  content: BlockContent; // Backend expects object, not string
+  orderIndex: number;
+};

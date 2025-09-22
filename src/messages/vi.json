@@ -742,7 +742,8 @@
     },
     "actions": {
       "createNote": "Tạo ghi chú",
-      "retry": "Thử lại"
+      "retry": "Thử lại",
+      "backToNotes": "Quay lại danh sách"
     },
     "emptyState": {
       "noNotes": "Chưa có ghi chú nào",
@@ -773,6 +774,10 @@
           "description": "Mẫu cho nhật ký hàng ngày"
         }
       }
+    },
+    "edit": {
+      "title": "Chỉnh sửa ghi chú",
+      "untitledNote": "Ghi chú không có tiêu đề"
     },
     "editor": {
       "untitledNote": "Ghi chú không có tiêu đề",

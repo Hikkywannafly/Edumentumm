@@ -36,7 +36,7 @@ export function NoteCreateButton() {
       const newNote = await createWithTemplate(title, template);
 
       // Navigate to the new note editor
-      router.push(`/notes/${newNote.id}`);
+      router.push(`/notes/edit/${newNote.id}`);
 
       toast.success(t("create.success"));
     } catch (error) {

@@ -11,12 +11,38 @@ import { useQuery } from "@tanstack/react-query";
 import { AlertCircle, ArrowLeft, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useParams, useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 export default function NoteEditPage() {
   const params = useParams();
   const router = useRouter();
   const t = useTranslations("Notes");
   const noteId = Number.parseInt(params.id as string);
+
+  // Check if user is authenticated
+  useEffect(() => {
+    const accessToken = localStorage.getItem("accessToken");
+    if (!accessToken) {
+      console.log("No access token found, redirecting to login");
+      router.push("/login");
+      return;
+    }
+  }, [router]);
+
+  // Handler to create test note if ID=1 doesn't exist
+  const handleCreateTestNote = async () => {
+    try {
+      const testNote = await noteAPI.createNote({
+        title: "Test Note",
+        type: "block",
+        tags: [],
+      });
+      console.log("Test note created:", testNote);
+      router.push(`/notes/edit/${testNote.id}`);
+    } catch (error) {
+      console.error("Failed to create test note:", error);
+    }
+  };
 
   const {
     data: note,
@@ -25,9 +51,22 @@ export default function NoteEditPage() {
     refetch,
   } = useQuery({
     queryKey: ["note", noteId],
-    queryFn: () => noteAPI.getNoteById(noteId),
+    queryFn: async () => {
+      console.log("Fetching note with ID:", noteId);
+      try {
+        const result = await noteAPI.getNoteById(noteId);
+        console.log("Note fetched successfully:", result);
+        return result;
+      } catch (err) {
+        console.error("Failed to fetch note:", err);
+        throw err;
+      }
+    },
     enabled: !!noteId && !Number.isNaN(noteId),
+    retry: 1,
   });
+
+  console.log("Query state:", { note, isLoading, error, noteId });
 
   const handleBack = () => {
     router.push("/notes");
@@ -50,6 +89,7 @@ export default function NoteEditPage() {
   }
 
   if (error) {
+    console.error("Note query error:", error);
     return (
       <DashboardLayout>
         <PageHeaderClient
@@ -69,9 +109,16 @@ export default function NoteEditPage() {
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
-                {t("errors.failedToLoadNote")}
+                {error.message.includes("No access token")
+                  ? "Vui lòng đăng nhập để xem ghi chú"
+                  : t("errors.failedToLoadNote")}
               </AlertDescription>
             </Alert>
+            <div className="mt-4">
+              <Button onClick={() => refetch()} variant="outline">
+                {t("actions.retry")}
+              </Button>
+            </div>
           </Card>
         </div>
       </DashboardLayout>
@@ -99,6 +146,14 @@ export default function NoteEditPage() {
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>{t("errors.noteNotFound")}</AlertDescription>
             </Alert>
+            <div className="mt-4 space-x-2">
+              <Button onClick={() => refetch()} variant="outline">
+                {t("actions.retry")}
+              </Button>
+              <Button onClick={handleCreateTestNote} variant="default">
+                Create Test Note
+              </Button>
+            </div>
           </Card>
         </div>
       </DashboardLayout>
