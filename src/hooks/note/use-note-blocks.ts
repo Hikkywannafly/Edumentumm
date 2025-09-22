@@ -22,7 +22,33 @@ export function useAddBlock() {
       noteId: number;
       blockData: CreateBlockRequest;
     }): Promise<BlockData> => {
-      return noteAPI.addBlock(noteId, blockData);
+      const result = await noteAPI.addBlock(noteId, blockData);
+
+      // Map backend type to frontend BlockType
+      const typeMap: Record<string, string> = {
+        TEXT: "paragraph",
+        HEADING: "heading_1",
+        CODE: "code",
+        QUOTE: "quote",
+        LIST: "bulleted_list_item",
+        IMAGE: "image",
+      };
+
+      let content: BlockContent;
+      if (typeof result.content === "string") {
+        content = { text: result.content };
+      } else {
+        content = result.content;
+      }
+
+      const block: BlockData = {
+        id: result.id,
+        type: typeMap[result.type] as any,
+        content: content,
+        orderIndex: result.orderIndex,
+      };
+
+      return block;
     },
     onSuccess: (newBlock, { noteId }) => {
       // Update store
