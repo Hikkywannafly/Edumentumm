@@ -1,7 +1,11 @@
 "use client";
 
 import { usePublicFlashcards } from "@/hooks/flashcard/use-flashcards-query";
-import { useState } from "react";
+import {
+  usePublicQuizList,
+  usePublicQuizTags,
+} from "@/hooks/quiz/use-public-quizzes";
+import { useCallback, useEffect, useState } from "react";
 import { FlashcardSkeletonGrid } from "../flashcards/flashcard-skeleton";
 import ThinLayout from "../layout/thin-layout";
 import { Card } from "../ui";
@@ -14,72 +18,113 @@ import FlashcardExploreCard from "./flashcard-explore-card";
 export default function ExploreContent() {
   const [activeTab, setActiveTab] = useState("quizzes");
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const pageSize = 6;
 
   // Convert UI page (1-based) to API page (0-based)
   const apiPage = currentPage - 1;
 
+  // Fetch public quizzes
+  const {
+    data: quizzesResponse,
+    isLoading: quizzesLoading,
+    error: quizzesError,
+    refetch: refetchQuizzes,
+  } = usePublicQuizList(
+    activeTab === "quizzes"
+      ? {
+          page: apiPage,
+          size: pageSize,
+          ...(searchQuery && { search: searchQuery }),
+          ...(selectedTagIds.length > 0 && {
+            tagIds: selectedTagIds.join(","),
+          }),
+        }
+      : undefined,
+  );
+
+  // Fetch public flashcards
   const {
     data: flashcardsResponse,
-    isLoading,
-    error,
+    isLoading: flashcardsLoading,
+    error: flashcardsError,
+    refetch: refetchFlashcards,
   } = usePublicFlashcards(activeTab === "flashcards" ? apiPage : 0, pageSize);
 
-  // Extract data with fallbacks
-  const flashcardSets = flashcardsResponse?.data || [];
-  const apiPagination = flashcardsResponse?.pagination;
+  // Fetch all tags for filtering
+  const { data: tagsData, isLoading: tagsLoading } = usePublicQuizTags();
 
-  // Convert API pagination (0-based) to UI pagination (1-based)
-  const pagination = apiPagination
+  // Extract data with fallbacks
+  const quizSets = quizzesResponse?.content || [];
+  const flashcardSets = flashcardsResponse?.data || [];
+
+  // Pagination data for quizzes
+  const quizzesPagination = quizzesResponse
     ? {
-        currentPage: apiPagination.currentPage + 1,
-        pageSize: apiPagination.pageSize,
-        totalElements: apiPagination.totalElements,
-        totalPages: apiPagination.totalPages,
-        hasNext: apiPagination.hasNext,
-        hasPrevious: apiPagination.hasPrevious,
+        currentPage: quizzesResponse.number + 1,
+        pageSize: quizzesResponse.size,
+        totalElements: quizzesResponse.totalElements,
+        totalPages: quizzesResponse.totalPages,
+        hasNext: !quizzesResponse.last,
+        hasPrevious: !quizzesResponse.first,
       }
     : {
         currentPage: 1,
-        pageSize: pageSize,
+        pageSize,
         totalElements: 0,
         totalPages: 0,
         hasNext: false,
         hasPrevious: false,
       };
 
-  const handlePageChange = (page: number) => {
+  // Pagination data for flashcards
+  const flashcardsPagination = flashcardsResponse?.pagination
+    ? {
+        currentPage: flashcardsResponse.pagination.currentPage + 1,
+        pageSize: flashcardsResponse.pagination.pageSize,
+        totalElements: flashcardsResponse.pagination.totalElements,
+        totalPages: flashcardsResponse.pagination.totalPages,
+        hasNext: flashcardsResponse.pagination.hasNext,
+        hasPrevious: flashcardsResponse.pagination.hasPrevious,
+      }
+    : {
+        currentPage: 1,
+        pageSize,
+        totalElements: 0,
+        totalPages: 0,
+        hasNext: false,
+        hasPrevious: false,
+      };
+
+  const handlePageChange = useCallback((page: number) => {
     setCurrentPage(page);
-    if (activeTab === "flashcards") {
-      // React Query will automatically refetch when dependencies change
-      // No need to manually call refetch with parameters
+  }, []);
+
+  const handleTagFilterChange = useCallback((tagIds: number[]) => {
+    setSelectedTagIds(tagIds);
+    setCurrentPage(1); // Reset to first page when filter changes
+  }, []);
+
+  const handleSearchChange = useCallback((query: string) => {
+    setSearchQuery(query);
+    setCurrentPage(1); // Reset to first page when search changes
+  }, []);
+
+  // Refetch data when filters change
+  useEffect(() => {
+    if (activeTab === "quizzes") {
+      refetchQuizzes();
+    } else {
+      refetchFlashcards();
     }
-  };
+  }, [activeTab, refetchQuizzes, refetchFlashcards]);
 
-  console.log("Explore Content Debug:", {
-    activeTab,
-    flashcardSets: flashcardSets.length,
-    pagination,
-    isLoading,
-    error,
-  });
-
-  const mockQuizData = [
-    { title: "Debt Instruments and Valuation Quiz", questions: 10, daysAgo: 9 },
-    {
-      title: "Trắc nghiệm Triết học Mác-Lênin (Chương 1)",
-      questions: 19,
-      daysAgo: 11,
-    },
-    {
-      title: "Trắc nghiệm Triết học Mác-Lênin cơ bản",
-      questions: 5,
-      daysAgo: 11,
-    },
-    { title: "Project Management Fundamentals", questions: 19, daysAgo: 17 },
-    { title: "Câu hỏi về Triết học Mác", questions: 10, daysAgo: 18 },
-    { title: "Triết học Mác - Lênin", questions: 9, daysAgo: 20 },
-  ];
+  const isLoading =
+    activeTab === "quizzes" ? quizzesLoading : flashcardsLoading;
+  const error = activeTab === "quizzes" ? quizzesError : flashcardsError;
+  const pagination =
+    activeTab === "quizzes" ? quizzesPagination : flashcardsPagination;
 
   const renderContent = () => {
     if (activeTab === "flashcards") {
@@ -118,10 +163,40 @@ export default function ExploreContent() {
     }
 
     // Render quizzes (default tab)
+    if (isLoading) {
+      return <FlashcardSkeletonGrid count={6} />;
+    }
+
+    if (error) {
+      return (
+        <Card className="flex items-center justify-center border-none py-12">
+          <p className="text-red-500">
+            Error loading quizzes: {error?.message}
+          </p>
+        </Card>
+      );
+    }
+
+    if (quizSets.length === 0) {
+      return (
+        <Card className="flex items-center justify-center border-none py-12">
+          <p className="text-muted-foreground">No public quizzes found</p>
+        </Card>
+      );
+    }
+
     return (
       <Card className="grid gap-4 border-none py-6 md:grid-cols-3">
-        {mockQuizData.map((item, idx) => (
-          <ExploreCard key={idx} {...item} />
+        {quizSets.map((quiz) => (
+          <ExploreCard
+            key={quiz.id}
+            title={quiz.title}
+            questions={quiz.totalQuestions || 0}
+            daysAgo={Math.floor(
+              (Date.now() - new Date(quiz.createdAt).getTime()) /
+                (1000 * 60 * 60 * 24),
+            )}
+          />
         ))}
       </Card>
     );
@@ -130,11 +205,20 @@ export default function ExploreContent() {
   return (
     <ThinLayout>
       <ExploreTitle />
-      <ExploreFilter tab={activeTab} onTabChange={setActiveTab} />
+      <ExploreFilter
+        tab={activeTab}
+        onTabChange={setActiveTab}
+        tags={tagsData || []}
+        selectedTagIds={selectedTagIds}
+        onTagFilterChange={handleTagFilterChange}
+        tagsLoading={tagsLoading}
+        onSearchChange={handleSearchChange}
+        searchQuery={searchQuery}
+      />
       <ExplorePaging
         pagination={pagination}
         onPageChange={handlePageChange}
-        show={activeTab === "flashcards"}
+        show={true}
       />
       {renderContent()}
     </ThinLayout>

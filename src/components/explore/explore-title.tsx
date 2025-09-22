@@ -5,8 +5,8 @@ export default function ExploreTitle() {
   const t = useTranslations("Explore");
   return (
     <Card className="border-none py-6">
-      <h1 className="font-bold text-2xl">{t("title")}</h1>
-      <p className="text-gray-500">{t("description")}</p>
+      <h1 className="font-bold text-3xl">{t("title")}</h1>
+      <p className="mt-2 text-muted-foreground">{t("description")}</p>
     </Card>
   );
 }
