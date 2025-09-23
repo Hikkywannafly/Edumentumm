@@ -1,5 +1,6 @@
 "use client";
 
+import { getLocaleFromPathname } from "@/lib/utils";
 import {
   AlertCircle,
   ArrowLeft,
@@ -9,8 +10,9 @@ import {
   Save,
   X,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { type Key, useEffect, useState } from "react";
+import { locales } from "zod";
 import {
   useTeacherCourseDetail,
   useUpdateCourse,
@@ -42,6 +44,8 @@ interface TeacherCourseEditProps {
 
 export function TeacherCourseEdit({ courseId }: TeacherCourseEditProps) {
   const router = useRouter();
+  const pathname = usePathname();
+  const locale = getLocaleFromPathname(pathname);
   const { toast } = useToast();
 
   const {
@@ -61,6 +65,13 @@ export function TeacherCourseEdit({ courseId }: TeacherCourseEditProps) {
   useEffect(() => {
     if (courseDetail?.course) {
       const course = courseDetail.course;
+      // Initialize tags
+      const initialTags =
+        (course.courseTags && Array.isArray(course.courseTags)
+          ? course.courseTags.map((tag: { name: string }) => tag.name)
+          : course.courseTagNames) || [];
+      setTags(initialTags);
+
       setFormData({
         title: course.title,
         shortDescription: course.shortDescription,
@@ -69,16 +80,10 @@ export function TeacherCourseEdit({ courseId }: TeacherCourseEditProps) {
         thumbnailUrl: course.thumbnailUrl || "",
         price: course.price,
         courseStatus: course.courseStatus,
+        tagCourseNames: tags,
       });
-
-      // Initialize tags
-      const initialTags =
-        course.courseTagNames ||
-        course.courseTags?.map((tag: { name: string }) => tag.name) ||
-        [];
-      setTags(initialTags);
     }
-  }, [courseDetail]);
+  }, [courseDetail, tags]);
 
   const handleInputChange = (field: keyof CourseUpdateRequest, value: any) => {
     setFormData((prev) => ({
@@ -129,7 +134,7 @@ export function TeacherCourseEdit({ courseId }: TeacherCourseEditProps) {
     try {
       const updateData: CourseUpdateRequest = {
         ...formData,
-        courseTagNames: tags.length > 0 ? tags : undefined,
+        tagCourseNames: tags.length > 0 ? tags : undefined,
       };
 
       await updateCourseMutation.mutateAsync({
@@ -143,7 +148,7 @@ export function TeacherCourseEdit({ courseId }: TeacherCourseEditProps) {
       });
 
       // Navigate back to course view
-      router.push(`/course/teacher/${courseId}/view`);
+      router.push(`/${locale}/course/teacher/${courseId}/view`);
     } catch (error: any) {
       toast({
         title: "Error",
@@ -200,7 +205,7 @@ export function TeacherCourseEdit({ courseId }: TeacherCourseEditProps) {
   const course = courseDetail.course;
 
   return (
-    <div className="container mx-auto max-w-4xl px-4 py-6">
+    <div className="container mx-auto p-4">
       {/* Header */}
       <div className="mb-6 flex items-center justify-between">
         <div className="flex items-center gap-4">
@@ -401,7 +406,11 @@ export function TeacherCourseEdit({ courseId }: TeacherCourseEditProps) {
                 <div className="space-y-2">
                   <Label htmlFor="courseLevel">Course Level</Label>
                   <Select
-                    value={formData.courseLevel || ""}
+                    value={
+                      formData.courseLevel ||
+                      courseDetail?.course.courseLevel ||
+                      ""
+                    }
                     onValueChange={(value) =>
                       handleInputChange("courseLevel", value as CourseLevel)
                     }
@@ -444,7 +453,11 @@ export function TeacherCourseEdit({ courseId }: TeacherCourseEditProps) {
                 <div className="space-y-2">
                   <Label htmlFor="courseStatus">Course Status</Label>
                   <Select
-                    value={formData.courseStatus || ""}
+                    value={
+                      formData.courseStatus ||
+                      courseDetail?.course.courseStatus ||
+                      ""
+                    }
                     onValueChange={(value) =>
                       handleInputChange("courseStatus", value as CourseStatus)
                     }
@@ -520,7 +533,9 @@ export function TeacherCourseEdit({ courseId }: TeacherCourseEditProps) {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => router.push(`/course/teacher/${courseId}`)}
+                onClick={() =>
+                  router.push(`${locales}/course/teacher/${courseId}`)
+                }
                 className="w-full"
               >
                 Cancel

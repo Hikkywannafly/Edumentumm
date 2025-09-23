@@ -171,7 +171,7 @@ export function TeacherCourseView({ courseId }: TeacherCourseViewProps) {
     publishCourseMutation.isPending || archiveCourseMutation.isPending;
 
   return (
-    <div className="container mx-auto max-w-4xl px-4 py-6">
+    <div className="container mx-auto p-4">
       {/* Header */}
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-4">

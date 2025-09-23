@@ -1,5 +1,6 @@
 "use client";
 
+import { LocalizedLink } from "@/components/localized-link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,7 +14,6 @@ import {
 import type { Course } from "@/types/course.type";
 import { StarIcon } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
 import { useState } from "react";
 
 interface CourseCardProps {
@@ -111,7 +111,9 @@ export function CourseCard({ course }: CourseCardProps) {
           {price === 0 ? "Free" : `$${price.toFixed(2)}`}
         </div>
         <Button asChild>
-          <Link href={`/courses/${courseIdentifier}`}>View Details</Link>
+          <LocalizedLink href={`/course/student/${courseIdentifier}/view`}>
+            View Details
+          </LocalizedLink>
         </Button>
       </CardFooter>
     </Card>

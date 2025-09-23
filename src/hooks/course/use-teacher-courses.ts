@@ -141,6 +141,7 @@ const getTeacherCourseDetail = async (
   const response = await fetch(
     `${API_BASE_URL}/teacher/courses/${validatedCourseId}`,
     {
+      method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",

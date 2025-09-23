@@ -1,3 +1,5 @@
+import type { Key } from "react";
+
 export enum CourseLevel {
   BEGINNER = "BEGINNER",
   INTERMEDIATE = "INTERMEDIATE",
@@ -29,7 +31,7 @@ export interface CourseUpdateRequest {
   thumbnailUrl?: string;
   price?: number;
   courseStatus?: CourseStatus;
-  courseTagNames?: string[];
+  tagCourseNames?: string[];
 }
 
 export interface ApiResponse<T> {
@@ -112,7 +114,9 @@ export interface Lesson {
 
 // Additional interfaces for backend responses
 export interface LessonResponseDto {
+  lessonId: Key | null | undefined;
   id: string;
+  durationMinutes: number;
   courseId: number;
   title: string;
   description: string;
@@ -125,6 +129,7 @@ export interface LessonResponseDto {
 }
 
 export interface ExerciseResponseDto {
+  [x: string]: Key | null | undefined;
   id: string;
   courseId: number;
   title: string;
@@ -135,6 +140,7 @@ export interface ExerciseResponseDto {
 }
 
 export interface ResourceResponseDto {
+  [x: string]: Key | null | undefined;
   id: string;
   courseId: number;
   title: string;
@@ -147,6 +153,7 @@ export interface ResourceResponseDto {
 }
 
 export interface RatingResponseDto {
+  [x: string]: Key | null | undefined;
   id: string;
   studentId: string;
   courseId: number;
@@ -235,4 +242,42 @@ export interface GetTeacherCoursesParams {
   size?: number;
   sortBy?: string;
   sortDir?: "asc" | "desc";
+}
+// Additional types to add to existing course.type.ts
+
+export enum EnrollmentStatus {
+  ACTIVE = "ACTIVE",
+  COMPLETED = "COMPLETED",
+  CANCELLED = "CANCELLED",
+}
+
+export interface RatingCreateRequestDto {
+  rating: number; // 1-5
+  comment?: string;
+}
+
+export interface EnrollmentResponseDto {
+  enrollmentId: number;
+  course: CourseSummary;
+  status: EnrollmentStatus;
+  paidAmount: number;
+  completedLessons: number;
+  completedExercises: number;
+  progressPercentage: number;
+  enrolledAt: string;
+}
+
+// Update existing TeacherSummary to match backend response
+export interface TeacherSummary {
+  userId: number;
+  username: string;
+  email: string;
+  imageUrl?: string;
+}
+
+// Update existing CourseTag to match backend response
+export interface CourseTag {
+  courseTagId: number;
+  name: string;
+  color?: string;
 }
