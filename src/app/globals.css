@@ -178,6 +178,15 @@
   display: none;
 }
 
+.scroll-hidden {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE + Edge */
+}
+
+.scroll-hidden::-webkit-scrollbar {
+  display: none; /* Chrome, Safari */
+}
+
 /* Hidden scrollbar when collapsed */
 .custom-scrollbar-hidden {
   scrollbar-width: none;

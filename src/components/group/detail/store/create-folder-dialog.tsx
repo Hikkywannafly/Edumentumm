@@ -36,15 +36,15 @@ export function CreateFolderDialog({
     if (!name.trim()) return;
     try {
       setLoading(true);
-      const newFolder = await folderAPI.createGroup(groupId, name.trim());
+      const newFolder = await folderAPI.createFolder(groupId, name.trim());
       console.log(newFolder);
       onSuccess?.(newFolder);
       onOpenChange(false);
       setName("");
-      toast.success("Tạo thư mục thành công!");
+      toast.success("Create folder successfully!");
     } catch (err) {
-      console.error("Lỗi tạo folder:", err);
-      toast.error("Tạo thư mục thất bại!");
+      console.error("Error creating folder:", err);
+      toast.error("Failed to create folder!");
     } finally {
       setLoading(false);
     }

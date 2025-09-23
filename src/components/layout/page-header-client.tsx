@@ -9,6 +9,7 @@ import { motion } from "framer-motion";
 import { Crown } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type React from "react";
+import { Notification } from "../notification";
 import { SettingMenu } from "../setting-menu";
 
 interface PageHeaderClientProps {
@@ -33,14 +34,13 @@ export function PageHeaderClient({
   const { isExpanded } = useSidebarContext();
   const t = useTranslations("Header");
   const { goPricing } = useLocalizedNavigation();
-
   return (
     <header
       className={`fixed top-0 right-0 left-0 z-20 flex h-16 items-center gap-3 bg-background ${
         isExpanded ? "pl-64" : "pl-16"
       } ${className}`}
     >
-      <div className=" mx-auto flex w-full items-center justify-between gap-2 px-4">
+      <div className="mx-auto flex w-full items-center justify-between gap-2 px-4">
         <h1 className="font-semibold text-xl">{title}</h1>
         <div className="flex-1">{children}</div>
 
@@ -82,8 +82,8 @@ export function PageHeaderClient({
             </motion.div>
           )}
           {action && <div>{action}</div>}
-
           {showThemeToggle && <ThemeToggle />}
+          <Notification />
           {showLanguageSwitcher && <LanguageSwitcher />}
           <SettingMenu />
         </div>

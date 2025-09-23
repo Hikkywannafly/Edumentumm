@@ -56,7 +56,7 @@ export default function DashboardStats({
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-bold text-2xl">
-            Welcome back, {profileInfo?.username || "MerQyan"}!
+            Welcome back, {profileInfo?.username}!
           </h1>
           <p className="text-muted-foreground">
             Ready for another productive study session?

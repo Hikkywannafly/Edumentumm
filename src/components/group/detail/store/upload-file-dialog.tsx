@@ -78,17 +78,17 @@ export function UploadFileDialog({
         onUploadSuccess(folderId, uploadedFiles);
       }
 
-      toast.success("Tải lên thành công!");
+      toast.success("Upload successfully!");
       setFiles([]);
       setFolderId("root");
       setIsDragActive(false);
       onOpenChange(false);
     } catch (error) {
-      console.error("Upload thất bại:", error);
+      console.error("Upload failed:", error);
       if (error instanceof Error) {
         toast.error(error.message);
       } else {
-        toast.error("Có lỗi khi tải lên file!");
+        toast.error("An error occurred while uploading the file!");
       }
     } finally {
       setIsUploading(false);
