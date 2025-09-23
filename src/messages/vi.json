@@ -500,6 +500,8 @@
   },
   "Settings": {
     "title": "Cài đặt",
+    "profile": "Trang cá nhân",
+    "logout": "Đăng xuất",
     "description": "Cấu hình tùy chọn để cá nhân hóa trải nghiệm của bạn",
     "save": "Lưu & Tiếp tục",
     "skip": "Bỏ qua",

@@ -1,5 +1,6 @@
 "use client";
 
+import { LocalizedLink } from "@/components/localized-link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,14 +12,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/contexts/auth-context";
-import { getLocaleFromPathname } from "@/lib/utils";
 import { LogOut, Settings, User } from "lucide-react";
-import { usePathname, useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 export function SettingMenu() {
+  const t = useTranslations("Settings");
   const { user, logout, isLoading } = useAuth();
-  const router = useRouter();
-  const pathname = usePathname();
 
   const getInitials = (username?: string, email?: string) => {
     if (username) {
@@ -37,16 +36,6 @@ export function SettingMenu() {
 
   const initials = getInitials(user?.username, user?.email);
   const displayName = user?.username || user?.email || "User";
-
-  const handleProfileClick = () => {
-    const locale = getLocaleFromPathname(pathname);
-    router.push(`/${locale}/profile`);
-  };
-
-  const handleSettingsClick = () => {
-    const locale = getLocaleFromPathname(pathname);
-    router.push(`/${locale}/settings`);
-  };
 
   if (isLoading) {
     return (
@@ -117,27 +106,25 @@ export function SettingMenu() {
             </div>
           </div>
         </DropdownMenuLabel>
-        <DropdownMenuItem
-          className="flex cursor-pointer items-center gap-2 px-4 py-3 transition hover:bg-indigo-50 dark:hover:bg-zinc-800"
-          onClick={handleProfileClick}
-        >
-          <User className="h-5 w-5" />
-          <span className="font-medium">Trang cá nhân</span>
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          className="flex cursor-pointer items-center gap-2 px-4 py-3 transition hover:bg-indigo-50 dark:hover:bg-zinc-800"
-          onClick={handleSettingsClick}
-        >
-          <Settings className="h-5 w-5" />
-          <span className="font-medium">Cài đặt</span>
-        </DropdownMenuItem>
+        <LocalizedLink href="/profile">
+          <DropdownMenuItem className="flex cursor-pointer items-center gap-2 px-4 py-3 transition hover:bg-indigo-50 dark:hover:bg-zinc-800">
+            <User className="h-5 w-5" />
+            <span className="font-medium">{t("profile")}</span>
+          </DropdownMenuItem>
+        </LocalizedLink>
+        <LocalizedLink href="/settings">
+          <DropdownMenuItem className="flex cursor-pointer items-center gap-2 px-4 py-3 transition hover:bg-indigo-50 dark:hover:bg-zinc-800">
+            <Settings className="h-5 w-5" />
+            <span className="font-medium">{t("title")}</span>
+          </DropdownMenuItem>
+        </LocalizedLink>
         <DropdownMenuSeparator />
         <DropdownMenuItem
           className="flex cursor-pointer items-center gap-2 px-4 py-3 text-red-600 transition hover:bg-red-50 dark:hover:bg-zinc-800"
           onClick={logout}
         >
           <LogOut className="h-5 w-5 text-red-600" />
-          <span className="font-medium ">Đăng xuất</span>
+          <span className="font-medium">{t("logout")}</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

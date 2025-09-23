@@ -501,6 +501,8 @@
   },
   "Settings": {
     "title": "Settings",
+    "profile": "Profile",
+    "logout": "Logout",
     "description": "Configure your preferences to personalize your experience",
     "save": "Save & Continue",
     "skip": "Skip",
