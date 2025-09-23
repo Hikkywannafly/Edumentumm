@@ -31,8 +31,15 @@ export async function uploadImage(file: File): Promise<ImageUploadResult> {
     };
   } catch (error) {
     console.error("Error uploading image:", error);
-    throw new Error(
-      error instanceof Error ? error.message : "Failed to upload image",
-    );
+    // Provide more specific error messages
+    if (error instanceof Error) {
+      if (error.message.includes("Failed to fetch")) {
+        throw new Error(
+          "Network error. Please check your connection and try again.",
+        );
+      }
+      throw new Error(error.message);
+    }
+    throw new Error("Failed to upload image. Please try again.");
   }
 }

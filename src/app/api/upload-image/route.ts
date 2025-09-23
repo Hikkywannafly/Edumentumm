@@ -1,9 +1,11 @@
 import { put } from "@vercel/blob";
+import { customAlphabet } from "nanoid";
 import type { NextRequest } from "next/server";
+
+const nanoid = customAlphabet("1234567890abcdefghijklmnopqrstuvwxyz", 16);
 
 export async function POST(request: NextRequest) {
   try {
-    // Check if the request has form data
     const contentType = request.headers.get("content-type");
     if (!contentType || !contentType.includes("multipart/form-data")) {
       return new Response(
@@ -16,8 +18,6 @@ export async function POST(request: NextRequest) {
         },
       );
     }
-
-    // Get the file from the request
     const formData = await request.formData();
     const file = formData.get("file") as File;
 
@@ -27,8 +27,6 @@ export async function POST(request: NextRequest) {
         headers: { "Content-Type": "application/json" },
       });
     }
-
-    // Validate file type
     if (!file.type.startsWith("image/")) {
       return new Response(
         JSON.stringify({ error: "Invalid file type. Only images are allowed" }),
@@ -39,7 +37,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
       return new Response(
         JSON.stringify({ error: "File too large. Maximum size is 5MB" }),
@@ -50,12 +47,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Upload the file to Vercel Blob storage
-    const blob = await put(file.name, file, {
+    const fileExtension = file.name.split(".").pop();
+    // Generate a more robust unique filename using nanoid
+    const timestamp = Date.now();
+    const randomId = nanoid();
+    const uniqueFileName = `${timestamp}-${randomId}.${fileExtension}`;
+
+    const blob = await put(uniqueFileName, file, {
       access: "public",
     });
 
-    // Return the blob URL
     return new Response(JSON.stringify(blob), {
       status: 200,
       headers: { "Content-Type": "application/json" },
