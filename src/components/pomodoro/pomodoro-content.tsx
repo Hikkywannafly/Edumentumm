@@ -274,12 +274,7 @@ export default function PomodoroContent() {
                 updateTask={updateTask}
               />
             ) : (
-              <KanbanBoardView
-                tasks={tasks}
-                newTask={newTask}
-                setNewTask={setNewTask}
-                addTask={addTask}
-              />
+              <KanbanBoardView />
             )}
           </CardContent>
         </Card>
