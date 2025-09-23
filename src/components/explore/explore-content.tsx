@@ -91,13 +91,13 @@ export default function ExploreContent() {
   } = usePublicQuizList(
     activeTab === "quizzes"
       ? {
-        page: apiPage,
-        size: pageSize,
-        ...(debouncedSearch && { search: debouncedSearch }),
-        ...(selectedTagIds.length > 0 && {
-          tagIds: selectedTagIds.join(","),
-        }),
-      }
+          page: apiPage,
+          size: pageSize,
+          ...(debouncedSearch && { search: debouncedSearch }),
+          ...(selectedTagIds.length > 0 && {
+            tagIds: selectedTagIds.join(","),
+          }),
+        }
       : undefined,
   );
 
@@ -118,40 +118,40 @@ export default function ExploreContent() {
 
   const quizzesPagination = quizzesResponse
     ? {
-      currentPage: quizzesResponse.number + 1,
-      pageSize: quizzesResponse.size,
-      totalElements: quizzesResponse.totalElements,
-      totalPages: quizzesResponse.totalPages,
-      hasNext: !quizzesResponse.last,
-      hasPrevious: !quizzesResponse.first,
-    }
+        currentPage: quizzesResponse.number + 1,
+        pageSize: quizzesResponse.size,
+        totalElements: quizzesResponse.totalElements,
+        totalPages: quizzesResponse.totalPages,
+        hasNext: !quizzesResponse.last,
+        hasPrevious: !quizzesResponse.first,
+      }
     : {
-      currentPage: 1,
-      pageSize,
-      totalElements: 0,
-      totalPages: 0,
-      hasNext: false,
-      hasPrevious: false,
-    };
+        currentPage: 1,
+        pageSize,
+        totalElements: 0,
+        totalPages: 0,
+        hasNext: false,
+        hasPrevious: false,
+      };
 
   // Pagination data for flashcards
   const flashcardsPagination = flashcardsResponse?.pagination
     ? {
-      currentPage: flashcardsResponse.pagination.currentPage + 1,
-      pageSize: flashcardsResponse.pagination.pageSize,
-      totalElements: flashcardsResponse.pagination.totalElements,
-      totalPages: flashcardsResponse.pagination.totalPages,
-      hasNext: flashcardsResponse.pagination.hasNext,
-      hasPrevious: flashcardsResponse.pagination.hasPrevious,
-    }
+        currentPage: flashcardsResponse.pagination.currentPage + 1,
+        pageSize: flashcardsResponse.pagination.pageSize,
+        totalElements: flashcardsResponse.pagination.totalElements,
+        totalPages: flashcardsResponse.pagination.totalPages,
+        hasNext: flashcardsResponse.pagination.hasNext,
+        hasPrevious: flashcardsResponse.pagination.hasPrevious,
+      }
     : {
-      currentPage: 1,
-      pageSize,
-      totalElements: 0,
-      totalPages: 0,
-      hasNext: false,
-      hasPrevious: false,
-    };
+        currentPage: 1,
+        pageSize,
+        totalElements: 0,
+        totalPages: 0,
+        hasNext: false,
+        hasPrevious: false,
+      };
 
   const handlePageChange = useCallback(
     (page: number) => {
@@ -270,7 +270,7 @@ export default function ExploreContent() {
             questions={quiz.totalQuestions || 0}
             daysAgo={Math.floor(
               (Date.now() - new Date(quiz.createdAt).getTime()) /
-              (1000 * 60 * 60 * 24),
+                (1000 * 60 * 60 * 24),
             )}
           />
         ))}

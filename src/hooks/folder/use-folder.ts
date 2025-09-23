@@ -37,6 +37,7 @@ export function useFolders(publicId: string) {
       folderName: newFolder.folderName || "Folder mới",
       createdAt: newFolder.createdAt || new Date().toISOString(),
       files: [],
+      quiz: [], // Ensure the 'quiz' property is included
     };
 
     setFolders((prev) => [folderData, ...prev]);
@@ -62,6 +63,7 @@ export function useFolders(publicId: string) {
               ownerId: "",
               ownerName: "",
               createdAt: new Date().toISOString(),
+              quiz: [], // Ensure the 'quiz' property is included
             },
             ...prev.filter((f) => f.id !== "root"),
           ];
