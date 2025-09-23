@@ -2,6 +2,36 @@ import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
 
 const nextConfig: NextConfig = {
+  // Config Next.js Image component
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "**",
+      },
+      {
+        protocol: "http",
+        hostname: "**",
+      },
+
+      {
+        protocol: "https",
+        hostname: "sr12121.newzenler.com",
+        pathname: "/images/**",
+      },
+      {
+        protocol: "https",
+        hostname: "image",
+        pathname: "/example/**",
+      },
+    ],
+
+    domains: [],
+    unoptimized: false,
+    dangerouslyAllowSVG: true,
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
+  },
+
   webpack: (config, { isServer }) => {
     // Handle Node.js polyfills for client-side
     if (!isServer) {

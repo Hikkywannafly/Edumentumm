@@ -399,6 +399,31 @@
       "newAnswer": "New Answer"
     }
   },
+  "Kanban": {
+    "title": "Kanban Board",
+    "createTask": "Add Task",
+    "addTaskTitle": "Add New Task",
+    "addTaskDesc": "Enter the task details below.",
+    "statusTitle": "Status",
+    "status": {
+      "todo": "To Do",
+      "inProgress": "In Progress",
+      "done": "Done"
+    },
+    "noTask": "No tasks yet",
+    "dueDate": "Due Date & Time",
+    "BtnCancel": "Cancel",
+    "btnCreateTask": "Create Task",
+    "btnSave": "Save Changes",
+    "btnConfirmDelete": "Delete",
+    "dueStatus": {
+      "overdue": "Overdue",
+      "dueSoon": "Due soon"
+    },
+    "confirmDeletion": "Confirm Deletion",
+    "confirmDeletionDescBefore": "Are you sure you want to delete ",
+    "confirmDeletionDescAfter": "? This action cannot be undone."
+  },
   "RoleSelector": {
     "title": "Choose Your Role",
     "description": "Select the role that best describes you to get started",
@@ -567,7 +592,7 @@
     "flashcardCard": {
       "cards": "cards",
       "studied": "studied",
-      "averageScore": "Average Score",
+      "completed": "Flashcard Completed",
       "studyDeck": "Study Deck",
       "lastStudied": "Last studied"
     },
