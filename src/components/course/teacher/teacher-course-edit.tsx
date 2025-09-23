@@ -80,10 +80,18 @@ export function TeacherCourseEdit({ courseId }: TeacherCourseEditProps) {
         thumbnailUrl: course.thumbnailUrl || "",
         price: course.price,
         courseStatus: course.courseStatus,
-        tagCourseNames: tags,
       });
     }
-  }, [courseDetail, tags]);
+  }, [courseDetail]);
+
+  useEffect(() => {
+    if (tags.length > 0) {
+      setFormData((prev) => ({
+        ...prev,
+        tagCourseNames: tags,
+      }));
+    }
+  }, [tags]);
 
   const handleInputChange = (field: keyof CourseUpdateRequest, value: any) => {
     setFormData((prev) => ({
