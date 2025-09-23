@@ -24,9 +24,6 @@ export default function RecentNotes({ notes = [] }: RecentNotesProps) {
           <FileText className="h-5 w-5" />
           Recent Notes
         </CardTitle>
-        <Button size="sm" asChild>
-          <LocalizedLink href="/notes/create">Create Note</LocalizedLink>
-        </Button>
       </CardHeader>
       <CardContent>
         {notes.length > 0 ? (
