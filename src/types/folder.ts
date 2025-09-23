@@ -1,3 +1,5 @@
+import type { QuizDisplayData } from "./quiz-display";
+
 export interface GetFolderAPIResponse {
   data: FolderResponse[];
   status: string;
@@ -11,6 +13,7 @@ export interface FolderResponse {
   ownerName: string;
   createdAt: string;
   files: FileResponse[];
+  quiz: QuizDisplayData[];
 }
 
 export interface FolderRequest {

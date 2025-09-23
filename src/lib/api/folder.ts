@@ -47,17 +47,17 @@ class FolderAPI {
     }
   }
 
-  async getFolder(groupId: string): Promise<FolderResponse[]> {
+  async getFolder(publicId: string): Promise<FolderResponse[]> {
     const response = await this.request<GetFolderAPIResponse>(
-      `/user/groups/folders/${groupId}`,
+      `/user/groups/folders/${publicId}`,
     );
     console.log(response.data);
     return response.data;
   }
 
-  async createGroup(groupId: string, name: string): Promise<FolderResponse> {
+  async createFolder(publicId: string, name: string): Promise<FolderResponse> {
     const response = await this.request<FolderCreateAPIResponse>(
-      `/user/groups/${groupId}/folders`,
+      `/user/groups/${publicId}/folders`,
       {
         method: "POST",
         body: JSON.stringify({ name: name }),
