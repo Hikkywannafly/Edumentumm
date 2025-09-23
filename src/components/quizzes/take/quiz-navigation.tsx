@@ -18,27 +18,29 @@ export function QuizNavigation({
   onNext,
   onPrevious,
   onSubmit,
-  // isCompleted,
-  mode = "QUIZ",
   questions = [],
   quizId,
-  quiz, // Add quiz object to get the slug
+  quiz,
+  mode, // Add mode prop
 }: QuizNavigationProps & { quiz?: any }) {
   // Get the current question ID
   const currentQuestionId = questions[currentQuestion]?.id;
+  const currentQuestionType = questions[currentQuestion]?.type;
 
-  const { hasNextQuestion, hasPreviousQuestion, showFeedbackUI, isCorrect } =
-    useQuizNavigation({
-      currentQuestionIndex: currentQuestion,
-      totalQuestions,
-      showFeedback,
-      currentQuestionResult: currentQuestionResult ?? null,
-    });
-
-  const isAnswered = useMemo(() => {
-    if (!currentQuestionId) return false;
-    return answers.some((a) => a.questionId === currentQuestionId);
-  }, [answers, currentQuestionId]);
+  const {
+    hasNextQuestion,
+    hasPreviousQuestion,
+    showFeedbackUI,
+    isCorrect,
+    isAnswered,
+  } = useQuizNavigation({
+    currentQuestionIndex: currentQuestion,
+    totalQuestions,
+    showFeedback,
+    currentQuestionResult: currentQuestionResult ?? null,
+    answers, // Pass answers array
+    currentQuestionId, // Pass current question ID
+  });
 
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
@@ -70,6 +72,32 @@ export function QuizNavigation({
 
   const handleShare = () => {};
 
+  // Check if current question requires text input (for validation)
+  const isTextInputQuestion = useMemo(() => {
+    return (
+      currentQuestionType === "FILL_BLANK" ||
+      currentQuestionType === "FREE_RESPONSE"
+    );
+  }, [currentQuestionType]);
+
+  // Check if text input is valid for text-based questions
+  const isTextInputValid = useMemo(() => {
+    if (!isTextInputQuestion) return true;
+
+    const currentAnswer = answers.find(
+      (a) => a.questionId === currentQuestionId,
+    );
+    return (
+      currentAnswer &&
+      currentAnswer.selectedOptionId &&
+      currentAnswer.selectedOptionId.trim() !== ""
+    );
+  }, [isTextInputQuestion, answers, currentQuestionId]);
+
+  const finalIsAnswered = useMemo(() => {
+    return isAnswered && (isTextInputQuestion ? isTextInputValid : true);
+  }, [isAnswered, isTextInputQuestion, isTextInputValid]);
+
   if (showFeedbackUI && currentQuestionResult) {
     return (
       <QuizFeedback
@@ -93,8 +121,7 @@ export function QuizNavigation({
       <QuizMainNavigation
         hasPreviousQuestion={hasPreviousQuestion}
         hasNextQuestion={hasNextQuestion}
-        isAnswered={isAnswered}
-        mode={mode}
+        isAnswered={!!finalIsAnswered}
         onPrevious={onPrevious}
         onNext={onNext}
         onSubmit={onSubmit}
@@ -103,6 +130,9 @@ export function QuizNavigation({
         onResetQuiz={handleResetQuiz}
         onDeleteQuiz={handleDeleteQuiz}
         onShare={handleShare}
+        isTextInputQuestion={!!isTextInputQuestion}
+        isTextInputValid={!!isTextInputValid}
+        mode={mode} // Pass mode prop
       />
       <QuizDeleteDialog
         open={showDeleteDialog}

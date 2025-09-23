@@ -30,7 +30,9 @@ function convertBackendQuestion(backendQ: BackendQuestion): QuestionData {
   };
 }
 
-function convertBackendQuiz(backendQuiz: BackendQuizEntity): GeneratedQuiz {
+export function convertBackendQuiz(
+  backendQuiz: BackendQuizEntity,
+): GeneratedQuiz {
   const questions = backendQuiz.quizData?.questions || [];
 
   const convertTags = (tags: any[]): string[] => {
@@ -60,6 +62,13 @@ function convertBackendQuiz(backendQuiz: BackendQuizEntity): GeneratedQuiz {
       show_explanations: true,
       allow_retry: true,
       passing_score: backendQuiz.passingScore || 70,
+      status: backendQuiz.status,
+      isPremium: backendQuiz.isPremium,
+      isFeatured: backendQuiz.isFeatured || false,
+      isTrending: backendQuiz.isTrending || false,
+      estimatedTime: backendQuiz.estimatedTime,
+      maxAttempts: backendQuiz.maxAttempts,
+      passingScore: backendQuiz.passingScore,
     },
     metadata: {
       total_questions: backendQuiz.totalQuestions || questions.length,

@@ -5,16 +5,7 @@ export type QuizTakeMode = "QUIZ" | "EXAM";
 export interface QuizAnswer {
   questionId: string;
   selectedOptionId: string;
-  timeSpent: number; // in seconds
-}
-
-export interface QuizAttempt {
-  quizId: number;
-  startTime: string;
-  answers: QuizAnswer[];
-  currentQuestionIndex: number;
-  isCompleted: boolean;
-  totalTimeSpent: number;
+  timeSpent: string; // Changed from number to string to fix backend casting error
 }
 
 export interface QuizResult {
@@ -40,16 +31,12 @@ export interface QuizQuestionResult {
   explanation?: string;
 }
 
-export interface QuizTakeProps {
-  quiz: BackendQuizEntity;
-  mode?: QuizTakeMode;
-}
-
 export interface QuizQuestionProps {
   question: BackendQuestion;
   selectedOptionId?: string;
   onAnswerChange: (optionId: string) => void;
   showResult?: boolean;
+  showTextResult?: boolean; // Add this new prop
   correctOptionId?: string;
   mode?: QuizTakeMode;
   isAnswered?: boolean;
@@ -68,17 +55,33 @@ export interface QuizNavigationProps {
   showFeedback?: boolean;
   currentQuestionResult?: QuizQuestionResult | null;
   onRetry?: () => void;
-  questions?: any[]; // Add questions prop to access question data
+  questions?: BackendQuestion[]; // Add questions prop to access question data
   quizId?: number; // Add quiz ID for edit/reset/delete functionality
   quiz?: BackendQuizEntity; // Add quiz object to access the slug
+}
+
+export interface QuizMainNavigationProps {
+  hasPreviousQuestion: boolean;
+  hasNextQuestion: boolean;
+  isAnswered: boolean;
+  mode?: string;
+  onPrevious: () => void;
+  onNext: () => void;
+  onSubmit: () => void;
+  onRestartQuiz: () => void;
+  onEditQuiz: () => void;
+  onResetQuiz: () => void;
+  onDeleteQuiz: () => void;
+  onShare: () => void;
+  isTextInputQuestion?: boolean;
+  isTextInputValid?: boolean;
 }
 
 export interface QuizHeaderProps {
   title: string;
   currentQuestion: number;
   totalQuestions: number;
-  timeSpent: number;
-  estimatedTime?: number;
+  mode?: QuizTakeMode;
 }
 
 export interface QuizResultProps {

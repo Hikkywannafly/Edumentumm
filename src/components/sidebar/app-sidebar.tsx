@@ -10,6 +10,7 @@ import {
   Compass,
   CreditCard,
   FolderOpen,
+  GraduationCap,
   Group,
   HelpCircle,
   LayoutDashboard,
@@ -120,6 +121,11 @@ const menuData: MenuData = {
     },
   ],
   socialprogress: [
+    {
+      title: "Course",
+      url: "/course",
+      icon: GraduationCap,
+    },
     {
       title: "Study Group",
       url: "/group",

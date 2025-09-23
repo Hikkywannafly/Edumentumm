@@ -6,6 +6,9 @@ interface UseQuizNavigationProps {
   totalQuestions: number;
   showFeedback: boolean;
   currentQuestionResult: QuizQuestionResult | null;
+  // Add answers array to properly calculate isAnswered
+  answers: Array<{ questionId: string }>;
+  currentQuestionId: string | null;
 }
 
 interface UseQuizNavigationReturn {
@@ -21,11 +24,14 @@ export function useQuizNavigation({
   totalQuestions,
   showFeedback,
   currentQuestionResult,
+  answers,
+  currentQuestionId,
 }: UseQuizNavigationProps): UseQuizNavigationReturn {
   const isAnswered = useMemo(() => {
-    // This will be calculated in the component since we need the question ID
-    return false;
-  }, []);
+    // Properly calculate if the current question has been answered
+    if (!currentQuestionId) return false;
+    return answers.some((a) => a.questionId === currentQuestionId);
+  }, [answers, currentQuestionId]);
 
   const hasNextQuestion = currentQuestionIndex < totalQuestions - 1;
   const hasPreviousQuestion = currentQuestionIndex > 0;

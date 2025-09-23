@@ -3,16 +3,14 @@
 import { HtmlViewer } from "@/components/shared/editor/html-viewer";
 import { Button } from "@/components/ui/button";
 import type { QuizHeaderProps } from "@/types/quiz-take";
-import { Copy, Dices } from "lucide-react";
+import { Copy, Dices, X } from "lucide-react";
 
 export function QuizHeader({
   title,
   currentQuestion,
   totalQuestions,
-  estimatedTime,
-  timeSpent,
   mode = "QUIZ",
-}: QuizHeaderProps & { mode?: "QUIZ" | "EXAM" }) {
+}: QuizHeaderProps) {
   const handleCopyLink = () => {
     navigator.clipboard.writeText(window.location.href);
   };
@@ -22,10 +20,9 @@ export function QuizHeader({
     console.log("Navigate to random quiz");
   };
 
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, "0")}`;
+  const handleExitQuiz = () => {
+    // This will be handled by the navigation guard
+    window.history.back();
   };
 
   const getModeDescription = () => {
@@ -67,6 +64,14 @@ export function QuizHeader({
         <div className="flex gap-2">
           <Button
             className="inline-flex size-10 shrink-0 select-none items-center justify-center rounded-2xl border border-input font-medium text-sm ring-offset-background transition hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+            onClick={handleExitQuiz}
+            variant="outline"
+            size="icon"
+          >
+            <X className="size-4" />
+          </Button>
+          <Button
+            className="inline-flex size-10 shrink-0 select-none items-center justify-center rounded-2xl border border-input font-medium text-sm ring-offset-background transition hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
             onClick={handleRandomQuiz}
             variant="outline"
             size="icon"
@@ -83,11 +88,6 @@ export function QuizHeader({
           </Button>
         </div>
       </div>
-      {estimatedTime && (
-        <div className="mt-2 text-center text-muted-foreground text-sm">
-          Time: {formatTime(timeSpent)} / {formatTime(estimatedTime * 60)}
-        </div>
-      )}
       <div className="mt-2 text-center text-muted-foreground text-sm">
         {getModeDescription()}
       </div>

@@ -1,5 +1,7 @@
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import type { FlashcardSet } from "@/types/flashcard";
+import { ArrowRight } from "lucide-react";
 import { LocalizedLink } from "../localized-link";
 
 type FlashcardExploreCardProps = {
@@ -41,22 +43,41 @@ export default function FlashcardExploreCard({
   };
 
   return (
-    <Card className="cursor-pointer transition hover:shadow-md">
-      <CardContent className="p-4">
-        <LocalizedLink href={`/flashcards/${flashcardSet.id}`}>
-          <p className="text-muted-foreground text-sm">
-            {formatTimeAgo(flashcardSet.createdAt)}
-          </p>
-          <h3 className="mt-1 font-semibold">
-            {stripHtml(flashcardSet.title)}
-          </h3>
-          <p className="mt-1 text-muted-foreground text-sm">
-            {flashcardSet.flashcards.length} flashcards
-          </p>
-          <p className="mt-1 text-muted-foreground text-xs">
-            by {flashcardSet.user?.username || "Anonymous"}
-          </p>
-        </LocalizedLink>
+    <Card className="group relative h-full overflow-hidden border border-border/50 bg-card/50 backdrop-blur-sm transition-all duration-200 hover:bg-card hover:shadow-black/5 hover:shadow-sm dark:hover:shadow-black/20">
+      <CardContent className="flex h-full flex-col p-5">
+        <div className="mb-3 flex items-start justify-between">
+          <div className="flex-1 space-y-2">
+            <h3 className="line-clamp-2 text-start font-semibold text-foreground text-lg leading-tight">
+              {stripHtml(flashcardSet.title)}
+            </h3>
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="flex items-center gap-1 text-muted-foreground text-sm">
+                <span>{flashcardSet.flashcards.length} flashcards</span>
+              </div>
+              <div className="flex items-center gap-1 text-muted-foreground text-sm">
+                <span>{formatTimeAgo(flashcardSet.createdAt)}</span>
+              </div>
+            </div>
+            <p className="text-muted-foreground text-xs">
+              by {flashcardSet.user?.username || "Anonymous"}
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-auto">
+          <div className="flex flex-wrap justify-end gap-2 pt-4">
+            <Button
+              size="sm"
+              className="h-8 justify-center gap-2 bg-blue-600 font-medium text-white text-xs hover:bg-blue-700"
+              asChild
+            >
+              <LocalizedLink href={`/flashcards/${flashcardSet.id}`}>
+                <ArrowRight className="h-4 w-4" />
+                <span>Study</span>
+              </LocalizedLink>
+            </Button>
+          </div>
+        </div>
       </CardContent>
     </Card>
   );

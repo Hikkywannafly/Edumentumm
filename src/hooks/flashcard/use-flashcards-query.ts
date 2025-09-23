@@ -6,6 +6,7 @@ import type {
 } from "@/lib/api/flashcard";
 import type { FlashcardApiResponse, FlashcardSet } from "@/types/flashcard";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import React from "react";
 import { flashcardQueryKeys } from "../flashcard-query-keys";
 
 // Helper function to create consistent query keys
@@ -31,7 +32,6 @@ export function useFlashcardsQuery(
   const { accessToken } = useAuth();
   const queryClient = useQueryClient();
 
-  // Create a stable query key that includes all parameters
   const queryKey = createFlashcardQueryKey(page, size, search, sortBy);
 
   const result = useQuery<FlashcardApiResponse, Error>({
@@ -39,10 +39,10 @@ export function useFlashcardsQuery(
     queryFn: () =>
       flashcardService.getAllFlashcards(page, size, search, sortBy),
     enabled: !!accessToken,
-    staleTime: 5 * 60 * 1000, // 5 minutes - keep data fresh but allow caching
-    gcTime: 30 * 60 * 1000, // 30 minutes - keep cached data longer
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
     refetchOnWindowFocus: false,
-    refetchOnMount: true, // Don't refetch if data exists in cache
+    refetchOnMount: true,
   });
 
   // Prefetch next page for better UX (optional)
@@ -60,7 +60,6 @@ export function useFlashcardsQuery(
   return result;
 }
 
-// Hook for getting public flashcards
 export function usePublicFlashcards(page = 0, size = 6) {
   return useQuery<FlashcardApiResponse, Error>({
     queryKey: ["flashcards", "public", page, size],
@@ -70,7 +69,6 @@ export function usePublicFlashcards(page = 0, size = 6) {
   });
 }
 
-// Hook for getting a single flashcard by ID
 export function useFlashcard(id: number | null) {
   return useQuery<FlashcardSet, Error>({
     queryKey: id
@@ -85,7 +83,6 @@ export function useFlashcard(id: number | null) {
   });
 }
 
-// Hook for creating a new flashcard set
 export function useCreateFlashcard() {
   const queryClient = useQueryClient();
 
@@ -155,6 +152,85 @@ export function useDeleteFlashcard() {
       });
     },
   });
+}
+
+export function usePrefetchFlashcardList() {
+  const { accessToken } = useAuth();
+  const queryClient = useQueryClient();
+
+  const prefetchFlashcards = React.useCallback(
+    async (
+      page = 0,
+      size = 6,
+      search?: string,
+      sortBy?: string,
+    ): Promise<void> => {
+      if (!accessToken) return;
+
+      const queryKey = createFlashcardQueryKey(page, size, search, sortBy);
+
+      await queryClient.prefetchQuery({
+        queryKey,
+        queryFn: () =>
+          flashcardService.getAllFlashcards(page, size, search, sortBy),
+        staleTime: 5 * 60 * 1000,
+        gcTime: 30 * 60 * 1000,
+      });
+    },
+    [accessToken, queryClient],
+  );
+
+  const prefetchPublicFlashcards = React.useCallback(
+    async (page = 0, size = 6): Promise<void> => {
+      await queryClient.prefetchQuery({
+        queryKey: ["flashcards", "public", page, size],
+        queryFn: () => flashcardService.getPublicFlashcards(page, size),
+        staleTime: 5 * 60 * 1000,
+        gcTime: 10 * 60 * 1000,
+      });
+    },
+    [queryClient],
+  );
+
+  const prefetchFlashcard = React.useCallback(
+    async (id: number): Promise<void> => {
+      if (!accessToken) return;
+
+      await queryClient.prefetchQuery({
+        queryKey: flashcardQueryKeys.detail(id),
+        queryFn: () => flashcardService.getFlashcardById(id),
+        staleTime: 5 * 60 * 1000,
+      });
+    },
+    [accessToken, queryClient],
+  );
+
+  const prefetchPageRange = React.useCallback(
+    async (
+      startPage: number,
+      endPage: number,
+      size = 6,
+      search?: string,
+      sortBy?: string,
+    ): Promise<void> => {
+      if (!accessToken || startPage > endPage) return;
+
+      const prefetchPromises: Promise<void>[] = [];
+      for (let page = startPage; page <= endPage; page++) {
+        prefetchPromises.push(prefetchFlashcards(page, size, search, sortBy));
+      }
+
+      await Promise.all(prefetchPromises);
+    },
+    [accessToken, prefetchFlashcards],
+  );
+
+  return {
+    prefetchFlashcards,
+    prefetchPublicFlashcards,
+    prefetchFlashcard,
+    prefetchPageRange,
+  };
 }
 
 // Hook for calculating stats (utility function)

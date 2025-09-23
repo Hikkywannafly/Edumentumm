@@ -15,7 +15,6 @@ import {
   Save,
   Settings,
   Trash2,
-  // Upload,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
@@ -81,8 +80,18 @@ export function QuizEditorHeader({
               <ChevronUp className="h-4 w-4" />
               <span className="hidden sm:inline">{t("editor.backToTop")}</span>
             </Button>
+            {onShowSettings && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onShowSettings}
+                className="hidden items-center gap-2 sm:flex"
+              >
+                <Settings className="h-4 w-4" />
+                <span className="hidden md:inline">{t("editor.settings")}</span>
+              </Button>
+            )}
 
-            {/* Save button (if quiz exists) */}
             {canSave && onSaveQuiz && (
               <Button
                 variant="outline"
@@ -94,8 +103,6 @@ export function QuizEditorHeader({
                 {isSaving ? t("editor.saving") : t("editor.save")}
               </Button>
             )}
-
-            {/* More actions dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm">
@@ -103,7 +110,6 @@ export function QuizEditorHeader({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
-                {/* Scroll to top in mobile dropdown when scrolled */}
                 {isScrolled && (
                   <>
                     <DropdownMenuItem
@@ -112,6 +118,18 @@ export function QuizEditorHeader({
                     >
                       <ChevronUp className="mr-2 h-4 w-4" />
                       {t("editor.backToTop")}
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator className="sm:hidden" />
+                  </>
+                )}
+                {onShowSettings && (
+                  <>
+                    <DropdownMenuItem
+                      onClick={onShowSettings}
+                      className="sm:hidden"
+                    >
+                      <Settings className="mr-2 h-4 w-4" />
+                      {t("editor.settings")}
                     </DropdownMenuItem>
                     <DropdownMenuSeparator className="sm:hidden" />
                   </>
@@ -130,25 +148,13 @@ export function QuizEditorHeader({
                     <DropdownMenuSeparator className="sm:hidden" />
                   </>
                 )}
-
-                {onShowSettings && (
-                  <DropdownMenuItem onClick={onShowSettings}>
-                    <Settings className="mr-2 h-4 w-4" />
-                    {t("editor.settings")}
-                  </DropdownMenuItem>
-                )}
-
                 {onShowInfo && (
                   <DropdownMenuItem onClick={onShowInfo}>
                     <Info className="mr-2 h-4 w-4" />
                     {t("editor.quizInfo")}
                   </DropdownMenuItem>
                 )}
-
-                {(onShowSettings || onShowInfo) && onDeleteQuiz && (
-                  <DropdownMenuSeparator />
-                )}
-
+                {onShowInfo && onDeleteQuiz && <DropdownMenuSeparator />}
                 {onDeleteQuiz && (
                   <DropdownMenuItem
                     onClick={onDeleteQuiz}

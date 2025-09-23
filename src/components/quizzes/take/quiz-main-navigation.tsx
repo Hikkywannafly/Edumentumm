@@ -7,6 +7,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import type { QuizMainNavigationProps } from "@/types/quiz-take";
 import {
   ArrowRight,
   Edit,
@@ -19,26 +20,10 @@ import {
 import { useState } from "react";
 import { QuizWarningDialog } from "./quiz-warning-dialog";
 
-interface QuizMainNavigationProps {
-  hasPreviousQuestion: boolean;
-  hasNextQuestion: boolean;
-  isAnswered: boolean;
-  mode?: string;
-  onPrevious: () => void;
-  onNext: () => void;
-  onSubmit: () => void;
-  onRestartQuiz: () => void;
-  onEditQuiz: () => void;
-  onResetQuiz: () => void;
-  onDeleteQuiz: () => void;
-  onShare: () => void;
-}
-
 export function QuizMainNavigation({
   hasPreviousQuestion,
   hasNextQuestion,
   isAnswered,
-  mode = "QUIZ",
   onPrevious,
   onNext,
   onSubmit,
@@ -47,12 +32,32 @@ export function QuizMainNavigation({
   onResetQuiz,
   onDeleteQuiz,
   onShare,
-}: QuizMainNavigationProps) {
+  isTextInputQuestion = false,
+  isTextInputValid = true,
+  mode, // Destructure mode prop
+}: QuizMainNavigationProps & {
+  isTextInputQuestion?: boolean;
+  isTextInputValid?: boolean;
+  mode?: string;
+}) {
   const [showWarning, setShowWarning] = useState(false);
   const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
 
+  const getWarningMessage = () => {
+    if (isTextInputQuestion) {
+      return "Please provide an answer before moving to the next question.";
+    }
+    return "Please select an answer before moving to the next question.";
+  };
+
+  // In exam mode, we don't show warnings for unanswered questions
+  const shouldShowWarning = mode !== "EXAM" && !isAnswered;
+
   const handleNext = () => {
-    if (!isAnswered) {
+    if (isTextInputQuestion && !isTextInputValid) {
+      setPendingAction(() => onNext);
+      setShowWarning(true);
+    } else if (shouldShowWarning) {
       setPendingAction(() => onNext);
       setShowWarning(true);
     } else {
@@ -61,7 +66,10 @@ export function QuizMainNavigation({
   };
 
   const handleSubmit = () => {
-    if (!isAnswered) {
+    if (isTextInputQuestion && !isTextInputValid) {
+      setPendingAction(() => onSubmit);
+      setShowWarning(true);
+    } else if (shouldShowWarning) {
       setPendingAction(() => onSubmit);
       setShowWarning(true);
     } else {
@@ -176,7 +184,7 @@ export function QuizMainNavigation({
         open={showWarning}
         onOpenChange={setShowWarning}
         onConfirm={handleWarningConfirm}
-        mode={mode as "QUIZ" | "EXAM"}
+        customMessage={getWarningMessage()}
       />
     </div>
   );

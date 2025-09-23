@@ -2,7 +2,9 @@
 
 import ThinLayout from "@/components/layout/thin-layout";
 import { useQuizEditor } from "@/hooks/quiz/use-quiz-editor";
+import { useQuizSettingsSaver } from "@/hooks/quiz/use-quiz-settings-saver";
 import { extractIdFromSlug } from "@/utils/index";
+import { useQueryClient } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -10,6 +12,7 @@ import { QuizDescriptionEditor } from "./quiz-description-editor";
 import { QuizEditorHeader } from "./quiz-editor-header";
 import { QuizEditorSkeleton } from "./quiz-editor-skeleton";
 import { QuizQuestionsEditor } from "./quiz-questions-editor";
+import { QuizSettingsDialog } from "./quiz-settings-dialog";
 import { QuizTagsEditor } from "./quiz-tags-categories-editor";
 import { QuizTitleEditor } from "./quiz-title-editor";
 
@@ -17,7 +20,8 @@ export function QuizEditorContent() {
   const router = useRouter();
   const params = useParams();
   const quizId = params.slug as string;
-  const [isValidForCreation, setIsValidForCreation] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const queryClient = useQueryClient();
 
   const {
     quiz,
@@ -35,14 +39,22 @@ export function QuizEditorContent() {
     changedFields,
   } = useQuizEditor(extractIdFromSlug(quizId));
 
+  // Use the settings saver hook
+  const { saveSettings, isSaving: isSettingsSaving } = useQuizSettingsSaver(
+    extractIdFromSlug(quizId),
+  );
+
+  // Extract commonly used values
   const currentTitle = quiz?.title || "";
   const currentDescription = quiz?.description || "";
+  const safeQuestions = Array.isArray(quiz?.questions) ? quiz.questions : [];
 
+  // Validation logic
   const validateQuizForCreation = useCallback(() => {
     if (!currentTitle.trim()) return false;
-    if (!quiz?.questions?.length) return false;
+    if (!safeQuestions.length) return false;
 
-    const hasValidQuestions = quiz.questions.every((question) => {
+    return safeQuestions.every((question) => {
       if (
         question.type === "MULTIPLE_CHOICE" ||
         question.type === "TRUE_FALSE"
@@ -51,10 +63,15 @@ export function QuizEditorContent() {
       }
       return true;
     });
+  }, [currentTitle, safeQuestions]);
 
-    return hasValidQuestions;
-  }, [currentTitle, quiz]);
+  const [isValidForCreation, setIsValidForCreation] = useState(false);
 
+  useEffect(() => {
+    setIsValidForCreation(validateQuizForCreation());
+  }, [validateQuizForCreation]);
+
+  // Event handlers
   const handleSaveQuiz = async () => {
     try {
       if (Object.keys(changedFields).length === 0) {
@@ -66,18 +83,35 @@ export function QuizEditorContent() {
       await saveQuiz();
 
       toast.success("Quiz saved successfully!");
-      console.log("Quiz saved successfully");
     } catch (error) {
       console.error("Failed to save quiz:", error);
-
-      const errorMessage = "Failed to save quiz. Please try again.";
-      toast.error(errorMessage);
+      toast.error("Failed to save quiz. Please try again.");
     }
   };
 
-  useEffect(() => {
-    setIsValidForCreation(validateQuizForCreation());
-  }, [validateQuizForCreation]);
+  // Handler to save settings directly to backend
+  const handleSaveSettings = async (settings: any) => {
+    try {
+      // Save settings to backend
+      const result = await saveSettings(settings);
+      toast.success("Quiz settings saved successfully!");
+
+      // Invalidate the quiz queries to force a refresh from the backend
+      // This ensures that when the dialog reopens, it has the latest data
+      await queryClient.invalidateQueries({
+        queryKey: ["quiz", extractIdFromSlug(quizId)],
+      });
+      await queryClient.invalidateQueries({
+        queryKey: ["quiz-editing", extractIdFromSlug(quizId)],
+      });
+
+      return result;
+    } catch (error) {
+      console.error("Failed to save settings:", error);
+      toast.error("Failed to save settings. Please try again.");
+      throw error;
+    }
+  };
 
   const handleNavigateAway = () => {
     if (hasUnsavedChanges) {
@@ -93,12 +127,109 @@ export function QuizEditorContent() {
     router.back();
   };
 
-  // Loading state
+  const handleUpdateTitle = (newTitle: string) => {
+    updateQuiz({ title: newTitle });
+  };
+
+  const handleUpdateDescription = (newDescription: string) => {
+    updateQuiz({ description: newDescription });
+  };
+
+  const handleUpdateQuestion = (updatedQuestion: any) => {
+    updateQuestion(updatedQuestion.id, updatedQuestion);
+    setIsValidForCreation(validateQuizForCreation());
+  };
+
+  const handleMoveQuestionUp = (id: string) => {
+    const index = safeQuestions.findIndex((q) => q.id === id);
+    if (index > 0) {
+      moveQuestion(index, index - 1);
+    }
+  };
+
+  const handleMoveQuestionDown = (id: string) => {
+    const index = safeQuestions.findIndex((q) => q.id === id);
+    if (index < safeQuestions.length - 1) {
+      moveQuestion(index, index + 1);
+    }
+  };
+
+  const handleAddQuestionAfter = (afterIndex: number) => {
+    const newQuestion = {
+      id: crypto.randomUUID(),
+      question: "<p>New Question</p>",
+      type: "MULTIPLE_CHOICE" as const,
+      difficulty: "MEDIUM" as const,
+      bloom_level: "UNDERSTAND" as const,
+      points: 1,
+      order_index: afterIndex + 1,
+      answers: [
+        {
+          id: crypto.randomUUID(),
+          text: "<p>Option A</p>",
+          isCorrect: false,
+          order_index: 1,
+        },
+        {
+          id: crypto.randomUUID(),
+          text: "<p>Option B</p>",
+          isCorrect: true,
+          order_index: 2,
+        },
+      ],
+    };
+
+    const updatedQuestions = [...safeQuestions];
+    updatedQuestions.splice(afterIndex + 1, 0, newQuestion);
+
+    updateQuiz({
+      questions: updatedQuestions,
+      metadata: {
+        ...quiz?.metadata,
+        total_questions: updatedQuestions.length,
+        total_points: updatedQuestions.reduce(
+          (sum, q) => sum + (q.points || 1),
+          0,
+        ),
+      },
+    });
+
+    setIsValidForCreation(validateQuizForCreation());
+    toast.success("Question added successfully!");
+  };
+
+  const handleDeleteQuestion = (id: string) => {
+    deleteQuestion(id);
+    setIsValidForCreation(validateQuizForCreation());
+    toast.success("Question deleted successfully!");
+  };
+
+  const handleTagsChange = (tags: string[]) => {
+    if (quiz) {
+      const currentMetadata = quiz.metadata || {
+        total_questions: safeQuestions.length,
+        total_points: safeQuestions.reduce(
+          (sum, q) => sum + (q.points || 1),
+          0,
+        ),
+        estimated_time: Math.ceil(safeQuestions.length * 1.5),
+        tags: [],
+      };
+      updateQuiz({
+        metadata: {
+          ...currentMetadata,
+          tags,
+        },
+      });
+      toast.success("Tags updated successfully!");
+    }
+  };
+
+  // Render logic
   if (isLoading) {
     return <QuizEditorSkeleton />;
   }
 
-  // Error state
   if (isError || error) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -130,107 +261,6 @@ export function QuizEditorContent() {
     );
   }
 
-  const handleUpdateTitle = (newTitle: string) => {
-    updateQuiz({ title: newTitle });
-  };
-
-  const handleUpdateDescription = (newDescription: string) => {
-    updateQuiz({ description: newDescription });
-  };
-
-  const handleUpdateQuestion = (updatedQuestion: any) => {
-    updateQuestion(updatedQuestion.id, updatedQuestion);
-    setIsValidForCreation(validateQuizForCreation());
-  };
-
-  const handleMoveQuestionUp = (id: string) => {
-    const index = quiz.questions.findIndex((q) => q.id === id);
-    if (index > 0) {
-      moveQuestion(index, index - 1);
-    }
-  };
-
-  const handleMoveQuestionDown = (id: string) => {
-    const index = quiz.questions.findIndex((q) => q.id === id);
-    if (index < quiz.questions.length - 1) {
-      moveQuestion(index, index + 1);
-    }
-  };
-
-  const handleAddQuestionAfter = (afterIndex: number) => {
-    const newQuestion = {
-      id: crypto.randomUUID(),
-      question: "<p>New Question</p>",
-      type: "MULTIPLE_CHOICE" as const,
-      difficulty: "MEDIUM" as const,
-      bloom_level: "UNDERSTAND" as const,
-      points: 1,
-      order_index: afterIndex + 1,
-      answers: [
-        {
-          id: crypto.randomUUID(),
-          text: "<p>Option A</p>",
-          isCorrect: false,
-          order_index: 1,
-        },
-        {
-          id: crypto.randomUUID(),
-          text: "<p>Option B</p>",
-          isCorrect: true,
-          order_index: 2,
-        },
-      ],
-    };
-
-    // Insert the new question at the correct position
-    if (!quiz) return;
-
-    const updatedQuestions = [...quiz.questions];
-    updatedQuestions.splice(afterIndex + 1, 0, newQuestion);
-
-    updateQuiz({
-      questions: updatedQuestions,
-      metadata: {
-        ...quiz.metadata,
-        total_questions: updatedQuestions.length,
-        total_points: updatedQuestions.reduce(
-          (sum, q) => sum + (q.points || 1),
-          0,
-        ),
-      },
-    });
-
-    setIsValidForCreation(validateQuizForCreation());
-    toast.success("Question added successfully!");
-  };
-
-  const handleDeleteQuestion = (id: string) => {
-    deleteQuestion(id);
-    setIsValidForCreation(validateQuizForCreation());
-    toast.success("Question deleted successfully!");
-  };
-
-  const handleTagsChange = (tags: string[]) => {
-    if (quiz) {
-      const currentMetadata = quiz.metadata || {
-        total_questions: quiz.questions.length,
-        total_points: quiz.questions.reduce(
-          (sum, q) => sum + (q.points || 1),
-          0,
-        ),
-        estimated_time: Math.ceil(quiz.questions.length * 1.5),
-        tags: [],
-      };
-      updateQuiz({
-        metadata: {
-          ...currentMetadata,
-          tags,
-        },
-      });
-      toast.success("Tags updated successfully!");
-    }
-  };
-
   return (
     <ThinLayout>
       <div className="space-y-1">
@@ -241,6 +271,7 @@ export function QuizEditorContent() {
           canSave={!!quiz && hasUnsavedChanges}
           isCreating={false}
           isSaving={isSaving}
+          onShowSettings={() => setIsSettingsOpen(true)}
         />
 
         {/* Validation Status */}
@@ -248,12 +279,12 @@ export function QuizEditorContent() {
           {!currentTitle.trim() && (
             <div className="text-red-500 text-sm">⚠️ Title is required</div>
           )}
-          {!quiz.questions.length && (
+          {!safeQuestions.length && (
             <div className="text-red-500 text-sm">
               ⚠️ At least one question is required
             </div>
           )}
-          {quiz.questions.some(
+          {safeQuestions.some(
             (q) =>
               (q.type === "MULTIPLE_CHOICE" || q.type === "TRUE_FALSE") &&
               !q.answers.some((a) => a.isCorrect),
@@ -277,7 +308,7 @@ export function QuizEditorContent() {
           onTagsChange={handleTagsChange}
         />
         <QuizQuestionsEditor
-          questions={quiz.questions}
+          questions={safeQuestions}
           onAddQuestion={(question) => addQuestion(question)}
           onAddQuestionAfter={handleAddQuestionAfter}
           onUpdateQuestion={handleUpdateQuestion}
@@ -286,6 +317,14 @@ export function QuizEditorContent() {
           onMoveQuestionDown={handleMoveQuestionDown}
         />
       </div>
+
+      <QuizSettingsDialog
+        open={isSettingsOpen}
+        onOpenChange={setIsSettingsOpen}
+        quiz={quiz}
+        onSave={handleSaveSettings}
+        isSaving={isSettingsSaving}
+      />
     </ThinLayout>
   );
 }

@@ -169,7 +169,7 @@ export function FlipCard({ flashcard, onNext, onPrevious }: FlipCardProps) {
                     </h3>
                   </div>
 
-                  <div className="space-y-4">
+                  <div className="space-y-4 text-left">
                     {/* Meaning */}
                     <div className="rounded-lg border border-blue-200 p-4">
                       <h4 className="mb-2 font-semibold text-blue-800">

@@ -298,7 +298,28 @@
       "settings": "Cài đặt",
       "quizInfo": "Thông tin quiz",
       "deleteQuiz": "Xóa quiz",
-      "backToTop": "Quay lại đầu trang"
+      "backToTop": "Quay lại đầu trang",
+      "apply": "Áp dụng"
+    },
+    "editorSettings": {
+      "title": "Cài đặt Quiz",
+      "description": "Cấu hình cài đặt quiz của bạn",
+      "visibility": "Hiển thị",
+      "status": "Trạng thái",
+      "private": "Riêng tư",
+      "public": "Công khai",
+      "unlisted": "Không công khai",
+      "premium": "Cao cấp",
+      "draft": "Nháp",
+      "published": "Đã xuất bản",
+      "archived": "Đã lưu trữ",
+      "estimatedTime": "Thời gian ước tính (phút)",
+      "passingScore": "Điểm đậu (%)",
+      "maxAttempts": "Số lần thử tối đa (0 = không giới hạn)",
+      "isPremium": "Chỉ dành cho thành viên cao cấp",
+      "isFeatured": "Nổi bật",
+      "isTrending": "Xu hướng",
+      "cancel": "Hủy"
     },
     "yourQuizzes": "Bài kiểm tra của bạn",
     "quizCard": {
@@ -436,6 +457,31 @@
       "newAnswer": "Đáp án mới"
     }
   },
+  "Kanban": {
+    "title": "Bảng Kanban",
+    "createTask": "Tạo nhiệm vụ",
+    "addTaskTitle": "Tạo mới nhiệm vụ",
+    "addTaskDesc": "Nhập mô tả của nhiệm vụ ở đây",
+    "statusTitle": "Trạng thái",
+    "status": {
+      "todo": "Chưa hoàn thành",
+      "inProgress": "Đang hoàn thành",
+      "done": "Đã hoàn thành"
+    },
+    "noTask": "Chưa có nhiệm vụ nào",
+    "dueDate": "Ngày & giờ đến hạn ",
+    "BtnCancel": "Hủy",
+    "btnCreateTask": "Tạo Nhiệm vụ",
+    "btnSave": "Lưu",
+    "btnConfirmDelete": "Xóa",
+    "dueStatus": {
+      "overdue": "Quá hạn",
+      "dueSoon": "Sắp đến hạn"
+    },
+    "confirmDeletion": "Xác nhận xóa",
+    "confirmDeletionDescBefore": "Bạn có chắc chắn muốn xóa nhiệm vụ ",
+    "confirmDeletionDescAfter": "? không. Hành động này không thể hoàn tác."
+  },
   "RoleSelector": {
     "title": "Chọn vai trò của bạn",
     "description": "Chọn vai trò phù hợp nhất để bắt đầu",
@@ -545,7 +591,7 @@
     "flashcardCard": {
       "cards": "thẻ",
       "studied": "đã học",
-      "averageScore": "Điểm trung bình",
+      "completed": "Đã hoàn thành",
       "studyDeck": "Học bộ thẻ",
       "lastStudied": "Lần học cuối"
     },
