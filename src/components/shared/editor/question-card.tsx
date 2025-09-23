@@ -50,6 +50,7 @@ export default function QuestionCard({
   questionIndex,
 }: QuestionCardProps) {
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(true);
+
   const handleQuestionTextChange = (html: string) => {
     onUpdate({ ...question, question: html });
   };
@@ -95,21 +96,21 @@ export default function QuestionCard({
     if (newType === "FILL_BLANK" || newType === "FREE_RESPONSE") {
       updatedQuestion.answers = [];
       updatedQuestion.shortAnswerText = updatedQuestion.shortAnswerText || "";
-    } else if (newType === "MULTIPLE_CHOICE" || newType === "TRUE_FALSE") {
+    } else if (newType === "TRUE_FALSE") {
       updatedQuestion.shortAnswerText = undefined;
-      if (newType === "TRUE_FALSE" && updatedQuestion.answers.length !== 2) {
+      if (updatedQuestion.answers.length !== 2) {
         updatedQuestion.answers = [
           { id: uuidv4(), text: "True", isCorrect: false, order_index: 1 },
           { id: uuidv4(), text: "False", isCorrect: false, order_index: 2 },
         ];
-      } else if (
-        newType === "MULTIPLE_CHOICE" &&
-        updatedQuestion.answers.length === 0
-      ) {
-        updatedQuestion.answers = [
-          { id: uuidv4(), text: "", isCorrect: false, order_index: 1 },
-        ];
       }
+    } else if (
+      newType === "MULTIPLE_CHOICE" &&
+      updatedQuestion.answers.length === 0
+    ) {
+      updatedQuestion.answers = [
+        { id: uuidv4(), text: "", isCorrect: false, order_index: 1 },
+      ];
     }
     onUpdate(updatedQuestion);
   };
@@ -388,11 +389,11 @@ export default function QuestionCard({
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
+                        strokeWidth={2}
                       >
                         <path
                           strokeLinecap="round"
                           strokeLinejoin="round"
-                          strokeWidth={2}
                           d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                         />
                       </svg>

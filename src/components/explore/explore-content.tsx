@@ -37,7 +37,6 @@ export default function ExploreContent() {
   const [searchQuery, setSearchQuery] = useState(urlSearchQuery);
   const pageSize = 6;
 
-  // Debounce search input to avoid too many API calls
   const debouncedSearch = useDebounce(searchQuery, 500);
 
   // Convert UI page (1-based) to API page (0-based)
@@ -116,7 +115,6 @@ export default function ExploreContent() {
   const quizSets = quizzesResponse?.content || [];
   const flashcardSets = flashcardsResponse?.data || [];
 
-  // Pagination data for quizzes
   const quizzesPagination = quizzesResponse
     ? {
         currentPage: quizzesResponse.number + 1,
