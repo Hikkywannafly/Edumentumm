@@ -74,6 +74,16 @@ function convertToDisplayData(backendQuiz: any): QuizDisplayData {
       : []
     : [];
 
+  // Ensure we're properly handling all the numeric fields
+  const attemptCount =
+    backendQuiz.totalAttempts || backendQuiz.attemptCount || 0;
+
+  const bestCorrectAnswers =
+    backendQuiz.bestCorrectAnswers !== undefined &&
+    backendQuiz.bestCorrectAnswers !== null
+      ? backendQuiz.bestCorrectAnswers
+      : undefined;
+
   return {
     id: backendQuiz.id,
     title: backendQuiz.title,
@@ -88,8 +98,8 @@ function convertToDisplayData(backendQuiz: any): QuizDisplayData {
     keywords,
     createdAt: backendQuiz.createdAt,
     viewCount: backendQuiz.viewCount || 0,
-    attemptCount: backendQuiz.totalAttempts || backendQuiz.attemptCount || 0,
-    bestCorrectAnswers: backendQuiz.bestCorrectAnswers || undefined,
+    attemptCount: attemptCount,
+    bestCorrectAnswers: bestCorrectAnswers,
     maxAttempts: backendQuiz.maxAttempts,
     publishedAt: backendQuiz.publishedAt,
     lastAttemptAt: backendQuiz.lastAttemptAt,

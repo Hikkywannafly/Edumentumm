@@ -41,21 +41,26 @@ export function QuizCard({ quiz, onDelete }: QuizCardProps) {
   };
 
   const formatBestScore = () => {
+    const attemptCount = quiz.attemptCount || 0;
+    const bestCorrectAnswers =
+      quiz.bestCorrectAnswers !== undefined
+        ? quiz.bestCorrectAnswers
+        : undefined;
+    const totalQuestions = quiz.totalQuestions || 0;
+
     if (
-      quiz.attemptCount > 0 &&
-      quiz.bestCorrectAnswers !== undefined &&
-      quiz.totalQuestions > 0
+      attemptCount > 0 &&
+      bestCorrectAnswers !== undefined &&
+      totalQuestions > 0
     ) {
-      const bestScore = Math.round(
-        (quiz.bestCorrectAnswers / quiz.totalQuestions) * 100,
-      );
-      return `Best: ${bestScore}% (${quiz.attemptCount} ${quiz.attemptCount === 1 ? "attempt" : "attempts"})`;
+      const bestScore = Math.round((bestCorrectAnswers / totalQuestions) * 100);
+      return `Best: ${bestScore}% (${attemptCount} ${attemptCount === 1 ? "attempt" : "attempts"})`;
     }
-    if (quiz.attemptCount === 0) {
+    if (attemptCount === 0) {
       return "Not attempted yet";
     }
 
-    return `(${quiz.attemptCount} ${quiz.attemptCount === 1 ? "attempt" : "attempts"})`;
+    return `(${attemptCount} ${attemptCount === 1 ? "attempt" : "attempts"})`;
   };
 
   const handleDelete = () => {
@@ -120,8 +125,7 @@ export function QuizCard({ quiz, onDelete }: QuizCardProps) {
   };
 
   const renderPerformanceStats = () => {
-    if (quiz.attemptCount === 0) return null;
-
+    // Always render the performance stats section for consistency
     return (
       <div className="mb-3 flex items-center gap-2">
         <TrendingUp className="h-4 w-4 flex-shrink-0 text-muted-foreground/70" />
