@@ -62,6 +62,7 @@ interface Tag {
   description: string;
 }
 
+// Fetch public quiz list data from API
 async function fetchPublicQuizList(
   params: PublicQuizListParams,
 ): Promise<QuizListResponse> {
@@ -83,16 +84,17 @@ async function fetchPublicQuizList(
       direction: sortDirection.toUpperCase(),
     });
 
-    // Add optional parameters
+    // Determine the correct endpoint based on parameters
+    let endpoint = "/public/quizzes";
+
     if (search) {
-      queryParams.append("title", search);
+      // For search, use the search endpoint and add the title parameter
+      endpoint = "/public/quizzes/search";
+      queryParams.set("title", search);
+    } else if (tagIds) {
+      endpoint = "/public/quizzes/by-tags";
+      queryParams.set("tagIds", tagIds);
     }
-
-    if (tagIds) {
-      queryParams.append("tagIds", tagIds);
-    }
-
-    const endpoint = "/public/quizzes";
 
     const response = await apiClient.get<ApiResponse<QuizListResponse>>(
       `${endpoint}?${queryParams.toString()}`,
@@ -114,7 +116,7 @@ async function fetchPublicQuizList(
 // Fetch all tags for filtering
 async function fetchAllTags(): Promise<Tag[]> {
   try {
-    // Based on the Java controller, tags are fetched from /public/tags
+    // Based on the Java controller, tags are fetched from /public/quizzes/tags
     const response = await apiClient.get<ApiResponse<Tag[]>>(
       "/public/quizzes/tags",
     );
@@ -151,7 +153,7 @@ export function usePublicQuizList(params: PublicQuizListParams = {}) {
     }),
     queryFn: () => fetchPublicQuizList(params),
     refetchOnWindowFocus: false,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
   });
 }
 
@@ -160,6 +162,6 @@ export function usePublicQuizTags() {
     queryKey: PUBLIC_QUIZ_QUERY_KEYS.tags(),
     queryFn: () => fetchAllTags(),
     refetchOnWindowFocus: false,
-    staleTime: 10 * 60 * 1000, // 10 minutes
+    staleTime: 10 * 60 * 1000,
   });
 }

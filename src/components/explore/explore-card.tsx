@@ -1,17 +1,22 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowRight } from "lucide-react";
+import { LocalizedLink } from "../localized-link";
 
 type ExploreCardProps = {
   title: string;
   questions: number;
   daysAgo: number;
+  id: number;
+  slug: string;
 };
 
 export default function ExploreCard({
   title,
   questions,
   daysAgo,
+  id,
+  slug,
 }: ExploreCardProps) {
   // Format the time display similar to QuizCard
   const formatTimeDisplay = () => {
@@ -48,9 +53,12 @@ export default function ExploreCard({
             <Button
               size="sm"
               className="h-8 justify-center gap-2 bg-blue-600 font-medium text-white text-xs hover:bg-blue-700"
+              asChild
             >
-              <ArrowRight className="h-4 w-4" />
-              <span>Take Quiz</span>
+              <LocalizedLink href={`/quizzes/${slug || id}`}>
+                <ArrowRight className="h-4 w-4" />
+                <span>Take Quiz</span>
+              </LocalizedLink>
             </Button>
           </div>
         </div>

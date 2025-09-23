@@ -115,7 +115,7 @@ export default function ExploreFilter({
         </Tabs>
 
         {/* Search + Sort - Full Width Responsive */}
-        <div className="flex w-full items-center gap-3">
+        <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center">
           {/* Search Input - Takes most space */}
           <div className="relative flex-1">
             <Search className="-translate-y-1/2 pointer-events-none absolute top-1/2 left-3 z-10 h-4 w-4 text-muted-foreground" />
@@ -128,27 +128,29 @@ export default function ExploreFilter({
           </div>
 
           {/* Sort Dropdown */}
-          <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="h-10 w-[140px] rounded-lg border-0 bg-muted/30 text-sm">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="newest">
-                <div className="flex items-center gap-2">
-                  <Clock className="h-4 w-4" />
-                  Newest
-                </div>
-              </SelectItem>
-              <SelectItem value="oldest">
-                <div className="flex items-center gap-2">
-                  <Clock className="h-4 w-4" />
-                  Oldest
-                </div>
-              </SelectItem>
-              <SelectItem value="title-a-z">Title A-Z</SelectItem>
-              <SelectItem value="title-z-a">Title Z-A</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="w-full sm:w-auto">
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger className="h-10 w-full rounded-lg border-0 bg-muted/30 text-sm sm:w-[140px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="newest">
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-4 w-4" />
+                    Newest
+                  </div>
+                </SelectItem>
+                <SelectItem value="oldest">
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-4 w-4" />
+                    Oldest
+                  </div>
+                </SelectItem>
+                <SelectItem value="title-a-z">Title A-Z</SelectItem>
+                <SelectItem value="title-z-a">Title Z-A</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         {/* Tags Filter - Only show for quizzes tab */}

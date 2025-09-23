@@ -13,13 +13,6 @@ export default function ExplorePaging({
   onPageChange,
   show = false,
 }: ExplorePagingProps) {
-  console.log("ExplorePaging Debug:", {
-    show,
-    pagination,
-    totalPages: pagination?.totalPages,
-    shouldShow: show && pagination && onPageChange && pagination.totalPages > 1,
-  });
-
   if (!show || !pagination || !onPageChange || pagination.totalPages <= 1) {
     return null;
   }
