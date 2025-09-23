@@ -49,13 +49,17 @@ export function QuizCard({ quiz, onDelete }: QuizCardProps) {
       const bestScore = Math.round(
         (quiz.bestCorrectAnswers / quiz.totalQuestions) * 100,
       );
-      return `Best: ${bestScore}% (${quiz.attemptCount} ${quiz.attemptCount === 1 ? "attempt" : "attempts"})`;
+      return `Best: ${bestScore}% (${quiz.attemptCount} ${
+        quiz.attemptCount === 1 ? "attempt" : "attempts"
+      })`;
     }
     if (quiz.attemptCount === 0) {
       return "Not attempted yet";
     }
 
-    return `(${quiz.attemptCount} ${quiz.attemptCount === 1 ? "attempt" : "attempts"})`;
+    return `(${quiz.attemptCount} ${
+      quiz.attemptCount === 1 ? "attempt" : "attempts"
+    })`;
   };
 
   const handleDelete = () => {
@@ -215,7 +219,9 @@ export function QuizCard({ quiz, onDelete }: QuizCardProps) {
             <div className="flex flex-wrap items-center gap-2">
               <Badge
                 variant="outline"
-                className={`${getDifficultyColor(quiz.difficulty)} rounded-sm border-none px-2 py-0.5 font-medium text-xs`}
+                className={`${getDifficultyColor(
+                  quiz.difficulty,
+                )} rounded-sm border-none px-2 py-0.5 font-medium text-xs`}
               >
                 {quiz.difficulty}
               </Badge>

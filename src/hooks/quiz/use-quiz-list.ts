@@ -50,7 +50,7 @@ interface QuizStatsData {
   totalAttempts: number;
 }
 
-function convertToDisplayData(backendQuiz: any): QuizDisplayData {
+export function convertToDisplayData(backendQuiz: any): QuizDisplayData {
   const tags: (string | any)[] = backendQuiz.tags
     ? backendQuiz.tags.map((tag: any) => {
         if (typeof tag === "string") {

@@ -68,7 +68,7 @@ export function DocumentItem({
   const handleDelete = async () => {
     try {
       await folderAPI.deleteFile(document.id);
-      toast.success("Xóa file thành công");
+      toast.success("Delete successfully");
       onDeleted?.(document.id);
     } catch (err: any) {
       console.log(err);
@@ -76,58 +76,84 @@ export function DocumentItem({
   };
 
   return (
-    <div
-      className={`group relative rounded-lg border border-gray-200 p-3 transition-all hover:bg-gray-50 hover:shadow-lg dark:border-gray-700 dark:hover:bg-gray-800 ${
-        viewMode === "list"
-          ? "flex items-center gap-3"
-          : "flex flex-col items-start gap-2"
-      }`}
-    >
-      <div className="flex w-full items-center gap-3">
-        {getFileIcon(document.fileType)}
-        <div className="min-w-0 flex-1">
-          <h4 className="truncate font-medium text-sm">{document.filename}</h4>
-          <p className="mt-0.5 text-gray-500 text-xs dark:text-gray-400">
-            {document.fileSize} • {document.ownerName}
-          </p>
-          <p className="text-[10px] text-gray-400">{document.createdAt}</p>
-        </div>
-      </div>
-
+    <>
       <div
-        className={`flex gap-2 ${
-          viewMode === "grid"
-            ? "mt-2"
-            : "ml-auto opacity-0 transition-opacity group-hover:opacity-100"
+        className={`group relative rounded-lg border border-gray-200 p-3 transition-all hover:bg-gray-50 hover:shadow-lg dark:border-gray-700 dark:hover:bg-gray-800 ${
+          viewMode === "list"
+            ? "flex items-center gap-3"
+            : "flex flex-col items-start gap-2"
         }`}
       >
-        <Button variant="ghost" size="icon" className="h-7 w-7 p-1">
-          <Eye className="h-4 w-4" />
-        </Button>
-        <Button variant="ghost" size="icon" className="h-7 w-7 p-1">
-          <Download className="h-4 w-4" />
-        </Button>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-7 w-7 p-1">
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-32">
-            <DropdownMenuItem className="flex items-center gap-2">
-              <Edit className="h-4 w-4" />
-              Chỉnh sửa
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={handleDelete}
-              className="flex items-center gap-2 text-red-600"
-            >
-              <Trash2 className="h-4 w-4" />
-              Xóa
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <div className="flex w-full items-center gap-3">
+          {getFileIcon(document.fileType)}
+          <div className="min-w-0 flex-1">
+            <h4 className="truncate font-medium text-sm">
+              {document.filename}
+            </h4>
+            <p className="mt-0.5 text-gray-500 text-xs dark:text-gray-400">
+              {document.fileSize} • {document.ownerName}
+            </p>
+            <p className="text-[10px] text-gray-400">{document.createdAt}</p>
+          </div>
+        </div>
+
+        <div
+          className={`flex gap-2 ${
+            viewMode === "grid"
+              ? "mt-2"
+              : "ml-auto opacity-0 transition-opacity group-hover:opacity-100"
+          }`}
+        >
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 p-1"
+            onClick={() => {
+              if (
+                document.fileType === FileType.PDF ||
+                document.fileType === FileType.DOC ||
+                document.fileType === FileType.DOCX
+              ) {
+                // Mở file trực tiếp trên tab mới
+                const url =
+                  document.fileType === FileType.PDF
+                    ? document.fileUrl
+                    : `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(
+                        document.fileUrl,
+                      )}`;
+                window.open(url, "_blank", "noopener,noreferrer");
+              } else {
+                window.open(document.fileUrl, "_blank", "noopener,noreferrer");
+              }
+            }}
+          >
+            <Eye className="h-4 w-4" />
+          </Button>
+          <Button variant="ghost" size="icon" className="h-7 w-7 p-1">
+            <Download className="h-4 w-4" />
+          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-7 w-7 p-1">
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-32">
+              <DropdownMenuItem className="flex items-center gap-2">
+                <Edit className="h-4 w-4" />
+                Chỉnh sửa
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={handleDelete}
+                className="flex items-center gap-2 text-red-600"
+              >
+                <Trash2 className="h-4 w-4" />
+                Xóa
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
-    </div>
+    </>
   );
 }

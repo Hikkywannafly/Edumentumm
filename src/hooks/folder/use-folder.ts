@@ -2,19 +2,19 @@ import { useCallback, useEffect, useState } from "react";
 import { folderAPI } from "../../lib/api/folder";
 import type { FileResponse, FolderResponse } from "../../types/folder";
 
-export function useFolders(groupId: string) {
+export function useFolders(publicId: string) {
   const [folders, setFolders] = useState<FolderResponse[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
     const fetchFolders = async () => {
-      if (!groupId) return;
+      if (!publicId) return;
 
       setIsLoading(true);
       setError(null);
       try {
-        const res = await folderAPI.getFolder(groupId);
+        const res = await folderAPI.getFolder(publicId);
         setFolders(res);
       } catch (err) {
         setError(
@@ -27,7 +27,7 @@ export function useFolders(groupId: string) {
     };
 
     fetchFolders();
-  }, [groupId]);
+  }, [publicId]);
 
   const handleFolderCreated = useCallback((newFolder: FolderResponse) => {
     const folderData: FolderResponse = {
