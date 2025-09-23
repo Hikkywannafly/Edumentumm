@@ -1,8 +1,33 @@
 import { noteAPI } from "@/lib/api/note";
-import type { BlockData, NoteData, NoteFilter, NoteType } from "@/types/note";
+import type {
+  BlockData,
+  BlockResponse,
+  BlockType,
+  NoteData,
+  NoteFilter,
+  NoteType,
+} from "@/types/note";
 import { isBlockNote } from "@/types/note";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+
+// Helper function to convert BlockResponse to BlockData
+const convertBlockResponseToBlockData = (
+  blockResponse: BlockResponse,
+): BlockData => {
+  return {
+    id: blockResponse.id,
+    type: blockResponse.type as BlockType, // Cast string to BlockType
+    content:
+      typeof blockResponse.content === "string"
+        ? { text: blockResponse.content }
+        : blockResponse.content,
+    orderIndex: blockResponse.orderIndex,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    isDeleted: false,
+  };
+};
 
 interface NoteState {
   // Notes data
@@ -205,7 +230,8 @@ export const useNoteStore = create<NoteState>()(
       addBlockToNote: async (noteId, blockData) => {
         set({ isLoading: true, error: null });
         try {
-          const newBlock = await noteAPI.addBlock(noteId, blockData);
+          const newBlockResponse = await noteAPI.addBlock(noteId, blockData);
+          const newBlock = convertBlockResponseToBlockData(newBlockResponse);
           set((state) => {
             const updatedNotes = state.notes.map((note) => {
               if (note.id === noteId && isBlockNote(note)) {
@@ -243,7 +269,12 @@ export const useNoteStore = create<NoteState>()(
       updateNoteBlock: async (noteId, blockId, updates) => {
         set({ isLoading: true, error: null });
         try {
-          const updatedBlock = await noteAPI.updateBlock(blockId, updates);
+          const updatedBlockResponse = await noteAPI.updateBlock(
+            blockId,
+            updates,
+          );
+          const updatedBlock =
+            convertBlockResponseToBlockData(updatedBlockResponse);
           set((state) => {
             const updateBlockInArray = (blocks: BlockData[]) =>
               blocks.map((block) =>
