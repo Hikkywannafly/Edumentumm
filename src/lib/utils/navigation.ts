@@ -112,6 +112,13 @@ export function useLocalizedNavigation() {
     navigate("/pomodoro");
   };
 
+  /**
+   * Navigate to pricing page
+   */
+  const goPricing = () => {
+    navigate("/pricing");
+  };
+
   return {
     navigate,
     navigateAbsolute,
@@ -125,6 +132,7 @@ export function useLocalizedNavigation() {
     goFlashcardEdit,
     goFlashcards,
     goPomodoro,
+    goPricing,
   };
 }
 

@@ -25,7 +25,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
-import { Clock, Plus, Search, X } from "lucide-react";
+import { Clock, Grid3X3, List, Plus, Search, X } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 import { Card } from "../ui";
 
@@ -45,6 +45,10 @@ type ExploreFilterProps = {
   tagsLoading?: boolean;
   onSearchChange?: (query: string) => void;
   searchQuery?: string;
+  sortBy?: string;
+  onSortChange?: (value: string) => void;
+  onViewModeChange?: (value: string) => void;
+  viewMode?: string;
 };
 
 export default function ExploreFilter({
@@ -56,8 +60,11 @@ export default function ExploreFilter({
   tagsLoading = false,
   onSearchChange = () => {},
   searchQuery = "",
+  sortBy = "newest",
+  onSortChange = () => {},
+  onViewModeChange = () => {},
+  viewMode = "discovery",
 }: ExploreFilterProps) {
-  const [sortBy, setSortBy] = useState("newest");
   const [open, setOpen] = useState(false);
   const [tagSearchQuery, setTagSearchQuery] = useState("");
 
@@ -114,7 +121,7 @@ export default function ExploreFilter({
           </TabsList>
         </Tabs>
 
-        {/* Search + Sort - Full Width Responsive */}
+        {/* Search + Sort + View Mode - Full Width Responsive */}
         <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center">
           {/* Search Input - Takes most space */}
           <div className="relative flex-1">
@@ -127,29 +134,82 @@ export default function ExploreFilter({
             />
           </div>
 
-          {/* Sort Dropdown */}
-          <div className="w-full sm:w-auto">
-            <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="h-10 w-full rounded-lg border-0 bg-muted/30 text-sm sm:w-[140px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="newest">
-                  <div className="flex items-center gap-2">
-                    <Clock className="h-4 w-4" />
-                    Newest
-                  </div>
-                </SelectItem>
-                <SelectItem value="oldest">
-                  <div className="flex items-center gap-2">
-                    <Clock className="h-4 w-4" />
-                    Oldest
-                  </div>
-                </SelectItem>
-                <SelectItem value="title-a-z">Title A-Z</SelectItem>
-                <SelectItem value="title-z-a">Title Z-A</SelectItem>
-              </SelectContent>
-            </Select>
+          {/* Sort Dropdown and View Mode */}
+          <div className="flex gap-2">
+            {/* View Mode Toggle */}
+            {tab === "quizzes" && (
+              <div className="flex rounded-lg border border-muted/30 bg-muted/30 p-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={cn(
+                    "h-8 px-3 text-xs",
+                    viewMode === "discovery"
+                      ? "bg-background"
+                      : "hover:bg-muted",
+                  )}
+                  onClick={() => onViewModeChange("discovery")}
+                >
+                  <Grid3X3 className="mr-1 h-3 w-3" />
+                  Discovery
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={cn(
+                    "h-8 px-3 text-xs",
+                    viewMode === "list" ? "bg-background" : "hover:bg-muted",
+                  )}
+                  onClick={() => onViewModeChange("list")}
+                >
+                  <List className="mr-1 h-3 w-3" />
+                  List
+                </Button>
+              </div>
+            )}
+
+            {/* Sort Dropdown */}
+            <div className="w-full sm:w-auto">
+              <Select value={sortBy} onValueChange={onSortChange}>
+                <SelectTrigger className="h-10 w-full rounded-lg border-0 bg-muted/30 text-sm sm:w-[180px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="newest">
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-4 w-4" />
+                      Newest
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="oldest">
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-4 w-4" />
+                      Oldest
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="popular-attempts">
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-4 w-4" />
+                      Most Attempted
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="popular-views">
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-4 w-4" />
+                      Most Viewed
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="popular-completions">
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-4 w-4" />
+                      Most Completed
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="title-a-z">Title A-Z</SelectItem>
+                  <SelectItem value="title-z-a">Title Z-A</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
 
@@ -192,7 +252,7 @@ export default function ExploreFilter({
                   <Plus className="ml-2 h-3 w-3 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-[320px] p-0">
+              <PopoverContent className="w-[320px] p-0" align="start">
                 <Command>
                   <CommandInput
                     placeholder="Search tags..."
@@ -217,23 +277,24 @@ export default function ExploreFilter({
                             key={tag.id}
                             onSelect={() => {
                               handleTagToggle(tag.id);
+                              // Close the popover after selection
                               setOpen(false);
                             }}
-                            className="flex items-center py-2.5 text-sm"
+                            className="flex cursor-pointer items-center py-2.5 text-sm"
                           >
                             <div
                               className={cn(
-                                "mr-2 h-4 w-4 rounded-full border",
+                                "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border",
                                 selectedTagIds.includes(tag.id)
-                                  ? "bg-primary"
+                                  ? "border-primary bg-primary"
                                   : "border-muted-foreground",
                               )}
                             >
                               {selectedTagIds.includes(tag.id) && (
-                                <div className="h-full w-full rounded-full bg-primary" />
+                                <div className="h-2 w-2 rounded-sm bg-primary-foreground" />
                               )}
                             </div>
-                            {tag.name}
+                            <span>{tag.name}</span>
                           </CommandItem>
                         ))
                       )}

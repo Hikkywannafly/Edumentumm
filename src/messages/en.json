@@ -57,10 +57,12 @@
     "courses": "Courses",
     "community": "Community",
     "about": "About",
+    "pricing": "Pricing",
     "login": "Login",
     "register": "Register",
     "logout": "Logout",
-    "dashboard": "Dashboard"
+    "dashboard": "Dashboard",
+    "upgrade": "Upgrade"
   },
   "Dashboard": {
     "title": "Dashboard",
@@ -120,6 +122,86 @@
     "exams": "Exams",
     "reports": "Reports",
     "settings": "Settings"
+  },
+  "Pricing": {
+    "title": "Simple, transparent pricing",
+    "subtitle": "Choose the plan that works best for you. All plans include a 14-day free trial.",
+    "popular": "Most Popular",
+    "billing": {
+      "monthly": "Monthly",
+      "yearly": "Yearly",
+      "save20": "Save 20%",
+      "perMonth": "month",
+      "perYear": "year"
+    },
+    "free": {
+      "title": "Free",
+      "price": "Free",
+      "description": "Perfect for getting started with basic features.",
+      "features": {
+        "unlimitedQuizzes": "Unlimited quizzes",
+        "basicAnalytics": "Basic analytics",
+        "upTo5MindMaps": "Up to 5 mind maps",
+        "communitySupport": "Community support"
+      },
+      "button": "Get Started"
+    },
+    "pro": {
+      "title": "Pro",
+      "price": {
+        "monthly": "$9.99",
+        "yearly": "$7.99"
+      },
+      "description": "Perfect for students and professionals who want more features.",
+      "features": {
+        "unlimitedQuizzes": "Unlimited quizzes",
+        "advancedAnalytics": "Advanced analytics",
+        "unlimitedMindMaps": "Unlimited mind maps",
+        "prioritySupport": "Priority support",
+        "offlineAccess": "Offline access",
+        "customBranding": "Custom branding"
+      },
+      "button": "Start Free Trial"
+    },
+    "enterprise": {
+      "title": "Enterprise",
+      "price": {
+        "monthly": "$29.99",
+        "yearly": "$23.99"
+      },
+      "description": "Perfect for teams and organizations.",
+      "features": {
+        "everythingInPro": "Everything in Pro plan",
+        "teamCollaboration": "Team collaboration",
+        "dedicatedManager": "Dedicated account manager",
+        "customIntegrations": "Custom integrations",
+        "advancedSecurity": "Advanced security",
+        "slaGuarantee": "99.9% SLA guarantee"
+      },
+      "button": "Contact Sales"
+    },
+    "faq": {
+      "title": "Frequently Asked Questions",
+      "subtitle": "Everything you need to know about the pricing plans.",
+      "questions": {
+        "1": {
+          "question": "Can I change plans later?",
+          "answer": "Yes, you can upgrade or downgrade your plan at any time."
+        },
+        "2": {
+          "question": "Do you offer discounts for students?",
+          "answer": "Yes, we offer a 50% discount for students with a valid student ID."
+        },
+        "3": {
+          "question": "What payment methods do you accept?",
+          "answer": "We accept all major credit cards including Visa, Mastercard, and American Express."
+        },
+        "4": {
+          "question": "Can I cancel my subscription anytime?",
+          "answer": "Yes, you can cancel your subscription at any time with no cancellation fees."
+        }
+      }
+    }
   },
   "Common": {
     "loading": "Loading...",
