@@ -50,8 +50,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Upload the file to Vercel Blob storage
-    const blob = await put(file.name, file, {
+    const fileExtension = file.name.split(".").pop();
+    const uniqueFileName = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExtension}`;
+    const blob = await put(uniqueFileName, file, {
       access: "public",
     });
 
