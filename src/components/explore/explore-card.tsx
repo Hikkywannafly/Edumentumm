@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, CheckCircle, Eye, Users } from "lucide-react";
 import { LocalizedLink } from "../localized-link";
 
 type ExploreCardProps = {
@@ -9,6 +9,9 @@ type ExploreCardProps = {
   daysAgo: number;
   id: number;
   slug: string;
+  attemptCount?: number;
+  viewCount?: number;
+  completionCount?: number;
 };
 
 export default function ExploreCard({
@@ -17,8 +20,10 @@ export default function ExploreCard({
   daysAgo,
   id,
   slug,
+  attemptCount = 0,
+  viewCount = 0,
+  completionCount = 0,
 }: ExploreCardProps) {
-  // Format the time display similar to QuizCard
   const formatTimeDisplay = () => {
     if (daysAgo > 30) {
       return `${Math.floor(daysAgo / 30)} months ago`;
@@ -27,6 +32,13 @@ export default function ExploreCard({
       return `${daysAgo}d ago`;
     }
     return "Just now";
+  };
+
+  const formatPopularityNumber = (num: number) => {
+    if (num >= 1000) {
+      return `${(num / 1000).toFixed(1)}k`;
+    }
+    return num.toString();
   };
 
   return (
@@ -46,6 +58,28 @@ export default function ExploreCard({
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Popularity indicators */}
+        <div className="mb-3 flex flex-wrap gap-2">
+          {attemptCount > 0 && (
+            <div className="flex items-center gap-1 text-muted-foreground text-xs">
+              <Users className="h-3 w-3" />
+              <span>{formatPopularityNumber(attemptCount)}</span>
+            </div>
+          )}
+          {viewCount > 0 && (
+            <div className="flex items-center gap-1 text-muted-foreground text-xs">
+              <Eye className="h-3 w-3" />
+              <span>{formatPopularityNumber(viewCount)}</span>
+            </div>
+          )}
+          {completionCount > 0 && (
+            <div className="flex items-center gap-1 text-muted-foreground text-xs">
+              <CheckCircle className="h-3 w-3" />
+              <span>{formatPopularityNumber(completionCount)}</span>
+            </div>
+          )}
         </div>
 
         <div className="mt-auto">

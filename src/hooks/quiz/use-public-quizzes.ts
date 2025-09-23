@@ -20,6 +20,7 @@ interface PublicQuizListParams {
   tagIds?: string; // Comma-separated tag IDs
   sortBy?: string;
   sortDirection?: "asc" | "desc";
+  popularityCriteria?: string; // For popular quizzes
 }
 
 interface QuizListResponse {
@@ -47,6 +48,8 @@ interface QuizListResponseItem {
   lastAttemptAt: string;
   totalAttempts: number;
   bestCorrectAnswers: number;
+  viewCount?: number;
+  completionCount?: number;
 }
 
 interface ApiResponse<T> {
@@ -74,6 +77,7 @@ async function fetchPublicQuizList(
       tagIds,
       sortBy = "createdAt",
       sortDirection = "desc",
+      popularityCriteria,
     } = params;
 
     // Build query parameters
@@ -87,7 +91,11 @@ async function fetchPublicQuizList(
     // Determine the correct endpoint based on parameters
     let endpoint = "/public/quizzes";
 
-    if (search) {
+    if (popularityCriteria) {
+      // For popular quizzes, use the popular endpoint
+      endpoint = "/public/quizzes/popular";
+      queryParams.set("popularityCriteria", popularityCriteria);
+    } else if (search) {
       // For search, use the search endpoint and add the title parameter
       endpoint = "/public/quizzes/search";
       queryParams.set("title", search);

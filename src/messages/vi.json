@@ -101,10 +101,12 @@
     "courses": "Khóa học",
     "community": "Cộng đồng",
     "about": "Về chúng tôi",
+    "pricing": "Bảng giá",
     "login": "Đăng nhập",
     "register": "Đăng ký",
     "logout": "Đăng xuất",
-    "dashboard": "Bảng điều khiển"
+    "dashboard": "Bảng điều khiển",
+    "upgrade": "Nâng cấp"
   },
   "Dashboard": {
     "title": "Bảng điều khiển",
@@ -164,6 +166,86 @@
     "exams": "Kỳ thi",
     "reports": "Báo cáo",
     "settings": "Cài đặt"
+  },
+  "Pricing": {
+    "title": "Bảng giá đơn giản, minh bạch",
+    "subtitle": "Chọn gói phù hợp nhất với bạn. Tất cả các gói đều bao gồm bản dùng thử 14 ngày.",
+    "popular": "Phổ biến nhất",
+    "billing": {
+      "monthly": "Hàng tháng",
+      "yearly": "Hàng năm",
+      "save20": "Tiết kiệm 20%",
+      "perMonth": "tháng",
+      "perYear": "năm"
+    },
+    "free": {
+      "title": "Miễn phí",
+      "price": "Miễn phí",
+      "description": "Hoàn hảo để bắt đầu với các tính năng cơ bản.",
+      "features": {
+        "unlimitedQuizzes": "Không giới hạn bài kiểm tra",
+        "basicAnalytics": "Phân tích cơ bản",
+        "upTo5MindMaps": "Lên đến 5 sơ đồ tư duy",
+        "communitySupport": "Hỗ trợ cộng đồng"
+      },
+      "button": "Bắt đầu"
+    },
+    "pro": {
+      "title": "Chuyên nghiệp",
+      "price": {
+        "monthly": "230.000₫",
+        "yearly": "190.000₫"
+      },
+      "description": "Hoàn hảo cho học sinh và chuyên gia muốn có nhiều tính năng hơn.",
+      "features": {
+        "unlimitedQuizzes": "Không giới hạn bài kiểm tra",
+        "advancedAnalytics": "Phân tích nâng cao",
+        "unlimitedMindMaps": "Không giới hạn sơ đồ tư duy",
+        "prioritySupport": "Hỗ trợ ưu tiên",
+        "offlineAccess": "Truy cập ngoại tuyến",
+        "customBranding": "Thương hiệu tùy chỉnh"
+      },
+      "button": "Dùng thử miễn phí"
+    },
+    "enterprise": {
+      "title": "Doanh nghiệp",
+      "price": {
+        "monthly": "690.000₫",
+        "yearly": "550.000₫"
+      },
+      "description": "Hoàn hảo cho nhóm và tổ chức.",
+      "features": {
+        "everythingInPro": "Tất cả trong gói Chuyên nghiệp",
+        "teamCollaboration": "Cộng tác nhóm",
+        "dedicatedManager": "Quản lý tài khoản chuyên dụng",
+        "customIntegrations": "Tích hợp tùy chỉnh",
+        "advancedSecurity": "Bảo mật nâng cao",
+        "slaGuarantee": "Cam kết SLA 99.9%"
+      },
+      "button": "Liên hệ bán hàng"
+    },
+    "faq": {
+      "title": "Câu hỏi thường gặp",
+      "subtitle": "Tất cả những gì bạn cần biết về các gói giá.",
+      "questions": {
+        "1": {
+          "question": "Tôi có thể thay đổi gói sau này không?",
+          "answer": "Có, bạn có thể nâng cấp hoặc hạ cấp gói của mình bất kỳ lúc nào."
+        },
+        "2": {
+          "question": "Bạn có giảm giá cho sinh viên không?",
+          "answer": "Có, chúng tôi cung cấp giảm 50% cho sinh viên có thẻ sinh viên hợp lệ."
+        },
+        "3": {
+          "question": "Bạn chấp nhận những phương thức thanh toán nào?",
+          "answer": "Chúng tôi chấp nhận tất cả các thẻ tín dụng chính bao gồm Visa, Mastercard và American Express."
+        },
+        "4": {
+          "question": "Tôi có thể hủy đăng ký bất kỳ lúc nào không?",
+          "answer": "Có, bạn có thể hủy đăng ký của mình bất kỳ lúc nào mà không mất phí hủy."
+        }
+      }
+    }
   },
   "Common": {
     "loading": "Đang tải...",
