@@ -346,31 +346,29 @@ export function TeacherCourseEdit({ courseId }: TeacherCourseEditProps) {
                     <p className="mb-4 text-muted-foreground text-sm">
                       {courseDetail.lessons.length} lessons in this course
                     </p>
-                    {courseDetail.lessons
-                      .slice(0, 3)
-                      .map(
-                        (
-                          lesson: {
-                            id: Key | null | undefined;
-                            title: string | null | undefined;
-                          },
-                          index: number,
-                        ) => (
-                          <div
-                            key={lesson.id}
-                            className="flex items-center justify-between rounded-lg border p-3"
-                          >
-                            <div className="flex items-center gap-3">
-                              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 font-medium text-blue-600 text-sm">
-                                {index + 1}
-                              </div>
-                              <div>
-                                <h4 className="font-medium">{lesson.title}</h4>
-                              </div>
+                    {courseDetail.lessons.slice(0, 3).map(
+                      (
+                        lesson: {
+                          id: Key | null | undefined;
+                          title: string | null | undefined;
+                        },
+                        index: number,
+                      ) => (
+                        <div
+                          key={lesson.id}
+                          className="flex items-center justify-between rounded-lg border p-3"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 font-medium text-blue-600 text-sm">
+                              {index + 1}
+                            </div>
+                            <div>
+                              <h4 className="font-medium">{lesson.title}</h4>
                             </div>
                           </div>
-                        ),
-                      )}
+                        </div>
+                      ),
+                    )}
                     {courseDetail.lessons.length > 3 && (
                       <p className="text-center text-muted-foreground text-sm">
                         and {courseDetail.lessons.length - 3} more lessons...
