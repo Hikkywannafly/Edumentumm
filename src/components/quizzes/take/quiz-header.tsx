@@ -1,6 +1,6 @@
 "use client";
 
-import { HtmlViewer } from "@/components/shared/editor/html-viewer";
+import { HtmlTitle } from "@/components/shared/editor/html-title";
 import { Button } from "@/components/ui/button";
 import type { QuizHeaderProps } from "@/types/quiz-take";
 import { Copy, Dices, X } from "lucide-react";
@@ -14,14 +14,11 @@ export function QuizHeader({
   const handleCopyLink = () => {
     navigator.clipboard.writeText(window.location.href);
   };
-
   const handleRandomQuiz = () => {
-    // This would be implemented to navigate to a random quiz
     console.log("Navigate to random quiz");
   };
 
   const handleExitQuiz = () => {
-    // This will be handled by the navigation guard
     window.history.back();
   };
 
@@ -35,9 +32,11 @@ export function QuizHeader({
   return (
     <div className="w-full">
       <h1 className="hidden">{title}</h1>
-      <div className="prose prose-sm md:prose-lg mt-4 max-w-none text-center font-medium text-base text-muted-foreground sm:text-lg md:mt-8 lg:mt-12">
-        <HtmlViewer content={title} />
-      </div>
+      <HtmlTitle
+        content={title}
+        as="div"
+        className="prose prose-sm md:prose-lg mt-4 max-w-none text-center font-medium text-base text-muted-foreground sm:text-lg md:mt-8 lg:mt-12"
+      />
       <div className="mt-2 flex w-full flex-wrap items-center justify-center gap-3 sm:gap-4 md:flex-nowrap">
         <div
           aria-valuemax={100}

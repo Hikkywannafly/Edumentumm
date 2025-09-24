@@ -23,15 +23,13 @@ export default function ExploreContent() {
   const router = useRouter();
   const pathname = usePathname();
 
-  // Get values from URL search params
   const urlTab = searchParams.get("tab") || "quizzes";
   const urlPage = Number(searchParams.get("page")) || 1;
   const urlSearchQuery = searchParams.get("search") || "";
   const urlTagIds = searchParams.get("tagIds") || "";
   const urlSortBy = searchParams.get("sortBy") || "newest";
-  const urlViewMode = searchParams.get("view") || "discovery"; // discovery or list
+  const urlViewMode = searchParams.get("view") || "discovery";
 
-  // State management
   const [activeTab, setActiveTab] = useState(urlTab);
   const [currentPage, setCurrentPage] = useState(urlPage);
   const [selectedTagIds, setSelectedTagIds] = useState<number[]>(
@@ -39,15 +37,13 @@ export default function ExploreContent() {
   );
   const [searchQuery, setSearchQuery] = useState(urlSearchQuery);
   const [sortBy, setSortBy] = useState(urlSortBy);
-  const [viewMode, setViewMode] = useState(urlViewMode); // discovery or list
+  const [viewMode, setViewMode] = useState(urlViewMode);
   const pageSize = 6;
 
   const debouncedSearch = useDebounce(searchQuery, 500);
 
-  // Convert UI page (1-based) to API page (0-based)
   const apiPage = currentPage - 1;
 
-  // Update search params in URL
   const updateSearchParams = useCallback(
     (updates: Record<string, string | null>) => {
       const newSearchParams = new URLSearchParams(searchParams.toString());
@@ -60,7 +56,6 @@ export default function ExploreContent() {
         }
       }
 
-      // Reset to page 1 when search or filter changes
       if (
         "search" in updates ||
         "tagIds" in updates ||
@@ -77,7 +72,6 @@ export default function ExploreContent() {
     [searchParams, pathname, router],
   );
 
-  // Update URL when debounced search changes
   useEffect(() => {
     if (debouncedSearch !== urlSearchQuery) {
       updateSearchParams({ search: debouncedSearch });

@@ -14,6 +14,9 @@ import { extractIdFromSlug } from "@/utils/index";
 import { ArrowLeft, Play } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useState } from "react";
+
+import { HtmlTitle } from "@/components/shared/editor/html-title";
+
 export default function QuizDetailPage() {
   const params = useParams();
   const { navigate } = useLocalizedNavigation();
@@ -191,9 +194,11 @@ export default function QuizDetailPage() {
         <div className="flex flex-1 items-center justify-center p-6">
           <div className="mx-auto max-w-2xl space-y-6 text-center">
             <div className="space-y-4">
-              <h1 className="font-bold text-3xl text-foreground">
-                {quiz.title}
-              </h1>
+              <HtmlTitle
+                content={quiz.title}
+                as="h1"
+                className="font-bold text-3xl text-foreground"
+              />
               {quiz.description && (
                 <p className="text-lg text-muted-foreground leading-relaxed">
                   {quiz.description}

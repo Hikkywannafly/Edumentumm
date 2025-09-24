@@ -1,12 +1,12 @@
 "use client";
 
+import { HtmlTitle } from "@/components/shared/editor/html-title";
 import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQuizAttempts } from "@/hooks/quiz/use-quiz-attempts";
@@ -114,7 +114,11 @@ export function QuizResultsContent() {
           <CardHeader>
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <CardTitle className="text-2xl">{quiz.title}</CardTitle>
+                <HtmlTitle
+                  content={quiz.title}
+                  as="h2"
+                  className="font-bold text-2xl"
+                />
                 <CardDescription className="max-w-2xl">
                   {quiz.description || "No description available"}
                 </CardDescription>

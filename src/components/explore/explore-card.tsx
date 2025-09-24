@@ -1,3 +1,4 @@
+import { HtmlTitle } from "@/components/shared/editor/html-title";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowRight, CheckCircle, Eye, Users } from "lucide-react";
@@ -46,9 +47,11 @@ export default function ExploreCard({
       <CardContent className="flex h-full flex-col p-5">
         <div className="mb-3 flex items-start justify-between">
           <div className="flex-1 space-y-2">
-            <h3 className="line-clamp-2 text-start font-semibold text-foreground text-lg leading-tight">
-              {title}
-            </h3>
+            <HtmlTitle
+              content={title}
+              as="h3"
+              className="line-clamp-2 text-start font-semibold text-foreground text-lg leading-tight"
+            />
             <div className="flex flex-wrap items-center gap-2">
               <div className="flex items-center gap-1 text-muted-foreground text-sm">
                 <span>{questions} questions</span>
@@ -60,7 +63,6 @@ export default function ExploreCard({
           </div>
         </div>
 
-        {/* Popularity indicators */}
         <div className="mb-3 flex flex-wrap gap-2">
           {attemptCount > 0 && (
             <div className="flex items-center gap-1 text-muted-foreground text-xs">
