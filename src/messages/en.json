@@ -322,7 +322,9 @@
       "quizInfo": "Quiz Info",
       "deleteQuiz": "Delete Quiz",
       "backToTop": "Back to Top",
-      "apply": "Apply"
+      "apply": "Apply",
+      "deleteQuizDescription": "This action cannot be undone. This will permanently delete your quiz and remove all associated data.",
+      "confirmDelete": "Delete Quiz"
     },
     "editorSettings": {
       "title": "Quiz Settings",
