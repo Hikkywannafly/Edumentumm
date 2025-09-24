@@ -1,9 +1,11 @@
 "use client";
 
+import { useDeleteQuiz } from "@/hooks/quiz/use-quiz-list";
 import { useQuizNavigation } from "@/hooks/quiz/use-quiz-navigation";
 import { useLocalizedNavigation } from "@/lib/utils/navigation";
 import type { QuizNavigationProps } from "@/types/quiz-take";
 import { useMemo, useState } from "react";
+import { toast } from "sonner";
 import { QuizDeleteDialog } from "./quiz-delete-dialog";
 import { QuizFeedback } from "./quiz-feedback";
 import { QuizMainNavigation } from "./quiz-main-navigation";
@@ -43,8 +45,9 @@ export function QuizNavigation({
   });
 
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const { mutate: deleteQuiz } = useDeleteQuiz();
 
-  const { goQuizEdit } = useLocalizedNavigation();
+  const { goQuizEdit, navigate } = useLocalizedNavigation();
 
   const handleRestartQuiz = () => {
     window.location.reload();
@@ -67,7 +70,19 @@ export function QuizNavigation({
   };
 
   const confirmDeleteQuiz = () => {
-    setShowDeleteDialog(false);
+    if (quizId) {
+      deleteQuiz(quizId, {
+        onSuccess: () => {
+          toast.success("Quiz deleted successfully");
+          setShowDeleteDialog(false);
+          // Navigate to quizzes list
+          navigate("/quizzes");
+        },
+        onError: (error) => {
+          toast.error(`Failed to delete quiz: ${error.message}`);
+        },
+      });
+    }
   };
 
   const handleShare = () => {};
