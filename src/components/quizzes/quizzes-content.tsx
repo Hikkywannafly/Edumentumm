@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  convertToDisplayData,
   useDeleteQuiz,
   usePrefetchQuizDetail,
   usePrefetchQuizEditor,
@@ -324,7 +325,7 @@ export function QuizzesContent() {
               : quizzes.map((quiz) => (
                   <QuizCard
                     key={quiz.id}
-                    quiz={quiz}
+                    quiz={convertToDisplayData(quiz)}
                     onDelete={handleQuizDelete}
                     onEdit={handleQuizEdit}
                     onView={handleQuizView}
