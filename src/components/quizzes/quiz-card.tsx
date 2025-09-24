@@ -41,26 +41,21 @@ export function QuizCard({ quiz, onDelete }: QuizCardProps) {
   };
 
   const formatBestScore = () => {
-    const attemptCount = quiz.attemptCount || 0;
-    const bestCorrectAnswers =
-      quiz.bestCorrectAnswers !== undefined
-        ? quiz.bestCorrectAnswers
-        : undefined;
-    const totalQuestions = quiz.totalQuestions || 0;
-
     if (
-      attemptCount > 0 &&
-      bestCorrectAnswers !== undefined &&
-      totalQuestions > 0
+      quiz.attemptCount > 0 &&
+      quiz.bestCorrectAnswers !== undefined &&
+      quiz.totalQuestions > 0
     ) {
-      const bestScore = Math.round((bestCorrectAnswers / totalQuestions) * 100);
-      return `Best: ${bestScore}% (${attemptCount} ${attemptCount === 1 ? "attempt" : "attempts"})`;
+      const bestScore = Math.round(
+        (quiz.bestCorrectAnswers / quiz.totalQuestions) * 100,
+      );
+      return `Best: ${bestScore}% (${quiz.attemptCount} ${quiz.attemptCount === 1 ? "attempt" : "attempts"})`;
     }
-    if (attemptCount === 0) {
+    if (quiz.attemptCount === 0) {
       return "Not attempted yet";
     }
 
-    return `(${attemptCount} ${attemptCount === 1 ? "attempt" : "attempts"})`;
+    return `(${quiz.attemptCount} ${quiz.attemptCount === 1 ? "attempt" : "attempts"})`;
   };
 
   const handleDelete = () => {
@@ -125,7 +120,8 @@ export function QuizCard({ quiz, onDelete }: QuizCardProps) {
   };
 
   const renderPerformanceStats = () => {
-    // Always render the performance stats section for consistency
+    if (quiz.attemptCount === 0) return null;
+
     return (
       <div className="mb-3 flex items-center gap-2">
         <TrendingUp className="h-4 w-4 flex-shrink-0 text-muted-foreground/70" />
@@ -219,9 +215,7 @@ export function QuizCard({ quiz, onDelete }: QuizCardProps) {
             <div className="flex flex-wrap items-center gap-2">
               <Badge
                 variant="outline"
-                className={`${getDifficultyColor(
-                  quiz.difficulty,
-                )} rounded-sm border-none px-2 py-0.5 font-medium text-xs`}
+                className={`${getDifficultyColor(quiz.difficulty)} rounded-sm border-none px-2 py-0.5 font-medium text-xs`}
               >
                 {quiz.difficulty}
               </Badge>
