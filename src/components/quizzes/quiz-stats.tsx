@@ -10,6 +10,9 @@ interface QuizStatsData {
   publishedQuizzes: number;
   draftQuizzes: number;
   totalAttempts: number;
+  averageScore?: number | null;
+  averageDuration?: number | null;
+  accuracyRate?: number | null;
 }
 
 interface QuizStatsDisplayProps {
@@ -58,16 +61,22 @@ export function QuizStatsDisplay({ stats }: QuizStatsDisplayProps) {
     },
     {
       title: "Average Score",
-      value: "N/A",
+      value:
+        stats.averageScore !== undefined && stats.averageScore !== null
+          ? `${stats.averageScore.toFixed(2)}%`
+          : "N/A",
       icon: Target,
-      description: "Coming soon",
+      description: "Average score across all attempts",
       color: "text-purple-600 dark:text-purple-400",
     },
     {
       title: "Avg. Duration",
-      value: "N/A",
+      value:
+        stats.averageDuration !== undefined && stats.averageDuration !== null
+          ? `${stats.averageDuration.toFixed(2)} min`
+          : "N/A",
       icon: Clock,
-      description: "Coming soon",
+      description: "Average time spent per quiz",
       color: "text-orange-600 dark:text-orange-400",
     },
   ];
@@ -87,7 +96,7 @@ export function QuizStatsDisplay({ stats }: QuizStatsDisplayProps) {
               </CardTitle>
               <Icon className={`h-4 w-4 ${stat.color}`} />
             </CardHeader>
-            <CardContent>
+            <CardContent className="flex flex-col items-start justify-start">
               <div className="font-bold text-2xl">
                 {typeof stat.value === "number"
                   ? stat.value.toLocaleString()
