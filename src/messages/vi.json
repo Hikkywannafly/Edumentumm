@@ -381,7 +381,10 @@
       "quizInfo": "Thông tin quiz",
       "deleteQuiz": "Xóa quiz",
       "backToTop": "Quay lại đầu trang",
-      "apply": "Áp dụng"
+      "apply": "Áp dụng",
+      "cancel": "Hủy",
+      "deleteQuizDescription": "Hành động này không thể hoàn tác. Thao tác này sẽ xóa vĩnh viễn bài kiểm tra của bạn và xóa tất cả dữ liệu liên quan.",
+      "confirmDelete": "Xóa Quiz"
     },
     "editorSettings": {
       "title": "Cài đặt Quiz",

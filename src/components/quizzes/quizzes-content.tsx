@@ -14,6 +14,7 @@ import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useState } from "react";
+import { toast } from "sonner";
 import WideContainer from "../layout/wide-layout";
 import { Button } from "../ui/button";
 import { Skeleton } from "../ui/skeleton";
@@ -124,9 +125,14 @@ export function QuizzesContent() {
   };
 
   const handleQuizDelete = (id: number) => {
-    if (window.confirm("Are you sure you want to delete this quiz?")) {
-      deleteMutation.mutate(id);
-    }
+    deleteMutation.mutate(id, {
+      onSuccess: () => {
+        toast.success("Quiz deleted successfully");
+      },
+      onError: (error) => {
+        toast.error(`Failed to delete quiz: ${error.message}`);
+      },
+    });
   };
 
   const handleQuizEdit = (quiz: QuizDisplayData) => {

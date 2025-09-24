@@ -25,8 +25,12 @@ import {
   Trash2,
   TrendingUp,
 } from "lucide-react";
+import { useState } from "react";
+import { QuizDeleteDialog } from "./take/quiz-delete-dialog";
 
 export function QuizCard({ quiz, onDelete }: QuizCardProps) {
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
       case "EASY":
@@ -49,21 +53,22 @@ export function QuizCard({ quiz, onDelete }: QuizCardProps) {
       const bestScore = Math.round(
         (quiz.bestCorrectAnswers / quiz.totalQuestions) * 100,
       );
-      return `Best: ${bestScore}% (${quiz.attemptCount} ${
-        quiz.attemptCount === 1 ? "attempt" : "attempts"
-      })`;
+      return `Best: ${bestScore}% (${quiz.attemptCount} ${quiz.attemptCount === 1 ? "attempt" : "attempts"})`;
     }
     if (quiz.attemptCount === 0) {
       return "Not attempted yet";
     }
 
-    return `(${quiz.attemptCount} ${
-      quiz.attemptCount === 1 ? "attempt" : "attempts"
-    })`;
+    return `(${quiz.attemptCount} ${quiz.attemptCount === 1 ? "attempt" : "attempts"})`;
   };
 
-  const handleDelete = () => {
+  const handleDeleteClick = () => {
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDelete = () => {
     onDelete?.(quiz.id);
+    setShowDeleteDialog(false);
   };
 
   const renderKeywords = () => {
@@ -208,60 +213,66 @@ export function QuizCard({ quiz, onDelete }: QuizCardProps) {
   };
 
   return (
-    <Card className="group relative h-full overflow-hidden border border-border/50 bg-card/50 backdrop-blur-sm transition-all duration-200 hover:bg-card hover:shadow-black/5 hover:shadow-sm dark:hover:shadow-black/20">
-      <CardContent className="flex h-full flex-col p-5">
-        {/* Header */}
-        <div className="mb-3 flex items-start justify-between">
-          <div className="flex-1 space-y-2">
-            <h3 className="line-clamp-2 text-start font-semibold text-foreground text-lg leading-tight">
-              {quiz.title}
-            </h3>
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge
-                variant="outline"
-                className={`${getDifficultyColor(
-                  quiz.difficulty,
-                )} rounded-sm border-none px-2 py-0.5 font-medium text-xs`}
-              >
-                {quiz.difficulty}
-              </Badge>
-              <div className="flex items-center gap-1 text-muted-foreground text-sm">
-                <Dot className="h-5 w-5" />
-                <span>{quiz.totalQuestions} questions</span>
-              </div>
-              <div className="flex items-center gap-1 text-muted-foreground text-sm">
-                <Dot className="h-5 w-5" />
-                <span>{formatTimeDisplay()}</span>
+    <>
+      <Card className="group relative h-full overflow-hidden border border-border/50 bg-card/50 backdrop-blur-sm transition-all duration-200 hover:bg-card hover:shadow-black/5 hover:shadow-sm dark:hover:shadow-black/20">
+        <CardContent className="flex h-full flex-col p-5">
+          {/* Header */}
+          <div className="mb-3 flex items-start justify-between">
+            <div className="flex-1 space-y-2">
+              <h3 className="line-clamp-2 text-start font-semibold text-foreground text-lg leading-tight">
+                {quiz.title}
+              </h3>
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge
+                  variant="outline"
+                  className={`${getDifficultyColor(quiz.difficulty)} rounded-sm border-none px-2 py-0.5 font-medium text-xs`}
+                >
+                  {quiz.difficulty}
+                </Badge>
+                <div className="flex items-center gap-1 text-muted-foreground text-sm">
+                  <Dot className="h-5 w-5" />
+                  <span>{quiz.totalQuestions} questions</span>
+                </div>
+                <div className="flex items-center gap-1 text-muted-foreground text-sm">
+                  <Dot className="h-5 w-5" />
+                  <span>{formatTimeDisplay()}</span>
+                </div>
               </div>
             </div>
-          </div>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 w-8 p-0 opacity-0 transition-opacity duration-200 hover:bg-muted group-hover:opacity-100"
-                aria-label="Quiz options"
-              >
-                <MoreVertical className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-40">
-              <DropdownMenuItem
-                className="text-destructive focus:text-destructive"
-                onClick={handleDelete}
-              >
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-        {renderPerformanceStats()}
-        {renderKeywords()}
-        <div className="mt-auto">{renderActionButtons()}</div>
-      </CardContent>
-    </Card>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0 opacity-0 transition-opacity duration-200 hover:bg-muted group-hover:opacity-100"
+                  aria-label="Quiz options"
+                >
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-40">
+                <DropdownMenuItem
+                  className="text-destructive focus:text-destructive"
+                  onClick={handleDeleteClick}
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+          {renderPerformanceStats()}
+          {renderKeywords()}
+          <div className="mt-auto">{renderActionButtons()}</div>
+        </CardContent>
+      </Card>
+
+      <QuizDeleteDialog
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+        onConfirm={confirmDelete}
+      />
+    </>
   );
 }
