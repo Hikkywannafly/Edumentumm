@@ -34,7 +34,7 @@ export const getCourseDetail = async (courseId: number, token?: string) => {
 };
 
 export const getEnrolledCourseDetail = async (
-  courseId: string | number,
+  courseId: number,
   token?: string,
 ) => {
   const headers: HeadersInit = {
@@ -74,10 +74,7 @@ export const useCourseDetail = (courseId: number, options = {}) => {
   });
 };
 
-export const useEnrolledCourseDetail = (
-  courseId: string | number,
-  options = {},
-) => {
+export const useEnrolledCourseDetail = (courseId: number, options = {}) => {
   const { accessToken } = useAuth();
 
   return useQuery({

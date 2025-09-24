@@ -9,10 +9,7 @@ const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/v1";
 
 // Enrollment API functions
-export const enrollInCourse = async (
-  courseId: string | number,
-  token?: string,
-) => {
+export const enrollInCourse = async (courseId: number, token?: string) => {
   const headers: HeadersInit = {
     "Content-Type": "application/json",
   };
@@ -39,10 +36,7 @@ export const enrollInCourse = async (
   return response.json();
 };
 
-export const unenrollFromCourse = async (
-  courseId: string | number,
-  token?: string,
-) => {
+export const unenrollFromCourse = async (courseId: number, token?: string) => {
   const headers: HeadersInit = {
     "Content-Type": "application/json",
   };
@@ -159,7 +153,7 @@ export const updateEnrollmentProgress = async (
 
 // Rating API functions
 export const rateCourse = async (
-  courseId: string | number,
+  courseId: number,
   ratingData: RatingCreateRequestDto,
   token?: string,
 ) => {
@@ -191,7 +185,7 @@ export const rateCourse = async (
 };
 
 export const updateCourseRating = async (
-  courseId: string | number,
+  courseId: number,
   ratingData: RatingCreateRequestDto,
   token?: string,
 ) => {
@@ -222,10 +216,7 @@ export const updateCourseRating = async (
   return response.json();
 };
 
-export const deleteCourseRating = async (
-  courseId: string | number,
-  token?: string,
-) => {
+export const deleteCourseRating = async (courseId: number, token?: string) => {
   const headers: HeadersInit = {
     "Content-Type": "application/json",
   };
@@ -253,7 +244,7 @@ export const deleteCourseRating = async (
 };
 
 interface GetCourseRatingsParams {
-  courseId: string | number;
+  courseId: number;
   page?: number;
   size?: number;
 }
@@ -294,10 +285,7 @@ export const getCourseRatings = async (
   return response.json();
 };
 
-export const getUserCourseRating = async (
-  courseId: string | number,
-  token?: string,
-) => {
+export const getUserCourseRating = async (courseId: number, token?: string) => {
   const headers: HeadersInit = {
     "Content-Type": "application/json",
   };
@@ -329,7 +317,7 @@ export const useEnrollInCourse = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (courseId: string | number) =>
+    mutationFn: (courseId: number) =>
       enrollInCourse(courseId, accessToken || undefined),
     onSuccess: () => {
       // Invalidate and refetch related queries
@@ -345,7 +333,7 @@ export const useUnenrollFromCourse = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (courseId: string | number) =>
+    mutationFn: (courseId: number) =>
       unenrollFromCourse(courseId, accessToken || undefined),
     onSuccess: () => {
       // Invalidate and refetch related queries
@@ -406,7 +394,7 @@ export const useRateCourse = () => {
       courseId,
       ratingData,
     }: {
-      courseId: string | number;
+      courseId: number;
       ratingData: RatingCreateRequestDto;
     }) => rateCourse(courseId, ratingData, accessToken || undefined),
     onSuccess: () => {
@@ -427,7 +415,7 @@ export const useUpdateCourseRating = () => {
       courseId,
       ratingData,
     }: {
-      courseId: string | number;
+      courseId: number;
       ratingData: RatingCreateRequestDto;
     }) => updateCourseRating(courseId, ratingData, accessToken || undefined),
     onSuccess: () => {
@@ -444,7 +432,7 @@ export const useDeleteCourseRating = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (courseId: string | number) =>
+    mutationFn: (courseId: number) =>
       deleteCourseRating(courseId, accessToken || undefined),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["course-detail"] });
@@ -456,7 +444,7 @@ export const useDeleteCourseRating = () => {
 };
 
 export const useCourseRatings = (
-  courseId: string | number,
+  courseId: number,
   params: Omit<GetCourseRatingsParams, "courseId"> = {},
   options = {},
 ) => {
@@ -471,10 +459,7 @@ export const useCourseRatings = (
   });
 };
 
-export const useUserCourseRating = (
-  courseId: string | number,
-  options = {},
-) => {
+export const useUserCourseRating = (courseId: number, options = {}) => {
   const { accessToken } = useAuth();
 
   return useQuery({
