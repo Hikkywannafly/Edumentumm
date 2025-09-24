@@ -26,7 +26,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 
-export function QuizCard({ quiz, onDelete, turnButton }: QuizCardProps) {
+export function QuizCard({ quiz, onDelete }: QuizCardProps) {
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
       case "EASY":
@@ -134,20 +134,18 @@ export function QuizCard({ quiz, onDelete, turnButton }: QuizCardProps) {
 
   const renderActionButtons = () => (
     <div className="flex flex-wrap justify-end gap-2">
-      {turnButton && (
-        <Button
-          variant="outline"
-          size="sm"
-          className="h-8 justify-center gap-2 font-medium text-xs hover:bg-muted"
-          asChild
-        >
-          <LocalizedLink href={`quizzes/${quiz.slug}-${quiz.id}/edit`}>
-            <Edit className="h-4 w-4" />
-            <span className="hidden sm:inline">Edit</span>
-            <span className="sm:hidden">Edit</span>
-          </LocalizedLink>
-        </Button>
-      )}
+      <Button
+        variant="outline"
+        size="sm"
+        className="h-8 justify-center gap-2 font-medium text-xs hover:bg-muted"
+        asChild
+      >
+        <LocalizedLink href={`quizzes/${quiz.slug}-${quiz.id}/edit`}>
+          <Edit className="h-4 w-4" />
+          <span className="hidden sm:inline">Edit</span>
+          <span className="sm:hidden">Edit</span>
+        </LocalizedLink>
+      </Button>
 
       {quiz.attemptCount > 0 && (
         <Button
@@ -232,29 +230,27 @@ export function QuizCard({ quiz, onDelete, turnButton }: QuizCardProps) {
             </div>
           </div>
 
-          {turnButton && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 w-8 p-0 opacity-0 transition-opacity duration-200 hover:bg-muted group-hover:opacity-100"
-                  aria-label="Quiz options"
-                >
-                  <MoreVertical className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-40">
-                <DropdownMenuItem
-                  className="text-destructive focus:text-destructive"
-                  onClick={handleDelete}
-                >
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  Delete
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0 opacity-0 transition-opacity duration-200 hover:bg-muted group-hover:opacity-100"
+                aria-label="Quiz options"
+              >
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-40">
+              <DropdownMenuItem
+                className="text-destructive focus:text-destructive"
+                onClick={handleDelete}
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
         {renderPerformanceStats()}
         {renderKeywords()}
