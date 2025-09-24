@@ -30,6 +30,7 @@ export interface QuizDisplayData {
 
 export interface QuizCardProps {
   quiz: QuizDisplayData;
+  turnButton?: boolean;
   onDelete?: (id: number) => void;
   onEdit?: (quiz: QuizDisplayData) => void;
   onView?: (quiz: QuizDisplayData) => void;

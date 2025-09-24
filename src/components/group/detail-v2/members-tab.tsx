@@ -1,4 +1,4 @@
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users } from "lucide-react";
 import type { UserGroupResponse } from "../../../types/group";
@@ -25,12 +25,17 @@ export function MembersTab({ members }: { members?: UserGroupResponse[] }) {
               <div className="flex items-center gap-3">
                 <div className="relative">
                   <Avatar className="h-10 w-10">
-                    <AvatarFallback>{member?.imageUrl}</AvatarFallback>
+                    <img src={member?.imageUrl} alt={member?.username} />
                   </Avatar>
-                  <span
+                  <img
                     className={`absolute right-0 bottom-0 h-3 w-3 rounded-full border-2 border-white dark:border-zinc-900 ${
                       member?.imageUrl ? "bg-green-500" : "bg-gray-400"
                     }`}
+                    aria-label={
+                      member?.imageUrl
+                        ? "Online status indicator"
+                        : "Offline status indicator"
+                    }
                   />
                 </div>
                 <div>

@@ -28,18 +28,12 @@ export default function GroupContent() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const pageSize = 8;
 
-  const {
-    myGroups,
-    isLoading: myGroupsLoading,
-    error: myGroupsError,
-    addGroup,
-  } = useMyGroups();
+  const { myGroups, isLoading: myGroupsLoading, addGroup } = useMyGroups();
 
   const {
     groups,
     paging,
     isLoading: groupsLoading,
-    error: groupsError,
     keyword,
     setKeyword,
     setPage,
@@ -73,8 +67,27 @@ export default function GroupContent() {
         </div>
       ))
     ) : (
-      <div className="col-span-full flex min-h-[220px] items-center justify-center py-10 text-gray-500 dark:text-gray-400">
-        Không có dữ liệu
+      <div className="col-span-full flex min-h-[220px] flex-col items-center justify-center rounded-xl bg-gradient-to-br from-blue-50 to-purple-50 py-16 shadow-inner">
+        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full">
+          <Plus className="h-8 w-8 text-blue-500" />
+        </div>
+        <h3 className="mb-2 font-bold text-blue-700 text-xl">
+          Chưa có nhóm học nào
+        </h3>
+        <p className="mb-4 max-w-xs text-center text-gray-500">
+          Bạn chưa tham gia hoặc tạo nhóm học nào. Hãy bắt đầu bằng cách tạo
+          nhóm mới hoặc tham gia nhóm với mã!
+        </p>
+        <div className="flex gap-2">
+          <Button variant="outline" className="flex items-center gap-1">
+            <KeyRound className="h-4 w-4" /> Tham gia với mã
+          </Button>
+          <LocalizedLink href="group/create">
+            <Button className="flex items-center gap-1 bg-blue-600 text-white hover:bg-blue-700">
+              <Plus className="h-4 w-4" /> Tạo nhóm mới
+            </Button>
+          </LocalizedLink>
+        </div>
       </div>
     );
 
@@ -106,9 +119,6 @@ export default function GroupContent() {
         <h2 className="mb-4 font-semibold text-foreground text-xl">
           My Groups
         </h2>
-        {myGroupsError && (
-          <div className="mb-4 text-red-500">{myGroupsError.message}</div>
-        )}
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {myGroupsLoading ? (
             <>
@@ -122,7 +132,6 @@ export default function GroupContent() {
           )}
         </div>
       </section>
-
       <section>
         <h2 className="mb-4 font-semibold text-foreground text-xl">
           Discover Groups
@@ -166,12 +175,10 @@ export default function GroupContent() {
           </div>
         </div>
 
-        <div className="mb-4 flex-shrink-0">
-          <GroupPaging pagination={paging} pageIndex={setPage} />
-        </div>
-
-        {groupsError && (
-          <div className="mb-4 text-red-500">{groupsError.message}</div>
+        {paging && paging.totalElements > 8 && (
+          <div className="mb-4 flex-shrink-0">
+            <GroupPaging pagination={paging} pageIndex={setPage} />
+          </div>
         )}
 
         {groupsLoading ? (

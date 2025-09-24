@@ -50,7 +50,6 @@ export function AllTabContent({
 
       {!selectedFolder && (
         <div>
-          <h3 className="mb-3 font-semibold text-lg">Thư mục</h3>
           <div
             className={
               viewMode === "grid"

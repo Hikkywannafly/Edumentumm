@@ -12,8 +12,8 @@ export function RecentTabContent({ documents }: RecentTabContentProps) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="font-semibold text-lg">Tài liệu gần đây</h3>
-        <Badge variant="secondary">{documents.length} tài liệu</Badge>
+        <h3 className="font-semibold text-lg">Recent Documents</h3>
+        <Badge variant="secondary">{documents.length} documents</Badge>
       </div>
       <div className="space-y-3">
         {documents.slice(0, 10).map((doc) => (
@@ -25,7 +25,7 @@ export function RecentTabContent({ documents }: RecentTabContentProps) {
             <div className="min-w-0 flex-1">
               <h4 className="truncate font-medium">{doc.name}</h4>
               <p className="text-gray-500 text-sm dark:text-gray-400">
-                Tải lên bởi {doc.uploadedBy} • {doc.uploadedAt}
+                Upload by {doc.uploadedBy} • {doc.uploadedAt}
               </p>
             </div>
             <div className="flex items-center gap-2">
