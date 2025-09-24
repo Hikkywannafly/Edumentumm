@@ -1,5 +1,6 @@
 "use client";
 
+import { LocalizedLink } from "@/components/localized-link";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -523,11 +524,11 @@ export function CreateNewCourse() {
 
               {/* Form Actions */}
               <div className="flex gap-4 pt-6">
-                <Link href={`/${locale}/course`}>
+                <LocalizedLink href="/course">
                   <Button type="button" variant="outline" disabled={isLoading}>
                     Cancel
                   </Button>
-                </Link>
+                </LocalizedLink>
                 <Button
                   type="submit"
                   disabled={isLoading}

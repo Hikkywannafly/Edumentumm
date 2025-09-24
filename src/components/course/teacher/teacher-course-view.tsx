@@ -308,7 +308,7 @@ export function TeacherCourseView({ courseId }: TeacherCourseViewProps) {
                 <div className="space-y-3">
                   {courseDetail.lessons.map((lesson, index) => (
                     <div
-                      key={lesson.id}
+                      key={lesson.lessonId}
                       className="flex items-center justify-between rounded-lg border p-3"
                     >
                       <div className="flex items-center gap-3">
@@ -318,13 +318,13 @@ export function TeacherCourseView({ courseId }: TeacherCourseViewProps) {
                         <div>
                           <h4 className="font-medium">{lesson.title}</h4>
                           <p className="text-muted-foreground text-sm">
-                            {lesson.description}
+                            {lesson.content}
                           </p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2 text-muted-foreground text-sm">
                         <Clock className="h-4 w-4" />
-                        {lesson.duration} min
+                        {lesson.durationMinutes} min
                       </div>
                     </div>
                   ))}
@@ -333,13 +333,13 @@ export function TeacherCourseView({ courseId }: TeacherCourseViewProps) {
                 <div className="py-8 text-center">
                   <BookOpen className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
                   <p className="text-muted-foreground">No lessons added yet</p>
-                  <LocalizedLink
+                  {/* <LocalizedLink
                     href={`/course/teacher/${course.courseId}/edit`}
                   >
                     <Button variant="outline" size="sm" className="mt-2">
                       Add Lessons
                     </Button>
-                  </LocalizedLink>
+                  </LocalizedLink> */}
                 </div>
               )}
             </CardContent>
@@ -439,7 +439,7 @@ export function TeacherCourseView({ courseId }: TeacherCourseViewProps) {
                   <div className="flex flex-wrap gap-1">
                     {course.courseTags.map((tag) => (
                       <Badge
-                        key={tag.id}
+                        key={tag.courseTagId}
                         variant="secondary"
                         className="text-xs"
                       >

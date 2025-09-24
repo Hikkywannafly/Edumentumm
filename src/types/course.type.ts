@@ -12,6 +12,27 @@ export enum CourseStatus {
   ARCHIVED = "ARCHIVED",
 }
 
+export enum EnrollmentStatus {
+  ACTIVE = "ACTIVE",
+  COMPLETED = "COMPLETED",
+  CANCELLED = "CANCELLED",
+}
+
+export enum ResourceType {
+  PDF = "PDF",
+  VIDEO = "VIDEO",
+  LINK = "LINK",
+  IMAGE = "IMAGE",
+  AUDIO = "AUDIO",
+}
+
+export enum ExerciseType {
+  QUIZ = "QUIZ",
+  ASSIGNMENT = "ASSIGNMENT",
+  PROJECT = "PROJECT",
+  PRACTICE = "PRACTICE",
+}
+
 export interface CourseCreateRequest {
   title: string;
   shortDescription: string;
@@ -41,17 +62,18 @@ export interface ApiResponse<T> {
 }
 
 export interface TeacherSummary {
-  id: string;
-  name: string;
-  avatarUrl?: string;
+  userId: number;
+  username: string;
+  email: string;
+  imageUrl?: string;
 }
 
 export interface CourseTag {
-  id: string;
+  courseTagId: number;
   name: string;
+  color?: string;
 }
 
-// Fixed Course interface - removed duplicates and function definitions
 export interface Course {
   id: number;
   courseId: number;
@@ -85,6 +107,84 @@ export interface CourseSummary {
   createdAt: string;
 }
 
+// Lesson Types
+export interface LessonCreateRequestDto {
+  title: string;
+  content?: string;
+  orderIndex?: number;
+  videoUrl?: string;
+  durationMinutes?: number;
+}
+
+export interface LessonResponseDto {
+  lessonId: number;
+  title: string;
+  content?: string;
+  orderIndex: number;
+  videoUrl?: string;
+  durationMinutes?: number;
+  createdAt: string;
+}
+
+export interface LessonDetailResponseDto {
+  lessonId: number;
+  title: string;
+  description: string;
+  orderIndex: number;
+  exercises: ExerciseDetailResponseDto[];
+}
+
+export interface LessonPreviewResponseDto {
+  lessonId: number;
+  title: string;
+  description: string;
+  orderIndex: number;
+}
+
+// Exercise Types
+export interface ExerciseCreateRequestDto {
+  title: string;
+  description: string;
+  instructions?: string;
+  orderIndex?: number;
+}
+
+export interface ExerciseResponseDto {
+  exerciseId: number;
+  title: string;
+  description: string;
+  instructions?: string;
+  orderIndex: number;
+  createdAt: string;
+}
+
+export interface ExerciseDetailResponseDto {
+  exerciseId: number;
+  title: string;
+  description: string;
+  type: ExerciseType;
+}
+
+// Resource Types
+export interface ResourceCreateRequestDto {
+  title: string;
+  description?: string;
+  resourceType: ResourceType;
+  url: string;
+  orderIndex?: number;
+}
+
+export interface ResourceResponseDto {
+  resourceUrl: any;
+  resourceId: number;
+  title: string;
+  description?: string;
+  resourceType: ResourceType;
+  url: string;
+  orderIndex: number;
+  createdAt: string;
+}
+
 export interface FilterOptions {
   level?: CourseLevel;
   minPrice?: number;
@@ -112,44 +212,9 @@ export interface Lesson {
   content: string;
 }
 
-// Additional interfaces for backend responses
-export interface LessonResponseDto {
-  lessonId: Key | null | undefined;
-  id: string;
-  durationMinutes: number;
-  courseId: number;
-  title: string;
-  description: string;
-  orderIndex: number;
-  duration: number;
-  videoUrl?: string;
-  content: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface ExerciseResponseDto {
-  [x: string]: Key | null | undefined;
-  id: string;
-  courseId: number;
-  title: string;
-  description: string;
-  orderIndex: number;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface ResourceResponseDto {
-  [x: string]: Key | null | undefined;
-  id: string;
-  courseId: number;
-  title: string;
-  description: string;
-  resourceUrl: string;
-  resourceType: string;
-  orderIndex: number;
-  createdAt: string;
-  updatedAt: string;
+export interface RatingCreateRequestDto {
+  rating: number;
+  comment?: string;
 }
 
 export interface RatingResponseDto {
@@ -161,6 +226,17 @@ export interface RatingResponseDto {
   comment?: string;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface EnrollmentResponseDto {
+  enrollmentId: number;
+  course: CourseSummary;
+  status: EnrollmentStatus;
+  paidAmount: number;
+  completedLessons: number;
+  completedExercises: number;
+  progressPercentage: number;
+  enrolledAt: string;
 }
 
 export interface TeacherCourseDetailDto {
@@ -207,12 +283,10 @@ export interface PublicCourseDetailDto {
   totalExercises: number;
 }
 
-// For course selection/role selection
 export interface CourseSelectRequest {
   roleId: string;
 }
 
-// Fixed pagination interface - changed generic parameter name
 export interface PaginatedResponse<T> {
   content: T[];
   totalElements: number;
@@ -224,7 +298,6 @@ export interface PaginatedResponse<T> {
   empty: boolean;
 }
 
-// Specific typed interface for Course pagination if needed
 export interface CoursePaginatedResponse {
   content: Course[];
   totalElements: number;
@@ -242,42 +315,4 @@ export interface GetTeacherCoursesParams {
   size?: number;
   sortBy?: string;
   sortDir?: "asc" | "desc";
-}
-// Additional types to add to existing course.type.ts
-
-export enum EnrollmentStatus {
-  ACTIVE = "ACTIVE",
-  COMPLETED = "COMPLETED",
-  CANCELLED = "CANCELLED",
-}
-
-export interface RatingCreateRequestDto {
-  rating: number; // 1-5
-  comment?: string;
-}
-
-export interface EnrollmentResponseDto {
-  enrollmentId: number;
-  course: CourseSummary;
-  status: EnrollmentStatus;
-  paidAmount: number;
-  completedLessons: number;
-  completedExercises: number;
-  progressPercentage: number;
-  enrolledAt: string;
-}
-
-// Update existing TeacherSummary to match backend response
-export interface TeacherSummary {
-  userId: number;
-  username: string;
-  email: string;
-  imageUrl?: string;
-}
-
-// Update existing CourseTag to match backend response
-export interface CourseTag {
-  courseTagId: number;
-  name: string;
-  color?: string;
 }

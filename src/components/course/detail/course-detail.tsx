@@ -88,11 +88,13 @@ export function CourseDetail() {
             <div className="mb-6 flex items-center space-x-4">
               <div className="flex items-center">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-white">
-                  {course.course.teacher.name.charAt(0)}
+                  {course.course.teacher.username.charAt(0)}
                 </div>
                 <div className="ml-3">
                   <p className="text-muted-foreground text-sm">Instructor</p>
-                  <p className="font-medium">{course.course.teacher.name}</p>
+                  <p className="font-medium">
+                    {course.course.teacher.username}
+                  </p>
                 </div>
               </div>
             </div>

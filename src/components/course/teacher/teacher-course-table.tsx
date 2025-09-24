@@ -324,7 +324,7 @@ export function TeacherCourseTable({
                           )) ||
                           course.courseTags?.slice(0, 2).map((tag) => (
                             <Badge
-                              key={tag.id}
+                              key={tag.courseTagId}
                               variant="secondary"
                               className="text-xs"
                             >
