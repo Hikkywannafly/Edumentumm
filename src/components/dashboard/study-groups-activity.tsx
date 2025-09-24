@@ -3,40 +3,21 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useMyGroups } from "@/hooks/group";
-import { Play, Users } from "lucide-react";
+import { Play, Plus, UserPlus, Users } from "lucide-react";
 import { LocalizedLink } from "../localized-link";
 
-interface StudyGroup {
-  id: string;
-  name: string;
-  onlineCount: number; // Actually represents memberCount, keeping same name for compatibility
-}
-
-interface StudyGroupsActivityProps {
-  studyGroups?: StudyGroup[];
-}
-
-export default function StudyGroupsActivity({
-  studyGroups = [
-    { id: "1", name: "Mockup", onlineCount: 5 },
-    { id: "2", name: "Study Mock", onlineCount: 12 },
-  ],
-}: StudyGroupsActivityProps) {
+export default function StudyGroupsActivity() {
   const {
     myGroups,
     isLoading: myGroupsLoading,
     error: myGroupsError,
   } = useMyGroups();
 
-  // Map GroupResponse to StudyGroup format
   const mappedGroups = myGroups.map((group) => ({
     id: group.publicId,
     name: group.name,
     onlineCount: group.memberCount,
   }));
-
-  // Use real data if available, fallback to mock data
-  const displayGroups = mappedGroups.length > 0 ? mappedGroups : studyGroups;
 
   // Show loading state
   if (myGroupsLoading) {
@@ -87,8 +68,8 @@ export default function StudyGroupsActivity({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {displayGroups.length > 0 ? (
-          displayGroups.map((group) => (
+        {mappedGroups.length > 0 ? (
+          mappedGroups.map((group) => (
             <div
               key={group.id}
               className="flex items-center justify-between rounded-lg bg-muted/50 p-4"
@@ -105,26 +86,39 @@ export default function StudyGroupsActivity({
                   </p>
                 </div>
               </div>
-              {/* Check if this is a real group (has proper ID format) to determine if we should link */}
-              {group.id.length > 5 ? (
-                <LocalizedLink href={`/group/${group.id}`}>
-                  <Button variant="ghost" size="sm" className="gap-2">
-                    <Play className="h-4 w-4" />
-                    Join
-                  </Button>
-                </LocalizedLink>
-              ) : (
+              <LocalizedLink href={`/group/${group.id}`}>
                 <Button variant="ghost" size="sm" className="gap-2">
                   <Play className="h-4 w-4" />
                   Join
                 </Button>
-              )}
+              </LocalizedLink>
             </div>
           ))
         ) : (
-          <div className="flex items-center justify-center py-8">
-            <div className="text-muted-foreground text-sm">
-              No groups joined yet
+          <div className="space-y-4 py-8 text-center">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-gray-100">
+              <Users className="h-8 w-8 text-gray-400" />
+            </div>
+            <div className="space-y-2">
+              <h3 className="font-medium text-lg">No study groups yet</h3>
+              <p className="text-muted-foreground text-sm">
+                Join or create study groups to collaborate with other learners
+                and boost your productivity!
+              </p>
+            </div>
+            <div className="flex justify-center gap-2">
+              <Button variant="default" asChild>
+                <LocalizedLink href="/group">
+                  <UserPlus className="mr-2 h-4 w-4" />
+                  Explore Groups
+                </LocalizedLink>
+              </Button>
+              <Button variant="outline" asChild>
+                <LocalizedLink href="/group/create">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Create Group
+                </LocalizedLink>
+              </Button>
             </div>
           </div>
         )}

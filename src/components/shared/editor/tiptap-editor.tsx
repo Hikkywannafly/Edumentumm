@@ -62,6 +62,7 @@ export default function TiptapEditor({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const editorContainerRef = useRef<HTMLDivElement>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   const editor = useEditor({
     extensions: [
@@ -72,7 +73,7 @@ export default function TiptapEditor({
         openOnClick: false,
       }),
       Underline,
-      Image, // Add Image extension
+      Image,
     ],
     content: content,
     immediatelyRender: false,
@@ -81,6 +82,8 @@ export default function TiptapEditor({
     },
     onFocus: () => {
       setIsFocused(true);
+
+      setUploadError(null);
     },
     onBlur: (_props) => {
       setTimeout(() => {
@@ -97,7 +100,6 @@ export default function TiptapEditor({
     },
   });
 
-  // Handle drag and drop events
   useEffect(() => {
     const container = editorContainerRef.current;
     if (!container) return;
@@ -126,23 +128,25 @@ export default function TiptapEditor({
       container.removeEventListener("dragover", handleDragOver);
       container.removeEventListener("drop", handleDrop);
     };
-  }, []); // Empty dependency array is fine here
-
-  // Handle image upload to Vercel Blob
+  }, []);
   const handleImageUpload = async (file: File) => {
     if (!editor) return;
 
     try {
       setIsUploading(true);
+      setUploadError(null);
 
-      // Upload image to Vercel Blob
       const result = await uploadImage(file);
 
-      // Insert the image at the current cursor position
       editor.chain().focus().setImage({ src: result.url }).run();
     } catch (error) {
       console.error("Error uploading image:", error);
-      alert("Failed to upload image. Please try again.");
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Failed to upload image. Please try again.";
+      setUploadError(errorMessage);
+      alert(errorMessage);
     } finally {
       setIsUploading(false);
     }
@@ -486,6 +490,13 @@ export default function TiptapEditor({
               </Tooltip>
             </div>
           </TooltipProvider>
+        </div>
+      )}
+
+      {/* Show upload error if exists */}
+      {uploadError && (
+        <div className="rounded-md bg-red-50 p-3 text-red-800 text-sm dark:bg-red-900/20 dark:text-red-200">
+          Error: {uploadError}
         </div>
       )}
 

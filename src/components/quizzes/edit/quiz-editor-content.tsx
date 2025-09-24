@@ -82,6 +82,11 @@ export function QuizEditorContent() {
       console.log("Saving changed fields:", changedFields);
       await saveQuiz();
 
+      // Invalidate queries to ensure fresh data is fetched everywhere
+      await queryClient.invalidateQueries({
+        queryKey: ["quiz", extractIdFromSlug(quizId)],
+      });
+
       toast.success("Quiz saved successfully!");
     } catch (error) {
       console.error("Failed to save quiz:", error);
@@ -103,6 +108,11 @@ export function QuizEditorContent() {
       });
       await queryClient.invalidateQueries({
         queryKey: ["quiz-editing", extractIdFromSlug(quizId)],
+      });
+
+      // Also invalidate the main quizzes list
+      await queryClient.invalidateQueries({
+        queryKey: ["quizzes"],
       });
 
       return result;

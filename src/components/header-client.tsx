@@ -111,6 +111,12 @@ export function HeaderClient({ title }: HeaderClientProps) {
             >
               {t("about")}
             </a>
+            <LocalizedLink
+              href="/pricing"
+              className="font-medium text-sm transition-colors hover:text-primary"
+            >
+              {t("pricing")}
+            </LocalizedLink>
           </nav>
 
           <div className="flex items-center space-x-4">
