@@ -66,7 +66,6 @@ export function QuizTakeContent({ quiz, mode = "QUIZ" }: QuizTakeContentProps) {
   // Handle browser back/refresh/close
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      // Only show warning if quiz is not completed and user has answered at least one question
       if (!isCompleted && answers.length > 0) {
         e.preventDefault();
         e.returnValue =
@@ -79,19 +78,15 @@ export function QuizTakeContent({ quiz, mode = "QUIZ" }: QuizTakeContentProps) {
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [isCompleted, answers.length]);
 
-  // Handle manual exit (back button, navigation, etc.)
   const handleExitQuiz = useCallback(() => {
-    // Only show warning if quiz is not completed and user has answered at least one question
     if (!isCompleted && answers.length > 0) {
       setShowExitDialog(true);
     } else {
-      // If no answers or already completed, just go back
       goBack();
     }
   }, [isCompleted, answers.length, goBack]);
 
   const confirmExitQuiz = useCallback(() => {
-    // Save progress before exiting
     try {
       const progress = {
         currentQuestionIndex,
@@ -108,14 +103,12 @@ export function QuizTakeContent({ quiz, mode = "QUIZ" }: QuizTakeContentProps) {
     setShowExitDialog(false);
     goBack();
   }, [currentQuestionIndex, answers, quiz.id, goBack]);
-
-  // Load progress from localStorage on mount
   useEffect(() => {
     try {
       const savedProgress = localStorage.getItem(`quiz-progress-${quiz.id}`);
       if (savedProgress) {
         const progress = JSON.parse(savedProgress);
-        // Only restore if it's recent (less than 1 hour old)
+
         if (Date.now() - progress.timestamp < 3600000) {
           setCurrentQuestionIndex(progress.currentQuestionIndex);
           setAnswers(progress.answers);

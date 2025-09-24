@@ -1,5 +1,6 @@
 "use client";
 
+import { HtmlTitle } from "@/components/shared/editor/html-title";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription } from "@/components/ui/card";
 import type { AttemptListItemDto } from "@/lib/api/quiz-attempt";
@@ -32,9 +33,11 @@ export function AttemptHistory({
             <h1 className="font-bold text-2xl tracking-tight">
               Attempt History
             </h1>
-            <p className="text-muted-foreground">
-              Review your previous quiz attempts for &quot;{quiz.title}&quot;
-            </p>
+            <HtmlTitle
+              content={`Review your previous quiz attempts for "${quiz.title}"`}
+              as="p"
+              className="text-muted-foreground"
+            />
           </div>
           <Badge variant="secondary" className="self-start sm:self-auto">
             {attempts.length} {attempts.length === 1 ? "attempt" : "attempts"}

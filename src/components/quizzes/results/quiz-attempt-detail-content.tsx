@@ -16,6 +16,8 @@ import {
 } from "lucide-react";
 import { useParams } from "next/navigation";
 
+import { HtmlTitle } from "@/components/shared/editor/html-title";
+
 interface QuestionResultProps {
   question: any;
   index: number;
@@ -40,9 +42,11 @@ function QuestionResult({ question, index }: QuestionResultProps) {
   return (
     <div className="rounded-lg border border-border/50 p-4">
       <div className="mb-3 flex items-start justify-between">
-        <h3 className="font-semibold">
-          {index + 1}. {question.questionText}
-        </h3>
+        <HtmlTitle
+          content={`${index + 1}. ${question.questionText}`}
+          as="h3"
+          className="font-semibold"
+        />
         <div className="flex items-center gap-2">
           {isCorrect ? (
             <>

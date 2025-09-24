@@ -1,6 +1,7 @@
 "use client";
 
 import { LocalizedLink } from "@/components/localized-link";
+import { HtmlTitle } from "@/components/shared/editor/html-title";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -219,9 +220,11 @@ export function QuizCard({ quiz, onDelete }: QuizCardProps) {
           {/* Header */}
           <div className="mb-3 flex items-start justify-between">
             <div className="flex-1 space-y-2">
-              <h3 className="line-clamp-2 text-start font-semibold text-foreground text-lg leading-tight">
-                {quiz.title}
-              </h3>
+              <HtmlTitle
+                content={quiz.title}
+                as="h3"
+                className="line-clamp-2 text-start font-semibold text-foreground text-lg leading-tight"
+              />
               <div className="flex flex-wrap items-center gap-2">
                 <Badge
                   variant="outline"
