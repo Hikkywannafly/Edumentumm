@@ -15,17 +15,11 @@ import { useFlashcardPageDetailsPrefetch } from "@/hooks/flashcard/use-flashcard
 import { useFlashcardTotalStats } from "@/hooks/flashcard/use-flashcard-total-stats";
 import { useFlashcardsQuery } from "@/hooks/flashcard/use-flashcards-query";
 import { useDebounce } from "@/hooks/use-debounce";
-import {
-  AlertCircle,
-  Grid3x3,
-  List,
-  Plus,
-  RefreshCw,
-  Search,
-} from "lucide-react";
+import { Grid3x3, List, Plus, RefreshCw, Search } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { Error403 } from "../error";
 import ThinLayout from "../layout/thin-layout";
 import { FlashcardGrid } from "./flashcard-grid";
 import FlashcardPagination from "./flashcard-pagination";
@@ -95,7 +89,6 @@ export function FlashcardsContent() {
     data: flashcardsResponse,
     isLoading,
     error,
-    refetch,
     isFetching,
   } = useFlashcardsQuery(apiPage, pageSize, searchQuery, sortBy);
 
@@ -200,18 +193,7 @@ export function FlashcardsContent() {
   }
 
   if (error) {
-    return (
-      <ThinLayout classNames="flex-1 space-y-6 p-6">
-        <div className="flex flex-col items-center justify-center py-12">
-          <AlertCircle className="mb-4 h-12 w-12 text-red-500" />
-          <h3 className="mb-2 font-semibold text-lg">
-            Error loading flashcards
-          </h3>
-          <p className="mb-4 text-muted-foreground">{error.message}</p>
-          <Button onClick={() => refetch()}>Try again</Button>
-        </div>
-      </ThinLayout>
-    );
+    return <Error403 />;
   }
 
   return (
