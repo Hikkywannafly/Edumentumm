@@ -915,5 +915,11 @@
         "noteUpdatedDesc": "Your note has been saved successfully"
       }
     }
+  },
+  "Error403": {
+    "title": "ACCESS FORBIDDEN",
+    "description": "You don't have permission to access this resource. Please log in again if your session has expired.",
+    "homeButton": "GO HOME",
+    "loginButton": "LOGIN"
   }
 }

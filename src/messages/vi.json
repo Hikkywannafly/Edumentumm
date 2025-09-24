@@ -920,5 +920,11 @@
         "noteUpdatedDesc": "Ghi chú của bạn đã được lưu thành công"
       }
     }
+  },
+  "Error403": {
+    "title": "TRUY CẬP BỊ CẤM",
+    "description": "Bạn không có quyền truy cập vào tài nguyên này. Vui lòng đăng nhập lại nếu phiên đăng nhập hết hạn.",
+    "homeButton": "VỀ TRANG CHỦ",
+    "loginButton": "ĐĂNG NHẬP"
   }
 }
