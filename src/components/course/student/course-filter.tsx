@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/select";
 import { CourseLevel } from "@/types/course.type";
 import { Label } from "@radix-ui/react-label";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useDebouncedCallback } from "use-debounce";
 
 interface FilterOptions {
@@ -35,6 +35,20 @@ export function CourseFilter({
   ]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedLevel, setSelectedLevel] = useState<string>("");
+  const [isDragging, setIsDragging] = useState<"min" | "max" | null>(null);
+
+  // Refs to avoid stale closure issues
+  const priceRangeRef = useRef(priceRange);
+  const isDraggingRef = useRef(isDragging);
+
+  // Update refs when state changes
+  useEffect(() => {
+    priceRangeRef.current = priceRange;
+  }, [priceRange]);
+
+  useEffect(() => {
+    isDraggingRef.current = isDragging;
+  }, [isDragging]);
 
   const debouncedSearch = useDebouncedCallback((value: string) => {
     onFilterChange({
@@ -57,7 +71,9 @@ export function CourseFilter({
     debouncedPriceChange(value);
   };
 
-  const handleMinPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleMinPriceInputChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const newMin = Math.max(
       0,
       Math.min(Number.parseInt(e.target.value) || 0, priceRange[1] - 10),
@@ -65,7 +81,9 @@ export function CourseFilter({
     handlePriceChange([newMin, priceRange[1]]);
   };
 
-  const handleMaxPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleMaxPriceInputChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const newMax = Math.min(
       maxPriceValue,
       Math.max(
@@ -75,6 +93,62 @@ export function CourseFilter({
     );
     handlePriceChange([priceRange[0], newMax]);
   };
+
+  // Custom slider handlers
+  const handleMouseDown = (e: React.MouseEvent, thumb: "min" | "max") => {
+    e.preventDefault();
+    setIsDragging(thumb);
+  };
+
+  // Mouse event listeners
+  useEffect(() => {
+    if (!isDragging) return;
+
+    const sliderElement = document.querySelector(".price-slider-track");
+    if (!sliderElement) return;
+
+    const sliderRect = sliderElement.getBoundingClientRect();
+
+    const handleGlobalMouseMove = (e: MouseEvent) => {
+      const currentDragging = isDraggingRef.current;
+      const currentRange = priceRangeRef.current;
+
+      if (!currentDragging) return;
+
+      const percentage = Math.max(
+        0,
+        Math.min(1, (e.clientX - sliderRect.left) / sliderRect.width),
+      );
+      const newValue = Math.round((percentage * maxPriceValue) / 10) * 10;
+
+      if (currentDragging === "min") {
+        const newMin = Math.max(0, Math.min(newValue, currentRange[1] - 10));
+        const newRange: [number, number] = [newMin, currentRange[1]];
+        setPriceRange(newRange);
+        debouncedPriceChange(newRange);
+      } else if (currentDragging === "max") {
+        const newMax = Math.min(
+          maxPriceValue,
+          Math.max(newValue, currentRange[0] + 10),
+        );
+        const newRange: [number, number] = [currentRange[0], newMax];
+        setPriceRange(newRange);
+        debouncedPriceChange(newRange);
+      }
+    };
+
+    const handleGlobalMouseUp = () => {
+      setIsDragging(null);
+    };
+
+    document.addEventListener("mousemove", handleGlobalMouseMove);
+    document.addEventListener("mouseup", handleGlobalMouseUp);
+
+    return () => {
+      document.removeEventListener("mousemove", handleGlobalMouseMove);
+      document.removeEventListener("mouseup", handleGlobalMouseUp);
+    };
+  }, [isDragging, maxPriceValue, debouncedPriceChange]);
 
   const handleLevelChange = (value: string) => {
     setSelectedLevel(value);
@@ -144,14 +218,15 @@ export function CourseFilter({
       </div>
 
       <div className="space-y-3">
-        <label className="font-medium text-sm" htmlFor="dual-range-slider">
+        <label className="font-medium text-sm" htmlFor="price-range">
           Price Range: ${priceRange[0]} - ${priceRange[1]}
         </label>
 
-        {/* Dual Range Slider using CSS */}
-        <div className="relative" id="dual-range-slider">
-          <div className="relative h-2 rounded-lg bg-gray-200">
-            {/* Active range visualization */}
+        {/* Custom Dual Range Slider */}
+        <div className="relative w-full" id="price-range">
+          {/* Track background */}
+          <div className="price-slider-track relative h-2 rounded-lg bg-gray-200">
+            {/* Active range */}
             <div
               className="absolute h-2 rounded-lg bg-black"
               style={{
@@ -159,31 +234,25 @@ export function CourseFilter({
                 width: `${((priceRange[1] - priceRange[0]) / maxPriceValue) * 100}%`,
               }}
             />
+
+            {/* Min thumb */}
+            <div
+              className="-translate-x-1/2 -translate-y-1.5 absolute h-5 w-5 transform cursor-pointer select-none rounded-full border-2 border-black bg-white transition-shadow hover:shadow-lg"
+              style={{
+                left: `${(priceRange[0] / maxPriceValue) * 100}%`,
+              }}
+              onMouseDown={(e) => handleMouseDown(e, "min")}
+            />
+
+            {/* Max thumb */}
+            <div
+              className="-translate-x-1/2 -translate-y-1.5 absolute h-5 w-5 transform cursor-pointer select-none rounded-full border-2 border-black bg-white transition-shadow hover:shadow-lg"
+              style={{
+                left: `${(priceRange[1] / maxPriceValue) * 100}%`,
+              }}
+              onMouseDown={(e) => handleMouseDown(e, "max")}
+            />
           </div>
-
-          {/* Min range input */}
-          <input
-            type="range"
-            min={0}
-            max={maxPriceValue}
-            step={10}
-            value={priceRange[0]}
-            onChange={(e) => handleMinPriceChange(e)}
-            className="slider-thumb absolute h-2 w-full cursor-pointer appearance-none bg-transparent"
-            style={{ zIndex: 1 }}
-          />
-
-          {/* Max range input */}
-          <input
-            type="range"
-            min={0}
-            max={maxPriceValue}
-            step={10}
-            value={priceRange[1]}
-            onChange={(e) => handleMaxPriceChange(e)}
-            className="slider-thumb absolute h-2 w-full cursor-pointer appearance-none bg-transparent"
-            style={{ zIndex: 2 }}
-          />
         </div>
 
         {/* Price inputs */}
@@ -192,8 +261,8 @@ export function CourseFilter({
             type="number"
             placeholder="Min"
             value={priceRange[0]}
-            onChange={handleMinPriceChange}
-            className="w-20 text-sm"
+            onChange={handleMinPriceInputChange}
+            className="w-24 text-sm"
             min={0}
             max={priceRange[1] - 10}
           />
@@ -202,8 +271,8 @@ export function CourseFilter({
             type="number"
             placeholder="Max"
             value={priceRange[1]}
-            onChange={handleMaxPriceChange}
-            className="w-20 text-sm"
+            onChange={handleMaxPriceInputChange}
+            className="w-24 text-sm"
             min={priceRange[0] + 10}
             max={maxPriceValue}
           />
@@ -224,29 +293,6 @@ export function CourseFilter({
           Clear all filters
         </button>
       </div>
-
-      <style jsx>{`
-        .slider-thumb::-webkit-slider-thumb {
-          appearance: none;
-          height: 20px;
-          width: 20px;
-          border-radius: 50%;
-          background: #000;
-          border: 2px solid #fff;
-          cursor: pointer;
-          box-shadow: 0 0 2px 0px #555;
-        }
-        
-        .slider-thumb::-moz-range-thumb {
-          height: 20px;
-          width: 20px;
-          border-radius: 50%;
-          background: #000;
-          border: 2px solid #fff;
-          cursor: pointer;
-          box-shadow: 0 0 2px 0px #555;
-        }
-      `}</style>
     </div>
   );
 }

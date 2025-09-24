@@ -206,15 +206,6 @@ export default function CourseStudentPage() {
             <div className="flex h-40 items-center justify-center">
               <div className="text-center">
                 <p className="mb-2 text-muted-foreground">No courses found</p>
-                {(hasSearch || hasFilters) && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleClearFilters}
-                  >
-                    Clear filters
-                  </Button>
-                )}
               </div>
             </div>
           )}
