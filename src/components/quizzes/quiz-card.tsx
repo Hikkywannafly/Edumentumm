@@ -219,7 +219,9 @@ export function QuizCard({ quiz, onDelete }: QuizCardProps) {
             <div className="flex flex-wrap items-center gap-2">
               <Badge
                 variant="outline"
-                className={`${getDifficultyColor(quiz.difficulty)} rounded-sm border-none px-2 py-0.5 font-medium text-xs`}
+                className={`${getDifficultyColor(
+                  quiz.difficulty,
+                )} rounded-sm border-none px-2 py-0.5 font-medium text-xs`}
               >
                 {quiz.difficulty}
               </Badge>
