@@ -49,10 +49,10 @@ export function SearchFilterBar({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="name">Tên A-Z</SelectItem>
-                <SelectItem value="date">Ngày tải lên</SelectItem>
-                <SelectItem value="size">Kích thước</SelectItem>
-                <SelectItem value="type">Loại file</SelectItem>
+                <SelectItem value="name">Name A-Z</SelectItem>
+                <SelectItem value="date">Upload Date</SelectItem>
+                <SelectItem value="size">Size</SelectItem>
+                <SelectItem value="type">File Type</SelectItem>
               </SelectContent>
             </Select>
           </div>

@@ -8,6 +8,7 @@ export function useStoreUI() {
   const [sortBy, setSortBy] = useState("name");
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [isFolderDialogOpen, setIsFolderDialogOpen] = useState(false);
+  const [isShareQuizDialogOpen, setIsShareQuizDialogOpen] = useState(false);
 
   const handleSearch = useCallback((query: string) => {
     setSearchQuery(query);
@@ -29,6 +30,10 @@ export function useStoreUI() {
     setIsFolderDialogOpen((prev) => !prev);
   }, []);
 
+  const toggleShareQuizDialog = useCallback(() => {
+    setIsShareQuizDialogOpen((prev) => !prev);
+  }, []);
+
   const handleFolderSelect = useCallback((folderId: string | null) => {
     setSelectedFolder(folderId);
     setSearchQuery("");
@@ -41,6 +46,8 @@ export function useStoreUI() {
     sortBy,
     isUploadDialogOpen,
     isFolderDialogOpen,
+    isShareQuizDialogOpen,
+    toggleShareQuizDialog,
     handleSearch,
     handleSort,
     handleViewModeChange,

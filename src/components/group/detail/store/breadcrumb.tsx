@@ -24,7 +24,7 @@ export function Breadcrumb({
         onClick={onNavigateBack}
         className="h-auto p-0 font-normal"
       >
-        Tất cả
+        All
       </Button>
       <span>/</span>
       <span className="font-medium">

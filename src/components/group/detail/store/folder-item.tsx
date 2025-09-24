@@ -7,7 +7,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Edit, FolderOpen, MoreHorizontal, Trash2 } from "lucide-react";
+import { FolderOpen, MoreHorizontal, Trash2 } from "lucide-react";
 import type { FolderResponse } from "../../../../types/folder";
 import type { ViewMode } from "./types";
 
@@ -56,19 +56,10 @@ export function FolderItem({ folder, viewMode, onClick }: FolderItemProps) {
               onClick={(e) => {
                 e.stopPropagation();
               }}
-              className="flex items-center gap-2"
-            >
-              <Edit className="h-4 w-4" />
-              Chỉnh sửa
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={(e) => {
-                e.stopPropagation();
-              }}
               className="flex items-center gap-2 text-red-600"
             >
               <Trash2 className="h-4 w-4" />
-              Xóa
+              Delete
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

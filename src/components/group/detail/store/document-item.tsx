@@ -7,7 +7,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Download, Edit, Eye, MoreHorizontal, Trash2 } from "lucide-react";
+import { Download, Eye, MoreHorizontal, Trash2 } from "lucide-react";
 import {
   File,
   FileAudio,
@@ -139,16 +139,12 @@ export function DocumentItem({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-32">
-              <DropdownMenuItem className="flex items-center gap-2">
-                <Edit className="h-4 w-4" />
-                Chỉnh sửa
-              </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={handleDelete}
                 className="flex items-center gap-2 text-red-600"
               >
                 <Trash2 className="h-4 w-4" />
-                Xóa
+                Delete
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
