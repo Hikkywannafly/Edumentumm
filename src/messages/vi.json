@@ -108,6 +108,31 @@
     "dashboard": "Bảng điều khiển",
     "upgrade": "Nâng cấp"
   },
+  "Footer": {
+    "description": "Nền tảng học tập thông minh cho tương lai của giáo dục.",
+    "product": {
+      "title": "Sản phẩm",
+      "features": "Tính năng",
+      "courses": "Khóa học",
+      "community": "Cộng đồng",
+      "reports": "Báo cáo"
+    },
+    "support": {
+      "title": "Hỗ trợ",
+      "helpCenter": "Trung tâm trợ giúp",
+      "contact": "Liên hệ",
+      "faq": "FAQ",
+      "documentation": "Tài liệu"
+    },
+    "company": {
+      "title": "Công ty",
+      "aboutUs": "Giới thiệu về chúng tôi",
+      "recruitment": "Tuyển dụng",
+      "privacy": "Chính sách bảo mật",
+      "terms": "Điều khoản dịch vụ"
+    },
+    "copyright": "2025 Edumentum. Tất cả mọi quyền được bảo lưu."
+  },
   "Dashboard": {
     "title": "Bảng điều khiển",
     "createQuiz": "Tạo bài kiểm tra",
