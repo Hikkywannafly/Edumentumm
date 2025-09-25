@@ -2,10 +2,10 @@ import { CourseContentManager } from "@/components/course/teacher/course-content
 import DashboardLayout from "@/components/layout/dashboard-layout";
 import { PageHeader } from "@/components/layout/page-header";
 
-export default function CourseContentPage({
+export default async function CourseContentPage({
   params,
-}: { params: { courseId: number } }) {
-  const { courseId } = params;
+}: { params: Promise<{ courseId: number }> }) {
+  const { courseId } = await params;
 
   return (
     <DashboardLayout>

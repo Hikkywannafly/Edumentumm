@@ -2,10 +2,10 @@ import StudentCourseDetail from "@/components/course/student/student-course-deta
 import DashboardLayout from "@/components/layout/dashboard-layout";
 import { PageHeader } from "@/components/layout/page-header";
 
-export default function StudentCourseDetailPage({
+export default async function StudentCourseDetailPage({
   params,
-}: { params: { courseId: number } }) {
-  const { courseId } = params;
+}: { params: Promise<{ courseId: number }> }) {
+  const { courseId } = await params;
 
   return (
     <DashboardLayout>
