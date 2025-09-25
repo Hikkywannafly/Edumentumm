@@ -951,7 +951,7 @@ export function NoteEditor({
                     setIsEditing(true);
                   }}
                   height={400}
-                  data-color-mode="auto"
+                  data-color-mode="light"
                 />
               </div>
             )}
