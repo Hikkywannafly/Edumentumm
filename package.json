@@ -32,7 +32,8 @@
     "typecheck": "tsc --noEmit",
     "commit": "git cz",
     "prepare": "husky install",
-    "build:prepare": "pnpm run typecheck && pnpm run lint && pnpm run format && pnpm run check && pnpm run build"
+    "build:prepare": "pnpm run typecheck && pnpm run lint && pnpm run format && pnpm run check && pnpm run build",
+    "vercel-build": "next build"
   },
   "dependencies": {
     "@biomejs/biome": "^1.9.4",
