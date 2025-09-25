@@ -153,6 +153,8 @@ export function BlockEditor({
         return t("placeholders.bulleted_list_item");
       case "numbered_list_item":
         return t("placeholders.numbered_list_item");
+      case "to_do":
+        return t("placeholders.to_do");
       default:
         return t("placeholders.default");
     }
@@ -252,7 +254,7 @@ export function BlockEditor({
 
       case "quote":
         return (
-          <div className="border-muted-foreground/30 border-l-4 py-1 pl-4">
+          <div className="border-muted-foreground/30 border-l-4 py-1 pl-4 dark:border-muted-foreground/40">
             <Textarea
               ref={textareaRef}
               value={content}
@@ -263,7 +265,7 @@ export function BlockEditor({
               placeholder={getPlaceholder()}
               className={cn(
                 baseClasses,
-                "min-h-0 text-muted-foreground italic",
+                "min-h-0 text-muted-foreground italic dark:text-muted-foreground",
               )}
               rows={1}
             />
@@ -272,7 +274,7 @@ export function BlockEditor({
 
       case "code":
         return (
-          <div className="rounded-lg border border-border/30 bg-muted/30 px-4 py-3">
+          <div className="rounded-lg border border-border/30 bg-muted/30 px-4 py-3 dark:border-border/40 dark:bg-muted/20">
             <Textarea
               ref={textareaRef}
               value={content}

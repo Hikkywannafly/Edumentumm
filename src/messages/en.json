@@ -892,6 +892,10 @@
       "settings": "Settings",
       "addTag": "Add tag...",
       "addBlock": "Add a block",
+      "switchMode": "Switch Mode",
+      "blockMode": "Block Mode",
+      "markdownMode": "Markdown Mode",
+      "switchingMode": "Switching mode...",
       "autoSaveTitle": "Title auto-saved successfully!",
       "autoSaveTag": "Tag \"{tag}\" added successfully!",
       "autoRemoveTag": "Tag \"{tag}\" removed successfully!",
@@ -922,6 +926,7 @@
         "code": "Code",
         "bulleted_list_item": "List item",
         "numbered_list_item": "List item",
+        "to_do": "To-do item",
         "default": "Type something..."
       },
       "success": {

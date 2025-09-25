@@ -832,7 +832,7 @@ export function NoteEditor({
                         initialTagsRef.current = newTags;
                         setIsEditing(false);
                         toast.success(
-                          t("modeSwitchSuccess", { mode: "Markdown" }),
+                          t("modeSwitchSuccess", { mode: t("markdownMode") }),
                         );
                       } else {
                         // Markdown -> Block: Lưu markdown hiện tại trước, sau đó chuyển đổi
@@ -870,7 +870,7 @@ export function NoteEditor({
                         initialTagsRef.current = newTags;
                         setIsEditing(false);
                         toast.success(
-                          t("modeSwitchSuccess", { mode: "Block" }),
+                          t("modeSwitchSuccess", { mode: t("blockMode") }),
                         );
                       }
                     } catch (_error) {
@@ -883,10 +883,10 @@ export function NoteEditor({
                 >
                   <Settings className="mr-2 h-4 w-4" />
                   {isModeChanging
-                    ? tCommon("loading")
+                    ? t("switchingMode")
                     : editorMode === "block"
-                      ? "Markdown"
-                      : "Block"}
+                      ? t("markdownMode")
+                      : t("blockMode")}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -937,9 +937,12 @@ export function NoteEditor({
         <Separator className="mb-8" />
 
         {editorMode === "markdown" ? (
-          <div className="rounded-md border bg-background p-2">
+          <div className="rounded-md border bg-background p-2 dark:border-gray-700">
             {MDEditor && (
-              <div data-color-mode="auto">
+              <div
+                data-color-mode="auto"
+                className="prose dark:prose-invert max-w-none"
+              >
                 <MDEditor
                   key={`markdown-${note.id}`}
                   value={markdownValue}
@@ -948,6 +951,7 @@ export function NoteEditor({
                     setIsEditing(true);
                   }}
                   height={400}
+                  data-color-mode="auto"
                 />
               </div>
             )}

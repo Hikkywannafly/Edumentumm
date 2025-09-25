@@ -112,21 +112,25 @@ export function NotesContent() {
   const renderNoteCard = (note: NoteData) => (
     <Card
       key={note.id}
-      className="cursor-pointer transition-all hover:scale-[1.02] hover:shadow-md"
+      className="cursor-pointer transition-all hover:scale-[1.02] hover:shadow-md dark:border-border/50 dark:hover:shadow-lg"
       onClick={() => handleNoteClick(note)}
     >
       <CardContent className="p-4">
         <div className="space-y-3">
           {/* Header */}
           <div className="flex items-start justify-between">
-            <h3 className="line-clamp-2 font-semibold text-lg">{note.title}</h3>
-            <Badge variant="secondary" className="text-xs">
-              {note.type === "markdown" ? "Markdown" : "Block"}
+            <h3 className="line-clamp-2 font-semibold text-lg dark:text-foreground">
+              {note.title}
+            </h3>
+            <Badge variant="secondary" className="text-xs dark:bg-muted/50">
+              {note.type === "markdown"
+                ? t("editor.markdownMode")
+                : t("editor.blockMode")}
             </Badge>
           </div>
 
           {/* Content preview */}
-          <div className="line-clamp-3 text-muted-foreground text-sm">
+          <div className="line-clamp-3 text-muted-foreground text-sm dark:text-muted-foreground">
             {note.type === "markdown" && note.content
               ? note.content.substring(0, 150)
               : note.blocks && note.blocks.length > 0
@@ -135,7 +139,7 @@ export function NotesContent() {
                     .map((block) => block.content?.text || "")
                     .join(" ")
                     .substring(0, 150)
-                : "Chưa có nội dung"}
+                : t("emptyState.noResults")}
           </div>
 
           {/* Tags */}
@@ -290,12 +294,14 @@ export function NotesContent() {
           {/* Sort */}
           <Select value={sortBy} onValueChange={handleSortChange}>
             <SelectTrigger className="w-48">
-              <SelectValue placeholder="Sắp xếp theo" />
+              <SelectValue placeholder={t("sort.lastModified")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="updatedAt">Cập nhật gần nhất</SelectItem>
-              <SelectItem value="createdAt">Tạo gần nhất</SelectItem>
-              <SelectItem value="title">Tên ghi chú</SelectItem>
+              <SelectItem value="updatedAt">
+                {t("sort.lastModified")}
+              </SelectItem>
+              <SelectItem value="createdAt">{t("sort.dateCreated")}</SelectItem>
+              <SelectItem value="title">{t("sort.title")}</SelectItem>
             </SelectContent>
           </Select>
 
@@ -327,11 +333,13 @@ export function NotesContent() {
         {error ? (
           <div className="flex flex-col items-center justify-center py-12 text-center">
             <AlertCircle className="mb-4 h-12 w-12 text-destructive" />
-            <h3 className="mb-2 font-semibold text-lg">Lỗi tải ghi chú</h3>
+            <h3 className="mb-2 font-semibold text-lg">
+              {t("errors.loadFailed")}
+            </h3>
             <p className="mb-4 text-muted-foreground">{error}</p>
             <Button onClick={handleRefresh} variant="outline">
               <RefreshCw className="mr-2 h-4 w-4" />
-              Thử lại
+              {t("actions.retry")}
             </Button>
           </div>
         ) : isLoading ? (
@@ -340,17 +348,19 @@ export function NotesContent() {
           <div className="flex flex-col items-center justify-center py-12 text-center">
             <FileText className="mb-4 h-12 w-12 text-muted-foreground" />
             <h3 className="mb-2 font-semibold text-lg">
-              {searchQuery ? "Không tìm thấy ghi chú" : "Chưa có ghi chú nào"}
+              {searchQuery
+                ? t("emptyState.noResults")
+                : t("emptyState.noNotes")}
             </h3>
             <p className="mb-4 text-muted-foreground">
               {searchQuery
-                ? "Thử thay đổi từ khóa tìm kiếm"
-                : "Tạo ghi chú đầu tiên của bạn"}
+                ? t("emptyState.noResultsDescription")
+                : t("emptyState.createFirst")}
             </p>
             {!searchQuery && (
               <Button onClick={handleCreateNote}>
                 <FileText className="mr-2 h-4 w-4" />
-                Tạo ghi chú mới
+                {t("actions.createNote")}
               </Button>
             )}
           </div>
