@@ -33,7 +33,6 @@ export function QuizTakeContent({ quiz, mode = "QUIZ" }: QuizTakeContentProps) {
     currentQuestionIndex,
     answers,
     isCompleted,
-    setCurrentQuestionIndex,
     setAnswers,
     setIsCompleted,
     handleAnswerChange,
@@ -56,7 +55,7 @@ export function QuizTakeContent({ quiz, mode = "QUIZ" }: QuizTakeContentProps) {
     };
   }, [answers.length, setIsQuizInProgress, setQuizHasAnswers]);
 
-  // Use the quiz progress hook
+  // Use the quiz progress hook - this will now properly clear previous progress
   useQuizProgress({
     quizId: quiz.id.toString(),
     currentQuestionIndex,
@@ -103,21 +102,6 @@ export function QuizTakeContent({ quiz, mode = "QUIZ" }: QuizTakeContentProps) {
     setShowExitDialog(false);
     goBack();
   }, [currentQuestionIndex, answers, quiz.id, goBack]);
-  useEffect(() => {
-    try {
-      const savedProgress = localStorage.getItem(`quiz-progress-${quiz.id}`);
-      if (savedProgress) {
-        const progress = JSON.parse(savedProgress);
-
-        if (Date.now() - progress.timestamp < 3600000) {
-          setCurrentQuestionIndex(progress.currentQuestionIndex);
-          setAnswers(progress.answers);
-        }
-      }
-    } catch (error) {
-      console.warn("Failed to load quiz progress:", error);
-    }
-  }, [quiz.id, setCurrentQuestionIndex, setAnswers]);
 
   const { getQuestionResult } = useQuestionResults({
     questions,

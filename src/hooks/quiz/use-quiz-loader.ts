@@ -96,6 +96,13 @@ export function useQuizLoader(quizId: string): UseQuizLoaderReturn {
         throw new Error("Quiz ID is required");
       }
 
+      // Clear any existing progress when loading a quiz
+      try {
+        localStorage.removeItem(`quiz-progress-${quizId}`);
+      } catch (error) {
+        console.warn("Failed to clear quiz progress:", error);
+      }
+
       const accessToken = localStorage.getItem("accessToken");
       const headers: Record<string, string> = {
         "Content-Type": "application/json",
