@@ -10,6 +10,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { useTranslations } from "next-intl";
 
 interface QuizDeleteDialogProps {
   open: boolean;
@@ -22,23 +23,24 @@ export function QuizDeleteDialog({
   onOpenChange,
   onConfirm,
 }: QuizDeleteDialogProps) {
+  const t = useTranslations("Quizzes.editor");
+
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+          <AlertDialogTitle>{t("deleteQuiz")}</AlertDialogTitle>
           <AlertDialogDescription>
-            This action cannot be undone. This will permanently delete your quiz
-            and remove all associated data.
+            {t("deleteQuizDescription")}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
           <AlertDialogAction
             onClick={onConfirm}
             className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
           >
-            Delete Quiz
+            {t("confirmDelete")}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

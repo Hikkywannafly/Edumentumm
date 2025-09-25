@@ -1,6 +1,7 @@
 "use client";
 
 import { toast } from "@/hooks/use-toast";
+import { apiClient } from "@/lib/api/client";
 import type { BackendQuizEntity } from "@/types/quiz";
 import type { QuizDisplayData } from "@/types/quiz-display";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -48,9 +49,12 @@ interface QuizStatsData {
   publishedQuizzes: number;
   draftQuizzes: number;
   totalAttempts: number;
+  averageScore?: number | null;
+  averageDuration?: number | null;
+  accuracyRate?: number | null;
 }
 
-function convertToDisplayData(backendQuiz: any): QuizDisplayData {
+export function convertToDisplayData(backendQuiz: any): QuizDisplayData {
   const tags: (string | any)[] = backendQuiz.tags
     ? backendQuiz.tags.map((tag: any) => {
         if (typeof tag === "string") {
@@ -74,6 +78,12 @@ function convertToDisplayData(backendQuiz: any): QuizDisplayData {
       : []
     : [];
 
+  const attemptCount =
+    backendQuiz.attemptCount ||
+    backendQuiz.totalAttempts ||
+    backendQuiz.attempts ||
+    0;
+
   return {
     id: backendQuiz.id,
     title: backendQuiz.title,
@@ -88,7 +98,7 @@ function convertToDisplayData(backendQuiz: any): QuizDisplayData {
     keywords,
     createdAt: backendQuiz.createdAt,
     viewCount: backendQuiz.viewCount || 0,
-    attemptCount: backendQuiz.totalAttempts || backendQuiz.attemptCount || 0,
+    attemptCount, // Use the more robust attempt count
     bestCorrectAnswers: backendQuiz.bestCorrectAnswers || undefined,
     maxAttempts: backendQuiz.maxAttempts,
     publishedAt: backendQuiz.publishedAt,
@@ -96,7 +106,6 @@ function convertToDisplayData(backendQuiz: any): QuizDisplayData {
   };
 }
 
-// Fetch quiz list data from API
 async function fetchQuizList(
   params: QuizListParams,
 ): Promise<QuizListResponse> {
@@ -364,46 +373,86 @@ export function useQuizStats() {
   return useQuery<QuizStatsData, Error>({
     queryKey: QUIZ_QUERY_KEYS.stats(),
     queryFn: async (): Promise<QuizStatsData> => {
-      const accessToken = localStorage.getItem("accessToken");
-      const headers: Record<string, string> = {
-        "Content-Type": "application/json",
-      };
+      try {
+        const response = await apiClient.get("/student/quiz-stats/my-stats");
 
-      if (accessToken) {
-        headers.Authorization = `Bearer ${accessToken}`;
-      }
+        const backendData = response.data.data || response.data;
 
-      const response = await fetch("/api/quiz?size=1000", {
-        headers,
-      });
+        const transformedData = {
+          totalQuizzes:
+            backendData.totalQuizzes !== undefined
+              ? backendData.totalQuizzes
+              : 0,
+          publishedQuizzes:
+            backendData.completedQuizzes !== undefined
+              ? backendData.completedQuizzes
+              : 0,
+          draftQuizzes:
+            (backendData.totalQuizzes !== undefined
+              ? backendData.totalQuizzes
+              : 0) -
+            (backendData.completedQuizzes !== undefined
+              ? backendData.completedQuizzes
+              : 0),
+          totalAttempts:
+            backendData.totalAttempts !== undefined
+              ? backendData.totalAttempts
+              : 0,
+          averageScore:
+            backendData.averageScore !== undefined
+              ? backendData.averageScore
+              : null,
+          averageDuration:
+            backendData.averageDuration !== undefined
+              ? backendData.averageDuration
+              : null,
+          accuracyRate:
+            backendData.accuracyRate !== undefined
+              ? backendData.accuracyRate
+              : null,
+        };
 
-      if (!response.ok) {
-        throw new Error(`Failed to fetch quiz stats: ${response.status}`);
-      }
+        return transformedData;
+      } catch (error) {
+        console.warn(
+          "Direct backend API not available, falling back to quiz list calculation",
+          error,
+        );
+        try {
+          const fallbackResponse = await apiClient.get(
+            "/student/quizzes/page?size=1000",
+          );
 
-      const result: ApiResponse = await response.json();
+          if (fallbackResponse.data.success) {
+            const quizzes = fallbackResponse.data.data.content;
 
-      if (!result.success) {
-        throw new Error("Failed to fetch quiz stats");
-      }
+            const stats = {
+              totalQuizzes: quizzes.length,
+              publishedQuizzes: quizzes.filter(
+                (q: any) => q.status === "PUBLISHED",
+              ).length,
+              draftQuizzes: quizzes.filter((q: any) => q.status === "DRAFT")
+                .length,
+              totalAttempts: quizzes.reduce(
+                (sum: number, q: any) =>
+                  sum + (q.attemptCount || q.totalAttempts || 0),
+                0,
+              ),
+            };
 
-      const quizzes = result.data.content.map((quiz: any) => {
-        if ("slug" in quiz && "viewCount" in quiz) {
-          return quiz as QuizDisplayData;
+            return stats;
+          }
+        } catch (fallbackError) {
+          console.error("Fallback API also failed:", fallbackError);
         }
-        return convertToDisplayData(quiz as BackendQuizEntity);
-      });
 
-      return {
-        totalQuizzes: quizzes.length,
-        publishedQuizzes: quizzes.filter((q) => q.status === "PUBLISHED")
-          .length,
-        draftQuizzes: quizzes.filter((q) => q.status === "DRAFT").length,
-        totalAttempts: quizzes.reduce(
-          (sum, q) => sum + (q.attemptCount || 0),
-          0,
-        ),
-      };
+        return {
+          totalQuizzes: 0,
+          publishedQuizzes: 0,
+          draftQuizzes: 0,
+          totalAttempts: 0,
+        };
+      }
     },
     refetchOnWindowFocus: false,
     staleTime: 5 * 60 * 1000, // 5 minutes

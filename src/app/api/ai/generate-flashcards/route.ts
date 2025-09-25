@@ -75,7 +75,7 @@ You are an expert flashcard generator. You MUST return EXACTLY ${numberOfCards} 
 REQUIREMENTS:
 - Title: ${title}
 - Description: ${description}
-- Language: ${settings.language || "AUTO"}
+- Language: ${settings.language} (if "auto", detect and generate using the language of ${fileContent})
 - Difficulty: ${settings.difficulty || "EASY"}
 - Number of Cards: ${numberOfCards}
 

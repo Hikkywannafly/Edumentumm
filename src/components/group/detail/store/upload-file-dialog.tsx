@@ -7,7 +7,6 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import {
@@ -17,6 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { FolderOpen, UploadCloud } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { folderAPI } from "../../../../lib/api/folder";
@@ -28,6 +28,7 @@ interface UploadFileDialogProps {
   onOpenChange: (open: boolean) => void;
   folders: FolderResponse[];
   onUploadSuccess?: (folderId: string, files: FileResponse[]) => void;
+  defaultFolderId?: string; // Thêm dòng này
 }
 
 export function UploadFileDialog({
@@ -35,9 +36,10 @@ export function UploadFileDialog({
   onOpenChange,
   folders,
   onUploadSuccess,
+  defaultFolderId = "root", // Giá trị mặc định là "root"
 }: UploadFileDialogProps) {
   const [files, setFiles] = useState<File[]>([]);
-  const [folderId, setFolderId] = useState<string>("root");
+  const [folderId, setFolderId] = useState<string>(defaultFolderId);
   const [isDragActive, setIsDragActive] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [isUploading, setIsUploading] = useState(false);
@@ -71,7 +73,6 @@ export function UploadFileDialog({
         (progress) => setUploadProgress(progress),
       );
 
-      // Ensure we have an array of files
       const uploadedFiles = Array.isArray(response) ? response : [response];
 
       if (onUploadSuccess) {
@@ -84,12 +85,10 @@ export function UploadFileDialog({
       setIsDragActive(false);
       onOpenChange(false);
     } catch (error) {
-      console.error("Upload thất bại:", error);
-      if (error instanceof Error) {
-        toast.error(error.message);
-      } else {
-        toast.error("Có lỗi khi tải lên file!");
-      }
+      console.error("Upload failed:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Có lỗi khi tải lên!",
+      );
     } finally {
       setIsUploading(false);
       setUploadProgress(0);
@@ -98,15 +97,14 @@ export function UploadFileDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Tải lên tài liệu</DialogTitle>
-          <DialogDescription>
-            Chọn file để tải lên vào nhóm học tập
+      <DialogContent className="w-full max-w-lg overflow-hidden rounded-xl p-0">
+        <DialogHeader className="border-b bg-gradient-to-r from-blue-50 to-purple-50 px-6 py-5">
+          <DialogDescription className="mt-1 text-blue-600">
+            Choose file to upload
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="space-y-5 px-6 py-6">
           <FileUploadArea
             onDrop={handleDrop}
             isDragActive={isDragActive}
@@ -114,13 +112,19 @@ export function UploadFileDialog({
           />
 
           <div>
-            <Label htmlFor="folder-select">Thư mục</Label>
+            <Label
+              htmlFor="folder-select"
+              className="mb-2 flex items-center gap-2 font-semibold"
+            >
+              <FolderOpen className="h-4 w-4 text-purple-600" />
+              Folder
+            </Label>
             <Select value={folderId} onValueChange={setFolderId}>
               <SelectTrigger>
-                <SelectValue placeholder="Chọn thư mục..." />
+                <SelectValue placeholder="Choose folder..." />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="root">Thư mục gốc</SelectItem>
+                <SelectItem value="root">Root folder</SelectItem>
                 {folders.map((folder) => (
                   <SelectItem key={folder.id} value={folder.id}>
                     {folder.folderName}
@@ -131,10 +135,14 @@ export function UploadFileDialog({
           </div>
 
           {files.length > 0 && (
-            <ul className="mt-2 list-disc pl-5 text-gray-700 text-sm">
+            <ul className="mt-2 rounded-lg bg-blue-50 p-3 text-blue-700 text-sm shadow-inner">
               {files.map((file, idx) => (
-                <li key={idx}>
-                  {file.name} ({(file.size / 1024 / 1024).toFixed(2)} MB)
+                <li key={idx} className="flex items-center gap-2">
+                  <UploadCloud className="h-4 w-4 text-blue-500" />
+                  <span>{file.name}</span>
+                  <span className="ml-auto text-gray-500 text-xs">
+                    {(file.size / 1024 / 1024).toFixed(2)} MB
+                  </span>
                 </li>
               ))}
             </ul>
@@ -143,23 +151,28 @@ export function UploadFileDialog({
           {isUploading && (
             <div className="h-2 w-full overflow-hidden rounded bg-gray-200">
               <div
-                className="h-2 bg-blue-500 transition-all"
+                className="h-2 bg-gradient-to-r from-blue-500 to-purple-500 transition-all"
                 style={{ width: `${uploadProgress}%` }}
               />
             </div>
           )}
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="flex gap-2 bg-gray-50 px-6 py-4">
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
             disabled={isUploading}
+            className="font-semibold"
           >
-            Hủy
+            Cancel
           </Button>
-          <Button onClick={uploadFiles} disabled={isUploading}>
-            {isUploading ? `Đang tải lên ${uploadProgress}%` : "Tải lên"}
+          <Button
+            onClick={uploadFiles}
+            disabled={isUploading}
+            className="bg-gradient-to-r from-blue-600 to-purple-600 font-bold text-white"
+          >
+            {isUploading ? `Uploading ${uploadProgress}%` : "Upload"}
           </Button>
         </DialogFooter>
       </DialogContent>

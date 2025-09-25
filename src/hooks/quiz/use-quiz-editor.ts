@@ -49,11 +49,8 @@ export function useQuizEditor(quizId: string): UseQuizEditorReturn {
     updateQuestion: questionManager.updateQuestion,
     deleteQuestion: questionManager.deleteQuestion,
     moveQuestion: questionManager.moveQuestion,
-
-    // Combined error state
     error: quizLoader.error || quizSaver.error,
 
-    // Utilities
     reset,
   };
 }

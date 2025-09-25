@@ -76,7 +76,7 @@ export default function PomodoroContent() {
   if (isMini) return null;
 
   return (
-    <div className="flex h-full flex-col items-center justify-center p-6">
+    <div className="flex h-auto flex-col items-center justify-center p-6">
       <div className="grid w-full max-w-7xl gap-8 lg:grid-cols-2">
         {/* Timer Section */}
         <Card className="p-6">
@@ -274,12 +274,7 @@ export default function PomodoroContent() {
                 updateTask={updateTask}
               />
             ) : (
-              <KanbanBoardView
-                tasks={tasks}
-                newTask={newTask}
-                setNewTask={setNewTask}
-                addTask={addTask}
-              />
+              <KanbanBoardView />
             )}
           </CardContent>
         </Card>

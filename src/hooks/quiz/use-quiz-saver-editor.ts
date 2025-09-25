@@ -214,10 +214,54 @@ export function updateCacheWithQuizData(
 
   if (updatedQuizData) {
     console.log("Setting updated quiz data in cache:", updatedQuizData);
-    queryClient.setQueryData(["quiz", quizId], updatedQuizData);
+    // Set the cache for the editing view with the frontend format
     queryClient.setQueryData(["quiz-editing", quizId], updatedQuizData);
+
+    // Also update the cache for the take quiz view with the backend format
+    // This ensures consistency between editing and taking modes
+    const backendFormat = convertToFrontendToBackendFormat(updatedQuizData);
+    queryClient.setQueryData(["quiz", quizId], backendFormat);
     console.log("Cache updated for both query keys");
   }
 
+  // Invalidate queries to ensure fresh data is fetched
   queryClient.invalidateQueries({ queryKey: ["quizzes"] });
+  queryClient.invalidateQueries({ queryKey: ["quiz", quizId] });
+}
+
+// Helper function to convert frontend format back to backend format for cache consistency
+function convertToFrontendToBackendFormat(frontendQuiz: GeneratedQuiz): any {
+  return {
+    id: frontendQuiz.savedQuizId,
+    title: frontendQuiz.title,
+    description: frontendQuiz.description,
+    visibility: frontendQuiz.settings?.visibility,
+    status: frontendQuiz.settings?.status,
+    isPremium: frontendQuiz.settings?.isPremium,
+    isFeatured: frontendQuiz.settings?.isFeatured,
+    isTrending: frontendQuiz.settings?.isTrending,
+    estimatedTime: frontendQuiz.settings?.estimatedTime,
+    passingScore: frontendQuiz.settings?.passingScore,
+    maxAttempts: frontendQuiz.settings?.maxAttempts,
+    difficulty: frontendQuiz.settings?.difficulty,
+    totalQuestions: frontendQuiz.questions?.length || 0,
+    tags: frontendQuiz.metadata?.tags || [],
+    quizData: {
+      questions:
+        frontendQuiz.questions?.map((q) => ({
+          id: q.id,
+          text: q.question,
+          type: q.type,
+          points: q.points,
+          explanation: q.explanation,
+          options:
+            q.answers?.map((a) => ({
+              id: a.id,
+              text: a.text,
+            })) || [],
+          correctAnswer: q.answers?.find((a) => a.isCorrect)?.id,
+        })) || [],
+    },
+    metadata: frontendQuiz.metadata,
+  };
 }

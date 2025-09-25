@@ -12,7 +12,6 @@ import { Button } from "../../ui";
 import Chat from "../detail/chat/chat";
 import GiftPointsDialog from "../detail/gift-point-dialog";
 import GroupSettingsDialog from "../detail/group-settings-dialog";
-import { DocumentsTab } from "./documents-tab";
 import { LeaderboardTab } from "./leaderboard-tab";
 import { MembersTab } from "./members-tab";
 import { OverviewCards } from "./overview-cards";
@@ -312,11 +311,10 @@ export default function GroupDetailContentV2({ id }: { id: string }) {
 
         {/* Tabs */}
         <Tabs defaultValue="leaderboard" className="w-full">
-          <TabsList className="grid w-full grid-cols-5 rounded-lg bg-gray-100 dark:bg-zinc-800">
+          <TabsList className="grid w-full grid-cols-4 rounded-lg bg-gray-100 dark:bg-zinc-800">
             <TabsTrigger value="leaderboard">Leaderboard</TabsTrigger>
             <TabsTrigger value="members">Members</TabsTrigger>
             <TabsTrigger value="plans">Plans</TabsTrigger>
-            <TabsTrigger value="documents">Documents</TabsTrigger>
             <TabsTrigger value="reports">Reports</TabsTrigger>
           </TabsList>
 
@@ -335,10 +333,6 @@ export default function GroupDetailContentV2({ id }: { id: string }) {
                 expandedPlan={expandedPlan}
                 onTogglePlanExpansion={togglePlanExpansion}
               />
-            </TabsContent>
-
-            <TabsContent value="documents" className="space-y-4">
-              <DocumentsTab />
             </TabsContent>
 
             <TabsContent value="reports" className="space-y-4">

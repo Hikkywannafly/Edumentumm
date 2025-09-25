@@ -2,20 +2,31 @@ import { useCallback, useEffect, useState } from "react";
 import { folderAPI } from "../../lib/api/folder";
 import type { FileResponse, FolderResponse } from "../../types/folder";
 
-export function useFolders(groupId: string) {
+const folderCache = new Map<string, FolderResponse[]>();
+
+export function useFolders(publicId: string) {
   const [folders, setFolders] = useState<FolderResponse[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
     const fetchFolders = async () => {
-      if (!groupId) return;
+      if (!publicId) return;
+
+      if (folderCache.has(publicId)) {
+        const cachedFolders = folderCache.get(publicId);
+        if (cachedFolders) {
+          setFolders(cachedFolders);
+        }
+        return;
+      }
 
       setIsLoading(true);
       setError(null);
       try {
-        const res = await folderAPI.getFolder(groupId);
+        const res = await folderAPI.getFolder(publicId);
         setFolders(res);
+        folderCache.set(publicId, res);
       } catch (err) {
         setError(
           err instanceof Error ? err : new Error("Failed to fetch folders"),
@@ -27,21 +38,29 @@ export function useFolders(groupId: string) {
     };
 
     fetchFolders();
-  }, [groupId]);
+  }, [publicId]);
 
-  const handleFolderCreated = useCallback((newFolder: FolderResponse) => {
-    const folderData: FolderResponse = {
-      id: newFolder.id,
-      ownerId: newFolder.ownerId,
-      ownerName: newFolder.ownerName,
-      folderName: newFolder.folderName || "Folder mới",
-      createdAt: newFolder.createdAt || new Date().toISOString(),
-      files: [],
-    };
+  const handleFolderCreated = useCallback(
+    (newFolder: FolderResponse) => {
+      const folderData: FolderResponse = {
+        id: newFolder.id,
+        ownerId: newFolder.ownerId,
+        ownerName: newFolder.ownerName,
+        folderName: newFolder.folderName || "Folder mới",
+        createdAt: newFolder.createdAt || new Date().toISOString(),
+        files: [],
+        quiz: [],
+      };
 
-    setFolders((prev) => [folderData, ...prev]);
-    return folderData.id;
-  }, []);
+      setFolders((prev) => {
+        const updated = [folderData, ...prev];
+        folderCache.set(publicId, updated);
+        return updated;
+      });
+      return folderData.id;
+    },
+    [publicId],
+  );
 
   const handleUploadSuccess = useCallback(
     (folderId: string, uploadedFiles: FileResponse[]) => {
@@ -50,11 +69,11 @@ export function useFolders(groupId: string) {
         : [uploadedFiles];
 
       setFolders((prev) => {
+        let updated: FolderResponse[];
         if (folderId === "root") {
           const rootFolder = prev.find((f) => f.id === "root");
           const rootFiles = rootFolder?.files || [];
-
-          return [
+          updated = [
             {
               id: "root",
               folderName: "Root",
@@ -62,30 +81,38 @@ export function useFolders(groupId: string) {
               ownerId: "",
               ownerName: "",
               createdAt: new Date().toISOString(),
+              quiz: [],
             },
             ...prev.filter((f) => f.id !== "root"),
           ];
+        } else {
+          updated = prev.map((folder) =>
+            folder.id === folderId
+              ? { ...folder, files: [...folder.files, ...files] }
+              : folder,
+          );
         }
-
-        return prev.map((folder) =>
-          folder.id === folderId
-            ? { ...folder, files: [...folder.files, ...files] }
-            : folder,
-        );
+        folderCache.set(publicId, updated);
+        return updated;
       });
     },
-    [],
+    [publicId],
   );
 
-  const handleFileDeleted = useCallback((folderId: string, fileId: string) => {
-    setFolders((prev) =>
-      prev.map((folder) =>
-        folder.id === folderId
-          ? { ...folder, files: folder.files.filter((f) => f.id !== fileId) }
-          : folder,
-      ),
-    );
-  }, []);
+  const handleFileDeleted = useCallback(
+    (folderId: string, fileId: string) => {
+      setFolders((prev) => {
+        const updated = prev.map((folder) =>
+          folder.id === folderId
+            ? { ...folder, files: folder.files.filter((f) => f.id !== fileId) }
+            : folder,
+        );
+        folderCache.set(publicId, updated);
+        return updated;
+      });
+    },
+    [publicId],
+  );
 
   return {
     folders,

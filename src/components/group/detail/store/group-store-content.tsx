@@ -25,6 +25,7 @@ export default function GroupStoreContent({ id }: { id: string }) {
     toggleUploadDialog,
     toggleFolderDialog,
     handleFolderSelect,
+    toggleShareQuizDialog,
   } = useStoreUI();
 
   const {
@@ -45,6 +46,7 @@ export default function GroupStoreContent({ id }: { id: string }) {
         <GroupStoreHeader
           onCreateFolder={toggleFolderDialog}
           onUploadFile={toggleUploadDialog}
+          onShareQuiz={toggleShareQuizDialog}
         />
 
         <SearchFilterBar
@@ -68,10 +70,10 @@ export default function GroupStoreContent({ id }: { id: string }) {
                   value="folders"
                   className="flex items-center gap-2"
                 >
-                  <FileText className="h-4 w-4" /> Thư mục
+                  <FileText className="h-4 w-4" /> Folders
                 </TabsTrigger>
                 <TabsTrigger value="recent" className="flex items-center gap-2">
-                  <Clock className="h-4 w-4" /> Gần đây
+                  <Clock className="h-4 w-4" /> Recent
                 </TabsTrigger>
               </TabsList>
 

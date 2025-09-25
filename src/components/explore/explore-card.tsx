@@ -1,6 +1,7 @@
+import { HtmlTitle } from "@/components/shared/editor/html-title";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, CheckCircle, Eye, Users } from "lucide-react";
 import { LocalizedLink } from "../localized-link";
 
 type ExploreCardProps = {
@@ -9,6 +10,9 @@ type ExploreCardProps = {
   daysAgo: number;
   id: number;
   slug: string;
+  attemptCount?: number;
+  viewCount?: number;
+  completionCount?: number;
 };
 
 export default function ExploreCard({
@@ -17,8 +21,10 @@ export default function ExploreCard({
   daysAgo,
   id,
   slug,
+  attemptCount = 0,
+  viewCount = 0,
+  completionCount = 0,
 }: ExploreCardProps) {
-  // Format the time display similar to QuizCard
   const formatTimeDisplay = () => {
     if (daysAgo > 30) {
       return `${Math.floor(daysAgo / 30)} months ago`;
@@ -29,14 +35,23 @@ export default function ExploreCard({
     return "Just now";
   };
 
+  const formatPopularityNumber = (num: number) => {
+    if (num >= 1000) {
+      return `${(num / 1000).toFixed(1)}k`;
+    }
+    return num.toString();
+  };
+
   return (
     <Card className="group relative h-full overflow-hidden border border-border/50 bg-card/50 backdrop-blur-sm transition-all duration-200 hover:bg-card hover:shadow-black/5 hover:shadow-sm dark:hover:shadow-black/20">
       <CardContent className="flex h-full flex-col p-5">
         <div className="mb-3 flex items-start justify-between">
           <div className="flex-1 space-y-2">
-            <h3 className="line-clamp-2 text-start font-semibold text-foreground text-lg leading-tight">
-              {title}
-            </h3>
+            <HtmlTitle
+              content={title}
+              as="h3"
+              className="line-clamp-2 text-start font-semibold text-foreground text-lg leading-tight"
+            />
             <div className="flex flex-wrap items-center gap-2">
               <div className="flex items-center gap-1 text-muted-foreground text-sm">
                 <span>{questions} questions</span>
@@ -46,6 +61,27 @@ export default function ExploreCard({
               </div>
             </div>
           </div>
+        </div>
+
+        <div className="mb-3 flex flex-wrap gap-2">
+          {attemptCount > 0 && (
+            <div className="flex items-center gap-1 text-muted-foreground text-xs">
+              <Users className="h-3 w-3" />
+              <span>{formatPopularityNumber(attemptCount)}</span>
+            </div>
+          )}
+          {viewCount > 0 && (
+            <div className="flex items-center gap-1 text-muted-foreground text-xs">
+              <Eye className="h-3 w-3" />
+              <span>{formatPopularityNumber(viewCount)}</span>
+            </div>
+          )}
+          {completionCount > 0 && (
+            <div className="flex items-center gap-1 text-muted-foreground text-xs">
+              <CheckCircle className="h-3 w-3" />
+              <span>{formatPopularityNumber(completionCount)}</span>
+            </div>
+          )}
         </div>
 
         <div className="mt-auto">

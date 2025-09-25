@@ -16,34 +16,34 @@ import ExploreFilter from "./explore-filter";
 import ExplorePaging from "./explore-paging";
 import ExploreTitle from "./explore-title";
 import FlashcardExploreCard from "./flashcard-explore-card";
+import TopicExploration from "./topic-exploration";
 
 export default function ExploreContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
 
-  // Get values from URL search params
   const urlTab = searchParams.get("tab") || "quizzes";
   const urlPage = Number(searchParams.get("page")) || 1;
   const urlSearchQuery = searchParams.get("search") || "";
   const urlTagIds = searchParams.get("tagIds") || "";
+  const urlSortBy = searchParams.get("sortBy") || "newest";
+  const urlViewMode = searchParams.get("view") || "discovery";
 
-  // State management
   const [activeTab, setActiveTab] = useState(urlTab);
   const [currentPage, setCurrentPage] = useState(urlPage);
   const [selectedTagIds, setSelectedTagIds] = useState<number[]>(
     urlTagIds ? urlTagIds.split(",").map(Number) : [],
   );
   const [searchQuery, setSearchQuery] = useState(urlSearchQuery);
+  const [sortBy, setSortBy] = useState(urlSortBy);
+  const [viewMode, setViewMode] = useState(urlViewMode);
   const pageSize = 6;
 
-  // Debounce search input to avoid too many API calls
   const debouncedSearch = useDebounce(searchQuery, 500);
 
-  // Convert UI page (1-based) to API page (0-based)
   const apiPage = currentPage - 1;
 
-  // Update search params in URL
   const updateSearchParams = useCallback(
     (updates: Record<string, string | null>) => {
       const newSearchParams = new URLSearchParams(searchParams.toString());
@@ -56,8 +56,13 @@ export default function ExploreContent() {
         }
       }
 
-      // Reset to page 1 when search or filter changes
-      if ("search" in updates || "tagIds" in updates || "tab" in updates) {
+      if (
+        "search" in updates ||
+        "tagIds" in updates ||
+        "tab" in updates ||
+        "sortBy" in updates ||
+        "view" in updates
+      ) {
         newSearchParams.set("page", "1");
       }
 
@@ -67,7 +72,6 @@ export default function ExploreContent() {
     [searchParams, pathname, router],
   );
 
-  // Update URL when debounced search changes
   useEffect(() => {
     if (debouncedSearch !== urlSearchQuery) {
       updateSearchParams({ search: debouncedSearch });
@@ -80,7 +84,35 @@ export default function ExploreContent() {
     setCurrentPage(urlPage);
     setSearchQuery(urlSearchQuery);
     setSelectedTagIds(urlTagIds ? urlTagIds.split(",").map(Number) : []);
-  }, [urlTab, urlPage, urlSearchQuery, urlTagIds]);
+    setSortBy(urlSortBy);
+    setViewMode(urlViewMode);
+  }, [urlTab, urlPage, urlSearchQuery, urlTagIds, urlSortBy, urlViewMode]);
+
+  // Map frontend sort options to backend parameters
+  const getSortParams = (): {
+    sortBy?: string;
+    sortDirection?: "asc" | "desc";
+    popularityCriteria?: string;
+  } => {
+    switch (sortBy) {
+      case "newest":
+        return { sortBy: "createdAt", sortDirection: "desc" };
+      case "oldest":
+        return { sortBy: "createdAt", sortDirection: "asc" };
+      case "title-a-z":
+        return { sortBy: "title", sortDirection: "asc" };
+      case "title-z-a":
+        return { sortBy: "title", sortDirection: "desc" };
+      case "popular-attempts":
+        return { popularityCriteria: "attemptCount" };
+      case "popular-views":
+        return { popularityCriteria: "viewCount" };
+      case "popular-completions":
+        return { popularityCriteria: "completionCount" };
+      default:
+        return { sortBy: "createdAt", sortDirection: "desc" };
+    }
+  };
 
   // Fetch public quizzes
   const {
@@ -97,6 +129,7 @@ export default function ExploreContent() {
           ...(selectedTagIds.length > 0 && {
             tagIds: selectedTagIds.join(","),
           }),
+          ...getSortParams(),
         }
       : undefined,
   );
@@ -186,6 +219,42 @@ export default function ExploreContent() {
     setSearchQuery(query);
   }, []);
 
+  const handleSortChange = useCallback(
+    (sortValue: string) => {
+      setSortBy(sortValue);
+      setCurrentPage(1);
+      updateSearchParams({ sortBy: sortValue, page: "1" });
+    },
+    [updateSearchParams],
+  );
+
+  const handleViewModeChange = useCallback(
+    (mode: string) => {
+      setViewMode(mode);
+      updateSearchParams({ view: mode });
+    },
+    [updateSearchParams],
+  );
+
+  const handleTopicSelect = useCallback(
+    (tagId: number) => {
+      // Toggle tag selection
+      const newSelectedTagIds = selectedTagIds.includes(tagId)
+        ? selectedTagIds.filter((id) => id !== tagId)
+        : [...selectedTagIds, tagId];
+
+      setSelectedTagIds(newSelectedTagIds);
+      setCurrentPage(1);
+      updateSearchParams({
+        tagIds:
+          newSelectedTagIds.length > 0 ? newSelectedTagIds.join(",") : null,
+        page: "1",
+        view: "list", // Switch to list view when a topic is selected
+      });
+    },
+    [selectedTagIds, updateSearchParams],
+  );
+
   useEffect(() => {
     if (activeTab === "quizzes") {
       refetchQuizzes();
@@ -236,7 +305,7 @@ export default function ExploreContent() {
       );
     }
 
-    // Render quizzes (default tab)
+    // Render quizzes
     if (isLoading) {
       return <FlashcardSkeletonGrid count={6} />;
     }
@@ -248,6 +317,24 @@ export default function ExploreContent() {
             Error loading quizzes: {error?.message}
           </p>
         </Card>
+      );
+    }
+
+    // Show topic exploration view when no search/filter and in discovery mode
+    const showTopicExploration =
+      viewMode === "discovery" &&
+      !debouncedSearch &&
+      selectedTagIds.length === 0;
+
+    if (showTopicExploration && tagsData && tagsData.length > 0) {
+      return (
+        <div className="py-6">
+          <TopicExploration
+            tags={tagsData}
+            onTopicSelect={handleTopicSelect}
+            selectedTagId={selectedTagIds[0]} // Show first selected tag as active
+          />
+        </div>
       );
     }
 
@@ -272,6 +359,9 @@ export default function ExploreContent() {
               (Date.now() - new Date(quiz.createdAt).getTime()) /
                 (1000 * 60 * 60 * 24),
             )}
+            attemptCount={quiz.totalAttempts || 0}
+            viewCount={quiz.viewCount || 0}
+            completionCount={quiz.completionCount || 0}
           />
         ))}
       </Card>
@@ -290,6 +380,10 @@ export default function ExploreContent() {
         tagsLoading={tagsLoading}
         onSearchChange={handleSearchChange}
         searchQuery={searchQuery}
+        sortBy={sortBy}
+        onSortChange={handleSortChange}
+        onViewModeChange={handleViewModeChange}
+        viewMode={viewMode}
       />
       <ExplorePaging
         pagination={pagination}

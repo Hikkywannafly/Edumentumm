@@ -31,6 +31,7 @@ import {
   Users,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 interface TeacherCourseViewProps {
   courseId: string;
@@ -39,6 +40,7 @@ interface TeacherCourseViewProps {
 export function TeacherCourseView({ courseId }: TeacherCourseViewProps) {
   const router = useRouter();
   const { toast } = useToast();
+  const [imageError, setImageError] = useState(false);
 
   const {
     data: courseDetail,
@@ -53,7 +55,9 @@ export function TeacherCourseView({ courseId }: TeacherCourseViewProps) {
     if (!courseDetail?.course) return;
 
     try {
-      await publishCourseMutation.mutateAsync(courseDetail.course.courseId);
+      await publishCourseMutation.mutateAsync(
+        courseDetail.course.courseId.toString(),
+      );
       toast({
         title: "Course Published",
         description: `Course "${courseDetail.course.title}" has been published successfully.`,
@@ -71,7 +75,9 @@ export function TeacherCourseView({ courseId }: TeacherCourseViewProps) {
     if (!courseDetail?.course) return;
 
     try {
-      await archiveCourseMutation.mutateAsync(courseDetail.course.courseId);
+      await archiveCourseMutation.mutateAsync(
+        courseDetail.course.courseId.toString(),
+      );
       toast({
         title: "Course Archived",
         description: `Course "${courseDetail.course.title}" has been archived successfully.`,
@@ -86,14 +92,18 @@ export function TeacherCourseView({ courseId }: TeacherCourseViewProps) {
   };
 
   const formatDate = (date: string | Date) => {
-    const dateObj = typeof date === "string" ? new Date(date) : date;
-    return new Intl.DateTimeFormat("vi-VN", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    }).format(dateObj);
+    try {
+      const dateObj = typeof date === "string" ? new Date(date) : date;
+      return new Intl.DateTimeFormat("vi-VN", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      }).format(dateObj);
+    } catch (_e) {
+      return "Invalid date";
+    }
   };
 
   const getStatusColor = (status: string) => {
@@ -145,15 +155,21 @@ export function TeacherCourseView({ courseId }: TeacherCourseViewProps) {
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
-            Failed to load course details: {error.message}
+            Failed to load course details: {error.message || "Unknown error"}
           </AlertDescription>
         </Alert>
+        <div className="mt-4 flex justify-center">
+          <Button onClick={() => router.back()}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back
+          </Button>
+        </div>
       </div>
     );
   }
 
   // No data state
-  if (!courseDetail) {
+  if (!courseDetail || !courseDetail.course) {
     return (
       <div className="container mx-auto px-4 py-6">
         <Alert>
@@ -162,6 +178,12 @@ export function TeacherCourseView({ courseId }: TeacherCourseViewProps) {
             Course not found or you don't have permission to view it.
           </AlertDescription>
         </Alert>
+        <div className="mt-4 flex justify-center">
+          <Button onClick={() => router.back()}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back
+          </Button>
+        </div>
       </div>
     );
   }
@@ -258,15 +280,13 @@ export function TeacherCourseView({ courseId }: TeacherCourseViewProps) {
               <div className="aspect-video w-full overflow-hidden rounded-lg bg-muted">
                 <img
                   src={
-                    course.thumbnailUrl ||
-                    "https://sr12121.newzenler.com/images/default-course-thumbnail.png"
+                    !imageError && course.thumbnailUrl
+                      ? course.thumbnailUrl
+                      : "https://sr12121.newzenler.com/images/default-course-thumbnail.png"
                   }
                   alt={course.title}
                   className="h-full w-full object-cover"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src =
-                      "https://sr12121.newzenler.com/images/default-course-thumbnail.png";
-                  }}
+                  onError={() => setImageError(true)}
                 />
               </div>
             </CardContent>
@@ -282,15 +302,19 @@ export function TeacherCourseView({ courseId }: TeacherCourseViewProps) {
             </CardHeader>
             <CardContent>
               <p className="mb-4 text-muted-foreground text-sm">
-                {course.shortDescription}
+                {course.shortDescription || "No description provided"}
               </p>
-              {course.fullDescription && (
+              {course.fullDescription ? (
                 <>
                   <Separator className="mb-4" />
                   <div className="prose prose-sm max-w-none">
                     {parse(DOMPurify.sanitize(course.fullDescription || ""))}
                   </div>
                 </>
+              ) : (
+                <p className="text-muted-foreground text-sm">
+                  No detailed description provided
+                </p>
               )}
             </CardContent>
           </Card>
@@ -318,13 +342,13 @@ export function TeacherCourseView({ courseId }: TeacherCourseViewProps) {
                         <div>
                           <h4 className="font-medium">{lesson.title}</h4>
                           <p className="text-muted-foreground text-sm">
-                            {lesson.description}
+                            {lesson.description || "No description"}
                           </p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2 text-muted-foreground text-sm">
                         <Clock className="h-4 w-4" />
-                        {lesson.duration} min
+                        {lesson.duration || 0} min
                       </div>
                     </div>
                   ))}
@@ -360,7 +384,7 @@ export function TeacherCourseView({ courseId }: TeacherCourseViewProps) {
                   <span className="text-sm">Enrollments</span>
                 </div>
                 <span className="font-medium">
-                  {courseDetail.totalEnrollments}
+                  {courseDetail.totalEnrollments || 0}
                 </span>
               </div>
 
@@ -401,7 +425,7 @@ export function TeacherCourseView({ courseId }: TeacherCourseViewProps) {
               <div className="flex items-center justify-between">
                 <span className="font-medium text-sm">Price</span>
                 <span className="font-bold text-lg">
-                  {course.price > 0 ? `$${course.price}` : "Free"}
+                  {course.price > 0 ? `$${course.price.toFixed(2)}` : "Free"}
                 </span>
               </div>
             </CardContent>
@@ -418,7 +442,7 @@ export function TeacherCourseView({ courseId }: TeacherCourseViewProps) {
                 <div>
                   <p className="font-medium text-sm">Created</p>
                   <p className="text-muted-foreground text-sm">
-                    {formatDate(course.createdAt)}
+                    {course.createdAt ? formatDate(course.createdAt) : "N/A"}
                   </p>
                 </div>
               </div>
@@ -428,7 +452,7 @@ export function TeacherCourseView({ courseId }: TeacherCourseViewProps) {
                 <div>
                   <p className="font-medium text-sm">Last Updated</p>
                   <p className="text-muted-foreground text-sm">
-                    {formatDate(course.updatedAt)}
+                    {course.updatedAt ? formatDate(course.updatedAt) : "N/A"}
                   </p>
                 </div>
               </div>
@@ -468,7 +492,7 @@ export function TeacherCourseView({ courseId }: TeacherCourseViewProps) {
                             <Star
                               key={i}
                               className={`h-4 w-4 ${
-                                i < rating.rating
+                                i < (rating.rating || 0)
                                   ? "fill-yellow-400 text-yellow-400"
                                   : "text-gray-300"
                               }`}
@@ -476,7 +500,9 @@ export function TeacherCourseView({ courseId }: TeacherCourseViewProps) {
                           ))}
                         </div>
                         <span className="text-muted-foreground text-sm">
-                          {formatDate(rating.createdAt)}
+                          {rating.createdAt
+                            ? formatDate(rating.createdAt)
+                            : "N/A"}
                         </span>
                       </div>
                       {rating.comment && (

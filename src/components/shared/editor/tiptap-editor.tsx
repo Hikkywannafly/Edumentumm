@@ -13,6 +13,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { uploadImage } from "@/lib/utils/upload-image";
 import Link from "@tiptap/extension-link";
 import Underline from "@tiptap/extension-underline";
 import { EditorContent, useEditor } from "@tiptap/react";
@@ -34,8 +35,12 @@ import {
   Type,
   Underline as UnderlineIcon,
   Undo,
+  Upload,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+
+// Add Image extension
+import Image from "@tiptap/extension-image";
 
 interface TiptapEditorProps {
   content: string;
@@ -54,6 +59,10 @@ export default function TiptapEditor({
 }: TiptapEditorProps) {
   const [isFocused, setIsFocused] = useState(false);
   const [isToolbarInteracting, setIsToolbarInteracting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const editorContainerRef = useRef<HTMLDivElement>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   const editor = useEditor({
     extensions: [
@@ -64,6 +73,7 @@ export default function TiptapEditor({
         openOnClick: false,
       }),
       Underline,
+      Image,
     ],
     content: content,
     immediatelyRender: false,
@@ -72,6 +82,8 @@ export default function TiptapEditor({
     },
     onFocus: () => {
       setIsFocused(true);
+
+      setUploadError(null);
     },
     onBlur: (_props) => {
       setTimeout(() => {
@@ -87,6 +99,72 @@ export default function TiptapEditor({
       },
     },
   });
+
+  useEffect(() => {
+    const container = editorContainerRef.current;
+    if (!container) return;
+
+    const handleDragOver = (e: DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+    };
+
+    const handleDrop = async (e: DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (e.dataTransfer?.files && e.dataTransfer.files.length > 0) {
+        const file = e.dataTransfer.files[0];
+        if (file.type.startsWith("image/")) {
+          await handleImageUpload(file);
+        }
+      }
+    };
+
+    container.addEventListener("dragover", handleDragOver);
+    container.addEventListener("drop", handleDrop);
+
+    return () => {
+      container.removeEventListener("dragover", handleDragOver);
+      container.removeEventListener("drop", handleDrop);
+    };
+  }, []);
+  const handleImageUpload = async (file: File) => {
+    if (!editor) return;
+
+    try {
+      setIsUploading(true);
+      setUploadError(null);
+
+      const result = await uploadImage(file);
+
+      editor.chain().focus().setImage({ src: result.url }).run();
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Failed to upload image. Please try again.";
+      setUploadError(errorMessage);
+      alert(errorMessage);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  // Handle file input change
+  const handleFileInputChange = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = e.target.files?.[0];
+    if (file && file.type.startsWith("image/")) {
+      await handleImageUpload(file);
+    }
+    // Reset the file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
 
   useEffect(() => {
     if (editor && editor.getHTML() !== content) {
@@ -107,16 +185,31 @@ export default function TiptapEditor({
     }
   };
 
+  // Trigger file input click
+  const triggerFileInput = () => {
+    fileInputRef.current?.click();
+  };
+
   const setHeading = (level: 1 | 2 | 3) => {
     editor.chain().focus().toggleHeading({ level }).run();
   };
 
   return (
     <div
+      ref={editorContainerRef}
       className={
         "relative rounded-md bg-background transition-all duration-200"
       }
     >
+      {/* Hidden file input */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileInputChange}
+        accept="image/*"
+        className="hidden"
+      />
+
       {/* Fixed Toolbar - Only show when focused */}
       {showToolbar && (isFocused || isToolbarInteracting) && (
         <div
@@ -373,8 +466,37 @@ export default function TiptapEditor({
                   <p>Redo (Ctrl+Y)</p>
                 </TooltipContent>
               </Tooltip>
+
+              {/* Add Image Button */}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 px-2"
+                    onClick={triggerFileInput}
+                    disabled={isUploading}
+                  >
+                    {isUploading ? (
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                    ) : (
+                      <Upload className="h-4 w-4" />
+                    )}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{isUploading ? "Uploading..." : "Upload Image"}</p>
+                </TooltipContent>
+              </Tooltip>
             </div>
           </TooltipProvider>
+        </div>
+      )}
+
+      {/* Show upload error if exists */}
+      {uploadError && (
+        <div className="rounded-md bg-red-50 p-3 text-red-800 text-sm dark:bg-red-900/20 dark:text-red-200">
+          Error: {uploadError}
         </div>
       )}
 
