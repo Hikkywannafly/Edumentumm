@@ -5,7 +5,7 @@ const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/v1";
 
 export const getCourseDetail = async (
-  courseId: string,
+  courseId: number,
   token?: string,
 ): Promise<PublicCourseDetailDto> => {
   const headers: HeadersInit = {
@@ -31,7 +31,7 @@ export const getCourseDetail = async (
   return result.data;
 };
 
-export const useCourseDetail = (courseId: string) => {
+export const useCourseDetail = (courseId: number) => {
   return useQuery({
     queryKey: ["course", courseId],
     queryFn: () => {

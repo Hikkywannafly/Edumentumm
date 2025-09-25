@@ -1,5 +1,7 @@
 "use client";
 
+import { LocalizedLink } from "@/components/localized-link";
+import { getLocaleFromPathname } from "@/lib/utils";
 import {
   AlertCircle,
   ArrowLeft,
@@ -9,8 +11,8 @@ import {
   Save,
   X,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { type Key, useEffect, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import {
   useTeacherCourseDetail,
   useUpdateCourse,
@@ -37,11 +39,13 @@ import {
 import { Textarea } from "../../ui/textarea";
 
 interface TeacherCourseEditProps {
-  courseId: string;
+  courseId: number;
 }
 
 export function TeacherCourseEdit({ courseId }: TeacherCourseEditProps) {
   const router = useRouter();
+  const pathname = usePathname();
+  const locale = getLocaleFromPathname(pathname);
   const { toast } = useToast();
 
   const {
@@ -61,6 +65,13 @@ export function TeacherCourseEdit({ courseId }: TeacherCourseEditProps) {
   useEffect(() => {
     if (courseDetail?.course) {
       const course = courseDetail.course;
+      // Initialize tags
+      const initialTags =
+        (course.courseTags && Array.isArray(course.courseTags)
+          ? course.courseTags.map((tag: { name: string }) => tag.name)
+          : course.courseTagNames) || [];
+      setTags(initialTags);
+
       setFormData({
         title: course.title,
         shortDescription: course.shortDescription,
@@ -70,15 +81,17 @@ export function TeacherCourseEdit({ courseId }: TeacherCourseEditProps) {
         price: course.price,
         courseStatus: course.courseStatus,
       });
-
-      // Initialize tags
-      const initialTags =
-        course.courseTagNames ||
-        course.courseTags?.map((tag: { name: string }) => tag.name) ||
-        [];
-      setTags(initialTags);
     }
   }, [courseDetail]);
+
+  useEffect(() => {
+    if (tags.length > 0) {
+      setFormData((prev) => ({
+        ...prev,
+        tagCourseNames: tags,
+      }));
+    }
+  }, [tags]);
 
   const handleInputChange = (field: keyof CourseUpdateRequest, value: any) => {
     setFormData((prev) => ({
@@ -129,7 +142,7 @@ export function TeacherCourseEdit({ courseId }: TeacherCourseEditProps) {
     try {
       const updateData: CourseUpdateRequest = {
         ...formData,
-        courseTagNames: tags.length > 0 ? tags : undefined,
+        tagCourseNames: tags.length > 0 ? tags : undefined,
       };
 
       await updateCourseMutation.mutateAsync({
@@ -143,7 +156,7 @@ export function TeacherCourseEdit({ courseId }: TeacherCourseEditProps) {
       });
 
       // Navigate back to course view
-      router.push(`/course/teacher/${courseId}/view`);
+      router.push(`/${locale}/course/teacher/${courseId}/view`);
     } catch (error: any) {
       toast({
         title: "Error",
@@ -200,7 +213,7 @@ export function TeacherCourseEdit({ courseId }: TeacherCourseEditProps) {
   const course = courseDetail.course;
 
   return (
-    <div className="container mx-auto max-w-4xl px-4 py-6">
+    <div className="container mx-auto px-4 py-6">
       {/* Header */}
       <div className="mb-6 flex items-center justify-between">
         <div className="flex items-center gap-4">
@@ -341,6 +354,49 @@ export function TeacherCourseEdit({ courseId }: TeacherCourseEditProps) {
                 </CardTitle>
               </CardHeader>
               <CardContent>
+
+                <div className="space-y-3">
+                  <p className="mb-4 text-muted-foreground text-sm">
+                    {courseDetail.lessons.length} lessons in this course
+                  </p>
+                  <LocalizedLink
+                    href={`/course/teacher/${course.courseId}/edit/lesson`}
+                  >
+                    <Button variant="outline" size="sm" className="mb-4">
+                      Manage Lessons
+                    </Button>
+                  </LocalizedLink>
+
+                  {courseDetail.lessons.slice(0, 3).map(
+                    (
+                      lesson: {
+                        lessonId: number | null | undefined;
+                        title: string | null | undefined;
+                      },
+                      index: number,
+                    ) => (
+                      <div
+                        key={lesson.lessonId}
+                        className="flex items-center justify-between rounded-lg border p-3"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 font-medium text-blue-600 text-sm">
+                            {index + 1}
+                          </div>
+                          <div>
+                            <h4 className="font-medium">{lesson.title}</h4>
+                          </div>
+                        </div>
+                      </div>
+                    ),
+                  )}
+                  {courseDetail.lessons.length > 3 && (
+                    <p className="text-center text-muted-foreground text-sm">
+                      and {courseDetail.lessons.length - 3} more lessons...
+                    </p>
+                  )}
+                </div>
+                {courseDetail.lessons && courseDetail.lessons.length === 0 && (
                 {courseDetail.lessons && courseDetail.lessons.length > 0 ? (
                   <div className="space-y-3">
                     <p className="mb-4 text-muted-foreground text-sm">
@@ -381,9 +437,13 @@ export function TeacherCourseEdit({ courseId }: TeacherCourseEditProps) {
                     <p className="text-muted-foreground">
                       No lessons added yet
                     </p>
-                    <Button variant="outline" size="sm" className="mt-2">
-                      Add Lessons
-                    </Button>
+                    <LocalizedLink
+                      href={`/course/teacher/${course.courseId}/edit/lesson`}
+                    >
+                      <Button variant="outline" size="sm" className="mt-2">
+                        Add Lessons
+                      </Button>
+                    </LocalizedLink>
                   </div>
                 )}
               </CardContent>
@@ -401,7 +461,11 @@ export function TeacherCourseEdit({ courseId }: TeacherCourseEditProps) {
                 <div className="space-y-2">
                   <Label htmlFor="courseLevel">Course Level</Label>
                   <Select
-                    value={formData.courseLevel || ""}
+                    value={
+                      formData.courseLevel ||
+                      courseDetail?.course.courseLevel ||
+                      ""
+                    }
                     onValueChange={(value) =>
                       handleInputChange("courseLevel", value as CourseLevel)
                     }
@@ -444,7 +508,11 @@ export function TeacherCourseEdit({ courseId }: TeacherCourseEditProps) {
                 <div className="space-y-2">
                   <Label htmlFor="courseStatus">Course Status</Label>
                   <Select
-                    value={formData.courseStatus || ""}
+                    value={
+                      formData.courseStatus ||
+                      courseDetail?.course.courseStatus ||
+                      ""
+                    }
                     onValueChange={(value) =>
                       handleInputChange("courseStatus", value as CourseStatus)
                     }
@@ -517,14 +585,11 @@ export function TeacherCourseEdit({ courseId }: TeacherCourseEditProps) {
                 )}
               </Button>
 
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => router.push(`/course/teacher/${courseId}`)}
-                className="w-full"
-              >
-                Cancel
-              </Button>
+              <LocalizedLink href="/course/teacher/${courseId}">
+                <Button type="button" variant="outline" className="w-full">
+                  Cancel
+                </Button>
+              </LocalizedLink>
             </div>
           </div>
         </div>

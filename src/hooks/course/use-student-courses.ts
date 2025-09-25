@@ -15,7 +15,7 @@ async function fetchCourses(
 ): Promise<ApiResponse<Course[]>> {
   const { search, level, minPrice, maxPrice, page = 0, size = 6 } = filters;
 
-  let url = `${process.env.NEXT_PUBLIC_API_URL}/api/v1/student/courses`;
+  let url = `${process.env.NEXT_PUBLIC_API_URL}/student/courses`;
 
   if (search && search.trim() !== "") {
     url += `/search?keyword=${encodeURIComponent(search)}`;
@@ -163,12 +163,10 @@ export const filterCourses = async (
     sortDir,
   });
 
-  // Chỉ thêm level nếu có giá trị cụ thể (không phải undefined)
   if (level) {
     searchParams.append("level", level);
   }
 
-  // Thêm cả minPrice và maxPrice để filter trong khoảng
   if (minPrice !== undefined) {
     searchParams.append("minPrice", minPrice.toString());
   }

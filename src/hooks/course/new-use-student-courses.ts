@@ -1,4 +1,4 @@
-import type { Course, CourseLevel } from "@/types/course.type";
+import type { Course, GetStudentCoursesParams } from "@/types/course.type";
 import { useQuery } from "@tanstack/react-query";
 
 const API_BASE_URL =
@@ -14,17 +14,6 @@ interface QueryResult<T> {
     hasNext: boolean;
     hasPrevious: boolean;
   };
-}
-
-interface GetStudentCoursesParams {
-  keyword?: string;
-  level?: CourseLevel;
-  minPrice?: number;
-  maxPrice?: number;
-  page?: number;
-  size?: number;
-  sortBy?: string;
-  sortDir?: "asc" | "desc";
 }
 
 // API functions
@@ -166,3 +155,53 @@ export function useSearchCourses(params: GetStudentCoursesParams) {
     },
   });
 }
+
+export const getCoursesByTags = async (
+  params: GetStudentCoursesParams,
+  token?: string,
+) => {
+  const { tagNames = [], page = 0, size = 6 } = params;
+
+  const searchParams = new URLSearchParams();
+  tagNames.map((tag) => {
+    searchParams.append("tagCourseNames", tag);
+  });
+  searchParams.append("page", page.toString());
+  searchParams.append("size", size.toString());
+
+  const headers: HeadersInit = {
+    "Content-Type": "application/json",
+  };
+
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
+  const response = await fetch(
+    `${API_BASE_URL}/student/courses/tags?${searchParams}`,
+    {
+      headers,
+    },
+  );
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(
+      errorData.message || `HTTP ${response.status}: ${response.statusText}`,
+    );
+  }
+
+  return response.json();
+};
+
+export const useCoursesByTags = (
+  params: GetStudentCoursesParams,
+  options = {},
+) => {
+  return useQuery({
+    queryKey: ["courses-by-tags", params],
+    queryFn: () => getCoursesByTags(params),
+    enabled: !!params.tagNames?.length,
+    ...options,
+  });
+};
