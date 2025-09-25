@@ -11,13 +11,14 @@ import {
 import { useCreateNoteWithTemplate } from "@/hooks/note";
 import { Calendar, ChevronDown, FileText, Plus, Users } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
 export function NoteCreateButton() {
   const t = useTranslations("Notes");
   const router = useRouter();
+  const pathname = usePathname();
   const [isCreating, setIsCreating] = useState(false);
 
   const { createWithTemplate } = useCreateNoteWithTemplate();
@@ -36,7 +37,8 @@ export function NoteCreateButton() {
       const newNote = await createWithTemplate(title, template);
 
       // Navigate to the new note editor
-      router.push(`/notes/edit/${newNote.id}`);
+      const locale = pathname.split("/")[1] || "vi";
+      router.push(`/${locale}/notes/edit/${newNote.id}`);
 
       toast.success(t("create.success"));
     } catch (error) {

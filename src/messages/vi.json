@@ -272,29 +272,6 @@
       }
     }
   },
-  "Common": {
-    "loading": "Đang tải...",
-    "error": "Có lỗi xảy ra",
-    "success": "Thành công",
-    "save": "Lưu",
-    "cancel": "Hủy",
-    "delete": "Xóa",
-    "edit": "Chỉnh sửa",
-    "create": "Tạo mới",
-    "search": "Tìm kiếm",
-    "filter": "Lọc",
-    "sort": "Sắp xếp",
-    "export": "Xuất",
-    "import": "Nhập",
-    "yes": "Có",
-    "no": "Không",
-    "confirm": "Xác nhận",
-    "back": "Quay lại",
-    "next": "Tiếp theo",
-    "previous": "Trước đó",
-    "submit": "Gửi",
-    "reset": "Đặt lại"
-  },
   "Forms": {
     "validation": {
       "required": "Trường này là bắt buộc",
@@ -945,6 +922,46 @@
       "settings": "Cài đặt",
       "addTag": "Thêm thẻ...",
       "addBlock": "Thêm khối",
+      "switchMode": "Chuyển chế độ",
+      "blockMode": "Chế độ khối",
+      "markdownMode": "Chế độ Markdown",
+      "editMode": "Chỉnh sửa",
+      "previewMode": "Xem trước",
+      "switchingMode": "Đang chuyển chế độ...",
+      "autoSaveTitle": "Tiêu đề đã được tự động lưu!",
+      "autoSaveTag": "Thẻ \"{tag}\" đã được thêm thành công!",
+      "autoRemoveTag": "Thẻ \"{tag}\" đã được xóa thành công!",
+      "addBlockSuccess": "Khối {type} mới đã được thêm!",
+      "deleteBlockSuccess": "Khối đã được xóa thành công!",
+      "modeSwitchSuccess": "Đã chuyển sang chế độ {mode} thành công!",
+      "modeSwitchError": "Lỗi lưu thay đổi khi chuyển chế độ",
+      "titlePlaceholder": "Ghi chú không có tiêu đề",
+      "tagPlaceholder": "Thêm thẻ",
+      "addBlockPlaceholder": "Thêm khối",
+      "blockTypes": {
+        "paragraph": "Đoạn văn",
+        "heading_1": "Tiêu đề 1",
+        "heading_2": "Tiêu đề 2",
+        "heading_3": "Tiêu đề 3",
+        "bulleted_list_item": "Danh sách có dấu đầu dòng",
+        "numbered_list_item": "Danh sách có số",
+        "to_do": "Danh sách việc cần làm",
+        "quote": "Trích dẫn",
+        "code": "Mã nguồn",
+        "divider": "Đường phân cách"
+      },
+      "placeholders": {
+        "heading_1": "Tiêu đề 1",
+        "heading_2": "Tiêu đề 2",
+        "heading_3": "Tiêu đề 3",
+        "quote": "Trích dẫn",
+        "code": "Mã nguồn",
+        "bulleted_list_item": "Mục danh sách",
+        "numbered_list_item": "Mục danh sách",
+        "to_do": "Công việc cần làm",
+        "default": "Nhập nội dung...",
+        "preview": "Không có nội dung để xem trước"
+      },
       "success": {
         "noteUpdated": "Đã cập nhật ghi chú",
         "noteUpdatedDesc": "Ghi chú của bạn đã được lưu thành công"
@@ -956,5 +973,18 @@
     "description": "Bạn không có quyền truy cập vào tài nguyên này. Vui lòng đăng nhập lại nếu phiên đăng nhập hết hạn.",
     "homeButton": "VỀ TRANG CHỦ",
     "loginButton": "ĐĂNG NHẬP"
+  },
+  "Common": {
+    "unknownError": "Lỗi không xác định",
+    "loading": "Đang tải...",
+    "error": "Lỗi",
+    "success": "Thành công",
+    "cancel": "Hủy",
+    "confirm": "Xác nhận",
+    "delete": "Xóa",
+    "edit": "Chỉnh sửa",
+    "save": "Lưu",
+    "close": "Đóng",
+    "notes": "Ghi chú"
   }
 }

@@ -6,24 +6,27 @@ import { NoteEditor } from "@/components/notes/note-editor";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 
 export default function NoteCreatePage() {
   const router = useRouter();
+  const params = useParams();
   const t = useTranslations("Notes");
 
   const handleBack = () => {
-    router.push("/notes");
+    const locale = params.locale as string;
+    router.push(`/${locale}/notes`);
   };
 
   const handleSave = () => {
-    // Refresh will be handled by the editor component
-    router.push("/notes");
+    // Refresh sẽ được xử lý bởi component editor
+    const locale = params.locale as string;
+    router.push(`/${locale}/notes`);
   };
 
-  // Create a new note object for the editor
+  // Tạo object note mới cho editor
   const newNote = {
-    id: 0, // Temporary ID for new note
+    id: 0, // ID tạm thời cho note mới
     title: "",
     type: "block" as const,
     ownerId: 0,
@@ -51,7 +54,7 @@ export default function NoteCreatePage() {
           className="border-border border-b"
         />
 
-        {/* Main Content */}
+        {/* Nội dung chính */}
         <div className="flex-1 overflow-hidden">
           <NoteEditor note={newNote} onSave={handleSave} />
         </div>

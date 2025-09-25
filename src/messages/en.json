@@ -228,29 +228,6 @@
       }
     }
   },
-  "Common": {
-    "loading": "Loading...",
-    "error": "An error occurred",
-    "success": "Success",
-    "save": "Save",
-    "cancel": "Cancel",
-    "delete": "Delete",
-    "edit": "Edit",
-    "create": "Create",
-    "search": "Search",
-    "filter": "Filter",
-    "sort": "Sort",
-    "export": "Export",
-    "import": "Import",
-    "yes": "Yes",
-    "no": "No",
-    "confirm": "Confirm",
-    "back": "Back",
-    "next": "Next",
-    "previous": "Previous",
-    "submit": "Submit",
-    "reset": "Reset"
-  },
   "Mindmap": {
     "title": "Mindmaps",
     "viewTitle": "View Mindmap",
@@ -940,6 +917,46 @@
       "settings": "Settings",
       "addTag": "Add tag...",
       "addBlock": "Add a block",
+      "switchMode": "Switch Mode",
+      "blockMode": "Block Mode",
+      "markdownMode": "Markdown Mode",
+      "editMode": "Edit",
+      "previewMode": "Preview",
+      "switchingMode": "Switching mode...",
+      "autoSaveTitle": "Title auto-saved successfully!",
+      "autoSaveTag": "Tag \"{tag}\" added successfully!",
+      "autoRemoveTag": "Tag \"{tag}\" removed successfully!",
+      "addBlockSuccess": "New {type} block added!",
+      "deleteBlockSuccess": "Block deleted successfully!",
+      "modeSwitchSuccess": "Switched to {mode} mode successfully!",
+      "modeSwitchError": "Error saving changes when switching modes",
+      "titlePlaceholder": "Untitled note",
+      "tagPlaceholder": "Add tag",
+      "addBlockPlaceholder": "Add block",
+      "blockTypes": {
+        "paragraph": "Paragraph",
+        "heading_1": "Heading 1",
+        "heading_2": "Heading 2",
+        "heading_3": "Heading 3",
+        "bulleted_list_item": "Bulleted List",
+        "numbered_list_item": "Numbered List",
+        "to_do": "To-do List",
+        "quote": "Quote",
+        "code": "Code",
+        "divider": "Divider"
+      },
+      "placeholders": {
+        "heading_1": "Heading 1",
+        "heading_2": "Heading 2",
+        "heading_3": "Heading 3",
+        "quote": "Quote",
+        "code": "Code",
+        "bulleted_list_item": "List item",
+        "numbered_list_item": "List item",
+        "to_do": "To-do item",
+        "default": "Type something...",
+        "preview": "No content to preview"
+      },
       "success": {
         "noteUpdated": "Note updated",
         "noteUpdatedDesc": "Your note has been saved successfully"
@@ -951,5 +968,18 @@
     "description": "You don't have permission to access this resource. Please log in again if your session has expired.",
     "homeButton": "GO HOME",
     "loginButton": "LOGIN"
+  },
+  "Common": {
+    "unknownError": "Unknown error",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "delete": "Delete",
+    "edit": "Edit",
+    "save": "Save",
+    "close": "Close",
+    "notes": "Notes"
   }
 }

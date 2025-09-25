@@ -11,7 +11,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import { toast } from "@/hooks/use-toast";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useDebounce } from "@/hooks/use-debounce";
 import { noteAPI } from "@/lib/api/note";
 import type {
   BlockData,
@@ -22,11 +23,17 @@ import type {
 } from "@/types/note";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
+  Bold,
+  CheckSquare,
   Code,
+  Edit3,
+  Eye,
   FileText,
   Heading1,
   Heading2,
   Heading3,
+  Italic,
+  Link,
   List,
   ListOrdered,
   Minus,
@@ -36,47 +43,89 @@ import {
   Save,
   Settings,
   Share2,
+  Strikethrough,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type React from "react";
 import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
+
+// Hàm helper để phát hiện chế độ editor từ tags
+const detectEditorModeFromTags = (tags: string[]): "markdown" | "block" => {
+  if (tags.includes("markdown")) return "markdown";
+  if (tags.includes("block")) return "block";
+  return "block"; // Mặc định là block
+};
 
 interface NoteEditorProps {
   note: NoteData;
   onSave?: () => void;
+  initialValue?: string | BlockData[];
+  mode?: "markdown" | "block";
 }
 
-export function NoteEditor({ note, onSave }: NoteEditorProps) {
+export function NoteEditor({
+  note,
+  onSave,
+  initialValue,
+  mode = "markdown",
+}: NoteEditorProps) {
   const t = useTranslations("Notes.editor");
   const tErrors = useTranslations("Notes.errors");
   const tSuccess = useTranslations("Notes.editor.success");
+  const tCommon = useTranslations("Common");
   const queryClient = useQueryClient();
 
-  // Note metadata state
+  // State cho metadata note
   const [title, setTitle] = useState(note.title);
   const [tags, setTags] = useState<string[]>(note.tags || []);
   const [newTag, setNewTag] = useState("");
 
-  // Blocks state
-  const [blocks, setBlocks] = useState<BlockData[]>(note.blocks || []);
+  // State cho chế độ editor và nội dung
+  const [editorMode, setEditorMode] = useState<"markdown" | "block">(() => {
+    // Ưu tiên: 1. mode prop, 2. phát hiện từ tags, 3. note.type, 4. mặc định block
+    if (mode) return mode;
+    const detectedMode = detectEditorModeFromTags(note.tags || []);
+    if (detectedMode !== "block" || note.type === "markdown")
+      return detectedMode;
+    return (note.type as "markdown" | "block") || "block";
+  });
+
+  // State cho markdown editor tabs
+  const [markdownTab, setMarkdownTab] = useState<"edit" | "preview">("edit");
+
+  // Ref cho textarea để focus và điều khiển cursor
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const [markdownValue, setMarkdownValue] = useState<string>(
+    typeof initialValue === "string"
+      ? initialValue
+      : note.type === "markdown"
+        ? note.content || ""
+        : "",
+  );
+
+  const [blocks, setBlocks] = useState<BlockData[]>(
+    Array.isArray(initialValue)
+      ? (initialValue as BlockData[])
+      : note.blocks || [],
+  );
+
   const [isEditing, setIsEditing] = useState(false);
+  const [isModeChanging, setIsModeChanging] = useState(false);
 
-  // Refs
-  const titleRef = useRef<HTMLInputElement>(null);
+  // Refs để theo dõi giá trị ban đầu để phát hiện thay đổi
+  const initialTitleRef = useRef<string>(note.title);
+  const initialTagsRef = useRef<string[]>(note.tags || []);
+  const initialBlocksRef = useRef<BlockData[]>(note.blocks || []);
+  const initialMarkdownRef = useRef<string>(
+    note.type === "markdown" ? note.content || "" : "",
+  );
 
-  // Initialize with empty block if no blocks exist
-  useEffect(() => {
-    if (blocks.length === 0) {
-      const emptyBlock: BlockData = {
-        type: "paragraph",
-        content: { text: "" },
-        orderIndex: 0,
-      };
-      setBlocks([emptyBlock]);
-    }
-  }, [blocks.length]);
+  // Debounced title cho auto-save
+  const debouncedTitle = useDebounce(title, 1000);
 
-  // Update note mutation
+  // Mutation để cập nhật note
   const updateNoteMutation = useMutation({
     mutationFn: (data: UpdateNoteRequest) => noteAPI.updateNote(note.id, data),
     onSuccess: () => {
@@ -84,15 +133,532 @@ export function NoteEditor({ note, onSave }: NoteEditorProps) {
       queryClient.invalidateQueries({ queryKey: ["notes"] });
     },
     onError: (error) => {
-      toast({
-        title: tErrors("updateFailed"),
-        description: error.message,
-        variant: "destructive",
-      });
+      toast.error(`${tErrors("updateFailed")}: ${error.message}`);
     },
   });
 
-  // Block mutations
+  // Refs
+  const titleRef = useRef<HTMLInputElement>(null);
+
+  // Khởi tạo nội dung dựa trên chế độ và đảm bảo blocks không rỗng
+  useEffect(() => {
+    if (editorMode === "block") {
+      if (!blocks || blocks.length === 0) {
+        const fromMarkdown = markdownToBlocks(markdownValue);
+        if (fromMarkdown.length > 0) {
+          setBlocks(fromMarkdown);
+        } else {
+          const emptyBlock: BlockData = {
+            type: "paragraph",
+            content: { text: "" },
+            orderIndex: 0,
+          };
+          setBlocks([emptyBlock]);
+        }
+      }
+    } else {
+      // Chế độ markdown, chỉ khởi tạo từ note.content nếu chưa có nội dung
+      if (note.type === "markdown" && note.content && !markdownValue) {
+        setMarkdownValue(note.content);
+      } else if (!markdownValue || markdownValue.trim() === "") {
+        const md = blocksToMarkdown(blocks);
+        setMarkdownValue(md);
+      }
+    }
+  }, [editorMode, note.type, note.content, blocks, markdownValue]);
+
+  // Auto-save title khi giá trị debounced thay đổi
+  useEffect(() => {
+    if (
+      debouncedTitle !== initialTitleRef.current &&
+      debouncedTitle.trim() !== ""
+    ) {
+      const autoSaveTitle = async () => {
+        try {
+          // Đảm bảo tags bao gồm tag chế độ đúng
+          const modeTag = editorMode === "markdown" ? "markdown" : "block";
+          const updatedTags = [
+            ...tags.filter((tag) => tag !== "markdown" && tag !== "block"),
+            modeTag,
+          ];
+
+          const updateData: UpdateNoteRequest = {
+            title: debouncedTitle.trim(),
+            tags: updatedTags,
+            type: editorMode,
+          };
+
+          // Bao gồm nội dung cho chế độ markdown
+          if (editorMode === "markdown") {
+            updateData.content = markdownValue;
+          }
+
+          await updateNoteMutation.mutateAsync(updateData);
+          // Cập nhật state tags và refs ban đầu sau khi lưu thành công
+          setTags(updatedTags);
+          initialTitleRef.current = debouncedTitle.trim();
+          initialTagsRef.current = updatedTags;
+          toast.success(t("autoSaveTitle"));
+        } catch (error) {
+          toast.error(
+            `${tErrors("updateFailed")}: ${
+              error instanceof Error ? error.message : tCommon("unknownError")
+            }`,
+          );
+        }
+      };
+      autoSaveTitle();
+    }
+  }, [
+    debouncedTitle,
+    tags,
+    editorMode,
+    markdownValue,
+    updateNoteMutation,
+    t,
+    tErrors,
+    tCommon,
+  ]);
+
+  // Đồng bộ hiển thị nút Save khi các trường cốt lõi thay đổi
+  useEffect(() => {
+    const titleChanged =
+      title.trim() !== (initialTitleRef.current || "").trim();
+    const tagsChanged =
+      JSON.stringify(tags) !== JSON.stringify(initialTagsRef.current || []);
+    const modeIsMarkdown = editorMode === "markdown";
+    const contentChanged = modeIsMarkdown
+      ? (markdownValue ?? "") !== (initialMarkdownRef.current ?? "")
+      : JSON.stringify(blocks) !==
+        JSON.stringify(initialBlocksRef.current || []);
+    setIsEditing(titleChanged || tagsChanged || contentChanged);
+  }, [title, tags, markdownValue, blocks, editorMode]);
+
+  // Hàm chèn formatting vào markdown
+  const insertMarkdownFormat = (
+    format: string,
+    placeholder = "text",
+    wrapBoth = true,
+  ) => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selectedText = markdownValue.substring(start, end);
+
+    let newText: string;
+    if (selectedText) {
+      // Nếu có text được chọn, wrap nó
+      if (wrapBoth) {
+        newText = `${format}${selectedText}${format}`;
+      } else {
+        newText = `${format}${selectedText}`;
+      }
+    } else {
+      // Nếu không có text được chọn, chèn placeholder
+      if (wrapBoth) {
+        newText = `${format}${placeholder}${format}`;
+      } else {
+        newText = `${format}${placeholder}`;
+      }
+    }
+
+    const newValue =
+      markdownValue.substring(0, start) +
+      newText +
+      markdownValue.substring(end);
+
+    setMarkdownValue(newValue);
+    setIsEditing(true);
+
+    // Focus và đặt cursor
+    setTimeout(() => {
+      textarea.focus();
+      if (selectedText) {
+        textarea.setSelectionRange(
+          start + newText.length,
+          start + newText.length,
+        );
+      } else {
+        const newCursorPos = wrapBoth
+          ? start + format.length
+          : start + newText.length;
+        textarea.setSelectionRange(
+          newCursorPos,
+          newCursorPos + placeholder.length,
+        );
+      }
+    }, 0);
+  };
+
+  // Hàm chèn heading
+  const insertHeading = (level: number) => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const lineStart = markdownValue.lastIndexOf("\n", start - 1) + 1;
+    const lineEnd = markdownValue.indexOf("\n", start);
+    const currentLine = markdownValue.substring(
+      lineStart,
+      lineEnd === -1 ? markdownValue.length : lineEnd,
+    );
+
+    // Xóa heading hiện tại nếu có
+    const cleanLine = currentLine.replace(/^#+\s*/, "");
+    const prefix = `${"#".repeat(level)} `;
+    const newLine = prefix + cleanLine;
+
+    const newValue =
+      markdownValue.substring(0, lineStart) +
+      newLine +
+      markdownValue.substring(lineEnd === -1 ? markdownValue.length : lineEnd);
+
+    setMarkdownValue(newValue);
+    setIsEditing(true);
+
+    setTimeout(() => {
+      textarea.focus();
+      const newCursorPos = lineStart + prefix.length + cleanLine.length;
+      textarea.setSelectionRange(newCursorPos, newCursorPos);
+    }, 0);
+  };
+
+  // Hàm chèn list
+  const insertList = (ordered = false) => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const lineStart = markdownValue.lastIndexOf("\n", start - 1) + 1;
+    const prefix = ordered ? "1. " : "- ";
+
+    const newValue =
+      markdownValue.substring(0, lineStart) +
+      prefix +
+      markdownValue.substring(lineStart);
+
+    setMarkdownValue(newValue);
+    setIsEditing(true);
+
+    setTimeout(() => {
+      textarea.focus();
+      textarea.setSelectionRange(start + prefix.length, start + prefix.length);
+    }, 0);
+  };
+
+  // Hàm chèn checklist (GFM task list)
+  const insertChecklist = (checked = false) => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const lineStart = markdownValue.lastIndexOf("\n", start - 1) + 1;
+    const prefix = `- [${checked ? "x" : " "}] `;
+
+    const newValue =
+      markdownValue.substring(0, lineStart) +
+      prefix +
+      markdownValue.substring(lineStart);
+
+    setMarkdownValue(newValue);
+    setIsEditing(true);
+
+    setTimeout(() => {
+      textarea.focus();
+      textarea.setSelectionRange(start + prefix.length, start + prefix.length);
+    }, 0);
+  };
+
+  // Hàm render markdown sang HTML đơn giản
+  function renderMarkdownToHTML(markdown: string): string {
+    if (!markdown) return "";
+
+    let html = markdown
+      // Escape HTML first
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+
+      // Code blocks (process before other formatting)
+      .replace(
+        /```([^`\n]*)\n([^`]*)```/gim,
+        '<pre class="bg-muted p-3 rounded-md overflow-x-auto"><code>$2</code></pre>',
+      )
+
+      // Headers
+      .replace(
+        /^### (.*$)/gim,
+        '<h3 class="text-lg font-semibold mt-4 mb-2">$1</h3>',
+      )
+      .replace(
+        /^## (.*$)/gim,
+        '<h2 class="text-xl font-semibold mt-6 mb-3">$1</h2>',
+      )
+      .replace(
+        /^# (.*$)/gim,
+        '<h1 class="text-2xl font-bold mt-8 mb-4">$1</h1>',
+      )
+
+      // Text formatting
+      .replace(/\*\*(.*?)\*\*/gim, '<strong class="font-semibold">$1</strong>')
+      .replace(/\*(.*?)\*/gim, '<em class="italic">$1</em>')
+      .replace(/~~(.*?)~~/gim, '<del class="line-through">$1</del>')
+      .replace(
+        /`([^`]*)`/gim,
+        '<code class="bg-muted px-1 py-0.5 rounded text-sm">$1</code>',
+      )
+
+      // Links
+      .replace(
+        /\[([^\]]*)\]\(([^)]*)\)/gim,
+        '<a href="$2" class="text-primary underline" target="_blank" rel="noopener noreferrer">$1</a>',
+      )
+
+      // Lists (bullet points)
+      .replace(
+        /^\s*[-*+] (.*$)/gim,
+        '<ul class="list-disc list-inside my-2"><li class="mb-1">$1</li></ul>',
+      )
+
+      // Numbered lists
+      .replace(
+        /^\d+\. (.*$)/gim,
+        '<ol class="list-decimal list-inside my-2"><li class="mb-1">$1</li></ol>',
+      )
+
+      // Todo items (GFM task list) - supports -, *, + and upper/lower X
+      .replace(
+        /^\s*[-*+] \[ \] (.*$)/gim,
+        '<div class="flex items-center gap-2 my-1"><input type="checkbox" disabled class="rounded"> <span>$1</span></div>',
+      )
+      .replace(
+        /^\s*[-*+] \[(x|X)\] (.*$)/gim,
+        '<div class="flex items-center gap-2 my-1"><input type="checkbox" checked disabled class="rounded"> <span class="line-through text-muted-foreground">$2</span></div>',
+      )
+
+      // Blockquotes
+      .replace(
+        /^> (.*$)/gim,
+        '<blockquote class="border-l-4 border-muted-foreground/20 pl-4 my-4 text-muted-foreground italic">$1</blockquote>',
+      )
+
+      // Horizontal rule
+      .replace(/^---$/gim, '<hr class="my-6 border-muted-foreground/20">')
+
+      // Line breaks and paragraphs
+      .replace(/\n\n/gim, '</p><p class="mb-3">')
+      .replace(/\n/gim, "<br>");
+
+    // Wrap in paragraph tags if not already structured
+    if (
+      !html.includes("<h1>") &&
+      !html.includes("<h2>") &&
+      !html.includes("<h3>") &&
+      !html.includes("<ul>") &&
+      !html.includes("<ol>") &&
+      !html.includes("<blockquote>")
+    ) {
+      html = `<p class="mb-3">${html}</p>`;
+    }
+
+    // Clean up nested list tags
+    html = html.replace(/<\/ul>\s*<ul[^>]*>/gim, "");
+    html = html.replace(/<\/ol>\s*<ol[^>]*>/gim, "");
+
+    return html;
+  }
+
+  // Hàm chuyển đổi blocks sang markdown
+  function blocksToMarkdown(sourceBlocks: BlockData[]): string {
+    if (!sourceBlocks || sourceBlocks.length === 0) return "";
+    const lines: string[] = [];
+    for (const block of sourceBlocks.sort(
+      (a, b) => a.orderIndex - b.orderIndex,
+    )) {
+      switch (block.type) {
+        case "heading_1":
+          lines.push(`# ${block.content?.text ?? ""}`);
+          break;
+        case "heading_2":
+          lines.push(`## ${block.content?.text ?? ""}`);
+          break;
+        case "heading_3":
+          lines.push(`### ${block.content?.text ?? ""}`);
+          break;
+        case "bulleted_list_item":
+          lines.push(`- ${block.content?.text ?? ""}`);
+          break;
+        case "numbered_list_item":
+          lines.push(`1. ${block.content?.text ?? ""}`);
+          break;
+        case "to_do": {
+          const checked = block.content?.checked ? "x" : " ";
+          lines.push(`- [${checked}] ${block.content?.text ?? ""}`);
+          break;
+        }
+        case "quote":
+          lines.push(`> ${block.content?.text ?? ""}`);
+          break;
+        case "code":
+          lines.push(`\`\`\`\n${block.content?.text ?? ""}\n\`\`\``);
+          break;
+        case "divider":
+          lines.push("\n---\n");
+          break;
+        default:
+          lines.push(block.content?.text ?? "");
+      }
+    }
+    return lines.join("\n\n").trim();
+  }
+
+  // Hàm chuyển đổi markdown sang blocks
+  function markdownToBlocks(md: string): BlockData[] {
+    if (!md || md.trim() === "") return [];
+    const rawLines = md.replace(/\r\n/g, "\n").split("\n");
+    const result: BlockData[] = [];
+    let i = 0;
+    let paragraphBuffer: string[] = [];
+
+    const flushParagraph = () => {
+      const text = paragraphBuffer.join("\n").trim();
+      paragraphBuffer = [];
+      if (text.length === 0) return; // Bỏ qua đoạn văn rỗng
+      result.push({
+        type: "paragraph",
+        content: { text },
+        orderIndex: result.length,
+      });
+    };
+
+    while (i < rawLines.length) {
+      const line = rawLines[i];
+      const trimmed = line.trim();
+
+      // Dòng trống => ranh giới đoạn văn
+      if (trimmed === "") {
+        flushParagraph();
+        i++;
+        continue;
+      }
+
+      // Code block
+      if (trimmed.startsWith("```") && !trimmed.endsWith("```")) {
+        flushParagraph();
+        const codeLines: string[] = [];
+        i++;
+        while (i < rawLines.length && !rawLines[i].trim().startsWith("```")) {
+          codeLines.push(rawLines[i]);
+          i++;
+        }
+        // Di chuyển qua ``` đóng nếu có
+        if (i < rawLines.length && rawLines[i].trim().startsWith("```")) {
+          i++;
+        }
+        result.push({
+          type: "code",
+          content: { text: codeLines.join("\n") },
+          orderIndex: result.length,
+        });
+        continue;
+      }
+
+      // Headings / list / quote / divider => flush và push
+      const heading1 = /^#\s+/.test(line);
+      const heading2 = /^##\s+/.test(line);
+      const heading3 = /^###\s+/.test(line);
+      const quote = /^>\s?/.test(line);
+      const divider = /^\s*---\s*$/.test(line);
+      const task = /^\s*[-*+]\s+\[(x|X|\s)\]\s+/.test(line);
+      const bullet = /^\s*[-*+]\s+/.test(line);
+      const ordered = /^\s*\d+[\.)]\s+/.test(line);
+
+      if (
+        heading1 ||
+        heading2 ||
+        heading3 ||
+        quote ||
+        divider ||
+        bullet ||
+        ordered
+      ) {
+        flushParagraph();
+        if (heading1) {
+          result.push({
+            type: "heading_1",
+            content: { text: line.replace(/^#\s+/, "") },
+            orderIndex: result.length,
+          });
+        } else if (heading2) {
+          result.push({
+            type: "heading_2",
+            content: { text: line.replace(/^##\s+/, "") },
+            orderIndex: result.length,
+          });
+        } else if (heading3) {
+          result.push({
+            type: "heading_3",
+            content: { text: line.replace(/^###\s+/, "") },
+            orderIndex: result.length,
+          });
+        } else if (quote) {
+          result.push({
+            type: "quote",
+            content: { text: line.replace(/^>\s?/, "") },
+            orderIndex: result.length,
+          });
+        } else if (divider) {
+          result.push({
+            type: "divider",
+            content: { text: "" },
+            orderIndex: result.length,
+          });
+        } else if (task) {
+          const match = line.match(/^\s*[-*+]\s+\[(x|X|\s)\]\s+(.*)$/);
+          const checked = !!match && (match[1] === "x" || match[1] === "X");
+          const text = match
+            ? match[2]
+            : line.replace(/^\s*[-*+]\s+\[(x|X|\s)\]\s+/, "");
+          result.push({
+            type: "to_do",
+            content: { text, checked },
+            orderIndex: result.length,
+          });
+        } else if (bullet) {
+          result.push({
+            type: "bulleted_list_item",
+            content: { text: line.replace(/^\s*[-*+]\s+/, "") },
+            orderIndex: result.length,
+          });
+        } else if (ordered) {
+          result.push({
+            type: "numbered_list_item",
+            content: { text: line.replace(/^\s*\d+[\.)]\s+/, "") },
+            orderIndex: result.length,
+          });
+        }
+        i++;
+        continue;
+      }
+
+      // Tích lũy đoạn văn
+      paragraphBuffer.push(line);
+      i++;
+    }
+
+    // Hoàn thiện
+    flushParagraph();
+
+    if (result.length === 0) {
+      result.push({ type: "paragraph", content: { text: "" }, orderIndex: 0 });
+    }
+
+    return result.map((b, idx) => ({ ...b, orderIndex: idx }));
+  }
+
+  // Mutations cho blocks
   const addBlockMutation = useMutation({
     mutationFn: ({
       noteId,
@@ -115,95 +681,95 @@ export function NoteEditor({ note, onSave }: NoteEditorProps) {
 
   const handleSave = async () => {
     try {
-      // Step 1: Update note metadata ONLY (title, tags)
+      // Chuyển đổi markdown sang blocks nếu cần
+      let blocksToPersist = blocks;
+      if (editorMode === "markdown") {
+        blocksToPersist = markdownToBlocks(markdownValue);
+        setBlocks(blocksToPersist);
+      }
+
+      // Bước 1: Cập nhật metadata note (title, tags)
       try {
+        // Đảm bảo tags bao gồm tag chế độ đúng
+        const modeTag = editorMode === "markdown" ? "markdown" : "block";
+        const updatedTags = [
+          ...tags.filter((tag) => tag !== "markdown" && tag !== "block"),
+          modeTag,
+        ];
+
         const noteMetadata: UpdateNoteRequest = {
           title: title.trim(),
-          tags,
-          type: note.type, // Giữ nguyên lowercase type
+          tags: updatedTags,
+          type: editorMode,
+          ...(editorMode === "markdown" && { content: markdownValue }),
         };
 
-        // Nếu là markdown note, cập nhật content
-        if (note.type === "markdown") {
-          const markdownContent = blocks
-            .map((block) => block.content?.text || "")
-            .join("\n\n");
-          noteMetadata.content = markdownContent;
-        }
-
-        console.log("Step 1: Updating note metadata:", noteMetadata);
         await updateNoteMutation.mutateAsync(noteMetadata);
-        console.log("✅ Note metadata updated successfully");
+        // Cập nhật state tags và refs ban đầu sau khi lưu metadata thành công
+        setTags(updatedTags);
+        initialTitleRef.current = noteMetadata.title ?? initialTitleRef.current;
+        initialTagsRef.current = updatedTags;
+        if (editorMode === "markdown")
+          initialMarkdownRef.current = markdownValue;
       } catch (error) {
-        console.error("❌ Failed to update note metadata:", error);
         throw new Error(
-          `Failed to update note metadata: ${
-            error instanceof Error ? error.message : "Unknown error"
+          `Lỗi cập nhật metadata note: ${
+            error instanceof Error ? error.message : "Lỗi không xác định"
           }`,
         );
       }
 
-      // Step 2: Với block notes, lưu blocks riêng biệt
-      if (note.type === "block") {
+      // Bước 2: Lưu blocks riêng biệt (chỉ cho chế độ block)
+      if (editorMode === "block") {
         try {
-          console.log("Step 2: Updating blocks separately...");
           await saveBlocks();
-          console.log("✅ Blocks updated successfully");
         } catch (error) {
-          console.error("❌ Failed to update blocks:", error);
           throw new Error(
-            `Failed to update blocks: ${
-              error instanceof Error ? error.message : "Unknown error"
+            `Lỗi cập nhật blocks: ${
+              error instanceof Error ? error.message : "Lỗi không xác định"
             }`,
           );
         }
       }
 
-      toast({
-        title: tSuccess("noteUpdated"),
-        description: tSuccess("noteUpdatedDesc"),
-      });
+      toast.success(
+        `${tSuccess("noteUpdated")} - ${tSuccess("noteUpdatedDesc")}`,
+      );
       onSave?.();
       setIsEditing(false);
     } catch (error) {
-      console.error("💥 Save error:", error);
-      toast({
-        title: tErrors("updateFailed"),
-        description: error instanceof Error ? error.message : "Unknown error",
-        variant: "destructive",
-      });
+      toast.error(
+        `${tErrors("updateFailed")}: ${
+          error instanceof Error ? error.message : "Lỗi không xác định"
+        }`,
+      );
     }
   };
 
   const saveBlocks = async () => {
     const originalBlocks = note.blocks || [];
-    console.log("📝 Original blocks:", originalBlocks);
-    console.log("📝 Current blocks:", blocks);
-
     const errors: string[] = [];
 
-    // Step 1: Create new blocks và update existing blocks
+    // Bước 1: Tạo blocks mới và cập nhật blocks hiện có
     for (let i = 0; i < blocks.length; i++) {
       const block = blocks[i];
       const originalBlock = originalBlocks.find((b) => b.id === block.id);
 
       try {
         if (!block.id) {
-          // New block - create it
-          console.log("➕ Creating new block:", block);
+          // Block mới - tạo nó
           const blockData: CreateBlockRequest = {
-            type: block.type, // Use frontend block type directly
-            content: block.content || { text: "" }, // Send full content object
+            type: block.type,
+            content: block.content || { text: "" },
             orderIndex: i,
           };
 
-          const result = await addBlockMutation.mutateAsync({
+          await addBlockMutation.mutateAsync({
             noteId: note.id,
             blockData,
           });
-          console.log("✅ Created block:", result);
         } else if (originalBlock) {
-          // Check if block needs update
+          // Kiểm tra xem block có cần cập nhật không
           const originalContentText = originalBlock.content?.text || "";
           const currentContentText = block.content?.text || "";
 
@@ -213,109 +779,154 @@ export function NoteEditor({ note, onSave }: NoteEditorProps) {
             originalBlock.orderIndex !== i;
 
           if (needsUpdate) {
-            console.log("✏️ Updating block:", block.id, "Changes:", {
-              contentChanged: originalContentText !== currentContentText,
-              typeChanged: originalBlock.type !== block.type,
-              orderChanged: originalBlock.orderIndex !== i,
-            });
-
-            // Since individual block update endpoint returns 403,
-            // we'll use delete + create approach as a workaround
-            console.log("🔄 Using delete+create workaround for block update");
-
+            // Sử dụng phương pháp delete + create để cập nhật
             try {
-              // First delete the existing block
-              console.log("�️ Deleting existing block:", block.id);
               await deleteBlockMutation.mutateAsync(block.id);
-              console.log("✅ Deleted existing block:", block.id);
 
-              // Then create a new block with updated content
               const blockData: CreateBlockRequest = {
-                type: block.type, // Use frontend block type directly
-                content: block.content || { text: currentContentText }, // Send full content object
+                type: block.type,
+                content: block.content || { text: currentContentText },
                 orderIndex: i,
               };
 
-              const result = await addBlockMutation.mutateAsync({
+              await addBlockMutation.mutateAsync({
                 noteId: note.id,
                 blockData,
               });
-              console.log("✅ Created new block:", result);
-            } catch (recreateError) {
-              console.log(
-                "🔄 Delete+create approach also failed:",
-                recreateError,
-              );
+            } catch (_recreateError) {
               throw new Error(
-                `Failed to update block ${block.id} using delete+create approach`,
+                `Lỗi cập nhật block ${block.id} bằng phương pháp delete+create`,
               );
             }
-          } else {
-            console.log("⏭️ Block", block.id, "unchanged, skipping");
           }
         }
       } catch (error) {
-        const blockError = `Block ${block.id || "new"} at position ${i}: ${
-          error instanceof Error ? error.message : "Unknown error"
+        const blockError = `Block ${block.id || "mới"} tại vị trí ${i}: ${
+          error instanceof Error ? error.message : "Lỗi không xác định"
         }`;
-        console.error("❌", blockError);
         errors.push(blockError);
       }
     }
 
-    // Step 2: Delete removed blocks
+    // Bước 2: Xóa blocks đã bị loại bỏ
     const currentBlockIds = blocks.filter((b) => b.id).map((b) => b.id);
     const blocksToDelete = originalBlocks.filter(
       (b) => b.id && !currentBlockIds.includes(b.id),
     );
 
-    console.log("🗑️ Blocks to delete:", blocksToDelete);
     for (const blockToDelete of blocksToDelete) {
       if (blockToDelete.id) {
         try {
-          console.log("🗑️ Deleting block:", blockToDelete.id);
           await deleteBlockMutation.mutateAsync(blockToDelete.id);
-          console.log("✅ Deleted block:", blockToDelete.id);
         } catch (error) {
-          const deleteError = `Failed to delete block ${blockToDelete.id}: ${
-            error instanceof Error ? error.message : "Unknown error"
+          const deleteError = `Lỗi xóa block ${blockToDelete.id}: ${
+            error instanceof Error ? error.message : "Lỗi không xác định"
           }`;
-          console.error("❌", deleteError);
           errors.push(deleteError);
         }
       }
     }
 
-    // Throw aggregated errors if any
+    // Ném lỗi tổng hợp nếu có
     if (errors.length > 0) {
-      throw new Error(`Block operations failed:\n${errors.join("\n")}`);
+      throw new Error(`Các thao tác block thất bại:\n${errors.join("\n")}`);
     }
   };
 
-  const handleAddTag = (e: React.KeyboardEvent) => {
+  const handleAddTag = async (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && newTag.trim()) {
       if (!tags.includes(newTag.trim())) {
-        setTags([...tags, newTag.trim()]);
+        const newTags = [...tags, newTag.trim()];
+        setTags(newTags);
+        setIsEditing(true);
+
+        // Tự động lưu tags ngay lập tức
+        try {
+          // Đảm bảo tag chế độ được giữ
+          const modeTag = editorMode === "markdown" ? "markdown" : "block";
+          const finalTags = [
+            ...newTags.filter((tag) => tag !== "markdown" && tag !== "block"),
+            modeTag,
+          ];
+
+          const updateData: UpdateNoteRequest = {
+            title: title.trim(),
+            tags: finalTags,
+            type: editorMode,
+          };
+
+          if (editorMode === "markdown") {
+            updateData.content = markdownValue;
+          }
+
+          await updateNoteMutation.mutateAsync(updateData);
+          // Cập nhật state tags và refs ban đầu sau khi lưu thành công
+          setTags(finalTags);
+          initialTagsRef.current = finalTags;
+          setIsEditing(false);
+          toast.success(t("autoSaveTag", { tag: newTag.trim() }));
+        } catch (error) {
+          toast.error(
+            `${tErrors("updateFailed")}: ${
+              error instanceof Error ? error.message : tCommon("unknownError")
+            }`,
+          );
+        }
       }
       setNewTag("");
     }
   };
 
-  const handleRemoveTag = (tagToRemove: string) => {
-    setTags(tags.filter((tag) => tag !== tagToRemove));
+  const handleRemoveTag = async (tagToRemove: string) => {
+    const newTags = tags.filter((tag) => tag !== tagToRemove);
+    setTags(newTags);
+    setIsEditing(true);
+
+    // Tự động lưu tags ngay lập tức
+    try {
+      // Đảm bảo tag chế độ được giữ
+      const modeTag = editorMode === "markdown" ? "markdown" : "block";
+      const finalTags = [
+        ...newTags.filter((tag) => tag !== "markdown" && tag !== "block"),
+        modeTag,
+      ];
+
+      const updateData: UpdateNoteRequest = {
+        title: title.trim(),
+        tags: finalTags,
+        type: editorMode,
+      };
+
+      if (editorMode === "markdown") {
+        updateData.content = markdownValue;
+      }
+
+      await updateNoteMutation.mutateAsync(updateData);
+      // Cập nhật state tags và refs ban đầu sau khi lưu thành công
+      setTags(finalTags);
+      initialTagsRef.current = finalTags;
+      setIsEditing(false);
+      toast.success(t("autoRemoveTag", { tag: tagToRemove }));
+    } catch (error) {
+      toast.error(
+        `${tErrors("updateFailed")}: ${
+          error instanceof Error ? error.message : tCommon("unknownError")
+        }`,
+      );
+    }
   };
 
   const handleAddBlock = (type: BlockType, afterIndex?: number) => {
     const newBlock: BlockData = {
       type,
-      content: { text: "" },
+      content: type === "to_do" ? { text: "", checked: false } : { text: "" },
       orderIndex: afterIndex !== undefined ? afterIndex + 1 : blocks.length,
     };
 
     const newBlocks = [...blocks];
     if (afterIndex !== undefined) {
       newBlocks.splice(afterIndex + 1, 0, newBlock);
-      // Reorder indices
+      // Sắp xếp lại chỉ số
       newBlocks.forEach((block, index) => {
         block.orderIndex = index;
       });
@@ -325,6 +936,7 @@ export function NoteEditor({ note, onSave }: NoteEditorProps) {
 
     setBlocks(newBlocks);
     setIsEditing(true);
+    toast.success(t("addBlockSuccess", { type: t(`blockTypes.${type}`) }));
   };
 
   const handleUpdateBlock = (
@@ -337,39 +949,75 @@ export function NoteEditor({ note, onSave }: NoteEditorProps) {
     setIsEditing(true);
   };
 
-  const handleDeleteBlock = (index: number) => {
+  const handleDeleteBlock = async (index: number) => {
     if (blocks.length > 1) {
+      const blockToDelete = blocks[index];
+
+      // Nếu block có ID, xóa nó khỏi backend ngay lập tức
+      if (blockToDelete.id) {
+        try {
+          await deleteBlockMutation.mutateAsync(blockToDelete.id);
+        } catch (error) {
+          toast.error(
+            `${tErrors("updateFailed")}: Lỗi xóa block - ${
+              error instanceof Error ? error.message : "Lỗi không xác định"
+            }`,
+          );
+          return; // Không xóa khỏi local state nếu API call thất bại
+        }
+      }
+
+      // Xóa khỏi local state
       const newBlocks = blocks.filter((_, i) => i !== index);
-      // Reorder indices
+      // Sắp xếp lại chỉ số
       newBlocks.forEach((block, idx) => {
         block.orderIndex = idx;
       });
       setBlocks(newBlocks);
       setIsEditing(true);
+      toast.success(t("deleteBlockSuccess"));
     }
   };
 
   const blockTypeOptions = [
-    { type: "paragraph", icon: FileText, label: "Paragraph" },
-    { type: "heading_1", icon: Heading1, label: "Heading 1" },
-    { type: "heading_2", icon: Heading2, label: "Heading 2" },
-    { type: "heading_3", icon: Heading3, label: "Heading 3" },
-    { type: "bulleted_list_item", icon: List, label: "Bullet List" },
-    { type: "numbered_list_item", icon: ListOrdered, label: "Numbered List" },
-    { type: "quote", icon: Quote, label: "Quote" },
-    { type: "code", icon: Code, label: "Code" },
-    { type: "divider", icon: Minus, label: "Divider" },
+    { type: "paragraph", icon: FileText, label: t("blockTypes.paragraph") },
+    { type: "heading_1", icon: Heading1, label: t("blockTypes.heading_1") },
+    { type: "heading_2", icon: Heading2, label: t("blockTypes.heading_2") },
+    { type: "heading_3", icon: Heading3, label: t("blockTypes.heading_3") },
+    {
+      type: "bulleted_list_item",
+      icon: List,
+      label: t("blockTypes.bulleted_list_item"),
+    },
+    {
+      type: "numbered_list_item",
+      icon: ListOrdered,
+      label: t("blockTypes.numbered_list_item"),
+    },
+    { type: "to_do", icon: CheckSquare, label: t("blockTypes.to_do") },
+    { type: "quote", icon: Quote, label: t("blockTypes.quote") },
+    { type: "code", icon: Code, label: t("blockTypes.code") },
+    { type: "divider", icon: Minus, label: t("blockTypes.divider") },
   ];
 
   return (
     <div className="mx-auto max-w-4xl">
+      {isModeChanging && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+          <div className="flex items-center gap-2 rounded-lg border bg-background px-4 py-2 shadow-lg">
+            <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+            <span className="text-sm">{tCommon("loading")}</span>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="sticky top-0 z-10 border-b bg-background/80 backdrop-blur-sm">
         <div className="flex items-center justify-between p-4">
           <div className="flex items-center gap-2">
             <span className="text-2xl">📝</span>
             <h1 className="font-semibold text-lg text-muted-foreground">
-              Note
+              {tCommon("notes")}
             </h1>
           </div>
 
@@ -396,9 +1044,94 @@ export function NoteEditor({ note, onSave }: NoteEditorProps) {
                   <Share2 className="mr-2 h-4 w-4" />
                   {t("share")}
                 </DropdownMenuItem>
-                <DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={async () => {
+                    if (isModeChanging) return; // Ngăn nhiều lần click
+
+                    setIsModeChanging(true);
+                    try {
+                      if (editorMode === "block") {
+                        // Block -> Markdown: Lưu blocks hiện tại trước, sau đó chuyển đổi
+                        const md = blocksToMarkdown(blocks);
+                        setMarkdownValue(md);
+                        setEditorMode("markdown");
+
+                        // Cập nhật tags để bao gồm tag markdown
+                        const newTags = [
+                          ...tags.filter((tag) => tag !== "block"),
+                          "markdown",
+                        ];
+                        setTags(newTags);
+
+                        // Lưu markdown đã chuyển đổi vào database
+                        await updateNoteMutation.mutateAsync({
+                          title: title.trim(),
+                          tags: newTags,
+                          type: "markdown",
+                          content: md,
+                        });
+
+                        // Cập nhật refs ban đầu
+                        initialMarkdownRef.current = md;
+                        initialBlocksRef.current = blocks;
+                        initialTagsRef.current = newTags;
+                        setIsEditing(false);
+                        toast.success(
+                          t("modeSwitchSuccess", { mode: t("markdownMode") }),
+                        );
+                      } else {
+                        // Markdown -> Block: Lưu markdown hiện tại trước, sau đó chuyển đổi
+                        const newBlocks = markdownToBlocks(markdownValue);
+                        const finalBlocks: BlockData[] = newBlocks.length
+                          ? newBlocks
+                          : [
+                              {
+                                type: "paragraph",
+                                content: { text: "" },
+                                orderIndex: 0,
+                              },
+                            ];
+                        setBlocks(finalBlocks);
+                        setEditorMode("block");
+
+                        // Cập nhật tags để bao gồm tag block
+                        const newTags = [
+                          ...tags.filter((tag) => tag !== "markdown"),
+                          "block",
+                        ];
+                        setTags(newTags);
+
+                        // Lưu blocks đã chuyển đổi vào database
+                        await updateNoteMutation.mutateAsync({
+                          title: title.trim(),
+                          tags: newTags,
+                          type: "block",
+                          blocks: finalBlocks,
+                        });
+
+                        // Cập nhật refs ban đầu
+                        initialMarkdownRef.current = markdownValue;
+                        initialBlocksRef.current = finalBlocks;
+                        initialTagsRef.current = newTags;
+                        setIsEditing(false);
+                        toast.success(
+                          t("modeSwitchSuccess", { mode: t("blockMode") }),
+                        );
+                      }
+                    } catch (_error) {
+                      toast.error(t("modeSwitchError"));
+                    } finally {
+                      setIsModeChanging(false);
+                    }
+                  }}
+                  disabled={isModeChanging}
+                >
                   <Settings className="mr-2 h-4 w-4" />
-                  {t("settings")}
+                  {isModeChanging
+                    ? t("switchingMode")
+                    : editorMode === "block"
+                      ? t("markdownMode")
+                      : t("blockMode")}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -406,11 +1139,9 @@ export function NoteEditor({ note, onSave }: NoteEditorProps) {
         </div>
       </div>
 
-      {/* Content */}
+      {/* Nội dung */}
       <div className="p-6">
-        {/* Remove cover image section as it's not in NoteData */}
-
-        {/* Title */}
+        {/* Tiêu đề */}
         <div className="mb-6">
           <Input
             ref={titleRef}
@@ -419,7 +1150,7 @@ export function NoteEditor({ note, onSave }: NoteEditorProps) {
               setTitle(e.target.value);
               setIsEditing(true);
             }}
-            placeholder={t("untitledNote")}
+            placeholder={t("titlePlaceholder")}
             className="border-none p-0 font-bold text-4xl placeholder:text-muted-foreground/50 focus-visible:ring-0"
             style={{ fontSize: "2.5rem", lineHeight: "1.1" }}
           />
@@ -443,54 +1174,269 @@ export function NoteEditor({ note, onSave }: NoteEditorProps) {
             value={newTag}
             onChange={(e) => setNewTag(e.target.value)}
             onKeyDown={handleAddTag}
-            placeholder={t("addTag")}
+            placeholder={t("tagPlaceholder")}
             className="max-w-xs"
           />
         </div>
 
         <Separator className="mb-8" />
 
-        {/* Blocks */}
-        <div className="space-y-2">
-          {blocks.map((block, index) => (
-            <BlockEditor
-              key={index}
-              block={block}
-              index={index}
-              onUpdate={(updatedBlock: Partial<BlockData>) =>
-                handleUpdateBlock(index, updatedBlock)
+        {editorMode === "markdown" ? (
+          <div className="rounded-md border bg-background dark:border-gray-700">
+            <Tabs
+              value={markdownTab}
+              onValueChange={(value) =>
+                setMarkdownTab(value as "edit" | "preview")
               }
-              onDelete={() => handleDeleteBlock(index)}
-              onAddBlock={(type: BlockType) => handleAddBlock(type, index)}
-            />
-          ))}
-        </div>
-
-        {/* Add Block Button */}
-        <div className="mt-4">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                className="w-full justify-start text-muted-foreground"
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                {t("addBlock")}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-64">
-              {blockTypeOptions.map(({ type, icon: Icon, label }) => (
-                <DropdownMenuItem
-                  key={type}
-                  onClick={() => handleAddBlock(type as BlockType)}
+            >
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="edit" className="flex items-center gap-2">
+                  <Edit3 className="h-4 w-4" />
+                  {t("editMode")}
+                </TabsTrigger>
+                <TabsTrigger
+                  value="preview"
+                  className="flex items-center gap-2"
                 >
-                  <Icon className="mr-2 h-4 w-4" />
-                  {label}
-                </DropdownMenuItem>
+                  <Eye className="h-4 w-4" />
+                  {t("previewMode")}
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="edit" className="mt-0">
+                {/* Toolbar */}
+                <div className="border-b bg-muted/20 p-2">
+                  <div className="flex flex-wrap gap-1">
+                    {/* Text formatting */}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => insertMarkdownFormat("**", "bold text")}
+                      title="Bold"
+                    >
+                      <Bold className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => insertMarkdownFormat("*", "italic text")}
+                      title="Italic"
+                    >
+                      <Italic className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() =>
+                        insertMarkdownFormat("~~", "strikethrough")
+                      }
+                      title="Strikethrough"
+                    >
+                      <Strikethrough className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => insertMarkdownFormat("`", "code")}
+                      title="Inline Code"
+                    >
+                      <Code className="h-4 w-4" />
+                    </Button>
+
+                    <Separator orientation="vertical" className="mx-1 h-6" />
+
+                    {/* Headings */}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => insertHeading(1)}
+                      title="Heading 1"
+                    >
+                      <Heading1 className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => insertHeading(2)}
+                      title="Heading 2"
+                    >
+                      <Heading2 className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => insertHeading(3)}
+                      title="Heading 3"
+                    >
+                      <Heading3 className="h-4 w-4" />
+                    </Button>
+
+                    <Separator orientation="vertical" className="mx-1 h-6" />
+
+                    {/* Lists */}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => insertList(false)}
+                      title="Bullet List"
+                    >
+                      <List className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => insertList(true)}
+                      title="Numbered List"
+                    >
+                      <ListOrdered className="h-4 w-4" />
+                    </Button>
+
+                    <Separator orientation="vertical" className="mx-1 h-6" />
+
+                    {/* Other formatting */}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => insertChecklist(false)}
+                      title="Checklist"
+                    >
+                      <CheckSquare className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => insertMarkdownFormat("> ", "quote", false)}
+                      title="Quote"
+                    >
+                      <Quote className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() =>
+                        insertMarkdownFormat("[", "link text](url)", false)
+                      }
+                      title="Link"
+                    >
+                      <Link className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        const textarea = textareaRef.current;
+                        if (!textarea) return;
+
+                        const start = textarea.selectionStart;
+                        const selectedText = markdownValue.substring(
+                          textarea.selectionStart,
+                          textarea.selectionEnd,
+                        );
+                        const codeBlock = selectedText
+                          ? `\`\`\`\n${selectedText}\n\`\`\``
+                          : "```\ncode here\n```";
+
+                        const newValue =
+                          markdownValue.substring(0, start) +
+                          codeBlock +
+                          markdownValue.substring(textarea.selectionEnd);
+
+                        setMarkdownValue(newValue);
+                        setIsEditing(true);
+
+                        setTimeout(() => {
+                          textarea.focus();
+                          if (!selectedText) {
+                            const cursorPos = start + 4; // Position after ```\n
+                            textarea.setSelectionRange(
+                              cursorPos,
+                              cursorPos + 9,
+                            ); // Select "code here"
+                          }
+                        }, 0);
+                      }}
+                      title="Code Block"
+                    >
+                      <FileText className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="min-h-[400px] p-4">
+                  <textarea
+                    ref={textareaRef}
+                    key={`markdown-${note.id}`}
+                    value={markdownValue}
+                    onChange={(e) => {
+                      setMarkdownValue(e.target.value);
+                      setIsEditing(true);
+                    }}
+                    placeholder={t("placeholders.default")}
+                    className="h-[400px] w-full resize-none border-none bg-transparent p-0 font-mono text-sm leading-relaxed placeholder:text-muted-foreground/50 focus-visible:ring-0"
+                    style={{ outline: "none" }}
+                  />
+                </div>
+              </TabsContent>
+
+              <TabsContent value="preview" className="mt-0">
+                <div className="min-h-[400px] p-4">
+                  <div
+                    className="prose prose-sm dark:prose-invert max-w-none"
+                    // biome-ignore lint/security/noDangerouslySetInnerHtml: <explanation>
+                    dangerouslySetInnerHTML={{
+                      __html:
+                        renderMarkdownToHTML(markdownValue) ||
+                        `<p class="text-muted-foreground">${t(
+                          "placeholders.preview",
+                        )}</p>`,
+                    }}
+                  />
+                </div>
+              </TabsContent>
+            </Tabs>
+          </div>
+        ) : (
+          <>
+            <div className="space-y-2">
+              {blocks.map((block, index) => (
+                <BlockEditor
+                  key={index}
+                  block={block}
+                  index={index}
+                  onUpdate={(updatedBlock: Partial<BlockData>) =>
+                    handleUpdateBlock(index, updatedBlock)
+                  }
+                  onDelete={() => handleDeleteBlock(index)}
+                  onAddBlock={(type: BlockType) => handleAddBlock(type, index)}
+                />
               ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+            </div>
+            <div className="mt-4">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start text-muted-foreground"
+                  >
+                    <Plus className="mr-2 h-4 w-4" />
+                    {t("addBlockPlaceholder")}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-64">
+                  {blockTypeOptions.map(({ type, icon: Icon, label }) => (
+                    <DropdownMenuItem
+                      key={type}
+                      onClick={() => handleAddBlock(type as BlockType)}
+                    >
+                      <Icon className="mr-2 h-4 w-4" />
+                      {label}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
