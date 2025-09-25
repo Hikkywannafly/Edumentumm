@@ -1,6 +1,8 @@
 import { BookOpen } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 const Footer = () => {
+  const t = useTranslations("Footer");
   return (
     <footer className="border-t bg-background">
       <div className="container mx-auto px-4 py-12">
@@ -12,84 +14,82 @@ const Footer = () => {
               </div>
               <span className="font-bold text-xl">EDUMENTUM</span>
             </div>
-            <p className="text-muted-foreground">
-              Nền tảng học tập thông minh cho tương lai giáo dục.
-            </p>
+            <p className="text-muted-foreground">{t("description")}</p>
           </div>
 
           <div>
-            <h3 className="mb-4 font-semibold">Sản phẩm</h3>
+            <h3 className="mb-4 font-semibold">{t("product.title")}</h3>
             <ul className="space-y-2 text-muted-foreground">
               <li>
                 <a href=" " className="hover:text-primary">
-                  Tính năng
+                  {t("product.features")}
                 </a>
               </li>
               <li>
                 <a href=" " className="hover:text-primary">
-                  Khóa học
+                  {t("product.courses")}
                 </a>
               </li>
               <li>
                 <a href=" " className="hover:text-primary">
-                  Cộng đồng
+                  {t("product.community")}
                 </a>
               </li>
               <li>
                 <a href=" " className="hover:text-primary">
-                  Báo cáo
+                  {t("product.reports")}
                 </a>
               </li>
             </ul>
           </div>
 
           <div>
-            <h3 className="mb-4 font-semibold">Hỗ trợ</h3>
+            <h3 className="mb-4 font-semibold">{t("support.title")}</h3>
             <ul className="space-y-2 text-muted-foreground">
               <li>
                 <a href=" " className="hover:text-primary">
-                  Trung tâm trợ giúp
+                  {t("support.helpCenter")}
                 </a>
               </li>
               <li>
                 <a href=" " className="hover:text-primary">
-                  Liên hệ
+                  {t("support.contact")}
                 </a>
               </li>
               <li>
                 <a href=" " className="hover:text-primary">
-                  FAQ
+                  {t("support.faq")}
                 </a>
               </li>
               <li>
                 <a href=" " className="hover:text-primary">
-                  Tài liệu
+                  {t("support.documentation")}
                 </a>
               </li>
             </ul>
           </div>
 
           <div>
-            <h3 className="mb-4 font-semibold">Công ty</h3>
+            <h3 className="mb-4 font-semibold">{t("company.title")}</h3>
             <ul className="space-y-2 text-muted-foreground">
               <li>
                 <a href=" " className="hover:text-primary">
-                  Về chúng tôi
+                  {t("company.aboutUs")}
                 </a>
               </li>
               <li>
                 <a href=" " className="hover:text-primary">
-                  Tuyển dụng
+                  {t("company.recruitment")}
                 </a>
               </li>
               <li>
                 <a href=" " className="hover:text-primary">
-                  Bảo mật
+                  {t("company.privacy")}
                 </a>
               </li>
               <li>
                 <a href=" " className="hover:text-primary">
-                  Điều khoản
+                  {t("company.terms")}
                 </a>
               </li>
             </ul>
@@ -97,7 +97,7 @@ const Footer = () => {
         </div>
 
         <div className="mt-8 border-t pt-8 text-center text-muted-foreground">
-          <p>&copy; 2024 EDUMENTUM. Tất cả quyền được bảo lưu.</p>
+          <p>&copy; {t("copyright")}</p>
         </div>
       </div>
     </footer>

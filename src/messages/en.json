@@ -64,6 +64,31 @@
     "dashboard": "Dashboard",
     "upgrade": "Upgrade"
   },
+  "Footer": {
+    "description": "Smart learning platform for the future of education.",
+    "product": {
+      "title": "Product",
+      "features": "Features",
+      "courses": "Courses",
+      "community": "Community",
+      "reports": "Reports"
+    },
+    "support": {
+      "title": "Support",
+      "helpCenter": "Help Center",
+      "contact": "Contact",
+      "faq": "FAQ",
+      "documentation": "Documentation"
+    },
+    "company": {
+      "title": "Company",
+      "aboutUs": "About Us",
+      "recruitment": "Recruitment",
+      "privacy": "Privacy Policy",
+      "terms": "Terms of Service"
+    },
+    "copyright": "2025 Edumentum. All rights reserved."
+  },
   "Dashboard": {
     "title": "Dashboard",
     "createQuiz": "Create Quiz",
