@@ -4,7 +4,7 @@ import { PageHeader } from "@/components/layout/page-header";
 
 export default async function EditCoursePage({
   params,
-}: { params: Promise<{ courseId: string }> }) {
+}: { params: Promise<{ courseId: number }> }) {
   const { courseId } = await params;
 
   return (

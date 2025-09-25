@@ -55,9 +55,7 @@ export function TeacherCourseView({ courseId }: TeacherCourseViewProps) {
     if (!courseDetail?.course) return;
 
     try {
-      await publishCourseMutation.mutateAsync(
-        courseDetail.course.courseId.toString(),
-      );
+      await publishCourseMutation.mutateAsync(courseDetail.course.courseId);
       toast({
         title: "Course Published",
         description: `Course "${courseDetail.course.title}" has been published successfully.`,
@@ -75,9 +73,7 @@ export function TeacherCourseView({ courseId }: TeacherCourseViewProps) {
     if (!courseDetail?.course) return;
 
     try {
-      await archiveCourseMutation.mutateAsync(
-        courseDetail.course.courseId.toString(),
-      );
+      await archiveCourseMutation.mutateAsync(courseDetail.course.courseId);
       toast({
         title: "Course Archived",
         description: `Course "${courseDetail.course.title}" has been archived successfully.`,
@@ -343,14 +339,12 @@ export function TeacherCourseView({ courseId }: TeacherCourseViewProps) {
                           <h4 className="font-medium">{lesson.title}</h4>
                           <p className="text-muted-foreground text-sm">
                             {lesson.content}
-
                           </p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2 text-muted-foreground text-sm">
                         <Clock className="h-4 w-4" />
                         {lesson.durationMinutes} min
-
                       </div>
                     </div>
                   ))}
