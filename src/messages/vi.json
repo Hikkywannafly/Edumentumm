@@ -20,6 +20,34 @@
       "exams": {
         "title": "Tạo kỳ thi thông minh",
         "description": "Tự động tạo đề thi với độ khó phù hợp, chấm điểm và phân tích kết quả chi tiết."
+      },
+      "detail": {
+        "note": "Có một cách tốt hơn",
+        "title": "Biến ghi chú của bạn thành câu hỏi trắc nghiệm & flashcard để ghi nhớ dễ dàng",
+        "subtitle": "Một cách học dễ dàng hơn giúp bạn tập trung, ghi nhớ tốt hơn và cảm thấy sẵn sàng hơn.",
+        "quizzes": {
+          "title1": "Học tập vui vẻ với các bài quiz dễ sử dụng",
+          "subtitle1": "Biến tài liệu thành bài tập thực hành chủ động để giúp bạn ghi nhớ nhiều hơn, hiểu rõ hơn và học ít hơn",
+          "featDrop": "Kéo và thả tài liệu học tập",
+          "title2": "Tạo bài quiz phù hợp với nhu cầu của bạn",
+          "subtitle2": "Chọn ngôn ngữ, kiểu câu hỏi, độ khó và tùy chọn phản hồi để phù hợp với sở thích học tập của bạn."
+        },
+        "studyGroup": {
+          "title": "Nhóm học tập",
+          "subTitle": "Tạo hoặc tham gia nhóm học để cùng thi đua và học tập với bạn bè."
+        },
+        "mindMap": {
+          "title": "Hình dung ý tưởng với Sơ đồ tư duy",
+          "subTitle": "Tổ chức suy nghĩ và khái niệm của bạn trong một cấu trúc trực quan, phân cấp."
+        },
+        "pomodoro": {
+          "title": "Tập trung hơn với Bộ hẹn giờ Pomodoro",
+          "subTitle": "Sử dụng Bộ hẹn giờ Pomodoro để chia công việc thành từng khoảng, giúp bạn duy trì sự tập trung và năng suất."
+        },
+        "kanbanBoard": {
+          "title": "Sắp xếp công việc với Bảng Kanban",
+          "subTitle": "Giữ cho các nhiệm vụ học tập của bạn được tổ chức và theo dõi tiến độ."
+        }
       }
     }
   },
@@ -73,10 +101,12 @@
     "courses": "Khóa học",
     "community": "Cộng đồng",
     "about": "Về chúng tôi",
+    "pricing": "Bảng giá",
     "login": "Đăng nhập",
     "register": "Đăng ký",
     "logout": "Đăng xuất",
-    "dashboard": "Bảng điều khiển"
+    "dashboard": "Bảng điều khiển",
+    "upgrade": "Nâng cấp"
   },
   "Dashboard": {
     "title": "Bảng điều khiển",
@@ -88,10 +118,12 @@
       "completionRate": "Tỷ lệ hoàn thành"
     },
     "quickActions": {
+      "title": "Hành động nhanh",
       "createCourse": "Tạo khóa học",
       "addStudent": "Thêm học sinh",
       "generateReport": "Tạo báo cáo",
-      "sendNotification": "Gửi thông báo"
+      "sendNotification": "Gửi thông báo",
+      "goToQuizzes": "Đi đến Quizzes"
     }
   },
   "Courses": {
@@ -134,6 +166,86 @@
     "exams": "Kỳ thi",
     "reports": "Báo cáo",
     "settings": "Cài đặt"
+  },
+  "Pricing": {
+    "title": "Bảng giá đơn giản, minh bạch",
+    "subtitle": "Chọn gói phù hợp nhất với bạn. Tất cả các gói đều bao gồm bản dùng thử 14 ngày.",
+    "popular": "Phổ biến nhất",
+    "billing": {
+      "monthly": "Hàng tháng",
+      "yearly": "Hàng năm",
+      "save20": "Tiết kiệm 20%",
+      "perMonth": "tháng",
+      "perYear": "năm"
+    },
+    "free": {
+      "title": "Miễn phí",
+      "price": "Miễn phí",
+      "description": "Hoàn hảo để bắt đầu với các tính năng cơ bản.",
+      "features": {
+        "unlimitedQuizzes": "Không giới hạn bài kiểm tra",
+        "basicAnalytics": "Phân tích cơ bản",
+        "upTo5MindMaps": "Lên đến 5 sơ đồ tư duy",
+        "communitySupport": "Hỗ trợ cộng đồng"
+      },
+      "button": "Bắt đầu"
+    },
+    "pro": {
+      "title": "Chuyên nghiệp",
+      "price": {
+        "monthly": "230.000₫",
+        "yearly": "190.000₫"
+      },
+      "description": "Hoàn hảo cho học sinh và chuyên gia muốn có nhiều tính năng hơn.",
+      "features": {
+        "unlimitedQuizzes": "Không giới hạn bài kiểm tra",
+        "advancedAnalytics": "Phân tích nâng cao",
+        "unlimitedMindMaps": "Không giới hạn sơ đồ tư duy",
+        "prioritySupport": "Hỗ trợ ưu tiên",
+        "offlineAccess": "Truy cập ngoại tuyến",
+        "customBranding": "Thương hiệu tùy chỉnh"
+      },
+      "button": "Dùng thử miễn phí"
+    },
+    "enterprise": {
+      "title": "Doanh nghiệp",
+      "price": {
+        "monthly": "690.000₫",
+        "yearly": "550.000₫"
+      },
+      "description": "Hoàn hảo cho nhóm và tổ chức.",
+      "features": {
+        "everythingInPro": "Tất cả trong gói Chuyên nghiệp",
+        "teamCollaboration": "Cộng tác nhóm",
+        "dedicatedManager": "Quản lý tài khoản chuyên dụng",
+        "customIntegrations": "Tích hợp tùy chỉnh",
+        "advancedSecurity": "Bảo mật nâng cao",
+        "slaGuarantee": "Cam kết SLA 99.9%"
+      },
+      "button": "Liên hệ bán hàng"
+    },
+    "faq": {
+      "title": "Câu hỏi thường gặp",
+      "subtitle": "Tất cả những gì bạn cần biết về các gói giá.",
+      "questions": {
+        "1": {
+          "question": "Tôi có thể thay đổi gói sau này không?",
+          "answer": "Có, bạn có thể nâng cấp hoặc hạ cấp gói của mình bất kỳ lúc nào."
+        },
+        "2": {
+          "question": "Bạn có giảm giá cho sinh viên không?",
+          "answer": "Có, chúng tôi cung cấp giảm 50% cho sinh viên có thẻ sinh viên hợp lệ."
+        },
+        "3": {
+          "question": "Bạn chấp nhận những phương thức thanh toán nào?",
+          "answer": "Chúng tôi chấp nhận tất cả các thẻ tín dụng chính bao gồm Visa, Mastercard và American Express."
+        },
+        "4": {
+          "question": "Tôi có thể hủy đăng ký bất kỳ lúc nào không?",
+          "answer": "Có, bạn có thể hủy đăng ký của mình bất kỳ lúc nào mà không mất phí hủy."
+        }
+      }
+    }
   },
   "Common": {
     "loading": "Đang tải...",
@@ -259,6 +371,41 @@
       "averageScore": "Điểm trung bình",
       "avgDuration": "Thời gian TB (phút)"
     },
+    "editor": {
+      "back": "Quay lại",
+      "save": "Lưu",
+      "saving": "Đang lưu...",
+      "createQuiz": "Tạo quiz",
+      "creating": "Đang tạo...",
+      "settings": "Cài đặt",
+      "quizInfo": "Thông tin quiz",
+      "deleteQuiz": "Xóa quiz",
+      "backToTop": "Quay lại đầu trang",
+      "apply": "Áp dụng",
+      "cancel": "Hủy",
+      "deleteQuizDescription": "Hành động này không thể hoàn tác. Thao tác này sẽ xóa vĩnh viễn bài kiểm tra của bạn và xóa tất cả dữ liệu liên quan.",
+      "confirmDelete": "Xóa Quiz"
+    },
+    "editorSettings": {
+      "title": "Cài đặt Quiz",
+      "description": "Cấu hình cài đặt quiz của bạn",
+      "visibility": "Hiển thị",
+      "status": "Trạng thái",
+      "private": "Riêng tư",
+      "public": "Công khai",
+      "unlisted": "Không công khai",
+      "premium": "Cao cấp",
+      "draft": "Nháp",
+      "published": "Đã xuất bản",
+      "archived": "Đã lưu trữ",
+      "estimatedTime": "Thời gian ước tính (phút)",
+      "passingScore": "Điểm đậu (%)",
+      "maxAttempts": "Số lần thử tối đa (0 = không giới hạn)",
+      "isPremium": "Chỉ dành cho thành viên cao cấp",
+      "isFeatured": "Nổi bật",
+      "isTrending": "Xu hướng",
+      "cancel": "Hủy"
+    },
     "yourQuizzes": "Bài kiểm tra của bạn",
     "quizCard": {
       "questions": "câu hỏi",
@@ -273,9 +420,9 @@
       "hard": "Khó"
     },
     "createCTA": {
-      "title": "Tạo quiz đầu tiên",
-      "description": "Bắt đầu xây dựng các quiz tương tác để kiểm tra kiến thức",
-      "button": "Tạo quiz mới"
+      "title": "Chưa có quiz nào",
+      "description": "Tạo quiz đầu tiên để bắt đầu với nội dung hấp dẫn.",
+      "button": "Tạo Quiz"
     },
     "create": {
       "title": "Tạo Quiz",
@@ -308,7 +455,11 @@
         "fast": "Nhanh",
         "balanced": "Cân bằng",
         "thorough": "Kỹ lưỡng",
+        "fastModeDescription": "Xử lý nhanh, bỏ qua hình ảnh và bảng phức tạp",
+        "balancedModeDescription": "Cân bằng tốt giữa tốc độ và độ chính xác",
+        "thoroughModeDescription": "Xử lý hoàn chỉnh, bao gồm tất cả nội dung",
         "fastModeWarning": "Chế độ nhanh bỏ qua hình ảnh và bảng. Sử dụng chế độ cân bằng nếu tài liệu có chúng, nhưng xử lý sẽ mất nhiều thời gian hơn.",
+        "thoroughModeInfo": "Chế độ kỹ lưỡng xử lý tất cả nội dung bao gồm bảng và hình ảnh. Chất lượng tốt nhất nhưng mất nhiều thời gian hơn.",
         "generationMode": "Chế độ tạo",
         "modeGenerate": "Tạo mới",
         "modeExtract": "Trích xuất",
@@ -434,6 +585,8 @@
   },
   "Settings": {
     "title": "Cài đặt",
+    "profile": "Trang cá nhân",
+    "logout": "Đăng xuất",
     "description": "Cấu hình tùy chọn để cá nhân hóa trải nghiệm của bạn",
     "save": "Lưu & Tiếp tục",
     "skip": "Bỏ qua",
@@ -525,7 +678,7 @@
     "flashcardCard": {
       "cards": "thẻ",
       "studied": "đã học",
-      "averageScore": "Điểm trung bình",
+      "completed": "Đã hoàn thành",
       "studyDeck": "Học bộ thẻ",
       "lastStudied": "Lần học cuối"
     },
@@ -578,6 +731,9 @@
         "fast": "Nhanh",
         "balanced": "Cân bằng",
         "thorough": "Kỹ lưỡng",
+        "fastModeDescription": "Xử lý nhanh, bỏ qua hình ảnh và bảng phức tạp",
+        "balancedModeDescription": "Cân bằng tốt giữa tốc độ và độ chính xác",
+        "thoroughModeDescription": "Xử lý hoàn chỉnh, bao gồm tất cả nội dung",
         "fastModeWarning": "Chế độ nhanh bỏ qua hình ảnh và bảng. Sử dụng chế độ cân bằng nếu tài liệu có chúng, nhưng xử lý sẽ mất nhiều thời gian hơn."
       },
       "supportedFormats": {
@@ -649,7 +805,6 @@
       "title": "Chỉnh sửa bộ Flashcard",
       "backToFlashcards": "Quay lại Flashcards",
       "saveChanges": "Lưu thay đổi",
-      "saveDraft": "Lưu nháp",
       "flashcardSetTitle": "Tiêu đề bộ Flashcard",
       "description": "Mô tả",
       "addFlashcard": "Thêm Flashcard",
@@ -699,5 +854,82 @@
   "Explore": {
     "title": "Khám Phá",
     "description": "Khám phá các bài kiểm tra và thẻ flash được tạo bởi sinh viên khác."
+  },
+  "Notes": {
+    "title": "Ghi chú",
+    "description": "Tạo và quản lý ghi chú với trình soạn thảo dựa trên khối",
+    "stats": {
+      "totalNotes": "Tổng số ghi chú",
+      "recentlyUpdated": "Cập nhật gần đây",
+      "myNotes": "Ghi chú của tôi"
+    },
+    "search": {
+      "placeholder": "Tìm kiếm ghi chú..."
+    },
+    "sort": {
+      "lastModified": "Cập nhật lần cuối",
+      "dateCreated": "Ngày tạo",
+      "title": "Tiêu đề",
+      "desc": "Mới nhất trước",
+      "asc": "Cũ nhất trước"
+    },
+    "actions": {
+      "createNote": "Tạo ghi chú",
+      "retry": "Thử lại",
+      "backToNotes": "Quay lại danh sách"
+    },
+    "emptyState": {
+      "noNotes": "Chưa có ghi chú nào",
+      "noResults": "Không tìm thấy kết quả",
+      "createFirst": "Tạo ghi chú đầu tiên để bắt đầu",
+      "noResultsDescription": "Thử điều chỉnh từ khóa tìm kiếm"
+    },
+    "errors": {
+      "loadFailed": "Không thể tải ghi chú",
+      "failedToLoadNote": "Không thể tải ghi chú",
+      "noteNotFound": "Không tìm thấy ghi chú",
+      "updateFailed": "Không thể cập nhật ghi chú"
+    },
+    "create": {
+      "title": "Tạo ghi chú mới",
+      "button": "Tạo ghi chú",
+      "templates": {
+        "blank": {
+          "title": "Ghi chú trống",
+          "description": "Bắt đầu với một trang trống"
+        },
+        "meeting": {
+          "title": "Ghi chú họp",
+          "description": "Mẫu cho ghi chú cuộc họp"
+        },
+        "daily": {
+          "title": "Nhật ký hàng ngày",
+          "description": "Mẫu cho nhật ký hàng ngày"
+        }
+      }
+    },
+    "edit": {
+      "title": "Chỉnh sửa ghi chú",
+      "untitledNote": "Ghi chú không có tiêu đề"
+    },
+    "editor": {
+      "untitledNote": "Ghi chú không có tiêu đề",
+      "save": "Lưu",
+      "saving": "Đang lưu...",
+      "share": "Chia sẻ",
+      "settings": "Cài đặt",
+      "addTag": "Thêm thẻ...",
+      "addBlock": "Thêm khối",
+      "success": {
+        "noteUpdated": "Đã cập nhật ghi chú",
+        "noteUpdatedDesc": "Ghi chú của bạn đã được lưu thành công"
+      }
+    }
+  },
+  "Error403": {
+    "title": "TRUY CẬP BỊ CẤM",
+    "description": "Bạn không có quyền truy cập vào tài nguyên này. Vui lòng đăng nhập lại nếu phiên đăng nhập hết hạn.",
+    "homeButton": "VỀ TRANG CHỦ",
+    "loginButton": "ĐĂNG NHẬP"
   }
 }

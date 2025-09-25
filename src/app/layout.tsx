@@ -5,6 +5,7 @@ import { ReactQueryProvider } from "@/components/provider/react-query-provider";
 import { ThemeProvider } from "@/components/theme";
 import { AuthProvider } from "@/contexts/auth-context";
 import { PomodoroProvider } from "@/contexts/pomodoro-context";
+import { QuizNavigationProvider } from "@/contexts/quiz-navigation-context";
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import NextTopLoader from "nextjs-toploader";
@@ -12,7 +13,10 @@ import { Toaster } from "sonner";
 
 import { OpenGraph } from "@/lib/og";
 import "./globals.css";
+import { QuizNavigationGuard } from "@/components/quizzes/take/quiz-navigation-guard";
 import { GoogleOAuthProvider } from "@react-oauth/google";
+import { AttendanceProvider } from "../contexts/attendance-context";
+import { PingProvider } from "../contexts/study-time-context";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -37,18 +41,25 @@ export default function RootLayout({
       <body
         className={`${inter.variable} bg-background font-sans text-foreground antialiased`}
       >
-        <NextTopLoader />
+        <NextTopLoader showForHashAnchor={false} />
         <ReactQueryProvider>
           <ThemeProvider>
             <GoogleOAuthProvider clientId={process.env.GOOGLE_CLIENT_ID || ""}>
               <LocaleProvider>
                 <AuthProvider>
                   <PomodoroProvider>
-                    <AuthGuard>
-                      <PomodoroAppWrapper>
-                        <main className="mx-auto ">{children}</main>
-                      </PomodoroAppWrapper>
-                    </AuthGuard>
+                    <QuizNavigationProvider>
+                      <AuthGuard>
+                        <PingProvider>
+                          <AttendanceProvider>
+                            <PomodoroAppWrapper>
+                              <main className="mx-auto ">{children}</main>
+                            </PomodoroAppWrapper>
+                          </AttendanceProvider>
+                        </PingProvider>
+                      </AuthGuard>
+                      <QuizNavigationGuard />
+                    </QuizNavigationProvider>
                   </PomodoroProvider>
                 </AuthProvider>
               </LocaleProvider>

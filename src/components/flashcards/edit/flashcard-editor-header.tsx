@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/select";
 import { htmlToText } from "@/lib/utils/text";
 import type { FlashcardData, FlashcardSet } from "@/types/flashcard";
-import { CheckCircle, Globe, Loader2, Lock, Save, Trash2 } from "lucide-react";
+import { CheckCircle, Globe, Loader2, Lock, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { CardHeader, CardTitle } from "../../ui";
 
@@ -35,7 +35,6 @@ export function FlashcardEditorHeader({
   flashcards,
   isPublic,
   isSaving = false,
-  onSave,
   onPublish,
   onDelete,
   onPrivacyChange,
@@ -52,14 +51,38 @@ export function FlashcardEditorHeader({
       const original = flashcardSet.flashcards[index];
       if (!original) return true;
 
+      // Check if it's vocabulary type flashcard
+      if (flashcard.vocabulary && flashcard.meaning) {
+        return (
+          flashcard.vocabulary !== original.vocabulary ||
+          flashcard.meaning !== original.meaning ||
+          flashcard.example !== original.example ||
+          flashcard.explanation !== original.explanation
+        );
+      }
+
+      // Check if it's question type flashcard
+      if (flashcard.question && flashcard.choices) {
+        return (
+          flashcard.question !== original.question ||
+          flashcard.explanation !== original.explanation ||
+          flashcard.correctAnswer !== original.correctAnswer ||
+          (flashcard.choices?.length || 0) !==
+            (original.choices?.length || 0) ||
+          flashcard.choices?.some(
+            (choice, choiceIndex) => choice !== original.choices?.[choiceIndex],
+          )
+        );
+      }
+
+      // Fallback comparison for any other type
       return (
         flashcard.question !== original.question ||
+        flashcard.vocabulary !== original.vocabulary ||
+        flashcard.meaning !== original.meaning ||
+        flashcard.example !== original.example ||
         flashcard.explanation !== original.explanation ||
-        flashcard.correctAnswer !== original.correctAnswer ||
-        flashcard.choices.length !== original.choices.length ||
-        flashcard.choices.some(
-          (choice, choiceIndex) => choice !== original.choices[choiceIndex],
-        )
+        flashcard.correctAnswer !== original.correctAnswer
       );
     });
   };
@@ -128,19 +151,6 @@ export function FlashcardEditorHeader({
             >
               <Trash2 className="h-4 w-4" />
               {t("editPage.deleteFlashcard")}
-            </Button>
-            <Button
-              variant="outline"
-              onClick={onSave}
-              disabled={!canSave || isSaving}
-              className="flex items-center gap-2"
-            >
-              {isSaving ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Save className="h-4 w-4" />
-              )}
-              {t("editPage.saveDraft")}
             </Button>
             <Button
               onClick={onPublish}

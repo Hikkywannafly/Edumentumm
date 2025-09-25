@@ -5,30 +5,42 @@ import type {
   FlashcardStats,
 } from "@/types/flashcard";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
-
 export interface CreateFlashcardSetRequest {
   title: string;
   description: string;
+  categoryId?: number;
+  flashcardType?: "QUESTIONS" | "VOCABULARY";
   isPublic: boolean;
   flashcards: Array<{
-    question: string;
-    choices: string[];
-    correctAnswer: number;
+    // For questions type
+    question?: string;
+    choices?: string[];
+    correctAnswer?: number;
     explanation?: string;
+    // For vocabulary type
+    vocabulary?: string;
+    meaning?: string;
+    example?: string;
   }>;
 }
 
 export interface UpdateFlashcardSetRequest {
   title?: string;
   description?: string;
+  categoryId?: number;
+  flashcardType?: "QUESTIONS" | "VOCABULARY";
   isPublic?: boolean;
   flashcards?: Array<{
     id?: number;
-    question: string;
-    choices: string[];
-    correctAnswer: number;
+    // For questions type
+    question?: string;
+    choices?: string[];
+    correctAnswer?: number;
     explanation?: string;
+    // For vocabulary type
+    vocabulary?: string;
+    meaning?: string;
+    example?: string;
   }>;
 }
 
@@ -37,7 +49,8 @@ class FlashcardService {
     endpoint: string,
     options: RequestInit = {},
   ): Promise<T> {
-    const url = `${API_BASE_URL}${endpoint}`;
+    // Use Next.js API routes instead of direct external API calls
+    const url = `/api${endpoint}`;
 
     const accessToken = localStorage.getItem("accessToken");
 
@@ -50,25 +63,16 @@ class FlashcardService {
       ...options,
     };
 
-    console.log("🌐 API Request:", {
-      url,
-      config: { ...config, headers: config.headers },
-    });
-
     try {
       const response = await fetch(url, config);
-
-      console.log(
-        "📡 API Response status:",
-        response.status,
-        response.statusText,
-      );
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         console.log("❌ API Error data:", errorData);
         throw new Error(
-          errorData.message || `HTTP error! status: ${response.status}`,
+          errorData.error ||
+            errorData.message ||
+            `HTTP error! status: ${response.status}`,
         );
       }
 
@@ -82,10 +86,29 @@ class FlashcardService {
     }
   }
 
-  async getAllFlashcards(): Promise<FlashcardApiResponse> {
+  async getAllFlashcards(
+    page = 0,
+    size = 6,
+    search?: string,
+    sortBy?: string,
+  ): Promise<FlashcardApiResponse> {
     try {
+      const params = new URLSearchParams({
+        page: page.toString(),
+        size: size.toString(),
+      });
+
+      if (search && search.trim()) {
+        params.append("search", search.trim());
+      }
+
+      // Only send sortBy to backend if it's not "recent" (default)
+      if (sortBy && sortBy.trim() && sortBy !== "recent") {
+        params.append("sortBy", sortBy.trim());
+      }
+
       const response = await this.request<FlashcardApiResponse>(
-        "/student/flashcards",
+        `/flashcards?${params.toString()}`,
       );
       return response;
     } catch (error) {
@@ -94,25 +117,10 @@ class FlashcardService {
     }
   }
 
-  async getPublicFlashcards(): Promise<FlashcardApiResponse> {
+  async getPublicFlashcards(page = 0, size = 6): Promise<FlashcardApiResponse> {
     try {
-      console.log("🔍 FlashcardService: Fetching public flashcards...");
-
-      // Check if token exists
-      const accessToken = localStorage.getItem("accessToken");
-      console.log("🔑 Token exists:", !!accessToken);
-      if (accessToken) {
-        console.log(`🔑 Token preview: ${accessToken.substring(0, 20)}...`);
-      }
-
-      // Try the current endpoint first
       const response = await this.request<FlashcardApiResponse>(
-        "/student/flashcards/public",
-      );
-
-      console.log(
-        "✅ FlashcardService: Successfully fetched public flashcards:",
-        response,
+        `/flashcards/public?page=${page}&size=${size}`,
       );
       return response;
     } catch (error) {
@@ -120,27 +128,6 @@ class FlashcardService {
         "❌ FlashcardService: Error fetching public flashcards:",
         error,
       );
-
-      // If 403, try a different approach - maybe all flashcards with filtering
-      if (error instanceof Error && error.message.includes("403")) {
-        console.log(
-          "🔄 Trying to get all flashcards and filter public ones...",
-        );
-        try {
-          const allFlashcards = await this.getAllFlashcards();
-          // Filter only public flashcards
-          const publicFlashcards = {
-            ...allFlashcards,
-            data: allFlashcards.data.filter((flashcard) => flashcard.isPublic),
-          };
-          console.log("✅ Filtered public flashcards:", publicFlashcards);
-          return publicFlashcards;
-        } catch (fallbackError) {
-          console.error("❌ Fallback also failed:", fallbackError);
-          throw error; // Throw original error
-        }
-      }
-
       throw error;
     }
   }
@@ -148,7 +135,7 @@ class FlashcardService {
   async getFlashcardById(id: number): Promise<FlashcardSet> {
     try {
       const response = await this.request<FlashcardSetApiResponse>(
-        `/student/flashcards/${id}`,
+        `/flashcards/${id}`,
       );
       return response.data;
     } catch (error) {
@@ -157,15 +144,100 @@ class FlashcardService {
     }
   }
 
+  // Utility function to truncate text safely
+  private truncateText(text: string, maxLength: number): string {
+    if (!text || text.length <= maxLength) return text;
+    // Find the last space before the limit to avoid cutting words
+    const truncated = text.substring(0, maxLength);
+    const lastSpace = truncated.lastIndexOf(" ");
+    if (lastSpace > maxLength * 0.8) {
+      return `${truncated.substring(0, lastSpace)}...`;
+    }
+    return `${truncated.substring(0, maxLength - 3)}...`;
+  }
+
+  // Validate and sanitize flashcard data before sending to API
+  private validateFlashcardData(
+    data: CreateFlashcardSetRequest,
+  ): CreateFlashcardSetRequest {
+    return {
+      ...data,
+      title: this.truncateText(data.title, 255),
+      description: this.truncateText(data.description, 500),
+      categoryId: data.categoryId,
+      flashcards: data.flashcards.map((flashcard) => {
+        if (flashcard.vocabulary) {
+          // Vocabulary type flashcard
+          return {
+            vocabulary: this.truncateText(flashcard.vocabulary, 200),
+            meaning: this.truncateText(flashcard.meaning || "", 250),
+            example: this.truncateText(flashcard.example || "", 300),
+            explanation: this.truncateText(flashcard.explanation || "", 250),
+          };
+        }
+
+        // Question type flashcard
+        return {
+          question: this.truncateText(flashcard.question || "", 250),
+          choices: (flashcard.choices || []).map((choice) =>
+            this.truncateText(choice, 200),
+          ),
+          correctAnswer: flashcard.correctAnswer || 0,
+          explanation: this.truncateText(flashcard.explanation || "", 250),
+        };
+      }),
+    };
+  }
+
+  // Validate and sanitize update flashcard data
+  private validateUpdateFlashcardData(
+    data: UpdateFlashcardSetRequest,
+  ): UpdateFlashcardSetRequest {
+    return {
+      ...data,
+      title: data.title ? this.truncateText(data.title, 255) : data.title,
+      description: data.description
+        ? this.truncateText(data.description, 500)
+        : data.description,
+      categoryId: data.categoryId,
+      flashcards: data.flashcards?.map((flashcard) => {
+        if (flashcard.vocabulary) {
+          // Vocabulary type flashcard
+          return {
+            ...flashcard,
+            vocabulary: this.truncateText(flashcard.vocabulary, 200),
+            meaning: this.truncateText(flashcard.meaning || "", 250),
+            example: this.truncateText(flashcard.example || "", 300),
+            explanation: this.truncateText(flashcard.explanation || "", 250),
+          };
+        }
+
+        // Question type flashcard
+        return {
+          ...flashcard,
+          question: this.truncateText(flashcard.question || "", 250),
+          choices: (flashcard.choices || []).map((choice) =>
+            this.truncateText(choice, 200),
+          ),
+          correctAnswer: flashcard.correctAnswer || 0,
+          explanation: this.truncateText(flashcard.explanation || "", 250),
+        };
+      }),
+    };
+  }
+
   async createFlashcardSet(
     flashcardSetData: CreateFlashcardSetRequest,
   ): Promise<FlashcardSet> {
     try {
+      // Validate and sanitize data before sending to API
+      const validatedData = this.validateFlashcardData(flashcardSetData);
+
       const response = await this.request<FlashcardSetApiResponse>(
-        "/student/flashcards",
+        "/flashcards",
         {
           method: "POST",
-          body: JSON.stringify(flashcardSetData),
+          body: JSON.stringify(validatedData),
         },
       );
       return response.data;
@@ -183,11 +255,14 @@ class FlashcardService {
     flashcardSetData: UpdateFlashcardSetRequest,
   ): Promise<FlashcardSet> {
     try {
+      // Validate and sanitize data before sending to API
+      const validatedData = this.validateUpdateFlashcardData(flashcardSetData);
+
       const response = await this.request<FlashcardSetApiResponse>(
-        `/student/flashcards/${id}`,
+        `/flashcards/${id}`,
         {
           method: "PATCH",
-          body: JSON.stringify(flashcardSetData),
+          body: JSON.stringify(validatedData),
         },
       );
       return response.data;
@@ -202,10 +277,9 @@ class FlashcardService {
 
   async deleteFlashcardSet(id: number): Promise<void> {
     try {
-      await this.request(`/student/flashcards/${id}`, {
+      await this.request(`/flashcards/${id}`, {
         method: "DELETE",
       });
-      console.log("✅ Flashcard set deleted successfully");
     } catch (error) {
       console.error(
         "❌ FlashcardService: Error deleting flashcard set:",
@@ -215,8 +289,11 @@ class FlashcardService {
     }
   }
 
-  calculateStats(flashcards: FlashcardSet[]): FlashcardStats {
-    const totalDecks = flashcards.length;
+  calculateStats(
+    flashcards: FlashcardSet[],
+    pagination?: { totalElements: number },
+  ): FlashcardStats {
+    const totalDecks = pagination?.totalElements ?? flashcards.length;
     const totalFlashcards = flashcards.reduce(
       (sum, deck) => sum + deck.flashcards.length,
       0,

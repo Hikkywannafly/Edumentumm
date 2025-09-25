@@ -3,105 +3,43 @@
 import {} from "@radix-ui/react-dropdown-menu";
 import {} from "lucide-react";
 import { useTranslations } from "next-intl";
+import { useCallback, useEffect } from "react";
+import useGetAllAchievement from "../../hooks/achievement/use-get-all-achievement";
+import useGetSummaryAchievement from "../../hooks/achievement/use-get-sumary-achievement";
+import { Skeleton } from "../ui/skeleton";
 import { AchievementCard } from "./achievement-card";
 import AchievementFilter from "./achievement-filter";
 import AchievementPaging from "./achievement-paging";
+import {
+  AchievementCardSkeleton,
+  StatsCardSkeleton,
+} from "./achievement-skeleton";
 import { StatsCard } from "./starts-card";
 
 export const AchievementsContent = () => {
   const t = useTranslations("Achievements");
+  const {
+    achievements,
+    paging,
+    loading,
+    keyword,
+    setKeyword,
+    setPage,
+    rarity,
+    setRarity,
+    achieved,
+    setAchieved,
+  } = useGetAllAchievement();
 
-  const achievementsData: Array<{
-    icon: string;
-    title: string;
-    tier: string;
-    description: string;
-    xp: number;
-    progressCurrent?: number;
-    progressTotal?: number;
-    rarity: "COMMON" | "RARE" | "EPIC" | "LEGENDARY";
-  }> = [
-    {
-      icon: "🎯",
-      title: "First Steps",
-      tier: "Tier 1",
-      description: "Complete your first quiz",
-      xp: 10,
-      rarity: "COMMON",
-    },
-    {
-      icon: "🎓",
-      title: "Flashcard Scholar",
-      tier: "Tier 1",
-      description: "Study 500 flashcards",
-      xp: 75,
-      progressCurrent: 0,
-      progressTotal: 500,
-      rarity: "RARE",
-    },
-    {
-      icon: "🎓",
-      title: "Flashcard Student",
-      tier: "Tier 1",
-      description: "Study 50 flashcards",
-      xp: 20,
-      progressCurrent: 0,
-      progressTotal: 50,
-      rarity: "COMMON",
-    },
-    {
-      icon: "🎯",
-      title: "Quiz Novice",
-      tier: "Tier 1",
-      description: "Complete 10 quizzes",
-      xp: 25,
-      progressCurrent: 9,
-      progressTotal: 10,
-      rarity: "COMMON",
-    },
-    {
-      icon: "🎨",
-      title: "Card Creator",
-      tier: "Tier 1",
-      description: "Create your first flashcard set",
-      xp: 15,
-      rarity: "COMMON",
-    },
-    {
-      icon: "🎨",
-      title: "Flashcard Architect",
-      tier: "Tier 1",
-      description: "Create 25 flashcard sets",
-      xp: 60,
-      progressCurrent: 2,
-      progressTotal: 25,
-      rarity: "RARE",
-    },
-    {
-      icon: "🎯",
-      title: "Quiz Creator",
-      tier: "Tier 1",
-      description: "Create 5 quizzes",
-      xp: 50,
-      rarity: "COMMON",
-    },
-    {
-      icon: "🎯",
-      title: "Consistent Performer",
-      tier: "Tier 1",
-      description: "Achieve a 7-day streak",
-      xp: 150,
-      rarity: "EPIC",
-    },
-    {
-      icon: "🎯",
-      title: "Perfectionist",
-      tier: "Tier 1",
-      description: "Score 100% on a quiz",
-      xp: 30,
-      rarity: "RARE",
-    },
-  ];
+  const { data, loading: loadingSummary } = useGetSummaryAchievement();
+
+  const resetPage = useCallback(() => {
+    setPage(0);
+  }, [setPage]);
+
+  useEffect(() => {
+    resetPage();
+  }, [resetPage]);
 
   const statsData: Array<{
     title: string;
@@ -112,14 +50,14 @@ export const AchievementsContent = () => {
   }> = [
     {
       title: t("stats.totalUnlocked.title"),
-      value: "0/26",
+      value: `${data?.totalUnlocked}/${data?.totalAchievements ?? 1}`,
       description: t("stats.totalUnlocked.description"),
       icon: "trophy",
       iconColor: "text-yellow-400",
     },
     {
       title: t("stats.xpEarned.title"),
-      value: "10",
+      value: data?.totalXP.toString() || "0",
       description: t("stats.xpEarned.description"),
       icon: "bolt",
       iconColor: "text-blue-400",
@@ -143,6 +81,21 @@ export const AchievementsContent = () => {
   return (
     <div className="flex-1 space-y-6 p-6">
       <header className="mb-8">
+        {/* {loading ? (
+          <div>
+            <Skeleton className="mb-2 h-10 w-1/3" />
+            <Skeleton className="h-6 w-1/2" />
+          </div>
+        ) : (
+          <>
+            <h1 className="mb-2 font-bold text-3xl text-zinc-900 md:text-4xl dark:text-white">
+              {t("title")}
+            </h1>
+            <p className="text-lg text-zinc-600 dark:text-zinc-400">
+              {t("description")}
+            </p>
+          </>
+        )} */}
         <h1 className="mb-2 font-bold text-3xl text-zinc-900 md:text-4xl dark:text-white">
           {t("title")}
         </h1>
@@ -152,37 +105,58 @@ export const AchievementsContent = () => {
       </header>
 
       <section className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {statsData.map((stat, index) => (
-          <StatsCard
-            key={index}
-            title={stat.title}
-            value={stat.value}
-            description={stat.description}
-            icon={stat.icon}
-            iconColor={stat.iconColor}
-          />
-        ))}
+        {loadingSummary
+          ? Array.from({ length: 4 }).map((_, i) => (
+              <StatsCardSkeleton key={i} />
+            ))
+          : statsData.map((stat, index) => (
+              <StatsCard
+                key={index}
+                title={stat.title}
+                value={stat.value}
+                description={stat.description}
+                icon={stat.icon}
+                iconColor={stat.iconColor}
+              />
+            ))}
       </section>
 
-      <AchievementFilter />
+      {loadingSummary ? (
+        <div className="flex gap-4">
+          <Skeleton className="h-10 w-full rounded-md" />
+          <Skeleton className="h-10 w-56 rounded-md" />
+          <Skeleton className="h-10 w-56 rounded-md" />
+        </div>
+      ) : (
+        <AchievementFilter
+          keyword={keyword}
+          setKeyword={setKeyword}
+          rarity={rarity}
+          setRarity={setRarity}
+          achieved={achieved}
+          setAchieved={setAchieved}
+        />
+      )}
 
       <section className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {achievementsData.map((achievement, index) => (
-          <AchievementCard
-            key={index}
-            icon={achievement.icon}
-            title={achievement.title}
-            tier={achievement.tier}
-            description={achievement.description}
-            xp={achievement.xp}
-            progressCurrent={achievement.progressCurrent}
-            progressTotal={achievement.progressTotal}
-            rarity={achievement.rarity}
-          />
-        ))}
+        {loading
+          ? Array.from({ length: 6 }).map((_, i) => (
+              <AchievementCardSkeleton key={i} />
+            ))
+          : achievements.map((achievement, index) => (
+              <AchievementCard achievement={achievement} key={index} />
+            ))}
       </section>
-
-      <AchievementPaging />
+      {loading ? (
+        <div className="mt-4 flex justify-center">
+          <Skeleton className="h-10 w-40 rounded-md" />
+        </div>
+      ) : (
+        <AchievementPaging
+          pagination={paging || undefined}
+          pageIndex={setPage}
+        />
+      )}
     </div>
   );
 };

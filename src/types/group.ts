@@ -1,5 +1,5 @@
 export interface GroupResponse {
-  id: number;
+  publicId: string;
   name: string;
   description: string;
   memberLimit: number;
@@ -18,7 +18,17 @@ export interface GroupRequest {
   public: boolean;
 }
 
+export interface IPagination {
+  currentPage: number;
+  pageSize: number;
+  totalElements: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrevious: boolean;
+}
+
 export interface GetGroupsAPIResponse {
+  pagination: IPagination;
   data: GroupResponse[];
   status: string;
   message: string;
@@ -31,7 +41,7 @@ export interface UserGroupResponse {
 }
 
 export interface GroupDetailResponse {
-  id: number;
+  publicId: string;
   memberLimit: number;
   ownerId: number;
   ownerName: string;
@@ -39,7 +49,8 @@ export interface GroupDetailResponse {
   key: string;
   name: string;
   description: string;
-
+  groupTier: string;
+  contributionPoints: string;
   isPublic: boolean;
   userGroupResponseList: UserGroupResponse[];
 }

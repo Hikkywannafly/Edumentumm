@@ -28,10 +28,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { type SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { groupAPI } from "../../../lib/api/group";
+import { useCreateGroup } from "../../../hooks/group/use-create-group";
 
 export function CreateGroupContent() {
   const router = useRouter();
+  const { mutateAsync: createGroup, isPending } = useCreateGroup();
 
   const form = useForm<CreateStudyGroupFormData>({
     resolver: zodResolver(createStudyGroupSchema),
@@ -51,11 +52,13 @@ export function CreateGroupContent() {
         memberLimit: values.memberLimit,
         public: values.public,
       };
-      await groupAPI.createGroup(payload);
+
+      await createGroup(payload);
       toast.success("Tạo nhóm thành công!");
       form.reset();
       router.back();
     } catch (err) {
+      toast.error("Có lỗi khi tạo nhóm");
       console.error(err);
     }
   };
@@ -177,8 +180,12 @@ export function CreateGroupContent() {
                 >
                   Cancel
                 </Button>
-                <Button type="submit" className="rounded-sm px-6">
-                  Create Group
+                <Button
+                  type="submit"
+                  className="rounded-sm px-6"
+                  disabled={isPending}
+                >
+                  {isPending ? "Creating..." : "Create Group"}
                 </Button>
               </div>
             </form>

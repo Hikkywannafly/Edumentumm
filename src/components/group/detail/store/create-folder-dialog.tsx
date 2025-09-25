@@ -36,15 +36,15 @@ export function CreateFolderDialog({
     if (!name.trim()) return;
     try {
       setLoading(true);
-      const newFolder = await folderAPI.createGroup(groupId, name.trim());
+      const newFolder = await folderAPI.createFolder(groupId, name.trim());
       console.log(newFolder);
       onSuccess?.(newFolder);
       onOpenChange(false);
       setName("");
-      toast.success("Tạo thư mục thành công!");
+      toast.success("Create folder successfully!");
     } catch (err) {
-      console.error("Lỗi tạo folder:", err);
-      toast.error("Tạo thư mục thất bại!");
+      console.error("Error creating folder:", err);
+      toast.error("Failed to create folder!");
     } finally {
       setLoading(false);
     }
@@ -57,17 +57,17 @@ export function CreateFolderDialog({
           <div className="flex items-center gap-2">
             <FolderPlus className="h-5 w-5 text-primary" />
             <DialogTitle className="font-medium text-base">
-              Tạo thư mục
+              Create folder
             </DialogTitle>
           </div>
         </DialogHeader>
 
         <div className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="folder-name">Tên thư mục</Label>
+            <Label htmlFor="folder-name">Folder name</Label>
             <Input
               id="folder-name"
-              placeholder="Nhập tên thư mục..."
+              placeholder="Enter folder name..."
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="rounded-lg"
@@ -82,7 +82,7 @@ export function CreateFolderDialog({
             onClick={() => onOpenChange(false)}
             disabled={loading}
           >
-            Hủy
+            Cancel
           </Button>
           <Button onClick={handleCreate} disabled={loading}>
             {loading ? "Đang tạo..." : "Tạo"}

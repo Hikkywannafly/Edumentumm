@@ -45,12 +45,21 @@ class GroupAPI {
     }
   }
 
-  async getGroups(): Promise<GroupResponse[]> {
+  async getGroups(
+    page: number,
+    size: number,
+    keyword: string,
+  ): Promise<GetGroupsAPIResponse> {
     const response = await this.request<GetGroupsAPIResponse>(
-      "/user/groups/public",
+      `/user/groups/public?page=${page}&size=${size}&keyword=${keyword}`,
     );
     console.log(response.data);
-    return response.data;
+    return {
+      status: response.status,
+      message: response.message || "Success",
+      data: response.data,
+      pagination: response.pagination,
+    };
   }
 
   async createGroup(createGroup: GroupRequest): Promise<GroupResponse> {
@@ -62,9 +71,9 @@ class GroupAPI {
     return response;
   }
 
-  async getGroupDetailById(groupId: number): Promise<GroupDetailResponse> {
+  async getGroupDetailById(publicId: string): Promise<GroupDetailResponse> {
     const response = await this.request<GetGroupsDetailAPIResponse>(
-      `/user/groups/${groupId}`,
+      `/user/groups/${publicId}`,
       {
         method: "GET",
       },
@@ -81,22 +90,39 @@ class GroupAPI {
     return response.data;
   }
 
-  async joinGroup(groupId: number): Promise<void> {
-    await this.request(`/user/groups/${groupId}/join`, {
+  async joinGroup(publicId: string): Promise<void> {
+    await this.request(`/user/groups/${publicId}/join`, {
       method: "POST",
+    });
+  }
+
+  async deleteGroup(publicId: string): Promise<void> {
+    await this.request(`/user/groups/${publicId}`, {
+      method: "DELETE",
     });
   }
 
   async updateGroup(
     createGroup: GroupRequest,
-    id: string,
+    publicId: string,
   ): Promise<GroupResponse> {
-    const response = await this.request<any>(`/user/groups/${id}`, {
+    const response = await this.request<any>(`/user/groups/${publicId}`, {
       method: "PATCH",
       body: JSON.stringify(createGroup),
     });
     console.log(response.data);
     return response.data;
+  }
+
+  async donatePoint(
+    groupId: number,
+    points: number,
+    message: string,
+  ): Promise<void> {
+    await this.request(`/user/groups/${groupId}/donate`, {
+      method: "POST",
+      body: JSON.stringify({ points, message }),
+    });
   }
 }
 

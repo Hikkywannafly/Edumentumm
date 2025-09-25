@@ -54,6 +54,9 @@ export function AIGeneratedUploader({
   const [generationMode, setGenerationMode] = useState<"GENERATE" | "EXTRACT">(
     "GENERATE",
   );
+  const [flashcardType, setFlashcardType] = useState<
+    "QUESTIONS" | "VOCABULARY"
+  >("QUESTIONS");
   const [fileProcessingMode, setFileProcessingMode] = useState<
     "PARSE_THEN_SEND" | "SEND_DIRECT"
   >("PARSE_THEN_SEND");
@@ -109,6 +112,7 @@ export function AIGeneratedUploader({
     try {
       const settings = {
         generationMode,
+        flashcardType,
         fileProcessingMode,
         visibility,
         language,
@@ -219,6 +223,27 @@ export function AIGeneratedUploader({
                   </SelectContent>
                 </Select>
               </div>
+
+              {/* Flashcard Type - Only show when generation mode is GENERATE */}
+              {generationMode === "GENERATE" && (
+                <div className="space-y-2">
+                  <Label>Flashcard Type</Label>
+                  <Select
+                    value={flashcardType}
+                    onValueChange={(value: "QUESTIONS" | "VOCABULARY") =>
+                      setFlashcardType(value)
+                    }
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="w-full">
+                      <SelectItem value="QUESTIONS">❓ Questions</SelectItem>
+                      <SelectItem value="VOCABULARY">📚 Vocabulary</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
 
               <div className="space-y-2">
                 <Label>{t("create.settings.fileProcessing")}</Label>

@@ -19,8 +19,8 @@ export function FoldersTabContent({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="font-semibold text-lg">Tất cả thư mục</h3>
-        <Badge variant="secondary">{folders.length} thư mục</Badge>
+        <h3 className="font-semibold text-lg">All folders</h3>
+        <Badge variant="secondary">{folders.length} folders</Badge>
       </div>
       <div
         className={

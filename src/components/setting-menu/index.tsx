@@ -1,5 +1,6 @@
 "use client";
 
+import { LocalizedLink } from "@/components/localized-link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,16 +12,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/contexts/auth-context";
-import { getLocaleFromPathname } from "@/lib/utils";
 import { LogOut, Settings, User } from "lucide-react";
-import { usePathname, useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 export function SettingMenu() {
+  const t = useTranslations("Settings");
   const { user, logout, isLoading } = useAuth();
-  const router = useRouter();
-  const pathname = usePathname();
 
-  // Get user initials from username or email
   const getInitials = (username?: string, email?: string) => {
     if (username) {
       return username
@@ -33,31 +31,21 @@ export function SettingMenu() {
     if (email) {
       return email.slice(0, 2).toUpperCase();
     }
-    return "US"; // Default fallback
+    return "US";
   };
 
   const initials = getInitials(user?.username, user?.email);
   const displayName = user?.username || user?.email || "User";
 
-  const handleProfileClick = () => {
-    const locale = getLocaleFromPathname(pathname);
-    router.push(`/${locale}/profile`);
-  };
-
-  const handleSettingsClick = () => {
-    const locale = getLocaleFromPathname(pathname);
-    router.push(`/${locale}/settings`);
-  };
-
   if (isLoading) {
     return (
       <Button
         variant="ghost"
-        className="relative h-8 w-8 rounded-full"
+        className="relative h-10 w-10 animate-pulse rounded-full"
         disabled
       >
-        <Avatar className="h-8 w-8">
-          <AvatarFallback className="font-medium text-xs">...</AvatarFallback>
+        <Avatar className="h-10 w-10">
+          <AvatarFallback className="font-medium text-base">...</AvatarFallback>
         </Avatar>
       </Button>
     );
@@ -70,52 +58,73 @@ export function SettingMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-          <Avatar className="h-8 w-8">
-            <AvatarImage src={"/placeholder.svg"} alt={displayName} />
-            <AvatarFallback className="font-medium text-xs">
+        <Button
+          variant="ghost"
+          className="relative h-10 w-10 rounded-full ring-2 ring-indigo-500/70 transition hover:ring-indigo-600"
+        >
+          <Avatar className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border-4 border-background">
+            <AvatarImage
+              src={user?.imageUrl || "/placeholder.svg"}
+              className="h-full w-full object-cover"
+            />
+            <AvatarFallback className="flex h-full w-full items-center justify-center bg-muted font-bold text-4xl">
               {initials}
             </AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56" align="end" forceMount>
-        <DropdownMenuLabel className="font-normal">
-          <div className="flex flex-col space-y-1">
-            <p className="font-medium text-sm leading-none">{displayName}</p>
-            {user?.email && (
-              <p className="text-muted-foreground text-xs leading-none">
-                {user.email}
-              </p>
-            )}
-            {user?.roles && user.roles.length > 0 && (
-              <p className="text-muted-foreground text-xs leading-none">
-                {user.roles
-                  .map((role) => role.name.replace("ROLE_", ""))
-                  .join(", ")}
-              </p>
-            )}
+      <DropdownMenuContent
+        className="w-64 rounded-xl border-0 bg-white p-0 shadow-xl dark:bg-zinc-900"
+        align="end"
+        forceMount
+      >
+        <DropdownMenuLabel className=" border-b p-4 pb-2 font-normal dark:border-zinc-800">
+          <div className="flex items-center gap-3">
+            <Avatar className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border-4 border-background">
+              <AvatarImage
+                src={user?.imageUrl || "/placeholder.svg"}
+                className="h-full w-full object-cover"
+              />
+              <AvatarFallback className="flex h-full w-full items-center justify-center bg-muted font-bold text-4xl">
+                {initials}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex flex-col">
+              <span className="font-semibold text-base">{displayName}</span>
+              {user?.email && (
+                <span className="text-xs text-zinc-500 dark:text-zinc-400">
+                  {user.email}
+                </span>
+              )}
+              {user?.roles && user.roles.length > 0 && (
+                <span className="mt-1 text-indigo-600 text-xs dark:text-indigo-400">
+                  {user.roles
+                    .map((role) => role.name.replace("ROLE_", ""))
+                    .join(", ")}
+                </span>
+              )}
+            </div>
           </div>
         </DropdownMenuLabel>
+        <LocalizedLink href="/profile">
+          <DropdownMenuItem className="flex cursor-pointer items-center gap-2 px-4 py-3 transition hover:bg-indigo-50 dark:hover:bg-zinc-800">
+            <User className="h-5 w-5" />
+            <span className="font-medium">{t("profile")}</span>
+          </DropdownMenuItem>
+        </LocalizedLink>
+        <LocalizedLink href="/settings">
+          <DropdownMenuItem className="flex cursor-pointer items-center gap-2 px-4 py-3 transition hover:bg-indigo-50 dark:hover:bg-zinc-800">
+            <Settings className="h-5 w-5" />
+            <span className="font-medium">{t("title")}</span>
+          </DropdownMenuItem>
+        </LocalizedLink>
         <DropdownMenuSeparator />
         <DropdownMenuItem
-          className="cursor-pointer"
-          onClick={handleProfileClick}
+          className="flex cursor-pointer items-center gap-2 px-4 py-3 text-red-600 transition hover:bg-red-50 dark:hover:bg-zinc-800"
+          onClick={logout}
         >
-          <User className="mr-2 h-4 w-4" />
-          <span>Profile</span>
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          className="cursor-pointer"
-          onClick={handleSettingsClick}
-        >
-          <Settings className="mr-2 h-4 w-4" />
-          <span>Settings</span>
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem className="cursor-pointer" onClick={logout}>
-          <LogOut className="mr-2 h-4 w-4" />
-          <span>Log out</span>
+          <LogOut className="h-5 w-5 text-red-600" />
+          <span className="font-medium">{t("logout")}</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

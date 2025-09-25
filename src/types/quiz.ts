@@ -4,7 +4,20 @@ export type QuestionType =
   | "TRUE_FALSE"
   | "FILL_BLANK"
   | "FREE_RESPONSE";
+
+// Tag interface for complex tag objects from backend
+export interface TagObject {
+  name: string;
+  description?: string;
+  icon?: string;
+  color?: string;
+}
+
+// Tag type that can be either string or complex object
+export type Tag = string | TagObject;
+
 export type Difficulty = "EASY" | "MEDIUM" | "HARD";
+
 export type BloomLevel =
   | "REMEMBER"
   | "UNDERSTAND"
@@ -12,21 +25,41 @@ export type BloomLevel =
   | "ANALYZE"
   | "EVALUATE"
   | "CREATE";
-export type Visibility = "PRIVATE" | "PUBLIC" | "UNLISTED";
+
+export type Visibility = "PRIVATE" | "PUBLIC" | "UNLISTED" | "PREMIUM";
+
 export type Language = "AUTO" | "EN" | "VI" | "ZH" | "JA" | "KO";
+
 export type QuizMode = "QUIZ" | "FLASHCARD" | "STUDY_GUIDE";
+
 export type Task = "GENERATE_QUIZ" | "REVIEW" | "TEST";
+
 export type ParsingMode = "FAST" | "BALANCED" | "THOROUGH";
+
 export type SourceType =
   | "FILE"
   | "TEXT"
+  | "AI_GENERATED"
   | "LINK"
   | "DRIVE"
   | "MATERIAL"
   | "MEDIA"
   | "IMAGE"
   | "YOUTUBE";
+
 export type AIModel = "GPT-4" | "CLAUDE-3" | "GEMINI" | "LOCAL";
+
+export type GenerationMode = "GENERATE" | "EXTRACT";
+
+export type FileProcessingMode = "PARSE_THEN_SEND" | "SEND_DIRECT";
+
+export type QuizCreationType =
+  | "FILE_UPLOAD"
+  | "AI_GENERATED"
+  | "MANUAL"
+  | "TEMPLATE";
+
+export type QuizStatus = "DRAFT" | "PUBLISHED" | "ARCHIVED";
 
 // ===== CORE INTERFACES =====
 export interface Answer {
@@ -39,7 +72,7 @@ export interface Answer {
 
 export interface Question {
   id: string;
-  question: string; // HTML content from Tiptap
+  question: string;
   type: QuestionType;
   difficulty: Difficulty;
   bloom_level: BloomLevel;
@@ -47,7 +80,7 @@ export interface Question {
   order_index: number;
   explanation?: string;
   answers: Answer[];
-  shortAnswerText?: string; // For FILL_BLANK and FREE_RESPONSE
+  shortAnswerText?: string;
   tags?: string[];
   image_url?: string;
 }
@@ -68,13 +101,25 @@ export interface QuizSettings {
   allow_retry: boolean;
   time_limit_per_question?: number | null; // seconds
   passing_score: number; // percentage
+  generationMode?: GenerationMode;
+  fileProcessingMode?: FileProcessingMode;
+  useAI?: boolean;
+  autoSave?: boolean;
+  // Additional properties for quiz management
+  status?: QuizStatus;
+  isPremium?: boolean;
+  isFeatured?: boolean;
+  isTrending?: boolean;
+  estimatedTime?: number;
+  maxAttempts?: number;
+  passingScore?: number;
 }
 
 // ===== SOURCE INFORMATION =====
 export interface SourceInfo {
   type: SourceType;
-  content: string; // URL, text content, or file references
-  file_references?: string[]; // Array of file paths/IDs
+  content: string;
+  file_references?: string[];
   metadata?: {
     title?: string;
     author?: string;
@@ -89,11 +134,26 @@ export interface AIInfo {
   model?: AIModel;
   prompt?: string;
   generation_settings?: {
+    mode?: GenerationMode;
+    processing_mode?: FileProcessingMode;
     temperature?: number;
     max_tokens?: number;
     top_p?: number;
+    difficulty?: Difficulty;
+    question_type?: QuestionType | "MIXED";
   };
-  processing_time?: number; // seconds
+  processing_time?: number;
+}
+
+// ===== QUIZ METADATA =====
+export interface QuizMetadata {
+  total_questions: number;
+  total_points: number;
+  estimated_time: number; // minutes
+  tags: Tag[]; // Support both string and TagObject
+  category?: string;
+  subject?: string;
+  grade_level?: string;
 }
 
 // ===== QUIZ DATA (JSONB) =====
@@ -102,55 +162,65 @@ export interface QuizData {
   settings: QuizSettings;
   source_info: SourceInfo;
   ai_info: AIInfo;
-  metadata: {
-    total_questions: number;
-    total_points: number;
-    estimated_time: number; // minutes
-    tags: string[];
-    category?: string;
-    subject?: string;
-    grade_level?: string;
-  };
+  metadata: QuizMetadata;
 }
 
-// ===== DATABASE ENTITY =====
-export interface QuizEntity {
-  id: number;
+// ===== CREATE QUIZ PAYLOAD (for API) =====
+export interface CreateQuizPayload {
   title: string;
   description?: string;
-  user_id: number;
-  category_id?: number;
-  quiz_data: QuizData;
-  created_at: string;
-  updated_at: string;
+  userId: number;
+  categoryId?: number;
+  visibility?: Visibility;
+  language?: Language;
+  questionType?: QuestionType | "MIXED";
+  numberOfQuestions?: number;
+  mode?: QuizMode;
+  difficulty?: Difficulty;
+  task?: Task;
+  parsingMode?: ParsingMode;
+  sourceType?: SourceType;
+  sourceContent?: string;
+  isAiGenerated?: boolean;
+  aiModel?: AIModel;
+  generationMode?: GenerationMode;
+  fileProcessingMode?: FileProcessingMode;
+  quizData: {
+    questions: QuestionData[];
+    settings?: any;
+    metadata?: any;
+  };
+  tags?: string[];
+  estimatedTime?: number;
+  passingScore?: number;
 }
 
 // ===== API REQUEST/RESPONSE =====
-export interface CreateQuizRequest {
-  title: string;
-  description?: string;
-  category_id?: number;
-  quiz_data: QuizData;
-}
+// export interface CreateQuizRequest {
+//   title: string;
+//   description?: string;
+//   category_id?: number;
+//   quiz_data: QuizData;
+// }
 
-export interface UpdateQuizRequest {
-  id: number;
-  title?: string;
-  description?: string;
-  category_id?: number;
-  quiz_data?: Partial<QuizData>;
-}
+// export interface UpdateQuizRequest {
+//   id: number;
+//   title?: string;
+//   description?: string;
+//   category_id?: number;
+//   quiz_data?: Partial<QuizData>;
+// }
 
-export interface QuizResponse {
-  id: number;
-  title: string;
-  description?: string;
-  user_id: number;
-  category_id?: number;
-  quiz_data: QuizData;
-  created_at: string;
-  updated_at: string;
-}
+// export interface QuizResponse {
+//   id: number;
+//   title: string;
+//   description?: string;
+//   user_id: number;
+//   category_id?: number;
+//   quiz_data: QuizData;
+//   created_at: string;
+//   updated_at: string;
+// }
 
 // ===== LEGACY INTERFACES (for backward compatibility) =====
 export interface QuestionData {
@@ -165,10 +235,119 @@ export interface QuestionData {
   shortAnswerText?: string;
 }
 
-// ===== UTILITY TYPES =====
-export type QuizCreationType =
-  | "FILE_UPLOAD"
-  | "AI_GENERATED"
-  | "MANUAL"
-  | "TEMPLATE";
-export type QuizStatus = "DRAFT" | "PUBLISHED" | "ARCHIVED";
+// ===== BACKEND COMPATIBLE TYPES =====
+export interface BackendQuestionOption {
+  id: string;
+  text: string;
+}
+
+export interface BackendQuestion {
+  id: string;
+  text: string;
+  type: QuestionType;
+  points: number;
+  options?: BackendQuestionOption[]; // Make optional to handle missing data
+  explanation?: string;
+  correctAnswer?: string; // ID of the correct option, also make optional
+}
+
+export interface BackendQuizData {
+  summary?: string;
+  questions?: BackendQuestion[]; // Make optional to handle missing data
+  instructions?: string;
+  introduction?: string;
+}
+
+export interface BackendUser {
+  userId: number;
+  username: string;
+  email: string;
+  roles: Array<{ id: number; name: string }>;
+  isActive: boolean;
+  imageUrl?: string | null;
+}
+
+export interface BackendQuizEntity {
+  id: number;
+  title: string;
+  slug: string;
+  description?: string;
+  thumbnailUrl?: string | null;
+  user: BackendUser;
+  originalQuizId?: number | null;
+  quizData?: BackendQuizData; // Make optional to handle missing data
+  difficulty: Difficulty;
+  estimatedTime: number;
+  totalQuestions: number;
+  totalPoints: number;
+  passingScore: number;
+  maxAttempts: number;
+  isAiGenerated: boolean;
+  aiModel?: string;
+  sourceType?: SourceType;
+  generationPrompt?: string | null;
+  metaTitle?: string;
+  metaDescription?: string;
+  canonicalUrl?: string | null;
+  keywords: string[];
+  viewCount?: number | null;
+  attemptCount?: number | null;
+  completionCount?: number | null;
+  avgScore?: number | null;
+  avgCompletionTime?: number | null;
+  bookmarkCount?: number | null;
+  shareCount?: number | null;
+  visibility: Visibility;
+  status: QuizStatus;
+  isFeatured?: boolean | null;
+  isTrending?: boolean | null;
+  isPremium: boolean;
+  tags?: (string | TagObject)[] | null; // Can be array of strings or TagObjects
+  publishedAt?: string | null;
+  archivedAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface GeneratedQuiz {
+  title: string;
+  description: string;
+  questions: QuestionData[];
+  settings?: QuizSettings;
+  metadata?: {
+    total_questions: number;
+    total_points: number;
+    estimated_time: number;
+    tags: string[];
+    category?: string;
+    subject?: string;
+    grade_level?: string;
+  };
+  savedQuizId?: number;
+  isAutoSaved?: boolean;
+  lastSavedAt?: string;
+}
+
+export interface UploadedFile {
+  id: string;
+  name: string;
+  size: number;
+  status: "uploading" | "processing" | "success" | "error";
+  progress: number;
+  error?: string;
+  parsedContent?: string;
+  extractedQuestions?: QuestionData[];
+  actualFile?: File;
+  parsingMode?: ParsingMode;
+  metadata?: {
+    totalPages?: number;
+    processedPages?: number;
+    skippedContent?: string[];
+    processingTime?: number;
+    parsingMode?: ParsingMode;
+    originalFileSize?: number;
+    contentLength?: number;
+    processingTimestamp?: string;
+    errorTimestamp?: string;
+  };
+}

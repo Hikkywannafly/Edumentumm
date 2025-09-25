@@ -1,38 +1,48 @@
 import {
   Pagination,
   PaginationContent,
-  PaginationEllipsis,
   PaginationItem,
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import type { IPagination } from "../../lib/api/achievement";
 
-export default function AchievementPaging() {
+type GroupPagingProps = {
+  pagination?: IPagination;
+  pageIndex?: (index: number) => void;
+};
+
+export default function AchievementPaging({
+  pagination,
+  pageIndex = () => {},
+}: GroupPagingProps) {
   return (
     <section>
       <Pagination>
         <PaginationContent>
-          <PaginationItem>
+          <PaginationItem onClick={() => pageIndex(0)}>
             <PaginationPrevious href="#" />
           </PaginationItem>
-          <PaginationItem>
-            <PaginationLink href="#">1</PaginationLink>
-          </PaginationItem>
-          <PaginationItem>
-            <PaginationLink href="#" isActive>
-              2
-            </PaginationLink>
-          </PaginationItem>
-          <PaginationItem>
-            <PaginationLink href="#">3</PaginationLink>
-          </PaginationItem>
-          <PaginationItem>
-            <PaginationEllipsis />
-          </PaginationItem>
-          <PaginationItem>
-            <PaginationNext href="#" />
-          </PaginationItem>
+          {pagination?.totalPages &&
+            Array.from({ length: pagination.totalPages }, (_, index) => (
+              <PaginationItem onClick={() => pageIndex(index)} key={index}>
+                <PaginationLink
+                  href="#"
+                  className="text-sm"
+                  isActive={index === pagination.currentPage}
+                >
+                  {index + 1}
+                </PaginationLink>
+              </PaginationItem>
+            ))}
+          {pagination?.hasNext && (
+            <PaginationItem
+              onClick={() => pageIndex(pagination.currentPage + 1)}
+            >
+              <PaginationNext href="#" />
+            </PaginationItem>
+          )}
         </PaginationContent>
       </Pagination>
     </section>

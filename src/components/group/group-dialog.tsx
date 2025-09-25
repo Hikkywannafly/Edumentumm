@@ -33,7 +33,7 @@ export default function GroupDialog({
     if (!selectedGroup) return;
     setJoinLoading(true);
     try {
-      await groupAPI.joinGroup(selectedGroup.id);
+      await groupAPI.joinGroup(selectedGroup.publicId);
       onJoinSuccess(selectedGroup);
       toast.success("Tham gia nhóm thành công!");
       onClose();

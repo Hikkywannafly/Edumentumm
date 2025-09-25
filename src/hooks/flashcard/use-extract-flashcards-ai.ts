@@ -18,6 +18,7 @@ interface ExtractFlashcardsAIParams {
     numberOfCards?: number;
     difficulty?: string;
     generationMode?: "GENERATE" | "EXTRACT";
+    flashcardType?: "QUESTIONS" | "VOCABULARY";
     fileProcessing?: string;
     parsingMode?: string;
     [key: string]: any;
@@ -99,6 +100,8 @@ export function useExtractFlashcardsAI() {
             ? data.flashcards.length
             : data.flashcards.flashcards.length,
           difficulty: variables.settings?.difficulty || "EASY",
+          flashcardType: variables.settings?.flashcardType || "QUESTIONS",
+          categoryId: variables.settings?.categoryId,
           estimated_study_time: Math.max(
             5,
             Math.ceil(
@@ -112,23 +115,33 @@ export function useExtractFlashcardsAI() {
       };
       setFlashcardData(flashcardData);
 
-      // Generate better title with AI (async, non-blocking)
-      try {
-        const contentForTitle =
-          data.content || data.files?.[0]?.parsedContent || "";
-        await titleGenerator.generateTitleDescription(
-          contentForTitle,
-          Array.isArray(data.flashcards)
-            ? data.flashcards
-            : (data.flashcards.flashcards ?? []),
-          {
-            isExtractMode: true,
-            targetLanguage: variables.settings?.language || "vi",
-            filename: data.files?.[0]?.name,
-          },
+      // Generate better title with AI (async, non-blocking) - Only for QUESTIONS type
+      // VOCABULARY type already includes title/description from API
+      if (variables.settings?.flashcardType !== "VOCABULARY") {
+        try {
+          const contentForTitle =
+            data.content || data.files?.[0]?.parsedContent || "";
+          await titleGenerator.generateTitleDescription(
+            contentForTitle,
+            Array.isArray(data.flashcards)
+              ? data.flashcards
+              : (data.flashcards.flashcards ?? []),
+            {
+              isExtractMode: true,
+              targetLanguage: variables.settings?.language || "vi",
+              filename: data.files?.[0]?.name,
+            },
+          );
+        } catch (error) {
+          console.warn(
+            "⚠️ Failed to generate AI title (using fallback):",
+            error,
+          );
+        }
+      } else {
+        console.log(
+          "📚 Vocabulary extraction - title/description already included from API",
         );
-      } catch (error) {
-        console.warn("⚠️ Failed to generate AI title (using fallback):", error);
       }
     },
     onError: (error) => {

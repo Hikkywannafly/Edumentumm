@@ -2,9 +2,14 @@
 
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { Separator } from "@/components/ui/separator";
-// import { useAuth } from "@/contexts/auth-context";
+import { Button } from "@/components/ui/button";
+import { useSidebarContext } from "@/contexts/sidebar-context";
+import { useLocalizedNavigation } from "@/lib/utils/navigation";
+import { motion } from "framer-motion";
+import { Crown } from "lucide-react";
+import { useTranslations } from "next-intl";
 import type React from "react";
+import { Notification } from "../notification";
 import { SettingMenu } from "../setting-menu";
 
 interface PageHeaderClientProps {
@@ -14,6 +19,7 @@ interface PageHeaderClientProps {
   className?: string;
   showThemeToggle?: boolean;
   showLanguageSwitcher?: boolean;
+  showUpgradeButton?: boolean;
 }
 
 export function PageHeaderClient({
@@ -23,25 +29,61 @@ export function PageHeaderClient({
   className = "",
   showThemeToggle = true,
   showLanguageSwitcher = true,
+  showUpgradeButton = true,
 }: PageHeaderClientProps) {
-  // const { logout } = useAuth();
-
+  const { isExpanded } = useSidebarContext();
+  const t = useTranslations("Header");
+  const { goPricing } = useLocalizedNavigation();
   return (
-    <header className={`flex h-16 items-center gap-3 px-4 ${className}`}>
-      <Separator orientation="vertical" className="mr-2 h-4" />
-      <h1 className="font-semibold text-xl">{title}</h1>
+    <header
+      className={`fixed top-0 right-0 left-0 z-20 flex h-16 items-center gap-3 bg-background ${
+        isExpanded ? "pl-64" : "pl-16"
+      } ${className}`}
+    >
+      <div className="mx-auto flex w-full items-center justify-between gap-2 px-4">
+        <h1 className="font-semibold text-xl">{title}</h1>
+        <div className="flex-1">{children}</div>
 
-      {/* Center: Optional children content */}
-      <div className="flex-1">{children}</div>
-
-      {/* Right side: Actions and controls */}
-      <div className="flex items-center gap-2">
-        {/* Custom action button */}
-        {action && <div>{action}</div>}
-
-        {/* Theme and Language controls */}
         <div className="flex items-center gap-2">
+          {showUpgradeButton && (
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="hidden md:block"
+            >
+              <Button
+                onClick={goPricing}
+                className="group relative overflow-hidden bg-gradient-to-r from-amber-500 to-orange-600 shadow-lg transition-all duration-300 hover:from-amber-600 hover:to-orange-700 hover:shadow-xl"
+                size="sm"
+              >
+                <motion.div
+                  initial={{ x: 0 }}
+                  whileHover={{ x: -4 }}
+                  className="flex items-center gap-1"
+                >
+                  <Crown className="h-4 w-4 text-white transition-transform duration-300 group-hover:rotate-12" />
+                  <span className="relative z-10 font-medium">
+                    {t("upgrade")}
+                  </span>
+                </motion.div>
+                <motion.div
+                  className="absolute inset-0 bg-white opacity-0"
+                  whileHover={{ opacity: 0.2 }}
+                  transition={{ duration: 0.3 }}
+                />
+                <motion.div
+                  className="absolute top-0 left-0 h-full w-0 bg-gradient-to-r from-white/30 to-white/20"
+                  whileHover={{
+                    width: "100%",
+                    transition: { duration: 0.5 },
+                  }}
+                />
+              </Button>
+            </motion.div>
+          )}
+          {action && <div>{action}</div>}
           {showThemeToggle && <ThemeToggle />}
+          <Notification />
           {showLanguageSwitcher && <LanguageSwitcher />}
           <SettingMenu />
         </div>

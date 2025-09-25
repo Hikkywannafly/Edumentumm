@@ -1,7 +1,7 @@
 import DashboardLayout from "@/components/layout/dashboard-layout";
 import { PageHeaderClient } from "@/components/layout/page-header-client";
+import UserSetting from "@/components/setting-menu/setting";
 import { setRequestLocale } from "next-intl/server";
-import UserSetting from "../../../components/setting-menu/setting";
 
 export default async function SettingPage({
   params,

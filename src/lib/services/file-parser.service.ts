@@ -1,29 +1,101 @@
+import type { ParsingMode } from "@/types/quiz";
+
+export interface ParsingOptions {
+  mode?: ParsingMode;
+  maxPages?: number;
+  includeImages?: boolean;
+  skipTables?: boolean;
+}
+
+export interface ParseResult {
+  content: string;
+  metadata?: {
+    totalPages?: number;
+    processedPages?: number;
+    skippedContent?: string[];
+    processingTime?: number;
+  };
+}
+
 export class FileParserService {
-  async parseFile(file: File): Promise<string> {
+  async parseFile(file: File, options?: ParsingOptions): Promise<string> {
+    const startTime = Date.now();
+    const mode = options?.mode || "BALANCED";
+
+    console.log(`🔄 Parsing file with ${mode} mode:`, file.name);
     const extension = file.name.split(".").pop()?.toLowerCase();
+
+    const parseOptions = this.getParsingOptions(mode);
+    let result: string;
 
     switch (extension) {
       case "pdf":
-        return this.parsePDF(file);
+        result = await this.parsePDF(file, parseOptions);
+        break;
       case "docx":
       case "doc":
-        return this.parseWord(file);
+        result = await this.parseWord(file, parseOptions);
+        break;
       case "xlsx":
       case "xls":
-        return this.parseExcel(file);
+        result = await this.parseExcel(file, parseOptions);
+        break;
       case "pptx":
       case "ppt":
-        return this.parsePowerPoint(file);
+        result = await this.parsePowerPoint(file, parseOptions);
+        break;
       case "json":
-        return this.parseJSON(file);
+        result = await this.parseJSON(file, parseOptions);
+        break;
       case "md":
-        return this.parseMarkdown(file);
+        result = await this.parseMarkdown(file, parseOptions);
+        break;
       default:
         throw new Error(`Unsupported file type: ${extension}`);
     }
+
+    const processingTime = Date.now() - startTime;
+    console.log(
+      `✅ Parsing completed in ${processingTime}ms with ${mode} mode`,
+    );
+
+    return result;
   }
 
-  private async parsePDF(file: File): Promise<string> {
+  private getParsingOptions(mode: ParsingMode): ParsingOptions {
+    switch (mode) {
+      case "FAST":
+        return {
+          mode,
+          maxPages: 10,
+          includeImages: false,
+          skipTables: true,
+        };
+      case "BALANCED":
+        return {
+          mode,
+          maxPages: 10,
+          includeImages: false,
+          skipTables: false,
+        };
+      case "THOROUGH":
+        return {
+          mode,
+          maxPages: undefined,
+          includeImages: true,
+          skipTables: false,
+        };
+      default:
+        return {
+          mode: "BALANCED",
+          maxPages: 50,
+          includeImages: false,
+          skipTables: false,
+        };
+    }
+  }
+
+  private async parsePDF(file: File, options: ParsingOptions): Promise<string> {
     if (file.size > 10 * 1024 * 1024) {
       throw new Error("PDF file quá lớn (>10MB). Vui lòng chọn file nhỏ hơn.");
     }
@@ -49,10 +121,21 @@ export class FileParserService {
         useSystemFonts: true,
       }).promise;
 
-      const maxPages = Math.min(pdf.numPages, 50);
-      // if (pdf.numPages > 50) {
-      //   console.warn(`PDF có ${pdf.numPages} trang, chỉ xử lý 50 trang đầu`);
-      // }
+      const maxPages = options.maxPages
+        ? Math.min(pdf.numPages, options.maxPages)
+        : pdf.numPages;
+
+      if (options.mode === "FAST" && pdf.numPages > 20) {
+        console.warn(
+          `⚡ FAST mode: Processing only first 20 pages out of ${pdf.numPages}`,
+        );
+      } else if (options.mode === "BALANCED" && pdf.numPages > 50) {
+        console.warn(
+          `⚖️ BALANCED mode: Processing only first 50 pages out of ${pdf.numPages}`,
+        );
+      } else if (options.mode === "THOROUGH") {
+        console.info(`🔍 THOROUGH mode: Processing all ${pdf.numPages} pages`);
+      }
 
       let totalTextLength = 0;
       for (let i = 1; i <= Math.min(maxPages, 3); i++) {
@@ -102,25 +185,61 @@ export class FileParserService {
     }
   }
 
-  private async parseWord(file: File): Promise<string> {
+  private async parseWord(
+    file: File,
+    options: ParsingOptions,
+  ): Promise<string> {
+    console.log(`📄 Parsing Word document with ${options.mode} mode`);
     const mammoth = await import("mammoth");
     const arrayBuffer = await file.arrayBuffer();
     const result = await mammoth.extractRawText({ arrayBuffer });
+
+    if (options.mode === "FAST") {
+      return result.value.slice(0, 10000);
+    }
+
     return result.value;
   }
 
-  private async parseExcel(file: File): Promise<string> {
+  private async parseExcel(
+    file: File,
+    options: ParsingOptions,
+  ): Promise<string> {
     const XLSX = await import("xlsx");
     const arrayBuffer = await file.arrayBuffer();
     const workbook = XLSX.read(arrayBuffer, { type: "array" });
 
     let content = "";
-    for (const sheetName of workbook.SheetNames) {
+    // Limit sheets processing based on mode
+    const sheetsToProcess =
+      options.mode === "FAST"
+        ? workbook.SheetNames.slice(0, 3)
+        : workbook.SheetNames;
+
+    if (options.mode === "FAST" && workbook.SheetNames.length > 3) {
+      console.warn(
+        `⚡ FAST mode: Processing only first 3 sheets out of ${workbook.SheetNames.length}`,
+      );
+    }
+
+    for (const sheetName of sheetsToProcess) {
       const worksheet = workbook.Sheets[sheetName];
       const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
       content += `Sheet: ${sheetName}\n`;
-      for (const row of jsonData) {
-        content += `${(row as any[]).join("\t")}\n`;
+
+      const rowsToProcess =
+        options.mode === "FAST" ? jsonData.slice(0, 100) : jsonData;
+
+      for (const row of rowsToProcess) {
+        if (options.skipTables && options.mode === "FAST") {
+          // Simple text extraction for FAST mode
+          const textContent = (row as any[])
+            .filter((cell) => typeof cell === "string" && cell.length > 0)
+            .join(" ");
+          if (textContent) content += `${textContent}\n`;
+        } else {
+          content += `${(row as any[]).join("\t")}\n`;
+        }
       }
       content += "\n";
     }
@@ -128,11 +247,24 @@ export class FileParserService {
     return content;
   }
 
-  private async parsePowerPoint(_file: File): Promise<string> {
-    return "PowerPoint content extraction requires additional processing";
+  private async parsePowerPoint(
+    _file: File,
+    options: ParsingOptions,
+  ): Promise<string> {
+    // TODO: Implement PowerPoint parsing based on mode
+    const modeInfo =
+      options.mode === "FAST"
+        ? " (basic text only)"
+        : options.mode === "THOROUGH"
+          ? " (with slide structure)"
+          : "";
+    return `PowerPoint content extraction requires additional processing${modeInfo}`;
   }
 
-  private async parseJSON(file: File): Promise<string> {
+  private async parseJSON(
+    file: File,
+    options: ParsingOptions,
+  ): Promise<string> {
     const text = await file.text();
     const json = JSON.parse(text);
 
@@ -140,13 +272,27 @@ export class FileParserService {
       let content = `Quiz: ${json.quiz.title}\n`;
       content += `Description: ${json.quiz.description}\n\n`;
 
-      json.quiz.questions.forEach((q: any, index: number) => {
+      // Limit questions in FAST mode
+      const questionsToProcess =
+        options.mode === "FAST"
+          ? json.quiz.questions.slice(0, 20)
+          : json.quiz.questions;
+
+      if (options.mode === "FAST" && json.quiz.questions.length > 20) {
+        console.warn(
+          `⚡ FAST mode: Processing only first 20 questions out of ${json.quiz.questions.length}`,
+        );
+      }
+
+      questionsToProcess.forEach((q: any, index: number) => {
         content += `${index + 1}. ${q.question}\n`;
-        q.answers.forEach((a: any, aIndex: number) => {
-          const letter = String.fromCharCode(65 + aIndex);
-          const marker = a.isCorrect ? " *" : "";
-          content += `   ${letter}. ${a.text}${marker}\n`;
-        });
+        if (!options.skipTables || options.mode !== "FAST") {
+          q.answers.forEach((a: any, aIndex: number) => {
+            const letter = String.fromCharCode(65 + aIndex);
+            const marker = a.isCorrect ? " *" : "";
+            content += `   ${letter}. ${a.text}${marker}\n`;
+          });
+        }
         content += "\n";
       });
 
@@ -156,7 +302,22 @@ export class FileParserService {
     return JSON.stringify(json, null, 2);
   }
 
-  private async parseMarkdown(file: File): Promise<string> {
-    return await file.text();
+  private async parseMarkdown(
+    file: File,
+    options: ParsingOptions,
+  ): Promise<string> {
+    const content = await file.text();
+
+    if (options.mode === "FAST") {
+      return content
+        .replace(/```[\s\S]*?```/g, "")
+        .replace(/`[^`]+`/g, "")
+        .replace(/!\[[^\]]*\]\([^)]+\)/g, "")
+        .replace(/\[[^\]]*\]\([^)]+\)/g, "")
+        .replace(/[#*_~]/g, "")
+        .slice(0, 5000);
+    }
+
+    return content;
   }
 }

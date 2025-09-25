@@ -2,21 +2,36 @@
 
 import { AppSidebar } from "@/components/sidebar/app-sidebar";
 import { ErrorBoundary } from "@/components/sidebar/error_boundary";
+import { SidebarProvider, useSidebarContext } from "@/contexts/sidebar-context";
 import type React from "react";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
 }
 
+function DashboardContent({ children }: DashboardLayoutProps) {
+  const { isExpanded } = useSidebarContext();
+
+  return (
+    <div className="flex h-screen overflow-hidden">
+      <AppSidebar />
+      <div
+        className={`flex min-w-0 flex-1 flex-col overflow-hidden transition-all duration-200 ease-in-out ${
+          isExpanded ? "ml-64" : "ml-16"
+        }`}
+      >
+        <main className="flex-1 overflow-y-auto pt-16">{children}</main>
+      </div>
+    </div>
+  );
+}
+
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   return (
     <ErrorBoundary>
-      <div className="flex h-screen">
-        <AppSidebar />
-        <div className="flex min-w-0 flex-1 flex-col">
-          <main className="flex-1">{children}</main>
-        </div>
-      </div>
+      <SidebarProvider>
+        <DashboardContent>{children}</DashboardContent>
+      </SidebarProvider>
     </ErrorBoundary>
   );
 }

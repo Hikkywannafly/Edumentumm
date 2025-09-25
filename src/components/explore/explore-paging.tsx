@@ -1,28 +1,28 @@
-import { Button } from "@/components/ui/button";
+import FlashcardPagination from "@/components/flashcards/flashcard-pagination";
+import type { PaginationInfo } from "@/types/flashcard";
 import { Card } from "../ui";
 
-export default function ExplorePaging() {
+interface ExplorePagingProps {
+  pagination?: PaginationInfo;
+  onPageChange?: (page: number) => void;
+  show?: boolean;
+}
+
+export default function ExplorePaging({
+  pagination,
+  onPageChange,
+  show = false,
+}: ExplorePagingProps) {
+  if (!show || !pagination || !onPageChange || pagination.totalPages <= 1) {
+    return null;
+  }
+
   return (
-    <Card className="flex items-center justify-center gap-2 border-none py-6">
-      <Button variant="outline" size="sm">
-        Previous
-      </Button>
-      <Button size="sm" className="bg-blue-500 text-white">
-        1
-      </Button>
-      <Button variant="outline" size="sm">
-        2
-      </Button>
-      <Button variant="outline" size="sm">
-        3
-      </Button>
-      <span className="px-2">...</span>
-      <Button variant="outline" size="sm">
-        37
-      </Button>
-      <Button variant="outline" size="sm">
-        Next
-      </Button>
+    <Card className="border-none py-6">
+      <FlashcardPagination
+        pagination={pagination}
+        onPageChange={onPageChange}
+      />
     </Card>
   );
 }

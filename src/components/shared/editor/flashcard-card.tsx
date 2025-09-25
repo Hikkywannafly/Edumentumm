@@ -45,23 +45,42 @@ export default function FlashcardCard({
 
   const t = useTranslations("Flashcards");
 
+  // Determine flashcard type based on available fields
+  const isVocabularyType = !!(flashcard.vocabulary && flashcard.meaning);
+  const isQuestionType = !!(flashcard.question && flashcard.choices);
+
   const handleQuestionChange = (html: string) => {
     onUpdate({ ...flashcard, question: html });
   };
 
+  const handleVocabularyChange = (html: string) => {
+    onUpdate({ ...flashcard, vocabulary: html });
+  };
+
+  const handleMeaningChange = (html: string) => {
+    onUpdate({ ...flashcard, meaning: html });
+  };
+
+  const handleExampleChange = (html: string) => {
+    onUpdate({ ...flashcard, example: html });
+  };
+
   const handleChoiceChange = (choiceIndex: number, value: string) => {
+    if (!flashcard.choices) return;
     const updatedChoices = [...flashcard.choices];
     updatedChoices[choiceIndex] = value;
     onUpdate({ ...flashcard, choices: updatedChoices });
   };
 
   const handleAddChoice = () => {
+    if (!flashcard.choices) return;
     const choiceNumber = flashcard.choices.length + 1;
     const updatedChoices = [...flashcard.choices, `Choice ${choiceNumber}`];
     onUpdate({ ...flashcard, choices: updatedChoices });
   };
 
   const handleDeleteChoice = (choiceIndex: number) => {
+    if (!flashcard.choices || !flashcard.correctAnswer) return;
     const updatedChoices = flashcard.choices.filter(
       (_, index) => index !== choiceIndex,
     );
@@ -101,23 +120,29 @@ export default function FlashcardCard({
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
-              <Button
-                variant="outline"
-                onClick={handleAddChoice}
-                className="whitespace-nowrap"
-              >
-                <Plus className="mr-2 h-4 w-4" /> {t("editPage.addChoice")}
-              </Button>
+              {/* Only show Add Choice for question type */}
+              {isQuestionType && (
+                <Button
+                  variant="outline"
+                  onClick={handleAddChoice}
+                  className="whitespace-nowrap"
+                >
+                  <Plus className="mr-2 h-4 w-4" /> {t("editPage.addChoice")}
+                </Button>
+              )}
 
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setIsAdvancedOpen(!isAdvancedOpen)}
-                className="whitespace-nowrap"
-              >
-                <Settings className="mr-2 h-4 w-4" />
-                {t("editPage.advanced")}
-              </Button>
+              {/* Only show Advanced Settings for question type */}
+              {isQuestionType && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsAdvancedOpen(!isAdvancedOpen)}
+                  className="whitespace-nowrap"
+                >
+                  <Settings className="mr-2 h-4 w-4" />
+                  {t("editPage.advanced")}
+                </Button>
+              )}
 
               {/* Actions */}
               <Button
@@ -161,131 +186,211 @@ export default function FlashcardCard({
             </div>
           </div>
 
-          {/* Question Editor */}
-          <div className="mb-6 w-full">
-            <Label
-              htmlFor="question"
-              className="mb-2 block font-medium text-sm"
-            >
-              {t("editPage.question")}
-            </Label>
-            <TiptapEditor
-              content={flashcard.question}
-              onChange={handleQuestionChange}
-              placeholder="Enter your flashcard question here..."
-              showToolbar={true}
-            />
-          </div>
-
-          {/* Multiple Choice Answers */}
-          <div className="mb-2">
-            <Label htmlFor="choices" className="mb-3 block font-medium text-sm">
-              {t("editPage.answerChoices")}
-            </Label>
-            <RadioGroup
-              value={flashcard.correctAnswer.toString()}
-              onValueChange={handleCorrectAnswerChange}
-              className="grid gap-4"
-            >
-              {flashcard.choices.map((choice, index) => {
-                const isCorrect = index === flashcard.correctAnswer;
-                return (
-                  <div
-                    key={index}
-                    className={`flex items-start gap-2 rounded-md border p-3 transition-all duration-200 ${
-                      isCorrect
-                        ? "border-green-500 bg-green-100 shadow-sm dark:border-green-400 dark:bg-green-900/20"
-                        : "border-gray-200 hover:border-gray-300 dark:border-gray-700 dark:hover:border-gray-600"
-                    }`}
-                  >
-                    <RadioGroupItem
-                      value={index.toString()}
-                      id={`choice-${index}`}
-                      className="mt-4"
-                    />
-                    <div className="relative flex flex-1 items-center gap-2">
-                      <div className="flex-1">
-                        <TiptapEditor
-                          content={choice}
-                          onChange={(html) => handleChoiceChange(index, html)}
-                          placeholder={`Choice ${index + 1}`}
-                          showToolbar={true}
-                          className={`w-full ${isCorrect ? "border-none bg-green-100 dark:bg-green-900/30" : ""}`}
-                        />
-                      </div>
-                      {isCorrect && (
-                        <div className="-right-1 absolute flex h-6 w-6 items-center justify-center rounded-full bg-green-500 text-white shadow-sm dark:bg-green-400 dark:text-gray-900">
-                          <svg
-                            className="h-4 w-4"
-                            fill="currentColor"
-                            viewBox="0 0 20 20"
-                          >
-                            <path
-                              fillRule="evenodd"
-                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
-                        </div>
-                      )}
-                    </div>
-                    {flashcard.choices.length > 2 && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDeleteChoice(index)}
-                        className="mt-2"
-                        title="Delete choice"
-                      >
-                        <Trash2 className="h-4 w-4 text-red-500" />
-                      </Button>
-                    )}
-                  </div>
-                );
-              })}
-            </RadioGroup>
-          </div>
-
-          {/* Advanced Settings */}
-          <Collapsible open={isAdvancedOpen} onOpenChange={setIsAdvancedOpen}>
-            <CollapsibleContent className="mt-4 space-y-4 border-t pt-4">
-              {/* Explanation */}
-              <div className="space-y-3 rounded-lg border border-emerald-200 bg-emerald-50/50 p-4">
-                <div className="flex items-center gap-2">
-                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-100">
-                    <svg
-                      className="h-3.5 w-3.5 text-blue-600"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                  </div>
-                  <Label
-                    htmlFor="explanation"
-                    className="bg-emerald-50/50 font-medium text-sm"
-                  >
-                    {t("editPage.explanation")}
-                  </Label>
-                </div>
-                <div className="rounded-md border-emerald-200 bg-white">
+          {/* Content Editor - Different for each type */}
+          {isVocabularyType ? (
+            // Vocabulary Type Layout
+            <div className="space-y-6">
+              {/* Vocabulary */}
+              <div className="w-full">
+                <Label className="mb-2 block font-medium text-sm">
+                  Vocabulary
+                </Label>
+                <div className="items-start gap-2 rounded-md border border-gray-200 transition-all duration-200 hover:border-gray-300">
                   <TiptapEditor
-                    content={flashcard.explanation || ""}
-                    onChange={handleExplanationChange}
-                    placeholder="Explain why this answer is correct..."
+                    content={flashcard.vocabulary || ""}
+                    onChange={handleVocabularyChange}
+                    placeholder="Enter the vocabulary word or phrase..."
                     showToolbar={true}
-                    className="min-h-[100px] border-none bg-blue-50"
                   />
                 </div>
               </div>
-            </CollapsibleContent>
-          </Collapsible>
+
+              {/* Meaning */}
+              <div className="w-full">
+                <Label className="mb-2 block font-medium text-sm">
+                  Meaning
+                </Label>
+                <div className="items-start gap-2 rounded-md border border-gray-200 transition-all duration-200 hover:border-gray-300">
+                  <TiptapEditor
+                    content={flashcard.meaning || ""}
+                    onChange={handleMeaningChange}
+                    placeholder="Enter the meaning or definition..."
+                    showToolbar={true}
+                  />
+                </div>
+              </div>
+
+              {/* Example */}
+              <div className="w-full">
+                <Label className="mb-2 block font-medium text-sm">
+                  Example
+                </Label>
+                <div className="items-start gap-2 rounded-md border border-gray-200 transition-all duration-200 hover:border-gray-300">
+                  <TiptapEditor
+                    content={flashcard.example || ""}
+                    onChange={handleExampleChange}
+                    placeholder="Enter an example sentence..."
+                    showToolbar={true}
+                  />
+                </div>
+              </div>
+
+              {/* Explanation - Main field for vocabulary */}
+              <div className="w-full">
+                <Label className="mb-2 block font-medium text-sm">
+                  Explanation
+                </Label>
+                <div className="items-start gap-2 rounded-md border border-gray-200 transition-all duration-200 hover:border-gray-300">
+                  <TiptapEditor
+                    content={flashcard.explanation || ""}
+                    onChange={handleExplanationChange}
+                    placeholder="Add pronunciation tips, etymology, or usage notes..."
+                    showToolbar={true}
+                  />
+                </div>
+              </div>
+            </div>
+          ) : (
+            // Question Type Layout
+            <div className="space-y-6">
+              {/* Question Editor */}
+              <div className="w-full">
+                <Label
+                  htmlFor="question"
+                  className="mb-2 block font-medium text-sm"
+                >
+                  {t("editPage.question")}
+                </Label>
+                <TiptapEditor
+                  content={flashcard.question || ""}
+                  onChange={handleQuestionChange}
+                  placeholder="Enter your flashcard question here..."
+                  showToolbar={true}
+                />
+              </div>
+
+              {/* Multiple Choice Answers */}
+              {flashcard.choices && flashcard.correctAnswer !== undefined && (
+                <div>
+                  <Label
+                    htmlFor="choices"
+                    className="mb-3 block font-medium text-sm"
+                  >
+                    {t("editPage.answerChoices")}
+                  </Label>
+                  <RadioGroup
+                    value={flashcard.correctAnswer.toString()}
+                    onValueChange={handleCorrectAnswerChange}
+                    className="grid gap-4"
+                  >
+                    {flashcard.choices.map((choice, index) => {
+                      const isCorrect = index === flashcard.correctAnswer;
+                      return (
+                        <div
+                          key={index}
+                          className={`flex items-start gap-2 rounded-md border p-3 transition-all duration-200 ${
+                            isCorrect
+                              ? "border-green-500 bg-green-100 shadow-sm dark:border-green-400 dark:bg-green-900/20"
+                              : "border-gray-200 hover:border-gray-300 dark:border-gray-700 dark:hover:border-gray-600"
+                          }`}
+                        >
+                          <RadioGroupItem
+                            value={index.toString()}
+                            id={`choice-${index}`}
+                            className="mt-4"
+                          />
+                          <div className="relative flex flex-1 items-center gap-2">
+                            <div className="flex-1">
+                              <TiptapEditor
+                                content={choice}
+                                onChange={(html) =>
+                                  handleChoiceChange(index, html)
+                                }
+                                placeholder={`Choice ${index + 1}`}
+                                showToolbar={true}
+                                className={`w-full ${isCorrect ? "border-none bg-green-100 dark:bg-green-900/30" : ""}`}
+                              />
+                            </div>
+                            {isCorrect && (
+                              <div className="-right-1 absolute flex h-6 w-6 items-center justify-center rounded-full bg-green-500 text-white shadow-sm dark:bg-green-400 dark:text-gray-900">
+                                <svg
+                                  className="h-4 w-4"
+                                  fill="currentColor"
+                                  viewBox="0 0 20 20"
+                                >
+                                  <path
+                                    fillRule="evenodd"
+                                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                    clipRule="evenodd"
+                                  />
+                                </svg>
+                              </div>
+                            )}
+                          </div>
+                          {flashcard.choices &&
+                            flashcard.choices.length > 2 && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleDeleteChoice(index)}
+                                className="mt-2"
+                                title="Delete choice"
+                              >
+                                <Trash2 className="h-4 w-4 text-red-500" />
+                              </Button>
+                            )}
+                        </div>
+                      );
+                    })}
+                  </RadioGroup>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Advanced Settings - Only for question type */}
+          {isQuestionType && (
+            <Collapsible open={isAdvancedOpen} onOpenChange={setIsAdvancedOpen}>
+              <CollapsibleContent className="mt-4 space-y-4 border-t pt-4">
+                {/* Explanation */}
+                <div className="space-y-3 rounded-lg border border-emerald-200 bg-emerald-50/50 p-4 dark:border-emerald-800 dark:bg-emerald-900/30">
+                  <div className="flex items-center gap-2">
+                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-800">
+                      <svg
+                        className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                    </div>
+                    <Label
+                      htmlFor="explanation"
+                      className="bg-emerald-50/50 font-medium text-sm dark:bg-transparent dark:text-emerald-100"
+                    >
+                      {t("editPage.explanation")}
+                    </Label>
+                  </div>
+
+                  <div className="rounded-md border border-emerald-200 bg-white dark:border-emerald-700 dark:bg-emerald-950">
+                    <TiptapEditor
+                      content={flashcard.explanation || ""}
+                      onChange={handleExplanationChange}
+                      placeholder="Explain why this answer is correct..."
+                      showToolbar={true}
+                      className="min-h-[100px] border-none bg-blue-50 dark:bg-blue-950/40 dark:text-emerald-50"
+                    />
+                  </div>
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+          )}
         </CardContent>
       </Card>
       {onAddFlashcard && (

@@ -29,18 +29,18 @@ export function FlashcardCard({ flashcardSet }: FlashcardCardProps) {
   };
 
   return (
-    <Card className="shadow-md transition-all duration-300 hover:scale-[1.02] hover:shadow-lg">
+    <Card className="flex h-full flex-col shadow-md transition-all duration-300 hover:scale-[1.02] hover:shadow-lg">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
-          <div className="flex-1 space-y-1">
-            <h3 className="line-clamp-2 font-semibold text-lg leading-tight">
+          <div className="flex-1 space-y-2">
+            <h3 className="line-clamp-2 min-h-[3.5rem] font-semibold text-lg leading-tight">
               {htmlToText(flashcardSet.title)}
             </h3>
-            <p className="line-clamp-2 text-muted-foreground text-sm">
+            <p className="line-clamp-2 min-h-[2.5rem] text-muted-foreground text-sm">
               {htmlToText(flashcardSet.description)}
             </p>
           </div>
-          <div className="ml-3 flex items-center gap-1">
+          <div className="ml-3 flex flex-shrink-0 items-center gap-1">
             {flashcardSet.isPublic ? (
               <Globe className="h-4 w-4 text-green-600" />
             ) : (
@@ -50,7 +50,7 @@ export function FlashcardCard({ flashcardSet }: FlashcardCardProps) {
         </div>
       </CardHeader>
 
-      <CardContent className="pb-3">
+      <CardContent className="flex-1 pb-3">
         <div className="space-y-3">
           {/* Stats */}
           <div className="flex items-center gap-4 text-muted-foreground text-sm">

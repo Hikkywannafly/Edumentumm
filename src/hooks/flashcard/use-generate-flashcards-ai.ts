@@ -18,6 +18,7 @@ interface GenerateFlashcardsAIParams {
     numberOfCards?: number;
     difficulty?: string;
     generationMode?: "GENERATE" | "EXTRACT";
+    flashcardType?: "QUESTIONS" | "VOCABULARY";
     fileProcessing?: string;
     parsingMode?: string;
     [key: string]: any;
@@ -82,11 +83,22 @@ export function useGenerateFlashcardsAI() {
       }
 
       // Create initial flashcard data
-      const title =
-        data.source === "text"
+      // For VOCABULARY type, use title/description from API response
+      // For QUESTIONS type, use temporary title (will be updated by AI generation)
+      const hasApiTitleDesc =
+        !Array.isArray(data.flashcards) &&
+        typeof data.flashcards === "object" &&
+        "title" in data.flashcards;
+
+      const title = hasApiTitleDesc
+        ? (data.flashcards as any).title
+        : data.source === "text"
           ? "AI Generated Flashcards from Text"
           : `AI Generated Flashcards from ${data.files?.[0]?.name || "Files"}`;
-      const description = `Generated ${Array.isArray(data.flashcards) ? data.flashcards.length : 0} flashcards using AI`;
+
+      const description = hasApiTitleDesc
+        ? (data.flashcards as any).description
+        : `Generated ${Array.isArray(data.flashcards) ? data.flashcards.length : 0} flashcards using AI`;
 
       const flashcardData: GeneratedFlashcardSet = {
         title,
@@ -99,6 +111,8 @@ export function useGenerateFlashcardsAI() {
             ? data.flashcards.length
             : (data.flashcards.flashcards?.length ?? 0),
           difficulty: variables.settings?.difficulty || "EASY",
+          flashcardType: variables.settings?.flashcardType || "QUESTIONS",
+          categoryId: variables.settings?.categoryId,
           estimated_study_time: Math.max(
             5,
             Math.ceil(
@@ -112,24 +126,26 @@ export function useGenerateFlashcardsAI() {
       };
       setFlashcardData(flashcardData);
 
-      const generatedCount = Array.isArray(data.flashcards)
-        ? data.flashcards.length
-        : (data.flashcards.flashcards?.length ?? 0);
-      console.log(`✅ Generated ${generatedCount} flashcards using AI`);
-
-      // Generate better title with AI (async, non-blocking)
+      // Generate better title with AI (async, non-blocking) - For both QUESTIONS and VOCABULARY types
       try {
         const contentForTitle =
           data.content || data.files?.[0]?.parsedContent || "";
+        const flashcardsForTitle = Array.isArray(data.flashcards)
+          ? data.flashcards
+          : (data.flashcards.flashcards ?? []);
+
+        // Always generate AI title/description for better quality
         await titleGenerator.generateTitleDescription(
           contentForTitle,
-          Array.isArray(data.flashcards)
-            ? data.flashcards
-            : (data.flashcards.flashcards ?? []),
+          flashcardsForTitle,
           {
             isExtractMode: variables.settings?.generationMode === "EXTRACT",
             targetLanguage: variables.settings?.language || "vi",
             filename: data.files?.[0]?.name,
+            category:
+              variables.settings?.flashcardType === "VOCABULARY"
+                ? "Vocabulary"
+                : undefined,
           },
         );
       } catch (error) {
@@ -139,7 +155,28 @@ export function useGenerateFlashcardsAI() {
     onError: (error) => {
       console.error("❌ Generate Flashcards AI failed:", error);
     },
-    retry: 2,
+    retry: (failureCount, error: any) => {
+      // Don't retry on rate limit errors (429)
+      if (error?.response?.status === 429 || error?.status === 429) {
+        console.log(
+          "🚫 Skipping retry for 429 rate limit error in main flashcard generation",
+        );
+        return false;
+      }
+      // Don't retry on auth errors (401, 403)
+      if (error?.response?.status === 401 || error?.response?.status === 403) {
+        console.log(
+          "🚫 Skipping retry for auth error in main flashcard generation",
+        );
+        return false;
+      }
+      // Only retry on network errors, max 2 times
+      const shouldRetry = failureCount < 2;
+      console.log(
+        `${shouldRetry ? "✅" : "🚫"} Retry decision: ${shouldRetry} (attempt ${failureCount + 1})`,
+      );
+      return shouldRetry;
+    },
     retryDelay: 5000,
   });
 

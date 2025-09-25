@@ -24,7 +24,7 @@ export function PageHeader({
 }: PageHeaderProps) {
   return (
     <header
-      className={`flex h-16 shrink-0 items-center gap-2 border-b px-4 ${className}`}
+      className={`fixed top-0 right-0 left-0 z-50 flex h-16 w-full items-center gap-3 bg-background px-4 ${className}`}
     >
       {/* Left side: Title */}
       <Separator orientation="vertical" className="mr-2 h-4" />
@@ -37,13 +37,9 @@ export function PageHeader({
       <div className="flex items-center gap-2">
         {/* Custom action button */}
         {action && <div>{action}</div>}
-
-        {/* Theme and Language controls */}
-        <div className="flex items-center gap-2">
-          {showThemeToggle && <ThemeToggle />}
-          {showLanguageSwitcher && <LanguageSwitcher />}
-          <SettingMenu />
-        </div>
+        {showThemeToggle && <ThemeToggle />}
+        {showLanguageSwitcher && <LanguageSwitcher />}
+        <SettingMenu />
       </div>
     </header>
   );

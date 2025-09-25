@@ -1,4 +1,4 @@
-import { useLocale } from "next-intl";
+import { getLocaleFromPathname } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 
 /**
@@ -6,12 +6,16 @@ import { useRouter } from "next/navigation";
  */
 export function useLocalizedNavigation() {
   const router = useRouter();
-  const locale = useLocale();
 
   /**
    * Navigate to route with locale
    */
   const navigate = (path: string) => {
+    // Get current locale from window location
+    const currentPath =
+      typeof window !== "undefined" ? window.location.pathname : "";
+    const locale = getLocaleFromPathname(currentPath) || "en";
+
     const localizedPath = path.startsWith("/") ? path : `/${path}`;
     router.push(`/${locale}${localizedPath}`);
   };
@@ -38,6 +42,13 @@ export function useLocalizedNavigation() {
   };
 
   /**
+   * Navigate to home group
+   */
+  const goGroup = () => {
+    navigate("/group");
+  };
+
+  /**
    * Navigate to dashboard
    */
   const goDashboard = () => {
@@ -61,8 +72,23 @@ export function useLocalizedNavigation() {
   /**
    * Navigate to quiz edit page
    */
-  const goQuizEdit = () => {
-    navigate("/quizzes/edit");
+  const goQuizEdit = (quizId?: string | number, slug?: string) => {
+    // Get current locale from window location
+    const currentPath =
+      typeof window !== "undefined" ? window.location.pathname : "";
+    const locale = getLocaleFromPathname(currentPath) || "en";
+
+    if (quizId && slug) {
+      const path = `/quizzes/${slug}-${quizId}/edit`;
+      // Use replace to prevent back navigation to create page
+      router.replace(`/${locale}${path}`);
+    } else if (quizId) {
+      // Fallback if slug is not provided
+      const path = `/quizzes/${quizId}/edit`;
+      router.replace(`/${locale}${path}`);
+    } else {
+      router.replace(`/${locale}/quizzes/edit`);
+    }
   };
 
   /**
@@ -86,11 +112,19 @@ export function useLocalizedNavigation() {
     navigate("/pomodoro");
   };
 
+  /**
+   * Navigate to pricing page
+   */
+  const goPricing = () => {
+    navigate("/pricing");
+  };
+
   return {
     navigate,
     navigateAbsolute,
     goBack,
     goHome,
+    goGroup,
     goDashboard,
     goQuizzes,
     goLogin,
@@ -98,7 +132,7 @@ export function useLocalizedNavigation() {
     goFlashcardEdit,
     goFlashcards,
     goPomodoro,
-    locale,
+    goPricing,
   };
 }
 
@@ -106,7 +140,13 @@ export function useLocalizedNavigation() {
  * Utility function để tạo localized href
  */
 export function createLocalizedHref(href: string, locale?: string): string {
-  const currentLocale = locale || "en"; // fallback to 'en'
+  // If no locale provided, try to get it from window location
+  const currentLocale =
+    locale ||
+    (typeof window !== "undefined"
+      ? getLocaleFromPathname(window.location.pathname)
+      : "en");
+
   const cleanHref = href.startsWith("/") ? href : `/${href}`;
   return `/${currentLocale}${cleanHref}`;
 }

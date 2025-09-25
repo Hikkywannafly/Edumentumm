@@ -1,65 +1,79 @@
-import type { QuizResponse } from "@/types/quiz";
+import { apiClient } from "@/lib/api/client";
+import type { BackendQuizEntity } from "@/types/quiz";
 
-// Re-export new modular APIs
-export { quizCRUDAPI } from "./quiz/crud";
-export {
-  calculateTotalPoints,
-  calculateEstimatedTime,
-  validateQuizData,
-} from "./quiz/index";
-
-// Legacy compatibility - keep existing interfaces and types that other files might import
-export interface QuizListParams {
-  page?: number;
-  limit?: number;
-  category_id?: number;
-  visibility?: "PRIVATE" | "PUBLIC" | "UNLISTED";
-  search?: string;
-  sort_by?: "created_at" | "updated_at" | "title";
-  sort_order?: "ASC" | "DESC";
-}
-
-export interface QuizListResponse {
-  quizzes: QuizResponse[];
-  total: number;
-  page: number;
-  limit: number;
+interface QuizListResponse {
+  content: BackendQuizEntity[];
+  totalElements: number;
   totalPages: number;
+  size: number;
+  number: number;
+  first: boolean;
+  last: boolean;
+  numberOfElements: number;
 }
 
-export interface QuizStatsResponse {
-  total_attempts: number;
-  average_score: number;
-  completion_rate: number;
-  last_attempt?: string;
+interface QuizStatsData {
+  totalQuizzes: number;
+  publishedQuizzes: number;
+  draftQuizzes: number;
+  totalAttempts: number;
 }
 
-// Quiz Category interfaces
-export interface QuizCategory {
-  id: number;
-  name: string;
-  description?: string;
-  icon?: string;
-  color?: string;
-  is_active: boolean;
-  created_at: string;
+interface ApiResponse<T> {
+  success: boolean;
+  message?: string;
+  data: T;
 }
 
-export interface CreateCategoryRequest {
-  name: string;
-  description?: string;
-  icon?: string;
-  color?: string;
-  is_active?: boolean;
+class QuizAPI {
+  async getQuizList(params: Record<string, string>): Promise<QuizListResponse> {
+    try {
+      const queryParams = new URLSearchParams(params);
+      const response = await apiClient.get<ApiResponse<QuizListResponse>>(
+        `/student/quizzes/page?${queryParams.toString()}`,
+      );
+
+      if (!response.data.success) {
+        throw new Error(response.data.message || "Failed to fetch quiz list");
+      }
+
+      return response.data.data;
+    } catch (error) {
+      console.error("Failed to fetch quiz list:", error);
+      throw error;
+    }
+  }
+
+  async getQuizStats(): Promise<QuizStatsData> {
+    try {
+      const response = await apiClient.get<ApiResponse<QuizStatsData>>(
+        "/student/quizzes/stats",
+      );
+
+      if (!response.data.success) {
+        throw new Error(response.data.message || "Failed to fetch quiz stats");
+      }
+
+      return response.data.data;
+    } catch (error) {
+      console.error("Failed to fetch quiz stats:", error);
+      throw error;
+    }
+  }
+  async deleteQuiz(quizId: number): Promise<void> {
+    try {
+      const response = await apiClient.delete<ApiResponse<void>>(
+        `/student/quizzes/${quizId}`,
+      );
+
+      if (!response.data.success) {
+        throw new Error(response.data.message || "Failed to delete quiz");
+      }
+    } catch (error) {
+      console.error("Failed to delete quiz:", error);
+      throw error;
+    }
+  }
 }
 
-export interface UpdateCategoryRequest {
-  name?: string;
-  description?: string;
-  icon?: string;
-  color?: string;
-  is_active?: boolean;
-}
-
-// TODO: Migrate remaining QuizAPI class methods to new modular structure
-// For now, keeping legacy exports for backward compatibility
+export const quizAPI = new QuizAPI();

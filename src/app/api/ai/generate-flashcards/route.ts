@@ -8,7 +8,7 @@ const GenerateFlashcardsRequestSchema = z.object({
   description: z.string(),
   apiKey: z.string(),
   fileContent: z.string().optional(),
-  modelName: z.string().default("google/gemini-2.0-flash-001"),
+  modelName: z.string().default("google/gemini-2.0-flash-exp:free"),
   availableCategories: z.string().optional(),
   settings: z
     .object({
@@ -63,20 +63,10 @@ export async function POST(request: NextRequest) {
       file,
     } = validated.data;
 
-    console.log(
-      "🔑 API key provided:",
-      apiKey ? `${apiKey.substring(0, 10)}...` : "NO API KEY",
-    );
-
     // Parse number of cards from settings
     const numberOfCards = settings.numberOfCards || 5;
     const generationMode = settings.generationMode || "GENERATE";
     // const isExtractMode = generationMode === "EXTRACT";
-
-    // Category instructions
-    const categoryInstructions = availableCategories
-      ? `\n\nCATEGORY SELECTION:\n${availableCategories}\n\nIMPORTANT: You MUST select exactly ONE category from the list above that best matches the flashcard content. Include it in the response as "selectedCategory": "Category Name".`
-      : "";
 
     // Prompt generate flashcards (MCQ style)
     const prompt = `
@@ -85,9 +75,9 @@ You are an expert flashcard generator. You MUST return EXACTLY ${numberOfCards} 
 REQUIREMENTS:
 - Title: ${title}
 - Description: ${description}
-- Language: ${settings.language || "AUTO"}
+- Language: ${settings.language} (if "auto", detect and generate using the language of ${fileContent})
 - Difficulty: ${settings.difficulty || "EASY"}
-- Number of Cards: ${numberOfCards}${categoryInstructions}
+- Number of Cards: ${numberOfCards}
 
 Content to generate flashcards from:
 ${fileContent.slice(0, 8000)}

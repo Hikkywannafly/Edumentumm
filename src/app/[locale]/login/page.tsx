@@ -23,9 +23,7 @@ export default async function LoginPage({
               <h1 className="mb-8 font-bold text-3xl leading-tight sm:text-4xl">
                 {t("title")}
                 <br />
-                <span className="text-blue-600 ">
-                  {t("subtitle")}
-                </span>
+                <span className="text-blue-600 ">{t("subtitle")}</span>
               </h1>
               <div className="space-y-4">
                 <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 text-blue-800 dark:border-blue-400 dark:bg-blue-900 dark:text-blue-400">

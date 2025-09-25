@@ -1,9 +1,14 @@
 export interface FlashcardData {
   id: number;
-  question: string;
-  choices: string[];
-  correctAnswer: number;
-  explanation: string;
+  // For questions type
+  question?: string;
+  choices?: string[];
+  correctAnswer?: number;
+  explanation?: string;
+  // For vocabulary type
+  vocabulary?: string;
+  meaning?: string;
+  example?: string;
 }
 
 export interface User {
@@ -23,17 +28,27 @@ export interface FlashcardSet {
   id: number;
   title: string;
   description: string;
+  categoryId?: number;
   isPublic: boolean;
   createdAt: string;
   user?: User;
   flashcards: FlashcardData[];
 }
 
+export interface PaginationInfo {
+  currentPage: number;
+  pageSize: number;
+  totalElements: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrevious: boolean;
+}
+
 export interface FlashcardApiResponse {
-  total: number;
+  pagination: PaginationInfo;
+  data: FlashcardSet[];
   message: string;
   status: string;
-  data: FlashcardSet[];
 }
 
 export interface FlashcardSetApiResponse {

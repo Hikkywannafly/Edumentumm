@@ -2,10 +2,10 @@ import { TeacherCourseEdit } from "@/components/course/teacher/teacher-course-ed
 import DashboardLayout from "@/components/layout/dashboard-layout";
 import { PageHeader } from "@/components/layout/page-header";
 
-export default function EditCoursePage({
+export default async function EditCoursePage({
   params,
-}: { params: { courseId: number } }) {
-  const { courseId } = params;
+}: { params: Promise<{ courseId: string }> }) {
+  const { courseId } = await params;
 
   return (
     <DashboardLayout>

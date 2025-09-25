@@ -10,14 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { usePomodoro } from "@/contexts/pomodoro-context";
-import {
-  LayoutGrid,
-  List,
-  Minimize2,
-  Plus,
-  RotateCcw,
-  Settings,
-} from "lucide-react";
+import { LayoutGrid, List, Plus, RotateCcw, Settings } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect } from "react";
 import { KanbanBoardView } from "./kanban-board";
@@ -35,6 +28,8 @@ export default function PomodoroContent() {
     newTask,
     selectedCategory,
     viewMode,
+    isLoading,
+    error,
     progress,
     setTimerType,
     setCountdownMinutes,
@@ -47,6 +42,7 @@ export default function PomodoroContent() {
     addTask,
     toggleTaskCompletion,
     deleteTask,
+    updateTask,
     setIsMini,
     formatTime,
   } = usePomodoro();
@@ -80,7 +76,7 @@ export default function PomodoroContent() {
   if (isMini) return null;
 
   return (
-    <div className="flex h-full flex-col items-center justify-center p-6">
+    <div className="flex h-auto flex-col items-center justify-center p-6">
       <div className="grid w-full max-w-7xl gap-8 lg:grid-cols-2">
         {/* Timer Section */}
         <Card className="p-6">
@@ -88,15 +84,6 @@ export default function PomodoroContent() {
             {/* Header with minimize button */}
             <div className="flex items-center justify-between">
               <h2 className="font-semibold text-xl">Pomodoro Timer</h2>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsMini(true)}
-                className="flex items-center gap-2"
-              >
-                <Minimize2 className="h-4 w-4" />
-                Minimize
-              </Button>
             </div>
 
             {/* Timer Type Tags */}
@@ -137,7 +124,7 @@ export default function PomodoroContent() {
 
             {/* Timer Mode Buttons */}
             {timerType === "pomodoro" && (
-              <div className="flex gap-2">
+              <div className="flex justify-center gap-2">
                 <Button
                   variant={timerMode === "focus" ? "default" : "outline"}
                   onClick={() => handleModeChange("focus")}
@@ -277,19 +264,17 @@ export default function PomodoroContent() {
                 tasks={tasks}
                 newTask={newTask}
                 selectedCategory={selectedCategory}
+                isLoading={isLoading}
+                error={error}
                 setNewTask={setNewTask}
                 setSelectedCategory={setSelectedCategory}
                 addTask={addTask}
                 toggleTaskCompletion={toggleTaskCompletion}
                 deleteTask={deleteTask}
+                updateTask={updateTask}
               />
             ) : (
-              <KanbanBoardView
-                tasks={tasks}
-                newTask={newTask}
-                setNewTask={setNewTask}
-                addTask={addTask}
-              />
+              <KanbanBoardView />
             )}
           </CardContent>
         </Card>

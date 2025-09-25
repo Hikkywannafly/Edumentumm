@@ -1,43 +1,38 @@
-import type { QuestionData, QuizSettings } from "@/types/quiz";
-import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import type {
+  BackendQuizEntity,
+  GeneratedQuiz,
+  QuestionData,
+} from "@/types/quiz";
 
+// File upload interface
 export interface UploadedFile {
   id: string;
   name: string;
   size: number;
+  file: File;
   status: "uploading" | "processing" | "success" | "error";
   progress: number;
-  error?: string;
   parsedContent?: string;
-  extractedQuestions?: QuestionData[];
   actualFile?: File;
+  error?: string;
 }
 
-export interface GeneratedQuiz {
-  title: string;
-  description: string;
-  questions: QuestionData[];
-  settings?: QuizSettings;
-  metadata?: {
-    total_questions: number;
-    total_points: number;
-    estimated_time: number; // minutes
-    tags: string[];
-    category?: string;
-    subject?: string;
-    grade_level?: string;
-  };
-}
+// Export GeneratedQuiz for external use
+export type { GeneratedQuiz };
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
 interface QuizEditorState {
   quizData: GeneratedQuiz | null;
+  savedQuiz: BackendQuizEntity | null;
 
   isEditing: boolean;
   isLoading: boolean;
+  isAutoSaving: boolean;
 
-  setQuizData: (quiz: GeneratedQuiz) => void;
+  setQuizData: (quiz: GeneratedQuiz | null) => void;
   updateQuizData: (updates: Partial<GeneratedQuiz>) => void;
+  setSavedQuiz: (quiz: BackendQuizEntity | null) => void;
   addQuestion: (question: QuestionData) => void;
   addQuestionAfter: (afterIndex: number, question: QuestionData) => void;
   updateQuestion: (questionId: string, updates: Partial<QuestionData>) => void;
@@ -45,23 +40,29 @@ interface QuizEditorState {
   moveQuestion: (fromIndex: number, toIndex: number) => void;
   setEditing: (editing: boolean) => void;
   setLoading: (loading: boolean) => void;
+  setAutoSaving: (saving: boolean) => void;
   reset: () => void;
+  forceReset: () => void; // Force clear localStorage and reset state
 }
 
 export const useQuizEditorStore = create<QuizEditorState>()(
   persist(
     (set) => ({
       quizData: null,
+      savedQuiz: null,
       isEditing: false,
       isLoading: false,
+      isAutoSaving: false,
 
       // Actions
-      setQuizData: (quiz) => set({ quizData: quiz }),
+      setQuizData: (quiz: GeneratedQuiz | null) => set({ quizData: quiz }),
 
       updateQuizData: (updates) =>
         set((state) => ({
           quizData: state.quizData ? { ...state.quizData, ...updates } : null,
         })),
+
+      setSavedQuiz: (quiz) => set({ savedQuiz: quiz }),
 
       addQuestion: (question) =>
         set((state) => ({
@@ -130,18 +131,39 @@ export const useQuizEditorStore = create<QuizEditorState>()(
 
       setEditing: (editing) => set({ isEditing: editing }),
       setLoading: (loading) => set({ isLoading: loading }),
+      setAutoSaving: (saving) => set({ isAutoSaving: saving }),
 
       reset: () =>
         set({
           quizData: null,
+          savedQuiz: null,
           isEditing: false,
           isLoading: false,
+          isAutoSaving: false,
         }),
+
+      forceReset: () => {
+        // Clear localStorage immediately
+        if (typeof window !== "undefined") {
+          localStorage.removeItem("quiz-editor-storage");
+        }
+        // Reset state
+        set({
+          quizData: null,
+          savedQuiz: null,
+          isEditing: false,
+          isLoading: false,
+          isAutoSaving: false,
+        });
+      },
     }),
     {
       name: "quiz-editor-storage",
-      // Only persist quizData, not UI state
-      partialize: (state) => ({ quizData: state.quizData }),
+      // Only persist quizData and savedQuiz, not UI state
+      partialize: (state) => ({
+        quizData: state.quizData,
+        savedQuiz: state.savedQuiz,
+      }),
     },
   ),
 );
