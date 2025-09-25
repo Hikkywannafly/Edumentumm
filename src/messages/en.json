@@ -920,6 +920,8 @@
       "switchMode": "Switch Mode",
       "blockMode": "Block Mode",
       "markdownMode": "Markdown Mode",
+      "editMode": "Edit",
+      "previewMode": "Preview",
       "switchingMode": "Switching mode...",
       "autoSaveTitle": "Title auto-saved successfully!",
       "autoSaveTag": "Tag \"{tag}\" added successfully!",
@@ -952,7 +954,8 @@
         "bulleted_list_item": "List item",
         "numbered_list_item": "List item",
         "to_do": "To-do item",
-        "default": "Type something..."
+        "default": "Type something...",
+        "preview": "No content to preview"
       },
       "success": {
         "noteUpdated": "Note updated",

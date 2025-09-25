@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useDebounce } from "@/hooks/use-debounce";
 import { noteAPI } from "@/lib/api/note";
 import type {
@@ -22,12 +23,17 @@ import type {
 } from "@/types/note";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
+  Bold,
   CheckSquare,
   Code,
+  Edit3,
+  Eye,
   FileText,
   Heading1,
   Heading2,
   Heading3,
+  Italic,
+  Link,
   List,
   ListOrdered,
   Minus,
@@ -37,6 +43,7 @@ import {
   Save,
   Settings,
   Share2,
+  Strikethrough,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type React from "react";
@@ -83,6 +90,12 @@ export function NoteEditor({
       return detectedMode;
     return (note.type as "markdown" | "block") || "block";
   });
+
+  // State cho markdown editor tabs
+  const [markdownTab, setMarkdownTab] = useState<"edit" | "preview">("edit");
+
+  // Ref cho textarea để focus và điều khiển cursor
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const [markdownValue, setMarkdownValue] = useState<string>(
     typeof initialValue === "string"
@@ -220,6 +233,242 @@ export function NoteEditor({
         JSON.stringify(initialBlocksRef.current || []);
     setIsEditing(titleChanged || tagsChanged || contentChanged);
   }, [title, tags, markdownValue, blocks, editorMode]);
+
+  // Hàm chèn formatting vào markdown
+  const insertMarkdownFormat = (
+    format: string,
+    placeholder = "text",
+    wrapBoth = true,
+  ) => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selectedText = markdownValue.substring(start, end);
+
+    let newText: string;
+    if (selectedText) {
+      // Nếu có text được chọn, wrap nó
+      if (wrapBoth) {
+        newText = `${format}${selectedText}${format}`;
+      } else {
+        newText = `${format}${selectedText}`;
+      }
+    } else {
+      // Nếu không có text được chọn, chèn placeholder
+      if (wrapBoth) {
+        newText = `${format}${placeholder}${format}`;
+      } else {
+        newText = `${format}${placeholder}`;
+      }
+    }
+
+    const newValue =
+      markdownValue.substring(0, start) +
+      newText +
+      markdownValue.substring(end);
+
+    setMarkdownValue(newValue);
+    setIsEditing(true);
+
+    // Focus và đặt cursor
+    setTimeout(() => {
+      textarea.focus();
+      if (selectedText) {
+        textarea.setSelectionRange(
+          start + newText.length,
+          start + newText.length,
+        );
+      } else {
+        const newCursorPos = wrapBoth
+          ? start + format.length
+          : start + newText.length;
+        textarea.setSelectionRange(
+          newCursorPos,
+          newCursorPos + placeholder.length,
+        );
+      }
+    }, 0);
+  };
+
+  // Hàm chèn heading
+  const insertHeading = (level: number) => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const lineStart = markdownValue.lastIndexOf("\n", start - 1) + 1;
+    const lineEnd = markdownValue.indexOf("\n", start);
+    const currentLine = markdownValue.substring(
+      lineStart,
+      lineEnd === -1 ? markdownValue.length : lineEnd,
+    );
+
+    // Xóa heading hiện tại nếu có
+    const cleanLine = currentLine.replace(/^#+\s*/, "");
+    const prefix = `${"#".repeat(level)} `;
+    const newLine = prefix + cleanLine;
+
+    const newValue =
+      markdownValue.substring(0, lineStart) +
+      newLine +
+      markdownValue.substring(lineEnd === -1 ? markdownValue.length : lineEnd);
+
+    setMarkdownValue(newValue);
+    setIsEditing(true);
+
+    setTimeout(() => {
+      textarea.focus();
+      const newCursorPos = lineStart + prefix.length + cleanLine.length;
+      textarea.setSelectionRange(newCursorPos, newCursorPos);
+    }, 0);
+  };
+
+  // Hàm chèn list
+  const insertList = (ordered = false) => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const lineStart = markdownValue.lastIndexOf("\n", start - 1) + 1;
+    const prefix = ordered ? "1. " : "- ";
+
+    const newValue =
+      markdownValue.substring(0, lineStart) +
+      prefix +
+      markdownValue.substring(lineStart);
+
+    setMarkdownValue(newValue);
+    setIsEditing(true);
+
+    setTimeout(() => {
+      textarea.focus();
+      textarea.setSelectionRange(start + prefix.length, start + prefix.length);
+    }, 0);
+  };
+
+  // Hàm chèn checklist (GFM task list)
+  const insertChecklist = (checked = false) => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const lineStart = markdownValue.lastIndexOf("\n", start - 1) + 1;
+    const prefix = `- [${checked ? "x" : " "}] `;
+
+    const newValue =
+      markdownValue.substring(0, lineStart) +
+      prefix +
+      markdownValue.substring(lineStart);
+
+    setMarkdownValue(newValue);
+    setIsEditing(true);
+
+    setTimeout(() => {
+      textarea.focus();
+      textarea.setSelectionRange(start + prefix.length, start + prefix.length);
+    }, 0);
+  };
+
+  // Hàm render markdown sang HTML đơn giản
+  function renderMarkdownToHTML(markdown: string): string {
+    if (!markdown) return "";
+
+    let html = markdown
+      // Escape HTML first
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+
+      // Code blocks (process before other formatting)
+      .replace(
+        /```([^`\n]*)\n([^`]*)```/gim,
+        '<pre class="bg-muted p-3 rounded-md overflow-x-auto"><code>$2</code></pre>',
+      )
+
+      // Headers
+      .replace(
+        /^### (.*$)/gim,
+        '<h3 class="text-lg font-semibold mt-4 mb-2">$1</h3>',
+      )
+      .replace(
+        /^## (.*$)/gim,
+        '<h2 class="text-xl font-semibold mt-6 mb-3">$1</h2>',
+      )
+      .replace(
+        /^# (.*$)/gim,
+        '<h1 class="text-2xl font-bold mt-8 mb-4">$1</h1>',
+      )
+
+      // Text formatting
+      .replace(/\*\*(.*?)\*\*/gim, '<strong class="font-semibold">$1</strong>')
+      .replace(/\*(.*?)\*/gim, '<em class="italic">$1</em>')
+      .replace(/~~(.*?)~~/gim, '<del class="line-through">$1</del>')
+      .replace(
+        /`([^`]*)`/gim,
+        '<code class="bg-muted px-1 py-0.5 rounded text-sm">$1</code>',
+      )
+
+      // Links
+      .replace(
+        /\[([^\]]*)\]\(([^)]*)\)/gim,
+        '<a href="$2" class="text-primary underline" target="_blank" rel="noopener noreferrer">$1</a>',
+      )
+
+      // Lists (bullet points)
+      .replace(
+        /^\s*[-*+] (.*$)/gim,
+        '<ul class="list-disc list-inside my-2"><li class="mb-1">$1</li></ul>',
+      )
+
+      // Numbered lists
+      .replace(
+        /^\d+\. (.*$)/gim,
+        '<ol class="list-decimal list-inside my-2"><li class="mb-1">$1</li></ol>',
+      )
+
+      // Todo items (GFM task list) - supports -, *, + and upper/lower X
+      .replace(
+        /^\s*[-*+] \[ \] (.*$)/gim,
+        '<div class="flex items-center gap-2 my-1"><input type="checkbox" disabled class="rounded"> <span>$1</span></div>',
+      )
+      .replace(
+        /^\s*[-*+] \[(x|X)\] (.*$)/gim,
+        '<div class="flex items-center gap-2 my-1"><input type="checkbox" checked disabled class="rounded"> <span class="line-through text-muted-foreground">$2</span></div>',
+      )
+
+      // Blockquotes
+      .replace(
+        /^> (.*$)/gim,
+        '<blockquote class="border-l-4 border-muted-foreground/20 pl-4 my-4 text-muted-foreground italic">$1</blockquote>',
+      )
+
+      // Horizontal rule
+      .replace(/^---$/gim, '<hr class="my-6 border-muted-foreground/20">')
+
+      // Line breaks and paragraphs
+      .replace(/\n\n/gim, '</p><p class="mb-3">')
+      .replace(/\n/gim, "<br>");
+
+    // Wrap in paragraph tags if not already structured
+    if (
+      !html.includes("<h1>") &&
+      !html.includes("<h2>") &&
+      !html.includes("<h3>") &&
+      !html.includes("<ul>") &&
+      !html.includes("<ol>") &&
+      !html.includes("<blockquote>")
+    ) {
+      html = `<p class="mb-3">${html}</p>`;
+    }
+
+    // Clean up nested list tags
+    html = html.replace(/<\/ul>\s*<ul[^>]*>/gim, "");
+    html = html.replace(/<\/ol>\s*<ol[^>]*>/gim, "");
+
+    return html;
+  }
 
   // Hàm chuyển đổi blocks sang markdown
   function blocksToMarkdown(sourceBlocks: BlockData[]): string {
@@ -934,19 +1183,217 @@ export function NoteEditor({
 
         {editorMode === "markdown" ? (
           <div className="rounded-md border bg-background dark:border-gray-700">
-            <div className="min-h-[400px] p-4">
-              <textarea
-                key={`markdown-${note.id}`}
-                value={markdownValue}
-                onChange={(e) => {
-                  setMarkdownValue(e.target.value);
-                  setIsEditing(true);
-                }}
-                placeholder={t("placeholders.default")}
-                className="h-[400px] w-full resize-none border-none bg-transparent p-0 font-mono text-sm leading-relaxed placeholder:text-muted-foreground/50 focus-visible:ring-0"
-                style={{ outline: "none" }}
-              />
-            </div>
+            <Tabs
+              value={markdownTab}
+              onValueChange={(value) =>
+                setMarkdownTab(value as "edit" | "preview")
+              }
+            >
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="edit" className="flex items-center gap-2">
+                  <Edit3 className="h-4 w-4" />
+                  {t("editMode")}
+                </TabsTrigger>
+                <TabsTrigger
+                  value="preview"
+                  className="flex items-center gap-2"
+                >
+                  <Eye className="h-4 w-4" />
+                  {t("previewMode")}
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="edit" className="mt-0">
+                {/* Toolbar */}
+                <div className="border-b bg-muted/20 p-2">
+                  <div className="flex flex-wrap gap-1">
+                    {/* Text formatting */}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => insertMarkdownFormat("**", "bold text")}
+                      title="Bold"
+                    >
+                      <Bold className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => insertMarkdownFormat("*", "italic text")}
+                      title="Italic"
+                    >
+                      <Italic className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() =>
+                        insertMarkdownFormat("~~", "strikethrough")
+                      }
+                      title="Strikethrough"
+                    >
+                      <Strikethrough className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => insertMarkdownFormat("`", "code")}
+                      title="Inline Code"
+                    >
+                      <Code className="h-4 w-4" />
+                    </Button>
+
+                    <Separator orientation="vertical" className="mx-1 h-6" />
+
+                    {/* Headings */}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => insertHeading(1)}
+                      title="Heading 1"
+                    >
+                      <Heading1 className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => insertHeading(2)}
+                      title="Heading 2"
+                    >
+                      <Heading2 className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => insertHeading(3)}
+                      title="Heading 3"
+                    >
+                      <Heading3 className="h-4 w-4" />
+                    </Button>
+
+                    <Separator orientation="vertical" className="mx-1 h-6" />
+
+                    {/* Lists */}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => insertList(false)}
+                      title="Bullet List"
+                    >
+                      <List className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => insertList(true)}
+                      title="Numbered List"
+                    >
+                      <ListOrdered className="h-4 w-4" />
+                    </Button>
+
+                    <Separator orientation="vertical" className="mx-1 h-6" />
+
+                    {/* Other formatting */}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => insertChecklist(false)}
+                      title="Checklist"
+                    >
+                      <CheckSquare className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => insertMarkdownFormat("> ", "quote", false)}
+                      title="Quote"
+                    >
+                      <Quote className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() =>
+                        insertMarkdownFormat("[", "link text](url)", false)
+                      }
+                      title="Link"
+                    >
+                      <Link className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        const textarea = textareaRef.current;
+                        if (!textarea) return;
+
+                        const start = textarea.selectionStart;
+                        const selectedText = markdownValue.substring(
+                          textarea.selectionStart,
+                          textarea.selectionEnd,
+                        );
+                        const codeBlock = selectedText
+                          ? `\`\`\`\n${selectedText}\n\`\`\``
+                          : "```\ncode here\n```";
+
+                        const newValue =
+                          markdownValue.substring(0, start) +
+                          codeBlock +
+                          markdownValue.substring(textarea.selectionEnd);
+
+                        setMarkdownValue(newValue);
+                        setIsEditing(true);
+
+                        setTimeout(() => {
+                          textarea.focus();
+                          if (!selectedText) {
+                            const cursorPos = start + 4; // Position after ```\n
+                            textarea.setSelectionRange(
+                              cursorPos,
+                              cursorPos + 9,
+                            ); // Select "code here"
+                          }
+                        }, 0);
+                      }}
+                      title="Code Block"
+                    >
+                      <FileText className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="min-h-[400px] p-4">
+                  <textarea
+                    ref={textareaRef}
+                    key={`markdown-${note.id}`}
+                    value={markdownValue}
+                    onChange={(e) => {
+                      setMarkdownValue(e.target.value);
+                      setIsEditing(true);
+                    }}
+                    placeholder={t("placeholders.default")}
+                    className="h-[400px] w-full resize-none border-none bg-transparent p-0 font-mono text-sm leading-relaxed placeholder:text-muted-foreground/50 focus-visible:ring-0"
+                    style={{ outline: "none" }}
+                  />
+                </div>
+              </TabsContent>
+
+              <TabsContent value="preview" className="mt-0">
+                <div className="min-h-[400px] p-4">
+                  <div
+                    className="prose prose-sm dark:prose-invert max-w-none"
+                    // biome-ignore lint/security/noDangerouslySetInnerHtml: <explanation>
+                    dangerouslySetInnerHTML={{
+                      __html:
+                        renderMarkdownToHTML(markdownValue) ||
+                        `<p class="text-muted-foreground">${t(
+                          "placeholders.preview",
+                        )}</p>`,
+                    }}
+                  />
+                </div>
+              </TabsContent>
+            </Tabs>
           </div>
         ) : (
           <>
