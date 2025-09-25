@@ -82,7 +82,6 @@ export function QuizEditorContent() {
       console.log("Saving changed fields:", changedFields);
       await saveQuiz();
 
-      // Invalidate queries to ensure fresh data is fetched everywhere
       await queryClient.invalidateQueries({
         queryKey: ["quiz", extractIdFromSlug(quizId)],
       });
@@ -94,15 +93,11 @@ export function QuizEditorContent() {
     }
   };
 
-  // Handler to save settings directly to backend
   const handleSaveSettings = async (settings: any) => {
     try {
-      // Save settings to backend
       const result = await saveSettings(settings);
       toast.success("Quiz settings saved successfully!");
 
-      // Invalidate the quiz queries to force a refresh from the backend
-      // This ensures that when the dialog reopens, it has the latest data
       await queryClient.invalidateQueries({
         queryKey: ["quiz", extractIdFromSlug(quizId)],
       });
@@ -110,7 +105,6 @@ export function QuizEditorContent() {
         queryKey: ["quiz-editing", extractIdFromSlug(quizId)],
       });
 
-      // Also invalidate the main quizzes list
       await queryClient.invalidateQueries({
         queryKey: ["quizzes"],
       });

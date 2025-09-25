@@ -13,6 +13,13 @@ export function useQuizProgress({
   answers,
 }: UseQuizProgressProps) {
   useEffect(() => {
+    // Clear any existing progress when component mounts
+    try {
+      localStorage.removeItem(`quiz-progress-${quizId}`);
+    } catch (error) {
+      console.warn("Failed to clear quiz progress:", error);
+    }
+
     const saveProgress = () => {
       try {
         const progress = {
@@ -30,33 +37,13 @@ export function useQuizProgress({
       }
     };
 
-    // Load progress from localStorage on mount
-    const loadProgress = () => {
-      try {
-        const savedProgress = localStorage.getItem(`quiz-progress-${quizId}`);
-        if (savedProgress) {
-          const progress = JSON.parse(savedProgress);
-          if (Date.now() - progress.timestamp < 3600000) {
-            return {
-              currentQuestionIndex: progress.currentQuestionIndex,
-              answers: progress.answers,
-            };
-          }
-        }
-      } catch (error) {
-        console.warn("Failed to load quiz progress:", error);
-      }
-      return null;
-    };
-
-    const progress = loadProgress();
-    if (progress) {
-      console.log("Loaded quiz progress:", progress);
-    }
+    // Save progress periodically or when component unmounts
+    const interval = setInterval(saveProgress, 5000); // Save every 5 seconds
 
     return () => {
+      clearInterval(interval);
+      // Clear progress on unmount (quiz completed or exited)
       localStorage.removeItem(`quiz-progress-${quizId}`);
-      saveProgress(); // Save final progress before unmounting
     };
   }, [quizId, currentQuestionIndex, answers]);
 }

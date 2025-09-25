@@ -32,17 +32,7 @@ const nextConfig: NextConfig = {
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
 
-  // Add external packages that should be bundled
-  serverComponentsExternalPackages: [
-    "@langchain/langgraph",
-    "@langchain/core",
-    "@langchain/openai",
-    "@langchain/community",
-    "@langchain/textsplitters",
-  ],
-
   webpack: (config, { isServer }) => {
-    // Handle Node.js polyfills for client-side
     if (!isServer) {
       config.resolve.fallback = {
         ...config.resolve.fallback,
