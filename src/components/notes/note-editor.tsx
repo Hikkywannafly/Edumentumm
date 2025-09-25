@@ -39,13 +39,9 @@ import {
   Share2,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import dynamic from "next/dynamic";
 import type React from "react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-
-// Lazy load markdown editor để tránh lỗi SSR
-const MDEditor = dynamic(() => import("@uiw/react-md-editor"), { ssr: false });
 
 // Hàm helper để phát hiện chế độ editor từ tags
 const detectEditorModeFromTags = (tags: string[]): "markdown" | "block" => {
@@ -937,24 +933,20 @@ export function NoteEditor({
         <Separator className="mb-8" />
 
         {editorMode === "markdown" ? (
-          <div className="rounded-md border bg-background p-2 dark:border-gray-700">
-            {MDEditor && (
-              <div
-                data-color-mode="auto"
-                className="prose dark:prose-invert max-w-none"
-              >
-                <MDEditor
-                  key={`markdown-${note.id}`}
-                  value={markdownValue}
-                  onChange={(val) => {
-                    setMarkdownValue(val || "");
-                    setIsEditing(true);
-                  }}
-                  height={400}
-                  data-color-mode="light"
-                />
-              </div>
-            )}
+          <div className="rounded-md border bg-background dark:border-gray-700">
+            <div className="min-h-[400px] p-4">
+              <textarea
+                key={`markdown-${note.id}`}
+                value={markdownValue}
+                onChange={(e) => {
+                  setMarkdownValue(e.target.value);
+                  setIsEditing(true);
+                }}
+                placeholder={t("placeholders.default")}
+                className="h-[400px] w-full resize-none border-none bg-transparent p-0 font-mono text-sm leading-relaxed placeholder:text-muted-foreground/50 focus-visible:ring-0"
+                style={{ outline: "none" }}
+              />
+            </div>
           </div>
         ) : (
           <>
