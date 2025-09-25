@@ -17,13 +17,13 @@ export default function NoteCreatePage() {
   };
 
   const handleSave = () => {
-    // Refresh will be handled by the editor component
+    // Refresh sẽ được xử lý bởi component editor
     router.push("/notes");
   };
 
-  // Create a new note object for the editor
+  // Tạo object note mới cho editor
   const newNote = {
-    id: 0, // Temporary ID for new note
+    id: 0, // ID tạm thời cho note mới
     title: "",
     type: "block" as const,
     ownerId: 0,
@@ -51,7 +51,7 @@ export default function NoteCreatePage() {
           className="border-border border-b"
         />
 
-        {/* Main Content */}
+        {/* Nội dung chính */}
         <div className="flex-1 overflow-hidden">
           <NoteEditor note={newNote} onSave={handleSave} />
         </div>

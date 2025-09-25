@@ -23,16 +23,16 @@ export function useNoteList(filter?: NoteFilter) {
         return response;
       } catch (error) {
         const errorMessage =
-          error instanceof Error ? error.message : "Failed to fetch notes";
+          error instanceof Error ? error.message : "Lỗi tải danh sách notes";
         setError(errorMessage);
         throw error;
       } finally {
         setLoading(false);
       }
     },
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 1000 * 60 * 5, // 5 phút
     retry: (failureCount, error: any) => {
-      // Don't retry on auth errors
+      // Không retry với lỗi auth
       if (error?.message?.includes("401") || error?.message?.includes("403")) {
         return false;
       }
@@ -47,7 +47,7 @@ export function useNoteDetail(noteId: number | null) {
   return useQuery({
     queryKey: noteId ? noteQueryKeys.detail(noteId) : [],
     queryFn: async () => {
-      if (!noteId) throw new Error("Note ID is required");
+      if (!noteId) throw new Error("Cần có ID note");
 
       try {
         const note = await noteAPI.getNoteById(noteId);
@@ -56,13 +56,13 @@ export function useNoteDetail(noteId: number | null) {
         return note;
       } catch (error) {
         const errorMessage =
-          error instanceof Error ? error.message : "Failed to fetch note";
+          error instanceof Error ? error.message : "Lỗi tải note";
         setError(errorMessage);
         throw error;
       }
     },
     enabled: !!noteId,
-    staleTime: 1000 * 60 * 2, // 2 minutes
+    staleTime: 1000 * 60 * 2, // 2 phút
     retry: (failureCount, error: any) => {
       if (error?.message?.includes("404")) return false;
       if (error?.message?.includes("401") || error?.message?.includes("403")) {
@@ -82,20 +82,20 @@ export function useCreateNote() {
       return noteAPI.createNote(data);
     },
     onSuccess: (newNote) => {
-      // Add to store
+      // Thêm vào store
       addNote(newNote);
 
       // Invalidate lists
       queryClient.invalidateQueries({ queryKey: noteQueryKeys.lists() });
 
-      // Cache the new note
+      // Cache note mới
       queryClient.setQueryData(noteQueryKeys.detail(newNote.id), newNote);
 
       setError(null);
     },
     onError: (error) => {
       const errorMessage =
-        error instanceof Error ? error.message : "Failed to create note";
+        error instanceof Error ? error.message : "Lỗi tạo note";
       setError(errorMessage);
     },
     retry: (failureCount, error: any) => {
@@ -119,23 +119,23 @@ export function useUpdateNote() {
       return noteAPI.updateNote(noteId, data);
     },
     onSuccess: (updatedNote) => {
-      // Update store
+      // Cập nhật store
       updateNote(updatedNote.id, updatedNote);
 
-      // Update cache
+      // Cập nhật cache
       queryClient.setQueryData(
         noteQueryKeys.detail(updatedNote.id),
         updatedNote,
       );
 
-      // Invalidate lists to refresh
+      // Invalidate lists để refresh
       queryClient.invalidateQueries({ queryKey: noteQueryKeys.lists() });
 
       setError(null);
     },
     onError: (error) => {
       const errorMessage =
-        error instanceof Error ? error.message : "Failed to update note";
+        error instanceof Error ? error.message : "Lỗi cập nhật note";
       setError(errorMessage);
     },
     retry: (failureCount, error: any) => {
@@ -160,10 +160,10 @@ export function useDeleteNote() {
       return noteAPI.deleteNote(noteId);
     },
     onSuccess: (_, noteId) => {
-      // Remove from store
+      // Xóa khỏi store
       removeNote(noteId);
 
-      // Remove from cache
+      // Xóa khỏi cache
       queryClient.removeQueries({ queryKey: noteQueryKeys.detail(noteId) });
 
       // Invalidate lists
@@ -173,14 +173,14 @@ export function useDeleteNote() {
     },
     onError: (error) => {
       const errorMessage =
-        error instanceof Error ? error.message : "Failed to delete note";
+        error instanceof Error ? error.message : "Lỗi xóa note";
       setError(errorMessage);
     },
-    retry: false, // Don't retry delete operations
+    retry: false, // Không retry cho delete operations
   });
 }
 
-// Hook to create a note with default content
+// Hook để tạo note với template mặc định
 export function useCreateNoteWithTemplate() {
   const createNote = useCreateNote();
 
@@ -193,40 +193,40 @@ export function useCreateNoteWithTemplate() {
     switch (template) {
       case "meeting":
         initialBlocks = [
-          noteAPI.createHeadingBlock(1, "Meeting Notes", 0),
-          noteAPI.createParagraphBlock("**Date:** ", 1),
-          noteAPI.createParagraphBlock("**Attendees:** ", 2),
-          noteAPI.createHeadingBlock(2, "Agenda", 3),
+          noteAPI.createHeadingBlock(1, "Ghi chú cuộc họp", 0),
+          noteAPI.createParagraphBlock("**Ngày:** ", 1),
+          noteAPI.createParagraphBlock("**Tham dự:** ", 2),
+          noteAPI.createHeadingBlock(2, "Chương trình", 3),
           noteAPI.createToDoBlock("", false, 4),
-          noteAPI.createHeadingBlock(2, "Action Items", 5),
+          noteAPI.createHeadingBlock(2, "Hành động", 5),
           noteAPI.createToDoBlock("", false, 6),
         ];
         break;
       case "daily":
         initialBlocks = [
-          noteAPI.createHeadingBlock(1, "Daily Notes", 0),
+          noteAPI.createHeadingBlock(1, "Ghi chú hàng ngày", 0),
           noteAPI.createParagraphBlock(
             `**${new Date().toLocaleDateString()}**`,
             1,
           ),
-          noteAPI.createHeadingBlock(2, "Today's Goals", 2),
+          noteAPI.createHeadingBlock(2, "Mục tiêu hôm nay", 2),
           noteAPI.createToDoBlock("", false, 3),
-          noteAPI.createHeadingBlock(2, "Notes", 4),
+          noteAPI.createHeadingBlock(2, "Ghi chú", 4),
           noteAPI.createParagraphBlock("", 5),
         ];
         break;
       default:
-        initialBlocks = [noteAPI.createParagraphBlock("Start writing...", 0)];
+        initialBlocks = [noteAPI.createParagraphBlock("Bắt đầu viết...", 0)];
     }
 
-    // Create note first, then add blocks
+    // Tạo note trước, sau đó thêm blocks
     const noteData = await createNote.mutateAsync({
       title,
       type: "block",
       tags: [],
     });
 
-    // Add initial blocks if it's a template
+    // Thêm blocks ban đầu nếu là template
     if (template !== "blank" && noteData) {
       for (const block of initialBlocks) {
         await noteAPI.addBlock(noteData.id, block);
