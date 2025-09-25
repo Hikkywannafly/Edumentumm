@@ -6,19 +6,22 @@ import { NoteEditor } from "@/components/notes/note-editor";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 
 export default function NoteCreatePage() {
   const router = useRouter();
+  const params = useParams();
   const t = useTranslations("Notes");
 
   const handleBack = () => {
-    router.push("/notes");
+    const locale = params.locale as string;
+    router.push(`/${locale}/notes`);
   };
 
   const handleSave = () => {
     // Refresh sẽ được xử lý bởi component editor
-    router.push("/notes");
+    const locale = params.locale as string;
+    router.push(`/${locale}/notes`);
   };
 
   // Tạo object note mới cho editor

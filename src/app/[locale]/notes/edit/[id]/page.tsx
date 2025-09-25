@@ -38,7 +38,8 @@ export default function NoteEditPage() {
         tags: [],
       });
       console.log("Test note created:", testNote);
-      router.push(`/notes/edit/${testNote.id}`);
+      const locale = params.locale as string;
+      router.push(`/${locale}/notes/edit/${testNote.id}`);
     } catch (error) {
       console.error("Failed to create test note:", error);
     }
@@ -69,7 +70,8 @@ export default function NoteEditPage() {
   console.log("Query state:", { note, isLoading, error, noteId });
 
   const handleBack = () => {
-    router.push("/notes");
+    const locale = params.locale as string;
+    router.push(`/${locale}/notes`);
   };
 
   if (isLoading) {

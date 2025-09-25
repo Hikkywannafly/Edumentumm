@@ -95,14 +95,17 @@ export function NotesContent() {
     refetch();
   }, [refetch]);
 
+  // Lấy locale từ pathname
+  const locale = pathname.split("/")[1] || "vi";
+
   // Xử lý tạo note mới
   const handleCreateNote = () => {
-    router.push("/notes/create");
+    router.push(`/${locale}/notes/create`);
   };
 
   // Xử lý click vào note
   const handleNoteClick = (note: NoteData) => {
-    router.push(`/notes/edit/${note.id}`);
+    router.push(`/${locale}/notes/edit/${note.id}`);
   };
 
   // Render note card
