@@ -193,25 +193,25 @@ export function useCreateNoteWithTemplate() {
     switch (template) {
       case "meeting":
         initialBlocks = [
-          noteAPI.createHeadingBlock("Meeting Notes", 1, 0),
+          noteAPI.createHeadingBlock(1, "Meeting Notes", 0),
           noteAPI.createParagraphBlock("**Date:** ", 1),
           noteAPI.createParagraphBlock("**Attendees:** ", 2),
-          noteAPI.createHeadingBlock("Agenda", 2, 3),
-          noteAPI.createTodoBlock("", false, 4),
-          noteAPI.createHeadingBlock("Action Items", 2, 5),
-          noteAPI.createTodoBlock("", false, 6),
+          noteAPI.createHeadingBlock(2, "Agenda", 3),
+          noteAPI.createToDoBlock("", false, 4),
+          noteAPI.createHeadingBlock(2, "Action Items", 5),
+          noteAPI.createToDoBlock("", false, 6),
         ];
         break;
       case "daily":
         initialBlocks = [
-          noteAPI.createHeadingBlock("Daily Notes", 1, 0),
+          noteAPI.createHeadingBlock(1, "Daily Notes", 0),
           noteAPI.createParagraphBlock(
             `**${new Date().toLocaleDateString()}**`,
             1,
           ),
-          noteAPI.createHeadingBlock("Today's Goals", 2, 2),
-          noteAPI.createTodoBlock("", false, 3),
-          noteAPI.createHeadingBlock("Notes", 2, 4),
+          noteAPI.createHeadingBlock(2, "Today's Goals", 2),
+          noteAPI.createToDoBlock("", false, 3),
+          noteAPI.createHeadingBlock(2, "Notes", 4),
           noteAPI.createParagraphBlock("", 5),
         ];
         break;
@@ -219,12 +219,21 @@ export function useCreateNoteWithTemplate() {
         initialBlocks = [noteAPI.createParagraphBlock("Start writing...", 0)];
     }
 
-    return createNote.mutateAsync({
+    // Create note first, then add blocks
+    const noteData = await createNote.mutateAsync({
       title,
-      initialBlocks,
-      isPublic: false,
+      type: "block",
       tags: [],
     });
+
+    // Add initial blocks if it's a template
+    if (template !== "blank" && noteData) {
+      for (const block of initialBlocks) {
+        await noteAPI.addBlock(noteData.id, block);
+      }
+    }
+
+    return noteData;
   };
 
   return {
