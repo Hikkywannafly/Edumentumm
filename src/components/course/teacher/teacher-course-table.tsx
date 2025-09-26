@@ -139,7 +139,7 @@ export function TeacherCourseTable({
   const handleDeleteConfirm = async () => {
     if (courseToDelete) {
       try {
-        await deleteCourseMutation.mutateAsync(courseToDelete.id);
+        await deleteCourseMutation.mutateAsync(courseToDelete.courseId);
         toast({
           title: "Course Deleted",
           description: `Course "${courseToDelete.title}" has been deleted successfully.`,
@@ -158,7 +158,7 @@ export function TeacherCourseTable({
 
   const handlePublishCourse = async (course: Course) => {
     try {
-      await publishCourseMutation.mutateAsync(course.id);
+      await publishCourseMutation.mutateAsync(course.courseId);
       toast({
         title: "Course Published",
         description: `Course "${course.title}" has been published successfully.`,
@@ -174,7 +174,7 @@ export function TeacherCourseTable({
 
   const handleArchiveCourse = async (course: Course) => {
     try {
-      await archiveCourseMutation.mutateAsync(course.id);
+      await archiveCourseMutation.mutateAsync(course.courseId);
       toast({
         title: "Course Archived",
         description: `Course "${course.title}" has been archived successfully.`,

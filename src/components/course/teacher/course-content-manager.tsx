@@ -244,7 +244,7 @@ export const CourseContentManager: React.FC<CourseContentManagerProps> = ({
     );
 
   return (
-    <div className="mx-auto max-w-7xl p-6">
+    <div className="flex-1 space-y-6 p-6">
       <Button
         variant="ghost"
         size="sm"
@@ -278,18 +278,19 @@ export const CourseContentManager: React.FC<CourseContentManagerProps> = ({
 
       {/* Add New Button */}
       <div className="mb-6">
-        <Button
+        <button
+          type="button"
           onClick={() => startEdit(activeTab)}
-          className="rounded-lg border px-4 py-2 text-white hover:bg-white hover:text-slate-900"
+          className="size-sm rounded-lg border bg-slate-900 px-4 py-2 text-white hover:bg-white hover:text-slate-900"
         >
           Add New {activeTab.slice(0, -1)}
-        </Button>
+        </button>
       </div>
 
       {/* Lessons Tab */}
       {activeTab === "lessons" && (
         <div>
-          <h2 className="mb-4 font-bold text-2xl">
+          <h2 className="mb-4 font-semibold text-xl">
             Lessons ({lessons.length})
           </h2>
 
@@ -494,7 +495,7 @@ export const CourseContentManager: React.FC<CourseContentManagerProps> = ({
       {/* Exercises Tab */}
       {activeTab === "exercises" && (
         <div>
-          <h2 className="mb-4 font-bold text-2xl">
+          <h2 className="mb-4 font-semibold text-xl">
             Exercises ({exercises.length})
           </h2>
 
@@ -679,7 +680,7 @@ export const CourseContentManager: React.FC<CourseContentManagerProps> = ({
       {/* Resources Tab */}
       {activeTab === "resources" && (
         <div>
-          <h2 className="mb-4 font-bold text-2xl">
+          <h2 className="mb-4 font-semibold text-xl">
             Resources ({resources.length})
           </h2>
 

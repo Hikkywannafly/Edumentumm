@@ -75,7 +75,6 @@ export interface CourseTag {
 }
 
 export interface Course {
-  id: number;
   courseId: number;
   title: string;
   shortDescription: string;

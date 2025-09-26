@@ -158,10 +158,7 @@ export default function CourseStudentPage() {
               </div>
               <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
                 {data.data.map((course: Course) => (
-                  <CourseCard
-                    key={course.courseId || course.id}
-                    course={course}
-                  />
+                  <CourseCard key={course.courseId} course={course} />
                 ))}
               </div>
 

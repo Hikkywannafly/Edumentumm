@@ -321,7 +321,7 @@ export const useTeacherCourses = (params: GetTeacherCoursesParams = {}) => {
   });
 };
 
-export const useTeacherCourseDetail = (courseId: number | undefined) => {
+export const useTeacherCourseDetail = (courseId: number) => {
   const { accessToken, user, hasRole } = useAuth();
 
   return useQuery({
