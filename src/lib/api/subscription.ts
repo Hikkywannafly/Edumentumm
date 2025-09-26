@@ -11,7 +11,7 @@ export interface SubscriptionStatus {
 class SubscriptionAPI {
   async getSubscriptionStatus(): Promise<SubscriptionStatus> {
     try {
-      const response = await apiClient.get("/subscription/status");
+      const response = await apiClient.get("/student/subscription/status");
       if (response.data.success) {
         return response.data.data;
       }

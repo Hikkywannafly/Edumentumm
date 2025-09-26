@@ -20,7 +20,7 @@ export function useSubscription() {
     const fetchSubscriptionStatus = async () => {
       try {
         setLoading(true);
-        const response = await apiClient.get("/subscription/status");
+        const response = await apiClient.get("/student/subscription/status");
         if (response.data.success) {
           setSubscription(response.data.data);
         } else {
