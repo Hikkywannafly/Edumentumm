@@ -1,11 +1,5 @@
 "use client";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Lock } from "lucide-react";
 
 interface PaymentFormProps {
@@ -19,12 +13,14 @@ export function PaymentForm({
   selectedMethod,
   amount,
   content,
+  onPayment,
 }: PaymentFormProps) {
   const formatAmount = (amount: number) => {
-    return new Intl.NumberFormat("vi-VN", {
+    const dollars = amount / 100;
+    return new Intl.NumberFormat("en-US", {
       style: "currency",
-      currency: "VND",
-    }).format(amount);
+      currency: "USD",
+    }).format(dollars);
   };
 
   const qrInfo = {
@@ -41,93 +37,121 @@ export function PaymentForm({
       case "qr-code":
       case "momo":
         return (
-          <div className="flex flex-col items-center justify-between gap-8 rounded-2xl border border-zinc-600 border-dashed p-6 shadow-lg md:flex-row">
-            <div className="min-w-[240px] flex-1">
-              <div className="mb-3 flex items-center gap-2 font-semibold text-lg">
-                <span role="img" aria-label="bank" className="text-2xl">
-                  🏦
-                </span>
-                Chuyển khoản ngân hàng
-              </div>
-              <div className="mb-3 font-medium text-blue-400 text-sm">
-                Chú ý: nhập chính xác nội dung bên dưới
-              </div>
-              <table className="mb-2 w-full text-sm">
-                <tbody>
-                  <tr>
-                    <td className="py-1 pr-4">Ngân hàng</td>
-                    <td className="py-1 font-semibold text-red-600">
-                      {qrInfo.bank}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="py-1 pr-4">Số tài khoản</td>
-                    <td className="py-1 font-bold font-mono text-base">
-                      {qrInfo.account}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="py-1 pr-4">Chủ tài khoản</td>
-                    <td className="py-1">{qrInfo.owner}</td>
-                  </tr>
-                  <tr>
-                    <td className="py-1 pr-4">Số tiền</td>
-                    <td className="py-1 font-bold text-blue-400">
-                      {qrInfo.amount}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="py-1 pr-4">Nội dung</td>
-                    <td className="py-1 font-mono text-base text-yellow-400">
-                      {qrInfo.content}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+          <div className="space-y-4 rounded-lg border p-4">
+            <h3 className="font-semibold">Chuyển khoản ngân hàng</h3>
+            <div className="text-muted-foreground text-sm">
+              Chú ý: nhập chính xác nội dung bên dưới
             </div>
-            <div className="flex flex-col items-center gap-3">
-              <div className="rounded-xl bg-white p-2 shadow-md">
-                <img
-                  src={`https://img.vietqr.io/image/${qrInfo.bank}-${qrInfo.account}-qr_only.png?amount=${amount}&addInfo=${qrInfo.content}`}
-                  alt="QR code"
-                  className="h-40 w-40 rounded-lg"
+
+            <div className="grid grid-cols-2 gap-2 text-sm">
+              <div>Ngân hàng:</div>
+              <div className="font-semibold text-red-600">{qrInfo.bank}</div>
+
+              <div>Số tài khoản:</div>
+              <div className="font-bold font-mono">{qrInfo.account}</div>
+
+              <div>Chủ tài khoản:</div>
+              <div>{qrInfo.owner}</div>
+
+              <div>Số tiền:</div>
+              <div className="font-bold text-blue-600">{qrInfo.amount}</div>
+
+              <div>Nội dung:</div>
+              <div className="font-mono text-yellow-600">{qrInfo.content}</div>
+            </div>
+
+            <div className="rounded-lg border p-2 text-center">
+              <img
+                src={`https://img.vietqr.io/image/${qrInfo.bank}-${qrInfo.account}-qr_only.png?amount=${amount}&addInfo=${qrInfo.content}`}
+                alt="QR code"
+                className="mx-auto h-32 w-32"
+              />
+              <div className="mt-2 text-xs">
+                Thời gian còn lại: {qrInfo.expire}
+              </div>
+            </div>
+
+            <Button className="w-full" onClick={onPayment}>
+              Tôi đã thanh toán
+            </Button>
+          </div>
+        );
+      case "credit-card":
+        return (
+          <div className="space-y-4 rounded-lg border p-4">
+            <h3 className="font-semibold">Thanh toán bằng thẻ tín dụng</h3>
+
+            <div className="space-y-3">
+              <div>
+                <label
+                  className="mb-1 block font-medium text-sm"
+                  htmlFor="cardNumber"
+                >
+                  Số thẻ
+                </label>
+                <input
+                  type="text"
+                  id="cardNumber"
+                  placeholder="1234 5678 9012 3456"
+                  className="w-full rounded-md border px-3 py-2 text-sm"
                 />
               </div>
-              <div className="mt-2 text-xs">Thời gian còn lại</div>
-              <div className="font-bold text-3xl text-blue-400 tracking-widest">
-                {qrInfo.expire}
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label
+                    className="mb-1 block font-medium text-sm"
+                    htmlFor="expiryDate"
+                  >
+                    Ngày hết hạn
+                  </label>
+                  <input
+                    type="text"
+                    id="expiryDate"
+                    placeholder="MM/YY"
+                    className="w-full rounded-md border px-3 py-2 text-sm"
+                  />
+                </div>
+                <div>
+                  <label
+                    className="mb-1 block font-medium text-sm"
+                    htmlFor="cvv"
+                  >
+                    CVV
+                  </label>
+                  <input
+                    type="text"
+                    id="cvv"
+                    placeholder="123"
+                    className="w-full rounded-md border px-3 py-2 text-sm"
+                  />
+                </div>
               </div>
+
+              <Button className="w-full" onClick={onPayment}>
+                Thanh toán {formatAmount(amount)}
+              </Button>
             </div>
           </div>
         );
       default:
-        return null;
+        return (
+          <div className="rounded-lg border p-6 text-center text-muted-foreground">
+            Vui lòng chọn phương thức thanh toán
+          </div>
+        );
     }
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Thông tin thanh toán</CardTitle>
-        <CardDescription>Nhập thông tin để hoàn tất thanh toán</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="rounded-lg bg-primary/5 p-4">
-          <div className="flex items-center justify-between">
-            <span className="font-medium">Tổng thanh toán:</span>
-            <span className="font-bold text-2xl text-primary">
-              {formatAmount(amount)}
-            </span>
-          </div>
-        </div>
-        {renderPaymentForm()}
-        <div className="flex items-center gap-2 rounded-lg bg-muted p-3">
-          <Lock className="h-4 w-4 text-primary" />
-          <span className="text-sm">
-            Thông tin của bạn được bảo mật với mã hóa SSL 256-bit
-          </span>
-        </div>
-      </CardContent>
-    </Card>
+    <div className="space-y-4">
+      {renderPaymentForm()}
+      <div className="flex items-center gap-2 rounded-lg bg-muted p-3">
+        <Lock className="h-4 w-4 text-primary" />
+        <span className="text-sm">
+          Thông tin của bạn được bảo mật với mã hóa SSL 256-bit
+        </span>
+      </div>
+    </div>
   );
 }

@@ -1,17 +1,19 @@
-"use client";
+import BaseLayout from "@/components/layout/base-layout";
+import PaymentContent from "@/components/payment/payment-content";
+import { setRequestLocale } from "next-intl/server";
 
-import DashboardLayout from "@/components/layout/dashboard-layout";
-import { PageHeaderClient } from "@/components/layout/page-header-client";
-import PaymentContent from "../../../components/payment/payment-content";
+export default async function PaymentPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
 
-export default function PaymentPage() {
+  setRequestLocale(locale);
+
   return (
-    <DashboardLayout>
-      {/* Header */}
-      <PageHeaderClient title="Pomodoro" showThemeToggle={true} />
-
-      {/* Main content */}
+    <BaseLayout>
       <PaymentContent />
-    </DashboardLayout>
+    </BaseLayout>
   );
 }

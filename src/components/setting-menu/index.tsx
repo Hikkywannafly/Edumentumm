@@ -12,12 +12,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/contexts/auth-context";
-import { LogOut, Settings, User } from "lucide-react";
+import { useSubscription } from "@/hooks/use-subscription";
+import { Crown, LogOut, Settings, User } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 export function SettingMenu() {
   const t = useTranslations("Settings");
   const { user, logout, isLoading } = useAuth();
+  const { subscription, loading } = useSubscription();
+  const isProUser = subscription?.hasActiveSubscription || false;
 
   const getInitials = (username?: string, email?: string) => {
     if (username) {
@@ -37,7 +40,7 @@ export function SettingMenu() {
   const initials = getInitials(user?.username, user?.email);
   const displayName = user?.username || user?.email || "User";
 
-  if (isLoading) {
+  if (isLoading || loading) {
     return (
       <Button
         variant="ghost"
@@ -94,6 +97,12 @@ export function SettingMenu() {
               {user?.email && (
                 <span className="text-xs text-zinc-500 dark:text-zinc-400">
                   {user.email}
+                </span>
+              )}
+              {isProUser && (
+                <span className="mt-1 flex items-center gap-1 text-amber-600 text-xs dark:text-amber-400">
+                  <Crown className="h-3 w-3" />
+                  Pro Member
                 </span>
               )}
               {user?.roles && user.roles.length > 0 && (

@@ -131,6 +131,7 @@
       "monthly": "Monthly",
       "yearly": "Yearly",
       "save20": "Save 20%",
+      "save40": "Save 40%",
       "perMonth": "month",
       "perYear": "year"
     },
@@ -149,8 +150,8 @@
     "pro": {
       "title": "Pro",
       "price": {
-        "monthly": "$9.99",
-        "yearly": "$7.99"
+        "monthly": "$5",
+        "yearly": "$3"
       },
       "description": "Perfect for students and professionals who want more features.",
       "features": {
@@ -161,7 +162,7 @@
         "offlineAccess": "Offline access",
         "customBranding": "Custom branding"
       },
-      "button": "Start Free Trial"
+      "button": "Get Started"
     },
     "enterprise": {
       "title": "Enterprise",
@@ -467,7 +468,12 @@
         "extractingQuestions": "Extracting Questions...",
         "createQuiz": "Create Quiz",
         "guidance": "Paste clear and well-structured content for better question extraction."
-      }
+      },
+      "limitReached": "Free Plan Limit Reached",
+      "limitInfo": "You have created {created} of {limit} quizzes this week.",
+      "upgradeToPro": "Upgrade to Pro",
+      "cancel": "Cancel",
+      "upgradeToCreateMore": "Upgrade to Pro plan to create more quizzes."
     },
     "edit": {
       "title": "Edit Quiz",

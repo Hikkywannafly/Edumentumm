@@ -175,6 +175,7 @@
       "monthly": "Hàng tháng",
       "yearly": "Hàng năm",
       "save20": "Tiết kiệm 20%",
+      "save40": "Tiết kiệm 40%",
       "perMonth": "tháng",
       "perYear": "năm"
     },
@@ -193,8 +194,8 @@
     "pro": {
       "title": "Chuyên nghiệp",
       "price": {
-        "monthly": "230.000₫",
-        "yearly": "190.000₫"
+        "monthly": "$5",
+        "yearly": "$3"
       },
       "description": "Hoàn hảo cho học sinh và chuyên gia muốn có nhiều tính năng hơn.",
       "features": {
@@ -205,7 +206,7 @@
         "offlineAccess": "Truy cập ngoại tuyến",
         "customBranding": "Thương hiệu tùy chỉnh"
       },
-      "button": "Dùng thử miễn phí"
+      "button": "Bắt đầu"
     },
     "enterprise": {
       "title": "Doanh nghiệp",
@@ -526,7 +527,12 @@
         "extractingQuestions": "Đang trích xuất câu hỏi...",
         "createQuiz": "Tạo Quiz",
         "guidance": "Dán nội dung rõ ràng và có cấu trúc tốt để trích xuất câu hỏi tốt hơn."
-      }
+      },
+      "limitReached": "Đã đạt giới hạn gói miễn phí",
+      "limitInfo": "Bạn đã tạo {created} trên {limit} bài kiểm tra trong tuần này.",
+      "upgradeToPro": "Nâng cấp lên Pro",
+      "cancel": "Hủy",
+      "upgradeToCreateMore": "Nâng cấp lên gói Pro để tạo thêm bài kiểm tra."
     },
     "edit": {
       "title": "Chỉnh sửa Quiz",

@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { useQuizLimit } from "@/hooks/quiz/use-quiz-limit";
 import { useFileProcessor } from "@/hooks/use-file-processor";
 import { useLocalizedNavigation } from "@/lib/utils/navigation";
 import { useQuizEditorStore } from "@/stores/quiz-editor-store";
@@ -20,20 +21,27 @@ import { useEffect, useState } from "react";
 interface TextContentUploaderProps {
   onProcessingStart?: (fileName: string, label?: string) => void;
   onProcessingDone?: (done: boolean) => void;
+  onLimitReached?: () => void; // Add this prop to handle limit reached
 }
 
 export function TextContentUploader({
   onProcessingStart,
   onProcessingDone,
+  onLimitReached, // Destructure the new prop
 }: TextContentUploaderProps) {
   const t = useTranslations("Quizzes");
   const { goQuizEdit } = useLocalizedNavigation();
+  const { data: limitData } = useQuizLimit();
+
   const [isInitialMount, setIsInitialMount] = useState(true);
   const [isCreatingQuiz, setIsCreatingQuiz] = useState(false);
   const [textContent, setTextContent] = useState("");
 
   const { extractQuestionsFromText, isProcessing } = useFileProcessor();
   const { setEditing } = useQuizEditorStore();
+
+  // Check if user has reached the limit
+  const hasReachedLimit = limitData && limitData.quizzesCreatedThisWeek >= 3;
 
   const isBusy = isCreatingQuiz || isProcessing;
 
@@ -43,6 +51,14 @@ export function TextContentUploader({
 
   const handleCreateQuiz = async () => {
     if (isBusy) return;
+
+    // Check if user has reached the limit before proceeding
+    if (hasReachedLimit) {
+      // Notify parent component about limit reached instead of redirecting
+      onLimitReached?.();
+      return;
+    }
+
     setIsCreatingQuiz(true);
 
     onProcessingStart?.(

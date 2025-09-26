@@ -18,11 +18,19 @@ interface PaymentMethod {
 
 const paymentMethods: PaymentMethod[] = [
   {
+    id: "credit-card",
+    name: "Thẻ tín dụng",
+    description: "Visa, Mastercard, American Express",
+    icon: <Wallet className="h-6 w-6 text-blue-600" />,
+    popular: false,
+    fee: "Miễn phí",
+    processingTime: "Tức thì",
+  },
+  {
     id: "momo",
     name: "Ví MoMo",
     description: "Thanh toán qua ví điện tử MoMo",
     icon: <Wallet className="h-6 w-6 text-blue-600" />,
-    popular: true,
     fee: "Miễn phí",
     processingTime: "Tức thì",
   },
