@@ -858,7 +858,9 @@
     "stats": {
       "totalNotes": "Total Notes",
       "recentlyUpdated": "Recently Updated",
-      "myNotes": "My Notes"
+      "myNotes": "My Notes",
+      "blocks": "blocks",
+      "markdownMode": "Markdown"
     },
     "search": {
       "placeholder": "Search notes..."
@@ -890,6 +892,7 @@
     "create": {
       "title": "Create New Note",
       "button": "Create Note",
+      "error": "Failed to create note",
       "templates": {
         "blank": {
           "title": "Blank Note",

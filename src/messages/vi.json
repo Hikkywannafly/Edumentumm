@@ -863,7 +863,9 @@
     "stats": {
       "totalNotes": "Tổng số ghi chú",
       "recentlyUpdated": "Cập nhật gần đây",
-      "myNotes": "Ghi chú của tôi"
+      "myNotes": "Ghi chú của tôi",
+      "blocks": "khối",
+      "markdownMode": "Markdown"
     },
     "search": {
       "placeholder": "Tìm kiếm ghi chú..."
@@ -883,6 +885,7 @@
     "emptyState": {
       "noNotes": "Chưa có ghi chú nào",
       "noResults": "Không tìm thấy kết quả",
+      "noContent": "Chưa có nội dung",
       "createFirst": "Tạo ghi chú đầu tiên để bắt đầu",
       "noResultsDescription": "Thử điều chỉnh từ khóa tìm kiếm"
     },
@@ -895,6 +898,7 @@
     "create": {
       "title": "Tạo ghi chú mới",
       "button": "Tạo ghi chú",
+      "error": "Không thể tạo ghi chú",
       "templates": {
         "blank": {
           "title": "Ghi chú trống",

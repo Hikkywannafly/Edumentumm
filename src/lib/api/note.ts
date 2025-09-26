@@ -1,6 +1,5 @@
 import type {
   ApiError,
-  ApiResponse,
   BlockRequest,
   BlockResponse,
   CreateBlockRequest,
@@ -146,12 +145,13 @@ class NoteAPI {
       body: JSON.stringify(noteData),
     });
 
-    const apiResponse: ApiResponse<NoteData> = await this.handleResponse(
+    // API trả về trực tiếp NoteData, không wrap trong ApiResponse
+    const noteResponse: NoteData = await this.handleResponse(
       response,
       "Tạo note",
     );
 
-    return apiResponse.data;
+    return noteResponse;
   }
 
   // Cập nhật Note
