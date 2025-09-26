@@ -26,7 +26,6 @@ import {
   List,
   RefreshCw,
   Search,
-  User,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -49,6 +48,9 @@ export function NotesContent() {
   // State local
   const [searchInput, setSearchInput] = useState(searchQuery);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+
+  // Pagination state
+  const pageSize = 9;
 
   // Debounced search
   const debouncedSearch = useDebounce(searchInput, 500);
@@ -74,7 +76,7 @@ export function NotesContent() {
   useEffect(() => {
     setFilter({
       page: currentPage - 1,
-      size: 20,
+      size: pageSize,
       query: searchQuery,
     });
   }, [currentPage, searchQuery, setFilter]);
@@ -82,11 +84,40 @@ export function NotesContent() {
   // Fetch notes
   const { data, refetch } = useNoteList(filter);
 
+  // Sắp xếp notes để đảm bảo note mới cập nhật hiển thị ở đầu
+  const sortedNotes = data?.content
+    ? [...data.content].sort((a, b) => {
+        if (sortBy === "updatedAt") {
+          return sortDir === "desc"
+            ? new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+            : new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime();
+        }
+        if (sortBy === "createdAt") {
+          return sortDir === "desc"
+            ? new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+            : new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+        }
+        if (sortBy === "title") {
+          return sortDir === "desc"
+            ? b.title.localeCompare(a.title)
+            : a.title.localeCompare(b.title);
+        }
+        return 0;
+      })
+    : [];
+
   // Xử lý sắp xếp
   const handleSortChange = (newSortBy: string) => {
     const params = new URLSearchParams(searchParams);
     params.set("sortBy", newSortBy);
     params.set("sortDir", sortDir === "asc" ? "desc" : "asc");
+    router.push(`${pathname}?${params.toString()}`);
+  };
+
+  // Xử lý chuyển trang
+  const handlePageChange = (page: number) => {
+    const params = new URLSearchParams(searchParams);
+    params.set("page", String(page));
     router.push(`${pathname}?${params.toString()}`);
   };
 
@@ -105,7 +136,9 @@ export function NotesContent() {
 
   // Xử lý click vào note
   const handleNoteClick = (note: NoteData) => {
-    router.push(`/${locale}/notes/edit/${note.id}`);
+    // Thêm parameter mode để NoteEditor biết phải mở chế độ nào
+    const mode = note.type === "markdown" ? "markdown" : "block";
+    router.push(`/${locale}/notes/edit/${note.id}?mode=${mode}`);
   };
 
   // Render note card
@@ -122,9 +155,12 @@ export function NotesContent() {
             <h3 className="line-clamp-2 font-semibold text-lg dark:text-foreground">
               {note.title}
             </h3>
-            <Badge variant="secondary" className="text-xs dark:bg-muted/50">
+            <Badge
+              variant={note.type === "markdown" ? "default" : "secondary"}
+              className="text-xs dark:bg-muted/50"
+            >
               {note.type === "markdown"
-                ? t("editor.markdownMode")
+                ? t("stats.markdownMode")
                 : t("editor.blockMode")}
             </Badge>
           </div>
@@ -139,24 +175,34 @@ export function NotesContent() {
                     .map((block) => block.content?.text || "")
                     .join(" ")
                     .substring(0, 150)
-                : t("emptyState.noResults")}
+                : t("emptyState.noContent")}
           </div>
 
           {/* Tags */}
-          {note.tags && note.tags.length > 0 && (
-            <div className="flex flex-wrap gap-1">
-              {note.tags.slice(0, 3).map((tag) => (
-                <Badge key={tag} variant="outline" className="text-xs">
-                  {tag}
-                </Badge>
-              ))}
-              {note.tags.length > 3 && (
-                <Badge variant="outline" className="text-xs">
-                  +{note.tags.length - 3}
-                </Badge>
-              )}
-            </div>
-          )}
+          {note.tags &&
+            note.tags.filter((tag) => tag !== "markdown" && tag !== "block")
+              .length > 0 && (
+              <div className="flex flex-wrap gap-1">
+                {note.tags
+                  .filter((tag) => tag !== "markdown" && tag !== "block")
+                  .slice(0, 3)
+                  .map((tag) => (
+                    <Badge key={tag} variant="outline" className="text-xs">
+                      {tag}
+                    </Badge>
+                  ))}
+                {note.tags.filter(
+                  (tag) => tag !== "markdown" && tag !== "block",
+                ).length > 3 && (
+                  <Badge variant="outline" className="text-xs">
+                    +
+                    {note.tags.filter(
+                      (tag) => tag !== "markdown" && tag !== "block",
+                    ).length - 3}
+                  </Badge>
+                )}
+              </div>
+            )}
 
           {/* Footer */}
           <div className="flex items-center justify-between text-muted-foreground text-xs">
@@ -169,8 +215,12 @@ export function NotesContent() {
               </span>
             </div>
             <div className="flex items-center gap-1">
-              <User className="h-3 w-3" />
-              <span>ID: {note.id}</span>
+              <FileText className="h-3 w-3" />
+              <span>
+                {note.type === "markdown"
+                  ? t("stats.markdownMode")
+                  : `${note.blocks?.length || 0} ${t("stats.blocks")}`}
+              </span>
             </div>
           </div>
         </div>
@@ -190,8 +240,13 @@ export function NotesContent() {
           <div className="min-w-0 flex-1">
             <div className="mb-2 flex items-center gap-2">
               <h3 className="truncate font-semibold text-lg">{note.title}</h3>
-              <Badge variant="secondary" className="text-xs">
-                {note.type === "markdown" ? "Markdown" : "Block"}
+              <Badge
+                variant={note.type === "markdown" ? "default" : "secondary"}
+                className="text-xs"
+              >
+                {note.type === "markdown"
+                  ? t("stats.markdownMode")
+                  : t("editor.blockMode")}
               </Badge>
             </div>
             <p className="mb-2 line-clamp-2 text-muted-foreground text-sm">
@@ -203,7 +258,7 @@ export function NotesContent() {
                       .map((block) => block.content?.text || "")
                       .join(" ")
                       .substring(0, 100)
-                  : "Chưa có nội dung"}
+                  : t("emptyState.noContent")}
             </p>
             <div className="flex items-center gap-4 text-muted-foreground text-xs">
               <div className="flex items-center gap-1">
@@ -215,25 +270,39 @@ export function NotesContent() {
                 </span>
               </div>
               <div className="flex items-center gap-1">
-                <User className="h-3 w-3" />
-                <span>ID: {note.id}</span>
+                <FileText className="h-3 w-3" />
+                <span>
+                  {note.type === "markdown"
+                    ? t("stats.markdownMode")
+                    : `${note.blocks?.length || 0} ${t("stats.blocks")}`}
+                </span>
               </div>
             </div>
           </div>
-          {note.tags && note.tags.length > 0 && (
-            <div className="ml-4 flex flex-wrap gap-1">
-              {note.tags.slice(0, 2).map((tag) => (
-                <Badge key={tag} variant="outline" className="text-xs">
-                  {tag}
-                </Badge>
-              ))}
-              {note.tags.length > 2 && (
-                <Badge variant="outline" className="text-xs">
-                  +{note.tags.length - 2}
-                </Badge>
-              )}
-            </div>
-          )}
+          {note.tags &&
+            note.tags.filter((tag) => tag !== "markdown" && tag !== "block")
+              .length > 0 && (
+              <div className="ml-4 flex flex-wrap gap-1">
+                {note.tags
+                  .filter((tag) => tag !== "markdown" && tag !== "block")
+                  .slice(0, 2)
+                  .map((tag) => (
+                    <Badge key={tag} variant="outline" className="text-xs">
+                      {tag}
+                    </Badge>
+                  ))}
+                {note.tags.filter(
+                  (tag) => tag !== "markdown" && tag !== "block",
+                ).length > 2 && (
+                  <Badge variant="outline" className="text-xs">
+                    +
+                    {note.tags.filter(
+                      (tag) => tag !== "markdown" && tag !== "block",
+                    ).length - 2}
+                  </Badge>
+                )}
+              </div>
+            )}
         </div>
       </CardContent>
     </Card>
@@ -365,19 +434,139 @@ export function NotesContent() {
             )}
           </div>
         ) : (
-          <div
-            className={
-              viewMode === "grid"
-                ? "grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3"
-                : "space-y-4"
-            }
-          >
-            {data.content.map((note) =>
-              viewMode === "grid"
-                ? renderNoteCard(note)
-                : renderNoteListItem(note),
+          <>
+            {/* Pagination controls - Top */}
+            {data && data.totalPages > 1 && (
+              <div className="flex items-center justify-center gap-2">
+                <Button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1 || isLoading}
+                  variant="outline"
+                  size="sm"
+                  className="min-w-[80px]"
+                >
+                  Trước
+                </Button>
+
+                {/* Page numbers */}
+                <div className="flex items-center gap-1">
+                  {Array.from(
+                    { length: Math.min(5, data.totalPages) },
+                    (_, i) => {
+                      let pageNumber: number;
+                      if (data.totalPages <= 5) {
+                        pageNumber = i + 1;
+                      } else if (currentPage <= 3) {
+                        pageNumber = i + 1;
+                      } else if (currentPage >= data.totalPages - 2) {
+                        pageNumber = data.totalPages - 4 + i;
+                      } else {
+                        pageNumber = currentPage - 2 + i;
+                      }
+
+                      return (
+                        <Button
+                          key={pageNumber}
+                          onClick={() => handlePageChange(pageNumber)}
+                          variant={
+                            currentPage === pageNumber ? "default" : "outline"
+                          }
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                          disabled={isLoading}
+                        >
+                          {pageNumber}
+                        </Button>
+                      );
+                    },
+                  )}
+                </div>
+
+                <Button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage >= data.totalPages || isLoading}
+                  variant="outline"
+                  size="sm"
+                  className="min-w-[80px]"
+                >
+                  Sau
+                </Button>
+              </div>
             )}
-          </div>
+
+            <div
+              className={
+                viewMode === "grid"
+                  ? "grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3"
+                  : "space-y-4"
+              }
+            >
+              {sortedNotes.map((note) =>
+                viewMode === "grid"
+                  ? renderNoteCard(note)
+                  : renderNoteListItem(note),
+              )}
+            </div>
+
+            {/* Pagination controls - Bottom */}
+            {data && data.totalPages > 1 && (
+              <div className="flex items-center justify-center gap-2 pt-4">
+                <Button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1 || isLoading}
+                  variant="outline"
+                  size="sm"
+                  className="min-w-[80px]"
+                >
+                  Trước
+                </Button>
+
+                {/* Page numbers */}
+                <div className="flex items-center gap-1">
+                  {Array.from(
+                    { length: Math.min(5, data.totalPages) },
+                    (_, i) => {
+                      let pageNumber: number;
+                      if (data.totalPages <= 5) {
+                        pageNumber = i + 1;
+                      } else if (currentPage <= 3) {
+                        pageNumber = i + 1;
+                      } else if (currentPage >= data.totalPages - 2) {
+                        pageNumber = data.totalPages - 4 + i;
+                      } else {
+                        pageNumber = currentPage - 2 + i;
+                      }
+
+                      return (
+                        <Button
+                          key={pageNumber}
+                          onClick={() => handlePageChange(pageNumber)}
+                          variant={
+                            currentPage === pageNumber ? "default" : "outline"
+                          }
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                          disabled={isLoading}
+                        >
+                          {pageNumber}
+                        </Button>
+                      );
+                    },
+                  )}
+                </div>
+
+                <Button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage >= data.totalPages || isLoading}
+                  variant="outline"
+                  size="sm"
+                  className="min-w-[80px]"
+                >
+                  Sau
+                </Button>
+              </div>
+            )}
+          </>
         )}
 
         {/* Pagination info */}
@@ -386,10 +575,13 @@ export function NotesContent() {
             <div>
               Hiển thị {data.content.length} trong tổng số {data.totalElements}{" "}
               ghi chú
+              {searchQuery && ` cho "${searchQuery}"`}
             </div>
             <div className="flex items-center gap-2">
               <Calendar className="h-4 w-4" />
-              <span>Trang {currentPage}</span>
+              <span>
+                Trang {currentPage} trong tổng số {data.totalPages} trang
+              </span>
             </div>
           </div>
         )}

@@ -7,7 +7,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { noteAPI } from "@/lib/api/note";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AlertCircle, ArrowLeft, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useParams, useRouter } from "next/navigation";
@@ -17,6 +17,7 @@ export default function NoteEditPage() {
   const params = useParams();
   const router = useRouter();
   const t = useTranslations("Notes");
+  const queryClient = useQueryClient();
   const noteId = Number.parseInt(params.id as string);
 
   // Check if user is authenticated
@@ -71,6 +72,8 @@ export default function NoteEditPage() {
 
   const handleBack = () => {
     const locale = params.locale as string;
+    // Invalidate queries để refresh danh sách notes khi quay lại
+    queryClient.invalidateQueries({ queryKey: ["notes"] });
     router.push(`/${locale}/notes`);
   };
 

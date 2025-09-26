@@ -12,7 +12,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useDebounce } from "@/hooks/use-debounce";
+
 import { noteAPI } from "@/lib/api/note";
 import type {
   BlockData,
@@ -46,6 +46,7 @@ import {
   Strikethrough,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { useSearchParams } from "next/navigation";
 import type React from "react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -75,6 +76,7 @@ export function NoteEditor({
   const tSuccess = useTranslations("Notes.editor.success");
   const tCommon = useTranslations("Common");
   const queryClient = useQueryClient();
+  const searchParams = useSearchParams();
 
   // State cho metadata note
   const [title, setTitle] = useState(note.title);
@@ -83,7 +85,10 @@ export function NoteEditor({
 
   // State cho chế độ editor và nội dung
   const [editorMode, setEditorMode] = useState<"markdown" | "block">(() => {
-    // Ưu tiên: 1. mode prop, 2. phát hiện từ tags, 3. note.type, 4. mặc định block
+    // Ưu tiên: 1. URL parameter, 2. mode prop, 3. phát hiện từ tags, 4. note.type, 5. mặc định block
+    const urlMode = searchParams.get("mode") as "markdown" | "block";
+    if (urlMode && (urlMode === "markdown" || urlMode === "block"))
+      return urlMode;
     if (mode) return mode;
     const detectedMode = detectEditorModeFromTags(note.tags || []);
     if (detectedMode !== "block" || note.type === "markdown")
@@ -121,9 +126,6 @@ export function NoteEditor({
   const initialMarkdownRef = useRef<string>(
     note.type === "markdown" ? note.content || "" : "",
   );
-
-  // Debounced title cho auto-save
-  const debouncedTitle = useDebounce(title, 1000);
 
   // Mutation để cập nhật note
   const updateNoteMutation = useMutation({
@@ -166,59 +168,6 @@ export function NoteEditor({
       }
     }
   }, [editorMode, note.type, note.content, blocks, markdownValue]);
-
-  // Auto-save title khi giá trị debounced thay đổi
-  useEffect(() => {
-    if (
-      debouncedTitle !== initialTitleRef.current &&
-      debouncedTitle.trim() !== ""
-    ) {
-      const autoSaveTitle = async () => {
-        try {
-          // Đảm bảo tags bao gồm tag chế độ đúng
-          const modeTag = editorMode === "markdown" ? "markdown" : "block";
-          const updatedTags = [
-            ...tags.filter((tag) => tag !== "markdown" && tag !== "block"),
-            modeTag,
-          ];
-
-          const updateData: UpdateNoteRequest = {
-            title: debouncedTitle.trim(),
-            tags: updatedTags,
-            type: editorMode,
-          };
-
-          // Bao gồm nội dung cho chế độ markdown
-          if (editorMode === "markdown") {
-            updateData.content = markdownValue;
-          }
-
-          await updateNoteMutation.mutateAsync(updateData);
-          // Cập nhật state tags và refs ban đầu sau khi lưu thành công
-          setTags(updatedTags);
-          initialTitleRef.current = debouncedTitle.trim();
-          initialTagsRef.current = updatedTags;
-          toast.success(t("autoSaveTitle"));
-        } catch (error) {
-          toast.error(
-            `${tErrors("updateFailed")}: ${
-              error instanceof Error ? error.message : tCommon("unknownError")
-            }`,
-          );
-        }
-      };
-      autoSaveTitle();
-    }
-  }, [
-    debouncedTitle,
-    tags,
-    editorMode,
-    markdownValue,
-    updateNoteMutation,
-    t,
-    tErrors,
-    tCommon,
-  ]);
 
   // Đồng bộ hiển thị nút Save khi các trường cốt lõi thay đổi
   useEffect(() => {
@@ -1159,16 +1108,18 @@ export function NoteEditor({
         {/* Tags */}
         <div className="mb-8">
           <div className="mb-2 flex flex-wrap gap-2">
-            {tags.map((tag) => (
-              <Badge
-                key={tag}
-                variant="secondary"
-                className="cursor-pointer hover:bg-destructive/10"
-                onClick={() => handleRemoveTag(tag)}
-              >
-                {tag} ×
-              </Badge>
-            ))}
+            {tags
+              .filter((tag) => tag !== "markdown" && tag !== "block")
+              .map((tag) => (
+                <Badge
+                  key={tag}
+                  variant="secondary"
+                  className="cursor-pointer hover:bg-destructive/10"
+                  onClick={() => handleRemoveTag(tag)}
+                >
+                  {tag} ×
+                </Badge>
+              ))}
           </div>
           <Input
             value={newTag}

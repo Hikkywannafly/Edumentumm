@@ -175,13 +175,17 @@ export const useNoteStore = create<NoteState>()(
         set({ isLoading: true, error: null });
         try {
           const updatedNote = await noteAPI.updateNote(currentNote.id, updates);
-          set((state) => ({
-            notes: state.notes.map((note) =>
-              note.id === currentNote.id ? updatedNote : note,
-            ),
-            currentNote: updatedNote,
-            isLoading: false,
-          }));
+          set((state) => {
+            // Loại bỏ note cũ và thêm note đã cập nhật lên đầu danh sách
+            const filteredNotes = state.notes.filter(
+              (note) => note.id !== currentNote.id,
+            );
+            return {
+              notes: [updatedNote, ...filteredNotes],
+              currentNote: updatedNote,
+              isLoading: false,
+            };
+          });
         } catch (error) {
           set({
             error: error instanceof Error ? error.message : "Lỗi cập nhật note",
