@@ -68,11 +68,12 @@ export default function TiptapEditor({
     extensions: [
       StarterKit.configure({
         link: false as unknown as undefined,
+        underline: false as unknown as undefined, // Disable underline in StarterKit to avoid duplication
       }),
       Link.configure({
         openOnClick: false,
       }),
-      Underline,
+      Underline, // Add it explicitly here
       Image,
     ],
     content: content,
