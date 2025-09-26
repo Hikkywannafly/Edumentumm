@@ -34,7 +34,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 interface TeacherCourseViewProps {
-  courseId: number;
+  courseId: string;
 }
 
 export function TeacherCourseView({ courseId }: TeacherCourseViewProps) {

@@ -42,7 +42,7 @@ import { useState } from "react";
 import { CourseRatingSection } from "./course-rating-section";
 
 interface CourseDetailPageProps {
-  courseId: number;
+  courseId: string;
 }
 
 const DEFAULT_THUMBNAIL_URL =

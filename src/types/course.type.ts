@@ -75,7 +75,7 @@ export interface CourseTag {
 }
 
 export interface Course {
-  courseId: number;
+  courseId: string;
   title: string;
   shortDescription: string;
   fullDescription?: string;
@@ -94,7 +94,7 @@ export interface Course {
 }
 
 export interface CourseSummary {
-  courseId: number;
+  courseId: string;
   title: string;
   shortDescription: string;
   courseLevel: CourseLevel;
@@ -202,7 +202,7 @@ export interface ICourseFilter {
 
 export interface Lesson {
   id: string;
-  courseId: number;
+  courseId: string;
   title: string;
   description: string;
   order: number;
@@ -220,7 +220,7 @@ export interface RatingResponseDto {
   [x: string]: Key | null | undefined;
   id: string;
   studentId: string;
-  courseId: number;
+  courseId: string;
   rating: number;
   comment?: string;
   createdAt: string;

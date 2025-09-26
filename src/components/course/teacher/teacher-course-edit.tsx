@@ -39,7 +39,7 @@ import {
 import { Textarea } from "../../ui/textarea";
 
 interface TeacherCourseEditProps {
-  courseId: number;
+  courseId: string;
 }
 
 export function TeacherCourseEdit({ courseId }: TeacherCourseEditProps) {

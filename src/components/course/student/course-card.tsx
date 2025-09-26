@@ -28,7 +28,6 @@ export function CourseCard({ course }: CourseCardProps) {
   const [imageLoading, setImageLoading] = useState(true);
 
   const {
-    id,
     courseId,
     title,
     shortDescription,
@@ -40,7 +39,7 @@ export function CourseCard({ course }: CourseCardProps) {
   } = course;
 
   // Use courseId if id is not available
-  const courseIdentifier = id || courseId;
+  const courseIdentifier = courseId;
 
   const handleImageError = () => {
     setImageError(true);

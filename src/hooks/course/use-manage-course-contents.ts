@@ -55,15 +55,15 @@ api.interceptors.response.use(
 
 // Query Keys
 export const courseContentQueryKeys = {
-  lessons: (courseId: number) => ["lessons", courseId],
-  exercises: (courseId: number) => ["exercises", courseId],
-  resources: (courseId: number) => ["resources", courseId],
+  lessons: (courseId: string) => ["lessons", courseId],
+  exercises: (courseId: string) => ["exercises", courseId],
+  resources: (courseId: string) => ["resources", courseId],
 } as const;
 
 // ============ LESSON HOOKS ============
 
 // Get Course Lessons
-export const useGetCourseLessons = (courseId: number) => {
+export const useGetCourseLessons = (courseId: string) => {
   return useQuery({
     queryKey: courseContentQueryKeys.lessons(courseId),
     queryFn: async (): Promise<LessonResponseDto[]> => {
@@ -92,7 +92,7 @@ export const useCreateLesson = () => {
       courseId,
       lessonData,
     }: {
-      courseId: number;
+      courseId: string;
       lessonData: LessonCreateRequestDto;
     }): Promise<LessonResponseDto> => {
       const { data } = await api.post<ApiResponse<LessonResponseDto>>(
@@ -132,7 +132,7 @@ export const useUpdateLesson = () => {
       lessonData,
     }: {
       lessonId: number;
-      courseId: number;
+      courseId: string;
       lessonData: LessonCreateRequestDto;
     }): Promise<LessonResponseDto> => {
       const { data } = await api.patch<ApiResponse<LessonResponseDto>>(
@@ -161,7 +161,7 @@ export const useDeleteLesson = () => {
       lessonId,
     }: {
       lessonId: number;
-      courseId: number;
+      courseId: string;
     }): Promise<void> => {
       await api.delete(`/lessons/${lessonId}`);
     },
@@ -179,7 +179,7 @@ export const useDeleteLesson = () => {
 // ============ EXERCISE HOOKS ============
 
 // Get Course Exercises
-export const useGetCourseExercises = (courseId: number) => {
+export const useGetCourseExercises = (courseId: string) => {
   return useQuery({
     queryKey: courseContentQueryKeys.exercises(courseId),
     queryFn: async (): Promise<ExerciseResponseDto[]> => {
@@ -207,7 +207,7 @@ export const useCreateExercise = () => {
       courseId,
       exerciseData,
     }: {
-      courseId: number;
+      courseId: string;
       exerciseData: ExerciseCreateRequestDto;
     }): Promise<ExerciseResponseDto> => {
       const { data } = await api.post<ApiResponse<ExerciseResponseDto>>(
@@ -240,7 +240,7 @@ export const useUpdateExercise = () => {
       exerciseData,
     }: {
       exerciseId: number;
-      courseId: number;
+      courseId: string;
       exerciseData: ExerciseCreateRequestDto;
     }): Promise<ExerciseResponseDto> => {
       const { data } = await api.patch<ApiResponse<ExerciseResponseDto>>(
@@ -269,7 +269,7 @@ export const useDeleteExercise = () => {
       exerciseId,
     }: {
       exerciseId: number;
-      courseId: number;
+      courseId: string;
     }): Promise<void> => {
       await api.delete(`/exercises/${exerciseId}`);
     },
@@ -287,7 +287,7 @@ export const useDeleteExercise = () => {
 // ============ RESOURCE HOOKS ============
 
 // Get Course Resources
-export const useGetCourseResources = (courseId: number) => {
+export const useGetCourseResources = (courseId: string) => {
   return useQuery({
     queryKey: courseContentQueryKeys.resources(courseId),
     queryFn: async (): Promise<ResourceResponseDto[]> => {
@@ -315,7 +315,7 @@ export const useCreateResource = () => {
       courseId,
       resourceData,
     }: {
-      courseId: number;
+      courseId: string;
       resourceData: ResourceCreateRequestDto;
     }): Promise<ResourceResponseDto> => {
       const { data } = await api.post<ApiResponse<ResourceResponseDto>>(
@@ -348,7 +348,7 @@ export const useUpdateResource = () => {
       resourceData,
     }: {
       resourceId: number;
-      courseId: number;
+      courseId: string;
       resourceData: ResourceCreateRequestDto;
     }): Promise<ResourceResponseDto> => {
       const { data } = await api.patch<ApiResponse<ResourceResponseDto>>(
@@ -377,7 +377,7 @@ export const useDeleteResource = () => {
       resourceId,
     }: {
       resourceId: number;
-      courseId: number;
+      courseId: string;
     }): Promise<void> => {
       await api.delete(`/resources/${resourceId}`);
     },
@@ -395,7 +395,7 @@ export const useDeleteResource = () => {
 // ============ BULK OPERATIONS (Optional) ============
 
 // Get All Course Content
-export const useGetCourseContent = (courseId: number) => {
+export const useGetCourseContent = (courseId: string) => {
   const lessonsQuery = useGetCourseLessons(courseId);
   const exercisesQuery = useGetCourseExercises(courseId);
   const resourcesQuery = useGetCourseResources(courseId);
@@ -427,7 +427,7 @@ export const useUpdateLessonOrder = () => {
     mutationFn: async ({
       lessons,
     }: {
-      courseId: number;
+      courseId: string;
       lessons: { lessonId: number; orderIndex: number }[];
     }) => {
       // This would require a batch update endpoint on your backend

@@ -4,7 +4,7 @@ import { PageHeader } from "@/components/layout/page-header";
 
 export default function CourseContentPage({
   params,
-}: { params: { courseId: number } }) {
+}: { params: { courseId: string } }) {
   const { courseId } = params;
 
   return (

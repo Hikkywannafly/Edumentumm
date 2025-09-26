@@ -27,7 +27,7 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 interface CourseContentManagerProps {
-  courseId: number;
+  courseId: string;
 }
 
 type ContentType = "lessons" | "exercises" | "resources";

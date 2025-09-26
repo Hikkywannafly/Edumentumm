@@ -29,7 +29,7 @@ import { Loader2, Star, Trash2 } from "lucide-react";
 import { useState } from "react";
 
 interface CourseRatingSectionProps {
-  courseId: number;
+  courseId: string;
   isEnrolled: boolean;
   currentUserRating?: RatingResponseDto | null;
   averageRating?: number | null;
