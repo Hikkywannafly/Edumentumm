@@ -42,6 +42,14 @@ const paymentMethods: PaymentMethod[] = [
     fee: "Miễn phí",
     processingTime: "Tức thì",
   },
+  {
+    id: "vnpay",
+    name: "VNPay",
+    description: "Thanh toán qua ví điện tử VNPay",
+    icon: <Wallet className="h-6 w-6 text-blue-600" />,
+    fee: "Miễn phí",
+    processingTime: "Tức thì",
+  },
 ];
 
 interface PaymentMethodsProps {

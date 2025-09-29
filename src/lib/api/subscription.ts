@@ -37,6 +37,7 @@ class SubscriptionAPI {
     transactionId: string;
   }): Promise<any> {
     try {
+      console.log("Confirming payment with data:", paymentData);
       const response = await apiClient.post(
         "/student/subscription/payment/confirm",
         paymentData,
@@ -44,6 +45,23 @@ class SubscriptionAPI {
       return response.data;
     } catch (error) {
       console.error("Failed to confirm payment:", error);
+      throw error;
+    }
+  }
+
+  async createVNPayPayment(paymentData: {
+    packageId: string;
+  }): Promise<any> {
+    try {
+      console.log("Creating VNPay payment with data:", paymentData);
+      const response = await apiClient.post(
+        "/student/subscription/payment/vnpay/create",
+        paymentData,
+      );
+      console.log("VNPay payment response:", response.data);
+      return response.data;
+    } catch (error) {
+      console.error("Failed to create VNPay payment:", error);
       throw error;
     }
   }
