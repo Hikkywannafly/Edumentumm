@@ -29,7 +29,7 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import ThinLayout from "../layout/thin-layout";
 
 export function NotesContent() {
@@ -48,6 +48,7 @@ export function NotesContent() {
   // State local
   const [searchInput, setSearchInput] = useState(searchQuery);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // Pagination state
   const pageSize = 9;
@@ -59,67 +60,107 @@ export function NotesContent() {
   const { isLoading, error, filter, setFilter, setSearchQuery } =
     useNoteStore();
 
+  // Initialize component to prevent hydration mismatch
+  useEffect(() => {
+    setIsInitialized(true);
+  }, []);
+
   // Cập nhật URL khi search thay đổi
   useEffect(() => {
-    const params = new URLSearchParams(searchParams);
-    if (debouncedSearch) {
-      params.set("search", debouncedSearch);
-    } else {
-      params.delete("search");
-    }
-    params.set("page", "1"); // Reset về trang 1 khi search
-    router.replace(`${pathname}?${params.toString()}`);
-    setSearchQuery(debouncedSearch);
-  }, [debouncedSearch, router, pathname, searchParams, setSearchQuery]);
+    // Skip during initial load to prevent hydration issues
+    if (!isInitialized) return;
 
-  // Cập nhật filter khi URL thay đổi
+    // Skip if search hasn't actually changed
+    if (searchQuery === debouncedSearch) return;
+
+    const currentParams = new URLSearchParams(searchParams);
+    const newParams = new URLSearchParams(searchParams);
+
+    if (debouncedSearch) {
+      newParams.set("search", debouncedSearch);
+    } else {
+      newParams.delete("search");
+    }
+    newParams.set("page", "1"); // Reset về trang 1 khi search
+
+    // Only update URL if params actually changed
+    if (currentParams.toString() !== newParams.toString()) {
+      router.replace(`${pathname}?${newParams.toString()}`);
+    }
+
+    setSearchQuery(debouncedSearch);
+  }, [
+    debouncedSearch,
+    router,
+    pathname,
+    searchParams,
+    setSearchQuery,
+    searchQuery,
+    isInitialized,
+  ]);
+
+  // Cập nhật filter khi URL thay đổi (with debouncing to prevent excessive API calls)
   useEffect(() => {
-    setFilter({
-      page: currentPage - 1,
-      size: pageSize,
-      query: searchQuery,
-    });
-  }, [currentPage, searchQuery, setFilter]);
+    if (!isInitialized) return;
+
+    const timeoutId = setTimeout(() => {
+      setFilter({
+        page: currentPage - 1,
+        size: pageSize,
+        query: searchQuery,
+      });
+    }, 100);
+
+    return () => clearTimeout(timeoutId);
+  }, [currentPage, searchQuery, setFilter, isInitialized]);
 
   // Fetch notes
   const { data, refetch } = useNoteList(filter);
 
-  // Sắp xếp notes để đảm bảo note mới cập nhật hiển thị ở đầu
-  const sortedNotes = data?.content
-    ? [...data.content].sort((a, b) => {
-        if (sortBy === "updatedAt") {
-          return sortDir === "desc"
-            ? new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-            : new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime();
-        }
-        if (sortBy === "createdAt") {
-          return sortDir === "desc"
-            ? new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-            : new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-        }
-        if (sortBy === "title") {
-          return sortDir === "desc"
-            ? b.title.localeCompare(a.title)
-            : a.title.localeCompare(b.title);
-        }
-        return 0;
-      })
-    : [];
+  // Sắp xếp notes để đảm bảo note mới cập nhật hiển thị ở đầu (memoized)
+  const sortedNotes = useMemo(() => {
+    if (!data?.content) return [];
+
+    return [...data.content].sort((a, b) => {
+      if (sortBy === "updatedAt") {
+        return sortDir === "desc"
+          ? new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+          : new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime();
+      }
+      if (sortBy === "createdAt") {
+        return sortDir === "desc"
+          ? new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          : new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      }
+      if (sortBy === "title") {
+        return sortDir === "desc"
+          ? b.title.localeCompare(a.title)
+          : a.title.localeCompare(b.title);
+      }
+      return 0;
+    });
+  }, [data?.content, sortBy, sortDir]);
 
   // Xử lý sắp xếp
-  const handleSortChange = (newSortBy: string) => {
-    const params = new URLSearchParams(searchParams);
-    params.set("sortBy", newSortBy);
-    params.set("sortDir", sortDir === "asc" ? "desc" : "asc");
-    router.push(`${pathname}?${params.toString()}`);
-  };
+  const handleSortChange = useCallback(
+    (newSortBy: string) => {
+      const params = new URLSearchParams(searchParams);
+      params.set("sortBy", newSortBy);
+      params.set("sortDir", sortDir === "asc" ? "desc" : "asc");
+      router.push(`${pathname}?${params.toString()}`);
+    },
+    [searchParams, sortDir, router, pathname],
+  );
 
   // Xử lý chuyển trang
-  const handlePageChange = (page: number) => {
-    const params = new URLSearchParams(searchParams);
-    params.set("page", String(page));
-    router.push(`${pathname}?${params.toString()}`);
-  };
+  const handlePageChange = useCallback(
+    (page: number) => {
+      const params = new URLSearchParams(searchParams);
+      params.set("page", String(page));
+      router.push(`${pathname}?${params.toString()}`);
+    },
+    [searchParams, router, pathname],
+  );
 
   // Xử lý refresh
   const handleRefresh = useCallback(() => {
@@ -130,16 +171,19 @@ export function NotesContent() {
   const locale = pathname.split("/")[1] || "vi";
 
   // Xử lý tạo note mới
-  const handleCreateNote = () => {
+  const handleCreateNote = useCallback(() => {
     router.push(`/${locale}/notes/create`);
-  };
+  }, [router, locale]);
 
   // Xử lý click vào note
-  const handleNoteClick = (note: NoteData) => {
-    // Thêm parameter mode để NoteEditor biết phải mở chế độ nào
-    const mode = note.type === "markdown" ? "markdown" : "block";
-    router.push(`/${locale}/notes/edit/${note.id}?mode=${mode}`);
-  };
+  const handleNoteClick = useCallback(
+    (note: NoteData) => {
+      // Thêm parameter mode để NoteEditor biết phải mở chế độ nào
+      const mode = note.type === "markdown" ? "markdown" : "block";
+      router.push(`/${locale}/notes/edit/${note.id}?mode=${mode}`);
+    },
+    [router, locale],
+  );
 
   // Render note card
   const renderNoteCard = (note: NoteData) => (
