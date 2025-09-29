@@ -4,6 +4,7 @@ import DashboardLayout from "@/components/layout/dashboard-layout";
 import { PageHeaderClient } from "@/components/layout/page-header-client";
 import ThinLayout from "@/components/layout/thin-layout";
 import { LocalizedLink } from "@/components/localized-link";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -12,7 +13,7 @@ import { useQuizDetail } from "@/hooks/quiz/use-quiz-detail";
 import { useLocalizedNavigation } from "@/lib/utils/navigation";
 import type { QuizTakeMode } from "@/types/quiz-take";
 import { extractIdFromSlug } from "@/utils/index";
-import { ArrowLeft, Play } from "lucide-react";
+import { ArrowLeft, Play, User } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -238,6 +239,26 @@ export default function QuizDetailPage() {
                 <p className="text-lg text-muted-foreground leading-relaxed">
                   {currentQuiz.description}
                 </p>
+              )}
+
+              {/* Creator Information */}
+              {currentQuiz.user && (
+                <div className="flex items-center justify-center gap-3 pt-2">
+                  <Avatar className="h-10 w-10">
+                    <AvatarImage
+                      src={currentQuiz.user.imageUrl || undefined}
+                      alt={currentQuiz.user.username}
+                    />
+                    <AvatarFallback>
+                      <User className="h-5 w-5" />
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="text-left">
+                    <p className="font-medium text-foreground text-sm">
+                      Created by {currentQuiz.user.username}
+                    </p>
+                  </div>
+                </div>
               )}
             </div>
 

@@ -362,6 +362,8 @@ export default function ExploreContent() {
             attemptCount={quiz.totalAttempts || 0}
             viewCount={quiz.viewCount || 0}
             completionCount={quiz.completionCount || 0}
+            // Pass user information if available
+            user={quiz.user}
           />
         ))}
       </Card>

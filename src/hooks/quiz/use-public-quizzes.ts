@@ -50,6 +50,12 @@ interface QuizListResponseItem {
   bestCorrectAnswers: number;
   viewCount?: number;
   completionCount?: number;
+  // Add user information
+  user?: {
+    userId: number;
+    username: string;
+    imageUrl?: string | null;
+  };
 }
 
 interface ApiResponse<T> {
