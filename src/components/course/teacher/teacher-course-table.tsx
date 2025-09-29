@@ -35,12 +35,12 @@ import {
   usePublishCourse,
 } from "@/hooks/course/use-teacher-courses";
 import { useToast } from "@/hooks/use-toast";
-import { getLocaleFromPathname } from "@/lib/utils";
 import type { Course } from "@/types/course.type";
 import { CourseStatus } from "@/types/course.type";
 import {
   AlertCircle,
   Archive,
+  ArrowLeft,
   CheckCircle,
   Copy,
   Edit,
@@ -49,8 +49,7 @@ import {
   MoreHorizontal,
   Trash2,
 } from "lucide-react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { LocalizedLink } from "../../localized-link";
 
@@ -67,10 +66,9 @@ export function TeacherCourseTable({
 }: TeacherCourseTableProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [courseToDelete, setCourseToDelete] = useState<Course | null>(null);
-  const pathname = usePathname();
-  const locale = getLocaleFromPathname(pathname);
   const { toast } = useToast();
   const { user, hasRole } = useAuth();
+  const router = useRouter();
 
   const deleteCourseMutation = useDeleteCourse();
   const publishCourseMutation = usePublishCourse();
@@ -232,12 +230,23 @@ export function TeacherCourseTable({
   // Show error state
   if (error) {
     return (
-      <Alert variant="destructive">
-        <AlertCircle className="h-4 w-4" />
-        <AlertDescription>
-          An error occurred while loading the course list: {error.message}
-        </AlertDescription>
-      </Alert>
+      <>
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            An error occurred while loading the course list: {error.message}
+          </AlertDescription>
+        </Alert>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => router.back()}
+          className="mt-3 flex items-center gap-2"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back
+        </Button>
+      </>
     );
   }
 
@@ -262,7 +271,7 @@ export function TeacherCourseTable({
         <p className="mb-4 text-muted-foreground">
           Start by creating your first course
         </p>
-        <LocalizedLink href="/course/teacher/new">
+        <LocalizedLink href="/teacher/new">
           <Button>Create a new course</Button>
         </LocalizedLink>
       </div>
@@ -386,22 +395,18 @@ export function TeacherCourseTable({
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <Link
-                        href={`/${locale}/course/teacher/${course.courseId}/view`}
-                      >
+                      <LocalizedLink href={`/teacher/${course.courseId}/view`}>
                         <DropdownMenuItem>
                           <Eye className="mr-2 h-4 w-4" />
                           View
                         </DropdownMenuItem>
-                      </Link>
-                      <Link
-                        href={`/${locale}/course/teacher/${course.courseId}/edit`}
-                      >
+                      </LocalizedLink>
+                      <LocalizedLink href={`/teacher/${course.courseId}/edit`}>
                         <DropdownMenuItem>
                           <Edit className="mr-2 h-4 w-4" />
                           Edit
                         </DropdownMenuItem>
-                      </Link>
+                      </LocalizedLink>
 
                       {/* Conditional actions based on course status */}
                       {course.courseStatus === CourseStatus.DRAFT && (

@@ -156,7 +156,7 @@ export function TeacherCourseEdit({ courseId }: TeacherCourseEditProps) {
       });
 
       // Navigate back to course view
-      router.push(`/${locale}/course/teacher/${courseId}/view`);
+      router.push(`/${locale}/teacher/${courseId}/view`);
     } catch (error: any) {
       toast({
         title: "Error",
@@ -359,7 +359,7 @@ export function TeacherCourseEdit({ courseId }: TeacherCourseEditProps) {
                     {courseDetail.lessons.length} lessons in this course
                   </p>
                   <LocalizedLink
-                    href={`/course/teacher/${course.courseId}/edit/lesson`}
+                    href={`teacher/${course.courseId}/edit/lesson`}
                   >
                     <Button variant="outline" size="sm" className="mb-4">
                       Manage Lessons
@@ -428,7 +428,7 @@ export function TeacherCourseEdit({ courseId }: TeacherCourseEditProps) {
                       No lessons added yet
                     </p>
                     <LocalizedLink
-                      href={`/course/teacher/${course.courseId}/edit/lesson`}
+                      href={`teacher/${course.courseId}/edit/lesson`}
                     >
                       <Button variant="outline" size="sm" className="mt-2">
                         Add Lessons
@@ -575,7 +575,7 @@ export function TeacherCourseEdit({ courseId }: TeacherCourseEditProps) {
                 )}
               </Button>
 
-              <LocalizedLink href={`/${locale}/course/teacher/${courseId}`}>
+              <LocalizedLink href={`/${locale}/teacher/${courseId}`}>
                 <Button type="button" variant="outline" className="w-full">
                   Cancel
                 </Button>

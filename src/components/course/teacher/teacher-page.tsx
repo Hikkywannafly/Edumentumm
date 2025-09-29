@@ -1,3 +1,5 @@
+"use client";
+
 import { LocalizedLink } from "@/components/localized-link";
 import { Button } from "@/components/ui/button";
 import { useTeacherCourses } from "@/hooks/course/use-teacher-courses";
@@ -9,7 +11,7 @@ import { Plus } from "lucide-react";
 import { useMemo, useState } from "react";
 import { TeacherCourseTable } from "./teacher-course-table";
 
-export function CourseTeacherPage() {
+export function TeacherPage() {
   // State for filtering courses
   const [courseStatus, setCourseStatus] = useState<CourseStatus>(
     CourseStatus.DRAFT,

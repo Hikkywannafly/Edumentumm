@@ -97,8 +97,8 @@ const menuData: MenuData = {
       badge: "New",
     },
     {
-      title: "Tutors",
-      url: "/tutors",
+      title: "Teacher",
+      url: "/teacher",
       icon: Users,
       badge: "Beta",
     },
@@ -125,6 +125,7 @@ const menuData: MenuData = {
       title: "Course",
       url: "/course",
       icon: GraduationCap,
+      badge: "Beta",
     },
     {
       title: "Study Group",

@@ -4,9 +4,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/contexts/auth-context";
 import { AlertTriangle } from "lucide-react";
 import CourseStudentPage from "./student/course-student-page";
-import { CourseTeacherPage } from "./teacher/course-teacher-page";
 
-export default function CourseContent() {
+export default function CoursePage() {
   const { user, isLoading } = useAuth();
 
   if (isLoading) {
@@ -39,14 +38,9 @@ export default function CourseContent() {
   }
 
   const isStudent = user.roles?.some((role) => role.name === "ROLE_STUDENT");
-  const isTeacher = user.roles?.some((role) => role.name === "ROLE_TEACHER");
 
   if (isStudent) {
     return <CourseStudentPage />;
-  }
-
-  if (isTeacher) {
-    return <CourseTeacherPage />;
   }
 
   return (

@@ -24,7 +24,7 @@ import {
   CheckCircle,
   Clock,
   Edit,
-  Eye,
+  // Eye,
   FileText,
   Loader2,
   Star,
@@ -217,15 +217,15 @@ export function TeacherCourseView({ courseId }: TeacherCourseViewProps) {
 
         <div className="flex items-center gap-2">
           {/* Public View Link */}
-          <LocalizedLink href={`/course/${course.courseId}`}>
+          {/* <LocalizedLink href={`/course/${course.courseId}`}>
             <Button variant="outline" size="sm">
               <Eye className="mr-2 h-4 w-4" />
               Public View
             </Button>
-          </LocalizedLink>
+          </LocalizedLink> */}
 
           {/* Edit Button */}
-          <LocalizedLink href={`/course/teacher/${course.courseId}/edit`}>
+          <LocalizedLink href={`/teacher/${course.courseId}/edit`}>
             <Button variant="outline" size="sm">
               <Edit className="mr-2 h-4 w-4" />
               Edit
@@ -354,7 +354,7 @@ export function TeacherCourseView({ courseId }: TeacherCourseViewProps) {
                   <BookOpen className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
                   <p className="text-muted-foreground">No lessons added yet</p>
                   {/* <LocalizedLink
-                    href={`/course/teacher/${course.courseId}/edit`}
+                    href={`/teacher/${course.courseId}/edit`}
                   >
                     <Button variant="outline" size="sm" className="mt-2">
                       Add Lessons

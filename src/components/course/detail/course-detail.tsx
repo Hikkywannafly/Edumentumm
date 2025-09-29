@@ -6,13 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useCourseDetail } from "@/hooks/course/use-course-detail";
 import { ArrowLeft, Users } from "lucide-react";
-import { useParams } from "next/navigation";
 
-export function CourseDetail() {
-  const params = useParams();
-  const id = params.id ? String(params.id) : undefined;
+interface PublicCourseViewProps {
+  courseId: number;
+}
 
-  const { data: course, isLoading, error } = useCourseDetail(Number(id));
+export function CourseDetail({ courseId }: PublicCourseViewProps) {
+  const { data: course, isLoading, error } = useCourseDetail(courseId);
 
   if (isLoading) {
     return (
@@ -154,7 +154,7 @@ export function CourseDetail() {
               <div className="border-t pt-4">
                 <h3 className="mb-2 font-semibold">This course includes:</h3>
                 <ul className="space-y-2 text-muted-foreground text-sm">
-                  <li>• {course.totalLessons || 10} lessons</li>
+                  <li>• {course.totalLessons || 0} lessons</li>
                   <li>• Full lifetime access</li>
                   <li>• Access on mobile and desktop</li>
                   <li>• Certificate of completion</li>
