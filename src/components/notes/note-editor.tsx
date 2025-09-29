@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
+import { useDeleteNote } from "@/hooks/note";
 import { noteAPI } from "@/lib/api/note";
 import type {
   BlockData,
@@ -42,8 +43,8 @@ import {
   Quote,
   Save,
   Settings,
-  Share2,
   Strikethrough,
+  Trash2,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
@@ -77,6 +78,9 @@ export function NoteEditor({
   const tCommon = useTranslations("Common");
   const queryClient = useQueryClient();
   const searchParams = useSearchParams();
+
+  // Hook để xóa note
+  const deleteNoteMutation = useDeleteNote();
 
   // State cho metadata note
   const [title, setTitle] = useState(note.title);
@@ -989,9 +993,23 @@ export function NoteEditor({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem>
-                  <Share2 className="mr-2 h-4 w-4" />
-                  {t("share")}
+                <DropdownMenuItem
+                  onClick={async () => {
+                    if (window.confirm(tCommon("confirmDelete"))) {
+                      try {
+                        await deleteNoteMutation.mutateAsync(note.id);
+                        toast.success(t("success.noteDeleted"));
+                        // Điều hướng về trang danh sách notes
+                        window.history.back();
+                      } catch (_error) {
+                        toast.error(tErrors("deleteFailed"));
+                      }
+                    }
+                  }}
+                  className="text-destructive focus:text-destructive"
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  {tCommon("delete")}
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={async () => {

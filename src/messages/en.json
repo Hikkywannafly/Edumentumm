@@ -887,11 +887,13 @@
       "loadFailed": "Failed to load notes",
       "failedToLoadNote": "Failed to load note",
       "noteNotFound": "Note not found",
-      "updateFailed": "Failed to update note"
+      "updateFailed": "Failed to update note",
+      "deleteFailed": "Failed to delete note"
     },
     "create": {
       "title": "Create New Note",
       "button": "Create Note",
+      "success": "Note created successfully",
       "error": "Failed to create note",
       "templates": {
         "blank": {
@@ -962,7 +964,8 @@
       },
       "success": {
         "noteUpdated": "Note updated",
-        "noteUpdatedDesc": "Your note has been saved successfully"
+        "noteUpdatedDesc": "Your note has been saved successfully",
+        "noteDeleted": "Note deleted successfully"
       }
     }
   },
@@ -979,6 +982,7 @@
     "success": "Success",
     "cancel": "Cancel",
     "confirm": "Confirm",
+    "confirmDelete": "Are you sure you want to delete this note?",
     "delete": "Delete",
     "edit": "Edit",
     "save": "Save",

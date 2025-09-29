@@ -893,11 +893,13 @@
       "loadFailed": "Không thể tải ghi chú",
       "failedToLoadNote": "Không thể tải ghi chú",
       "noteNotFound": "Không tìm thấy ghi chú",
-      "updateFailed": "Không thể cập nhật ghi chú"
+      "updateFailed": "Không thể cập nhật ghi chú",
+      "deleteFailed": "Không thể xóa ghi chú"
     },
     "create": {
       "title": "Tạo ghi chú mới",
       "button": "Tạo ghi chú",
+      "success": "Đã tạo ghi chú thành công",
       "error": "Không thể tạo ghi chú",
       "templates": {
         "blank": {
@@ -968,7 +970,8 @@
       },
       "success": {
         "noteUpdated": "Đã cập nhật ghi chú",
-        "noteUpdatedDesc": "Ghi chú của bạn đã được lưu thành công"
+        "noteUpdatedDesc": "Ghi chú của bạn đã được lưu thành công",
+        "noteDeleted": "Đã xóa ghi chú thành công"
       }
     }
   },
@@ -985,6 +988,7 @@
     "success": "Thành công",
     "cancel": "Hủy",
     "confirm": "Xác nhận",
+    "confirmDelete": "Bạn có chắc chắn muốn xóa ghi chú này?",
     "delete": "Xóa",
     "edit": "Chỉnh sửa",
     "save": "Lưu",
