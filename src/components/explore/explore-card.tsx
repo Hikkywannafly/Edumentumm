@@ -91,7 +91,7 @@ export default function ExploreCard({
               className="h-8 justify-center gap-2 bg-blue-600 font-medium text-white text-xs hover:bg-blue-700"
               asChild
             >
-              <LocalizedLink href={`/quizzes/${slug || id}`}>
+              <LocalizedLink href={`/quizzes/${slug}-${id}`}>
                 <ArrowRight className="h-4 w-4" />
                 <span>Take Quiz</span>
               </LocalizedLink>
