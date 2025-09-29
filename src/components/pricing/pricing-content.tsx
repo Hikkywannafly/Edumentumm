@@ -40,19 +40,77 @@ export default function PricingContent() {
     checkSubscriptionStatus();
   }, []);
 
+  // Define features based on locale for proper internationalization
+  const freeFeatures =
+    locale === "vi"
+      ? [
+          "3 bài kiểm tra mỗi tuần",
+          "3 bộ flashcard mỗi tuần",
+          "Lên đến 20 câu hỏi mỗi bài kiểm tra",
+          "Lên đến 15 flashcard mỗi bộ",
+          "Tải lên PDF & Tài liệu (giới hạn 20MB)",
+          "Tải lên liên kết",
+          "Tải lên Google Drive",
+          "Bộ hẹn giờ Pomodoro",
+          "Bảng Kanban",
+          "Tải lên hình ảnh",
+          "Tải lên video YouTube",
+        ]
+      : [
+          "3 quizzes per week",
+          "3 flashcard sets per week",
+          "Up to 20 questions per quiz",
+          "Up to 15 flashcards per set",
+          "PDF & Document uploads (20MB limit)",
+          "Link uploads",
+          "Google Drive uploads",
+          "Pomodoro Timer",
+          "Kanban Board",
+          "Image uploads",
+          "YouTube video uploads",
+        ];
+
+  const proFeatures =
+    locale === "vi"
+      ? [
+          "Không giới hạn bài kiểm tra",
+          "Không giới hạn bộ flashcard",
+          "Lên đến 60 câu hỏi mỗi bài kiểm tra",
+          "Lên đến 60 flashcard mỗi bộ",
+          "Tải lên PDF & Tài liệu (giới hạn 50MB)",
+          "Tải lên liên kết",
+          "Tải lên Google Drive",
+          "Bộ hẹn giờ Pomodoro",
+          "Bảng Kanban",
+          "Tải lên hình ảnh",
+          "Tải lên video YouTube",
+          "Tạo AI ưu tiên",
+          "Hỗ trợ ưu tiên",
+        ]
+      : [
+          "Unlimited quizzes",
+          "Unlimited flashcard sets",
+          "Up to 60 questions per quiz",
+          "Up to 60 flashcards per set",
+          "PDF & Document uploads (50MB limit)",
+          "Link uploads",
+          "Google Drive uploads",
+          "Pomodoro Timer",
+          "Kanban Board",
+          "Image uploads",
+          "YouTube video uploads",
+          "Priority AI generation",
+          "Priority support",
+        ];
+
   const pricingPlans = [
     {
       id: "free",
       name: t("free.title"),
       price: t("free.price"),
-      period: "",
+      period: t("billing.perMonth"),
       description: t("free.description"),
-      features: [
-        t("free.features.unlimitedQuizzes"),
-        t("free.features.basicAnalytics"),
-        t("free.features.upTo5MindMaps"),
-        t("free.features.communitySupport"),
-      ],
+      features: freeFeatures,
       buttonText: t("free.button"),
       popular: false,
       priceValue: 0,
@@ -60,17 +118,10 @@ export default function PricingContent() {
     {
       id: "monthly",
       name: `${t("pro.title")} ${t("billing.monthly")}`,
-      price: "$5",
+      price: "$5.00",
       period: t("billing.perMonth"),
       description: t("pro.description"),
-      features: [
-        t("pro.features.unlimitedQuizzes"),
-        t("pro.features.advancedAnalytics"),
-        t("pro.features.unlimitedMindMaps"),
-        t("pro.features.prioritySupport"),
-        t("pro.features.offlineAccess"),
-        t("pro.features.customBranding"),
-      ],
+      features: proFeatures,
       buttonText: t("pro.button"),
       popular: false,
       priceValue: 5,
@@ -78,20 +129,15 @@ export default function PricingContent() {
     {
       id: "yearly",
       name: `${t("pro.title")} ${t("billing.yearly")}`,
-      price: "$3",
-      period: t("billing.perYear"),
+      price: "$2.50",
+      period: t("billing.perMonth"),
       description: t("pro.description"),
-      features: [
-        t("pro.features.unlimitedQuizzes"),
-        t("pro.features.advancedAnalytics"),
-        t("pro.features.unlimitedMindMaps"),
-        t("pro.features.prioritySupport"),
-        t("pro.features.offlineAccess"),
-        t("pro.features.customBranding"),
-      ],
+      features: proFeatures,
       buttonText: t("pro.button"),
       popular: true,
-      priceValue: 3,
+      priceValue: 2.5,
+      originalPrice: "$30.00",
+      billedAnnually: "$60.00 billed annually",
     },
   ];
 
@@ -171,6 +217,18 @@ export default function PricingContent() {
                 <span className="text-muted-foreground text-sm">
                   {plan.period ? `/${plan.period}` : ""}
                 </span>
+                {plan.originalPrice && (
+                  <div className="mt-1">
+                    <span className="text-muted-foreground text-sm line-through">
+                      {plan.originalPrice}
+                    </span>
+                  </div>
+                )}
+                {plan.billedAnnually && (
+                  <div className="text-muted-foreground text-sm">
+                    {plan.billedAnnually}
+                  </div>
+                )}
               </div>
               <CardDescription className="mt-2 text-center">
                 {plan.description}
