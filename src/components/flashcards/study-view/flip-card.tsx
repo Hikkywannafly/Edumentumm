@@ -6,6 +6,7 @@ import { htmlToText } from "@/lib/utils/text";
 import type { FlashcardData } from "@/types/flashcard";
 import { CheckCircle, Volume2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { HtmlViewer } from "../../shared/editor/html-viewer";
 
 interface FlipCardProps {
   flashcard: FlashcardData;
@@ -284,28 +285,31 @@ export function FlipCard({ flashcard, onNext, onPrevious }: FlipCardProps) {
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseLeave}
       >
-        <CardContent className="flex h-full min-h-[400px] flex-col p-4 pb-12">
+        <CardContent className="relative flex h-full min-h-[400px] flex-col p-4 pb-12">
           <div className="flex flex-1 flex-col justify-center">
             {isVocabularyType ? (
               // Vocabulary Type Front Side
-              <div className="flex flex-col items-center justify-between gap-20 text-center">
+              <div className="relative flex flex-col items-center justify-center gap-20 text-center">
+                {/* Audio button in top right corner */}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleSpeakVocabulary}
+                  disabled={isSpeaking}
+                  className="absolute top-0 right-0 flex h-12 w-12 items-center justify-center rounded-full hover:bg-blue-100"
+                  title="Listen to pronunciation"
+                >
+                  <Volume2
+                    className={`h-6 w-6 ${isSpeaking ? "animate-pulse text-blue-600" : "text-gray-600"}`}
+                  />
+                </Button>
+
                 <p className="text-muted-foreground text-sm">Vocabulary:</p>
-                <div className="flex items-center gap-4">
-                  <h3 className="font-semibold text-6xl leading-relaxed">
-                    {htmlToText(flashcard.vocabulary || "")}
-                  </h3>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleSpeakVocabulary}
-                    disabled={isSpeaking}
-                    className="flex h-16 w-16 items-center justify-center rounded-full hover:bg-blue-100"
-                    title="Listen to pronunciation"
-                  >
-                    <Volume2
-                      className={`h-16 w-16 ${isSpeaking ? "animate-pulse text-blue-600" : "text-gray-600"}`}
-                    />
-                  </Button>
+                <div className="flex items-center justify-center">
+                  <HtmlViewer
+                    content={flashcard.vocabulary || ""}
+                    className="font-semibold text-6xl leading-relaxed"
+                  />
                 </div>
                 <p className="text-muted-foreground text-sm">
                   What does this word mean?
@@ -318,9 +322,10 @@ export function FlipCard({ flashcard, onNext, onPrevious }: FlipCardProps) {
                   <p className="mb-2 text-muted-foreground text-sm">
                     Question:
                   </p>
-                  <h3 className="font-semibold text-xl leading-relaxed">
-                    {htmlToText(flashcard.question || "")}
-                  </h3>
+                  <HtmlViewer
+                    content={flashcard.question || ""}
+                    className="font-semibold text-xl leading-relaxed"
+                  />
                 </div>
 
                 <div className="space-y-4">
