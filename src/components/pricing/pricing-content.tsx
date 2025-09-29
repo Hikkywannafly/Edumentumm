@@ -11,24 +11,41 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Check } from "lucide-react";
-import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { subscriptionAPI } from "@/lib/api/subscription";
+import { Check, Star } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 export default function PricingContent() {
   const t = useTranslations("Pricing");
-  const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">(
-    "monthly",
-  );
+  const router = useRouter();
+  const locale = useLocale();
+  const [hasActiveSubscription, setHasActiveSubscription] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  // Check subscription status on component mount
+  useEffect(() => {
+    const checkSubscriptionStatus = async () => {
+      try {
+        const status = await subscriptionAPI.getSubscriptionStatus();
+        setHasActiveSubscription(status.hasActiveSubscription);
+      } catch (error) {
+        console.error("Failed to check subscription status:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkSubscriptionStatus();
+  }, []);
 
   const pricingPlans = [
     {
       id: "free",
       name: t("free.title"),
-      price: {
-        monthly: t("free.price"),
-        yearly: t("free.price"),
-      },
+      price: t("free.price"),
+      period: "",
       description: t("free.description"),
       features: [
         t("free.features.unlimitedQuizzes"),
@@ -38,14 +55,31 @@ export default function PricingContent() {
       ],
       buttonText: t("free.button"),
       popular: false,
+      priceValue: 0,
     },
     {
       id: "monthly",
-      name: t("pro.title"),
-      price: {
-        monthly: t("pro.price.monthly"),
-        yearly: t("pro.price.yearly"),
-      },
+      name: `${t("pro.title")} ${t("billing.monthly")}`,
+      price: "$5",
+      period: t("billing.perMonth"),
+      description: t("pro.description"),
+      features: [
+        t("pro.features.unlimitedQuizzes"),
+        t("pro.features.advancedAnalytics"),
+        t("pro.features.unlimitedMindMaps"),
+        t("pro.features.prioritySupport"),
+        t("pro.features.offlineAccess"),
+        t("pro.features.customBranding"),
+      ],
+      buttonText: t("pro.button"),
+      popular: false,
+      priceValue: 5,
+    },
+    {
+      id: "yearly",
+      name: `${t("pro.title")} ${t("billing.yearly")}`,
+      price: "$3",
+      period: t("billing.perYear"),
       description: t("pro.description"),
       features: [
         t("pro.features.unlimitedQuizzes"),
@@ -57,69 +91,62 @@ export default function PricingContent() {
       ],
       buttonText: t("pro.button"),
       popular: true,
-    },
-    {
-      id: "yearly",
-      name: t("enterprise.title"),
-      price: {
-        monthly: t("enterprise.price.monthly"),
-        yearly: t("enterprise.price.yearly"),
-      },
-      description: t("enterprise.description"),
-      features: [
-        t("enterprise.features.everythingInPro"),
-        t("enterprise.features.teamCollaboration"),
-        t("enterprise.features.dedicatedManager"),
-        t("enterprise.features.customIntegrations"),
-        t("enterprise.features.advancedSecurity"),
-        t("enterprise.features.slaGuarantee"),
-      ],
-      buttonText: t("enterprise.button"),
-      popular: false,
+      priceValue: 3,
     },
   ];
+
+  const handlePlanSelect = (planId: string) => {
+    if (planId === "free") {
+      router.push(`/${locale}/dashboard`);
+    } else {
+      router.push(`/${locale}/payment`);
+    }
+  };
+
+  if (loading) {
+    return (
+      <WideContainer padding>
+        <div className="flex h-64 items-center justify-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+        </div>
+      </WideContainer>
+    );
+  }
+
+  if (hasActiveSubscription) {
+    return (
+      <WideContainer padding>
+        <div className="mx-auto max-w-2xl text-center">
+          <div className="mb-6 flex justify-center">
+            <div className="rounded-full bg-green-100 p-3">
+              <Check className="h-12 w-12 text-green-600" />
+            </div>
+          </div>
+          <h1 className="font-bold text-3xl md:text-4xl">
+            Bạn đang sử dụng gói Pro!
+          </h1>
+          <p className="mt-4 text-lg text-muted-foreground">
+            Cảm ơn bạn đã nâng cấp. Bạn đang tận hưởng tất cả các tính năng Pro.
+          </p>
+          <Button
+            className="mt-8"
+            onClick={() => router.push(`/${locale}/dashboard`)}
+          >
+            Trở về bảng điều khiển
+          </Button>
+        </div>
+      </WideContainer>
+    );
+  }
 
   return (
     <WideContainer padding>
       <div className="mx-auto max-w-4xl text-center">
         <h1 className="font-bold text-3xl md:text-4xl">{t("title")}</h1>
         <p className="mt-4 text-lg text-muted-foreground">{t("subtitle")}</p>
-
-        {/* Billing toggle */}
-        <div className="mt-10 flex items-center justify-center">
-          <div className="relative inline-flex rounded-full bg-secondary p-1">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setBillingCycle("monthly")}
-              className={`relative z-10 rounded-full px-4 py-2 font-medium text-sm transition-colors ${
-                billingCycle === "monthly"
-                  ? "bg-primary text-white shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {t("billing.monthly")}
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setBillingCycle("yearly")}
-              className={`relative z-10 rounded-full px-4 py-2 font-medium text-sm transition-colors ${
-                billingCycle === "yearly"
-                  ? "bg-primary text-white shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {t("billing.yearly")}
-              <Badge className="ml-2" variant="secondary">
-                {t("billing.save20")}
-              </Badge>
-            </Button>
-          </div>
-        </div>
       </div>
 
-      {/* Pricing cards */}
+      {/* Pricing cards - showing all three plans */}
       <div className="mt-16 grid gap-8 md:grid-cols-3">
         {pricingPlans.map((plan) => (
           <Card
@@ -130,24 +157,19 @@ export default function PricingContent() {
           >
             {plan.popular && (
               <div className="-top-3 -translate-x-1/2 absolute left-1/2">
-                <Badge className="bg-primary px-3 py-1">{t("popular")}</Badge>
+                <Badge className="flex items-center gap-1 bg-primary px-3 py-1">
+                  <Star className="h-3 w-3 fill-current" />
+                  {t("popular")}
+                </Badge>
               </div>
             )}
 
             <CardHeader>
               <CardTitle className="text-center">{plan.name}</CardTitle>
               <div className="mt-4 text-center">
-                <span className="font-bold text-4xl">
-                  {billingCycle === "monthly"
-                    ? plan.price.monthly
-                    : plan.price.yearly}
-                </span>
+                <span className="font-bold text-4xl">{plan.price}</span>
                 <span className="text-muted-foreground text-sm">
-                  {plan.id !== "free" && billingCycle === "monthly"
-                    ? `/${t("billing.perMonth")}`
-                    : plan.id !== "free"
-                      ? `/${t("billing.perYear")}`
-                      : ""}
+                  {plan.period ? `/${plan.period}` : ""}
                 </span>
               </div>
               <CardDescription className="mt-2 text-center">
@@ -159,7 +181,7 @@ export default function PricingContent() {
               <ul className="space-y-3">
                 {plan.features.map((feature, index) => (
                   <li key={index} className="flex items-start">
-                    <Check className="mt-0.5 mr-2 h-4 w-4 text-green-500" />
+                    <Check className="mt-0.5 mr-2 h-4 w-4 flex-shrink-0 text-green-500" />
                     <span className="text-sm">{feature}</span>
                   </li>
                 ))}
@@ -170,6 +192,7 @@ export default function PricingContent() {
               <Button
                 className="w-full"
                 variant={plan.popular ? "default" : "outline"}
+                onClick={() => handlePlanSelect(plan.id)}
               >
                 {plan.buttonText}
               </Button>
