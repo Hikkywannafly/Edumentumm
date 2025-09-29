@@ -385,10 +385,6 @@ export function NotesContent() {
             <h1 className="font-bold text-3xl">{t("title")}</h1>
             <p className="text-muted-foreground">{t("description")}</p>
           </div>
-          <Button onClick={handleCreateNote} className="gap-2">
-            <FileText className="h-4 w-4" />
-            {t("actions.createNote")}
-          </Button>
         </div>
 
         {/* Filters */}

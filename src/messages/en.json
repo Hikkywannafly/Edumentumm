@@ -368,8 +368,21 @@
     },
     "contextMenu": {
       "addChild": "Add Child",
+      "addChildLeft": "Add Child Left",
+      "addChildRight": "Add Child Right",
+      "addChildUp": "Add Child Up",
+      "addChildDown": "Add Child Down",
+      "addNode": "Add Node",
       "delete": "Delete",
       "editStyle": "Edit Style"
+    },
+    "styleDialog": {
+      "title": "Edit Node Style",
+      "shape": "Shape",
+      "rectangle": "Rectangle",
+      "circle": "Circle",
+      "diamond": "Diamond",
+      "square": "Square"
     },
     "empty": {
       "title": "No mindmaps found",

@@ -2,18 +2,25 @@ import { Button } from "@/components/ui/button";
 import { Edit, Plus, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 
-interface ContextMenuProps {
+interface BaseContextMenuProps {
   top?: number;
   left?: number;
   right?: number;
   bottom?: number;
-  onAddChild?: () => void;
-  onDelete?: () => void;
-  onEditStyle?: () => void;
   onClose: () => void;
 }
 
-const ContextMenu = ({
+interface NodeContextMenuProps extends BaseContextMenuProps {
+  onAddChild?: () => void;
+  onDelete?: () => void;
+  onEditStyle?: () => void;
+}
+
+interface PaneContextMenuProps extends BaseContextMenuProps {
+  onAddNode?: () => void;
+}
+
+const NodeContextMenu = ({
   top,
   left,
   right,
@@ -21,12 +28,12 @@ const ContextMenu = ({
   onAddChild,
   onDelete,
   onEditStyle,
-}: ContextMenuProps) => {
+}: NodeContextMenuProps) => {
   const t = useTranslations("Mindmap");
 
   return (
     <div
-      className="absolute z-50 min-w-[160px] rounded-md border border-border bg-background p-1 shadow-lg"
+      className="absolute z-50 min-w-[140px] rounded-md border border-border bg-background p-1 shadow-lg"
       style={{
         top: top,
         left: left,
@@ -71,4 +78,38 @@ const ContextMenu = ({
   );
 };
 
-export default ContextMenu;
+const PaneContextMenu = ({
+  top,
+  left,
+  right,
+  bottom,
+  onAddNode,
+}: PaneContextMenuProps) => {
+  const t = useTranslations("Mindmap");
+
+  return (
+    <div
+      className="absolute z-50 min-w-[140px] rounded-md border border-border bg-background p-1 shadow-lg"
+      style={{
+        top: top,
+        left: left,
+        right: right,
+        bottom: bottom,
+      }}
+    >
+      {onAddNode && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onAddNode}
+          className="w-full justify-start"
+        >
+          <Plus className="mr-2 h-4 w-4" />
+          {t("contextMenu.addNode")}
+        </Button>
+      )}
+    </div>
+  );
+};
+
+export { NodeContextMenu, PaneContextMenu };

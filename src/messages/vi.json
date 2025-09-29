@@ -427,8 +427,21 @@
     },
     "contextMenu": {
       "addChild": "Thêm con",
+      "addChildLeft": "Thêm con bên trái",
+      "addChildRight": "Thêm con bên phải",
+      "addChildUp": "Thêm con bên trên",
+      "addChildDown": "Thêm con bên dưới",
+      "addNode": "Thêm node",
       "delete": "Xóa",
       "editStyle": "Chỉnh sửa kiểu"
+    },
+    "styleDialog": {
+      "title": "Chỉnh sửa kiểu node",
+      "shape": "Hình dáng",
+      "rectangle": "Hình chữ nhật",
+      "circle": "Hình tròn",
+      "diamond": "Hình thoi",
+      "square": "Hình vuông"
     },
     "empty": {
       "title": "Không tìm thấy sơ đồ tư duy",
