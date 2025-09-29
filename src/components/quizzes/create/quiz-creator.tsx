@@ -57,7 +57,9 @@ export function QuizCreator() {
   };
 
   // Check if user has reached the limit
-  const hasReachedLimit = limitData && limitData.quizzesCreatedThisWeek >= 3;
+  const hasReachedLimit =
+    limitData &&
+    limitData.quizzesCreatedThisWeek >= (limitData.weeklyLimit || 3);
 
   const handleTabChange = (value: string) => {
     if (hasReachedLimit) {

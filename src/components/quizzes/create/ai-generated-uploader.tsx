@@ -141,7 +141,9 @@ export function AIGeneratedUploader({
   });
 
   // Check if user has reached the limit
-  const hasReachedLimit = limitData && limitData.quizzesCreatedThisWeek >= 3;
+  const hasReachedLimit =
+    limitData &&
+    limitData.quizzesCreatedThisWeek >= (limitData.weeklyLimit || 3);
 
   const handleGenerateQuiz = async () => {
     if (!hasFiles) return;
