@@ -14,6 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useKanbanTasks } from "@/hooks/kanban/use-kanban-query";
 import type { ITask } from "@/types/task";
 import { BarChart3, Calendar, Eye, Plus } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { LocalizedLink } from "../localized-link";
 
@@ -44,6 +45,9 @@ const TasksSkeleton = () => (
 );
 
 export default function KanbanBoard() {
+  const t = useTranslations("Dashboard");
+  const tKanban = useTranslations("Kanban");
+
   const [selectedStatus, setSelectedStatus] = useState<
     "TODO" | "IN_PROGRESS" | "DONE"
   >("TODO");
@@ -76,25 +80,25 @@ export default function KanbanBoard() {
     switch (status) {
       case "TODO":
         return {
-          label: "To Do",
+          label: t("toDo"),
           color: "bg-blue-100 text-blue-800",
           count: stats.todo,
         };
       case "IN_PROGRESS":
         return {
-          label: "In Progress",
+          label: t("inProgress"),
           color: "bg-yellow-100 text-yellow-800",
           count: stats.inProgress,
         };
       case "DONE":
         return {
-          label: "Done",
+          label: t("done"),
           color: "bg-green-100 text-green-800",
           count: stats.done,
         };
       default:
         return {
-          label: "Unknown",
+          label: tKanban("status.todo"),
           color: "bg-gray-100 text-gray-800",
           count: 0,
         };
@@ -113,18 +117,18 @@ export default function KanbanBoard() {
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
           <CardTitle className="flex items-center gap-2">
             <Calendar className="h-5 w-5" />
-            Kanban Board
+            {t("kanbanBoard")}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
             <p className="text-destructive text-sm">
-              Failed to load kanban data. Please try again.
+              {t("failedToLoadKanban")}
             </p>
             <Button variant="outline" className="w-full" asChild>
               <LocalizedLink href="/kanban">
                 <Eye className="mr-2 h-4 w-4" />
-                View Full Board
+                {t("viewFullBoard")}
               </LocalizedLink>
             </Button>
           </div>
@@ -138,7 +142,7 @@ export default function KanbanBoard() {
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
         <CardTitle className="flex items-center gap-2">
           <Calendar className="h-5 w-5" />
-          Kanban Board
+          {t("kanbanBoard")}
         </CardTitle>
 
         {/* Stats Summary */}
@@ -146,7 +150,7 @@ export default function KanbanBoard() {
           <div className="flex items-center gap-2">
             <BarChart3 className="h-4 w-4 text-muted-foreground" />
             <span className="text-muted-foreground text-sm">
-              {stats.total} total
+              {t("totalTasks", { total: stats.total })}
             </span>
           </div>
         )}
@@ -160,15 +164,17 @@ export default function KanbanBoard() {
               <Calendar className="h-8 w-8 text-gray-400" />
             </div>
             <div className="space-y-2">
-              <h3 className="font-medium text-lg">No active kanban boards</h3>
+              <h3 className="font-medium text-lg">
+                {t("noActiveKanbanBoards")}
+              </h3>
               <p className="text-muted-foreground text-sm">
-                Create one to track your goals and organize your tasks!
+                {t("createKanbanDescription")}
               </p>
             </div>
             <Button variant="default" className="mt-4" asChild>
               <LocalizedLink href="/kanban">
                 <Plus className="mr-2 h-4 w-4" />
-                Create Your First Board
+                {t("createYourFirstBoard")}
               </LocalizedLink>
             </Button>
           </div>
@@ -179,7 +185,7 @@ export default function KanbanBoard() {
               {/* Label + Select */}
               <div className="flex items-center gap-3">
                 <span className="font-medium text-muted-foreground text-sm">
-                  Status:
+                  {t("status")}
                 </span>
                 <Select
                   value={selectedStatus}
@@ -188,14 +194,14 @@ export default function KanbanBoard() {
                   }
                 >
                   <SelectTrigger className="h-9 w-44 rounded-md border border-input bg-background px-3 font-medium text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1">
-                    <SelectValue placeholder="Select status" />
+                    <SelectValue placeholder={t("selectStatus")} />
                   </SelectTrigger>
 
                   <SelectContent className="rounded-md shadow-lg">
                     <SelectItem value="TODO" className="cursor-pointer">
                       <div className="flex items-center gap-2 text-sm">
                         <div className="h-2.5 w-2.5 rounded-full bg-blue-500" />
-                        <span>To Do</span>
+                        <span>{t("toDo")}</span>
                         {!tasksLoading && (
                           <Badge
                             variant="secondary"
@@ -210,7 +216,7 @@ export default function KanbanBoard() {
                     <SelectItem value="IN_PROGRESS" className="cursor-pointer">
                       <div className="flex items-center gap-2 text-sm">
                         <div className="h-2.5 w-2.5 rounded-full bg-yellow-500" />
-                        <span>In Progress</span>
+                        <span>{t("inProgress")}</span>
                         {!tasksLoading && (
                           <Badge
                             variant="secondary"
@@ -225,7 +231,7 @@ export default function KanbanBoard() {
                     <SelectItem value="DONE" className="cursor-pointer">
                       <div className="flex items-center gap-2 text-sm">
                         <div className="h-2.5 w-2.5 rounded-full bg-green-500" />
-                        <span>Done</span>
+                        <span>{t("done")}</span>
                         {!tasksLoading && (
                           <Badge
                             variant="secondary"
@@ -258,10 +264,12 @@ export default function KanbanBoard() {
                     <Calendar className="h-6 w-6 text-gray-400" />
                   </div>
                   <p className="text-muted-foreground text-sm">
-                    No tasks in {currentStatusInfo.label.toLowerCase()}
+                    {t("noTasksInStatus", {
+                      status: currentStatusInfo.label.toLowerCase(),
+                    })}
                   </p>
                   <p className="text-muted-foreground text-xs">
-                    Create a new task to get started!
+                    {t("createNewTask")}
                   </p>
                 </div>
               ) : (
@@ -273,7 +281,9 @@ export default function KanbanBoard() {
                     <div className="pt-2 text-center">
                       <Button variant="ghost" size="sm" asChild>
                         <LocalizedLink href="/kanban">
-                          View {filteredTasks.length - 5} more tasks
+                          {t("viewMoreTasks", {
+                            count: filteredTasks.length - 5,
+                          })}
                         </LocalizedLink>
                       </Button>
                     </div>
@@ -287,7 +297,7 @@ export default function KanbanBoard() {
               <Button variant="outline" className="flex-1" asChild>
                 <LocalizedLink href="/kanban">
                   <Eye className="mr-2 h-4 w-4" />
-                  View Full Board
+                  {t("viewFullBoard")}
                 </LocalizedLink>
               </Button>
             </div>

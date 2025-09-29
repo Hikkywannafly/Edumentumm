@@ -1,13 +1,13 @@
 import FeaturesSection from "@/components/landing/features-section";
 import BaseLayout from "@/components/layout/base-layout";
 import WideContainer from "@/components/layout/wide-layout";
+import { LocalizedLink } from "@/components/localized-link";
 import { ScrollAnimation } from "@/components/motion/scroll-animation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Play, Users } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { setRequestLocale } from "next-intl/server";
-import Link from "next/link";
 
 export default async function HomePage({
   params,
@@ -45,10 +45,10 @@ export default async function HomePage({
           <ScrollAnimation direction="up" delay={0.8} distance={30}>
             <div className="flex flex-col justify-center gap-4 sm:flex-row">
               <Button size="lg" className="px-8 text-lg" asChild>
-                <Link href={`/${locale}/quizzes`} prefetch>
+                <LocalizedLink href="/quizzes" prefetch>
                   <Play className="mr-2 h-5 w-5" />
                   {t("startLearning")}
-                </Link>
+                </LocalizedLink>
               </Button>
               <Button
                 variant="outline"
@@ -56,10 +56,10 @@ export default async function HomePage({
                 className="px-8 text-lg"
                 asChild
               >
-                <Link href={`/${locale}/login`}>
+                <LocalizedLink href="/login">
                   <Users className="mr-2 h-5 w-5" />
                   {t("joinCommunity")}
-                </Link>
+                </LocalizedLink>
               </Button>
             </div>
           </ScrollAnimation>
