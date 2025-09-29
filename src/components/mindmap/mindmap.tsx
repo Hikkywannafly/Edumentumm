@@ -11,6 +11,7 @@ import ReactFlow, {
   useReactFlow,
   useStoreApi,
 } from "reactflow";
+// @ts-ignore
 import "reactflow/dist/style.css";
 import { useMindmapStore } from "@/stores/mindmap";
 import { nanoid } from "nanoid";
