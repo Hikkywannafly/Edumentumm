@@ -21,7 +21,7 @@ interface UseAchievementsReturn {
 }
 
 export default function useGetAllAchievement(
-  pageSize = 9,
+  pageSize = 12,
 ): UseAchievementsReturn {
   const [page, setPage] = useState(0);
   const [keyword, setKeyword] = useState("");

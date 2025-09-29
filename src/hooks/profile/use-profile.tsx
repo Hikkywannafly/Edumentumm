@@ -51,13 +51,13 @@ export function useProfile() {
   );
 
   const productivityData = [
-    { name: "Mon", time: 60, focus: 80 },
-    { name: "Tue", time: 45, focus: 60 },
-    { name: "Wed", time: 80, focus: 90 },
-    { name: "Thu", time: 30, focus: 50 },
-    { name: "Fri", time: 90, focus: 70 },
-    { name: "Sat", time: 120, focus: 95 },
-    { name: "Sun", time: 70, focus: 85 },
+    { name: "Mon", time: 60, focus: 80, f: 10 },
+    { name: "Tue", time: 45, focus: 60, f: 10 },
+    { name: "Wed", time: 80, focus: 90, f: 10 },
+    { name: "Thu", time: 30, focus: 50, f: 10 },
+    { name: "Fri", time: 90, focus: 70, f: 10 },
+    { name: "Sat", time: 120, focus: 95, f: 10 },
+    { name: "Sun", time: 70, focus: 85, f: 10 },
   ];
 
   return {
