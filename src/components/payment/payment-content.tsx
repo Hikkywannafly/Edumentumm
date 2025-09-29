@@ -37,6 +37,28 @@ export default function PaymentContent() {
     setIsProcessing(true);
 
     try {
+      if (selectedMethod === "vnpay") {
+        // Handle VNPay payment
+        console.log("Initiating VNPay payment for package:", packageInfo.id);
+        const response = await subscriptionAPI.createVNPayPayment({
+          packageId: packageInfo.id,
+        });
+
+        console.log("VNPay payment response:", response);
+
+        if (response.success && response.data.paymentUrl) {
+          console.log(
+            "Redirecting to VNPay payment page:",
+            response.data.paymentUrl,
+          );
+          window.location.href = response.data.paymentUrl;
+          return;
+        }
+
+        throw new Error(response.message || "Failed to create VNPay payment");
+      }
+
+      // Handle other payment methods (existing logic)
       // Simulate payment processing delay
       await new Promise((resolve) => setTimeout(resolve, 2000));
 
@@ -50,9 +72,10 @@ export default function PaymentContent() {
       if (response.success) {
         // Payment successful, redirect to dashboard with success message
         router.push(`/${locale}/dashboard?payment=success`);
-      } else {
-        throw new Error(response.message || "Payment failed");
+        return;
       }
+
+      throw new Error(response.message || "Payment failed");
     } catch (error) {
       console.error("Payment error:", error);
       alert("Thanh toán thất bại. Vui lòng thử lại.");
