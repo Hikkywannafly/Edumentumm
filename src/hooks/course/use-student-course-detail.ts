@@ -10,7 +10,7 @@ const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/v1";
 
 // API functions
-export const getCourseDetail = async (courseId: string, token?: string) => {
+export const getCourseDetail = async (courseId: number, token?: string) => {
   const headers: HeadersInit = {
     "Content-Type": "application/json",
   };
@@ -34,7 +34,7 @@ export const getCourseDetail = async (courseId: string, token?: string) => {
 };
 
 export const getEnrolledCourseDetail = async (
-  courseId: string,
+  courseId: number,
   token?: string,
 ) => {
   const headers: HeadersInit = {
@@ -63,7 +63,7 @@ export const getEnrolledCourseDetail = async (
 };
 
 // React Query Hooks
-export const useCourseDetail = (courseId: string, options = {}) => {
+export const useCourseDetail = (courseId: number, options = {}) => {
   const { accessToken } = useAuth();
 
   return useQuery({
@@ -74,7 +74,7 @@ export const useCourseDetail = (courseId: string, options = {}) => {
   });
 };
 
-export const useEnrolledCourseDetail = (courseId: string, options = {}) => {
+export const useEnrolledCourseDetail = (courseId: number, options = {}) => {
   const { accessToken } = useAuth();
 
   return useQuery({

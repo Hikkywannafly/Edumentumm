@@ -5,7 +5,7 @@ import { PageHeader } from "@/components/layout/page-header";
 export default async function CourseContentPage({
   params,
 }: { params: Promise<{ courseId: string }> }) {
-  const { courseId } = await params;
+  const courseId = Number((await params).courseId);
 
   return (
     <DashboardLayout>

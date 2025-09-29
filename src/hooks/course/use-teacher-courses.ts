@@ -38,8 +38,8 @@ class ApiError extends Error {
 }
 
 // Utility function to validate courseId
-const validateCourseId = (courseId: string | undefined): number => {
-  if (!courseId && courseId?.length !== 0) {
+const validateCourseId = (courseId: number): number => {
+  if (!courseId && courseId !== 0) {
     throw new ApiError(400, "Invalid course ID provided");
   }
   return Number(courseId);
@@ -133,7 +133,7 @@ const getTeacherCourses = async (
 };
 
 const getTeacherCourseDetail = async (
-  courseId: string,
+  courseId: number,
   token: string,
 ): Promise<TeacherCourseDetailDto> => {
   const validatedCourseId = validateCourseId(courseId);
@@ -162,7 +162,7 @@ const getTeacherCourseDetail = async (
 };
 
 const updateCourse = async (
-  courseId: string,
+  courseId: number,
   courseData: CourseUpdateRequest,
   token: string,
 ): Promise<Course> => {
@@ -198,7 +198,7 @@ const updateCourse = async (
 };
 
 const publishCourse = async (
-  courseId: string,
+  courseId: number,
   token: string,
 ): Promise<Course> => {
   const validatedCourseId = validateCourseId(courseId);
@@ -227,7 +227,7 @@ const publishCourse = async (
 };
 
 const archiveCourse = async (
-  courseId: string,
+  courseId: number,
   token: string,
 ): Promise<Course> => {
   const validatedCourseId = validateCourseId(courseId);
@@ -255,7 +255,7 @@ const archiveCourse = async (
   return result.data;
 };
 
-const deleteCourse = async (courseId: string, token: string): Promise<void> => {
+const deleteCourse = async (courseId: number, token: string): Promise<void> => {
   const validatedCourseId = validateCourseId(courseId);
 
   const response = await fetch(
@@ -321,7 +321,7 @@ export const useTeacherCourses = (params: GetTeacherCoursesParams = {}) => {
   });
 };
 
-export const useTeacherCourseDetail = (courseId: string) => {
+export const useTeacherCourseDetail = (courseId: number) => {
   const { accessToken, user, hasRole } = useAuth();
 
   return useQuery({
@@ -362,7 +362,7 @@ export const useUpdateCourse = () => {
       courseId,
       courseData,
     }: {
-      courseId: string;
+      courseId: number;
       courseData: CourseUpdateRequest;
     }) => {
       if (!accessToken || !user || !hasRole) {
@@ -384,7 +384,7 @@ export const usePublishCourse = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (courseId: string) => {
+    mutationFn: (courseId: number) => {
       if (!accessToken || !user || !hasRole) {
         throw new ApiError(401, "Authentication required");
       }
@@ -401,7 +401,7 @@ export const useArchiveCourse = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (courseId: string) => {
+    mutationFn: (courseId: number) => {
       if (!accessToken || !user || !hasRole) {
         throw new ApiError(401, "Authentication required");
       }
@@ -418,7 +418,7 @@ export const useDeleteCourse = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (courseId: string) => {
+    mutationFn: (courseId: number) => {
       if (!accessToken || !user || !hasRole) {
         throw new ApiError(401, "Authentication required");
       }

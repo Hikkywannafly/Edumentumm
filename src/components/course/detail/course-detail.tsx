@@ -12,7 +12,7 @@ export function CourseDetail() {
   const params = useParams();
   const id = params.id ? String(params.id) : undefined;
 
-  const { data: course, isLoading, error } = useCourseDetail(id as string);
+  const { data: course, isLoading, error } = useCourseDetail(Number(id));
 
   if (isLoading) {
     return (
