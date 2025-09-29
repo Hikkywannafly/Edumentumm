@@ -75,6 +75,8 @@ export interface QuizMainNavigationProps {
   onShare: () => void;
   isTextInputQuestion?: boolean;
   isTextInputValid?: boolean;
+  // Add quiz property to access creator information
+  quiz?: BackendQuizEntity;
 }
 
 export interface QuizHeaderProps {

@@ -148,6 +148,7 @@ export function QuizNavigation({
         isTextInputQuestion={!!isTextInputQuestion}
         isTextInputValid={!!isTextInputValid}
         mode={mode} // Pass mode prop
+        quiz={quiz} // Pass quiz prop to display creator information
       />
       <QuizDeleteDialog
         open={showDeleteDialog}

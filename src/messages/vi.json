@@ -206,31 +206,45 @@
     },
     "free": {
       "title": "Miễn phí",
-      "price": "Miễn phí",
+      "price": "$0.00",
       "description": "Hoàn hảo để bắt đầu với các tính năng cơ bản.",
-      "features": {
-        "unlimitedQuizzes": "Không giới hạn bài kiểm tra",
-        "basicAnalytics": "Phân tích cơ bản",
-        "upTo5MindMaps": "Lên đến 5 sơ đồ tư duy",
-        "communitySupport": "Hỗ trợ cộng đồng"
-      },
+      "features": [
+        "3 bài kiểm tra mỗi tuần",
+        "3 bộ flashcard mỗi tuần",
+        "Lên đến 20 câu hỏi mỗi bài kiểm tra",
+        "Lên đến 15 flashcard mỗi bộ",
+        "Tải lên PDF & Tài liệu (giới hạn 20MB)",
+        "Tải lên liên kết",
+        "Tải lên Google Drive",
+        "Bộ hẹn giờ Pomodoro",
+        "Bảng Kanban",
+        "Tải lên hình ảnh",
+        "Tải lên video YouTube"
+      ],
       "button": "Bắt đầu"
     },
     "pro": {
       "title": "Chuyên nghiệp",
       "price": {
-        "monthly": "$5",
-        "yearly": "$3"
+        "monthly": "$5.00",
+        "yearly": "$2.50"
       },
       "description": "Hoàn hảo cho học sinh và chuyên gia muốn có nhiều tính năng hơn.",
-      "features": {
-        "unlimitedQuizzes": "Không giới hạn bài kiểm tra",
-        "advancedAnalytics": "Phân tích nâng cao",
-        "unlimitedMindMaps": "Không giới hạn sơ đồ tư duy",
-        "prioritySupport": "Hỗ trợ ưu tiên",
-        "offlineAccess": "Truy cập ngoại tuyến",
-        "customBranding": "Thương hiệu tùy chỉnh"
-      },
+      "features": [
+        "Không giới hạn bài kiểm tra",
+        "Không giới hạn bộ flashcard",
+        "Lên đến 60 câu hỏi mỗi bài kiểm tra",
+        "Lên đến 60 flashcard mỗi bộ",
+        "Tải lên PDF & Tài liệu (giới hạn 50MB)",
+        "Tải lên liên kết",
+        "Tải lên Google Drive",
+        "Bộ hẹn giờ Pomodoro",
+        "Bảng Kanban",
+        "Tải lên hình ảnh",
+        "Tải lên video YouTube",
+        "Tạo AI ưu tiên",
+        "Hỗ trợ ưu tiên"
+      ],
       "button": "Bắt đầu"
     },
     "enterprise": {
@@ -240,14 +254,14 @@
         "yearly": "550.000₫"
       },
       "description": "Hoàn hảo cho nhóm và tổ chức.",
-      "features": {
-        "everythingInPro": "Tất cả trong gói Chuyên nghiệp",
-        "teamCollaboration": "Cộng tác nhóm",
-        "dedicatedManager": "Quản lý tài khoản chuyên dụng",
-        "customIntegrations": "Tích hợp tùy chỉnh",
-        "advancedSecurity": "Bảo mật nâng cao",
-        "slaGuarantee": "Cam kết SLA 99.9%"
-      },
+      "features": [
+        "Tất cả trong gói Chuyên nghiệp",
+        "Cộng tác nhóm",
+        "Quản lý tài khoản chuyên dụng",
+        "Tích hợp tùy chỉnh",
+        "Bảo mật nâng cao",
+        "Cam kết SLA 99.9%"
+      ],
       "button": "Liên hệ bán hàng"
     },
     "faq": {

@@ -162,31 +162,45 @@
     },
     "free": {
       "title": "Free",
-      "price": "Free",
+      "price": "$0.00",
       "description": "Perfect for getting started with basic features.",
-      "features": {
-        "unlimitedQuizzes": "Unlimited quizzes",
-        "basicAnalytics": "Basic analytics",
-        "upTo5MindMaps": "Up to 5 mind maps",
-        "communitySupport": "Community support"
-      },
+      "features": [
+        "3 quizzes per week",
+        "3 flashcard sets per week",
+        "Up to 20 questions per quiz",
+        "Up to 15 flashcards per set",
+        "PDF & Document uploads (20MB limit)",
+        "Link uploads",
+        "Google Drive uploads",
+        "Pomodoro Timer",
+        "Kanban Board",
+        "Image uploads",
+        "YouTube video uploads"
+      ],
       "button": "Get Started"
     },
     "pro": {
       "title": "Pro",
       "price": {
-        "monthly": "$5",
-        "yearly": "$3"
+        "monthly": "$5.00",
+        "yearly": "$2.50"
       },
       "description": "Perfect for students and professionals who want more features.",
-      "features": {
-        "unlimitedQuizzes": "Unlimited quizzes",
-        "advancedAnalytics": "Advanced analytics",
-        "unlimitedMindMaps": "Unlimited mind maps",
-        "prioritySupport": "Priority support",
-        "offlineAccess": "Offline access",
-        "customBranding": "Custom branding"
-      },
+      "features": [
+        "Unlimited quizzes",
+        "Unlimited flashcard sets",
+        "Up to 60 questions per quiz",
+        "Up to 60 flashcards per set",
+        "PDF & Document uploads (50MB limit)",
+        "Link uploads",
+        "Google Drive uploads",
+        "Pomodoro Timer",
+        "Kanban Board",
+        "Image uploads",
+        "YouTube video uploads",
+        "Priority AI generation",
+        "Priority support"
+      ],
       "button": "Get Started"
     },
     "enterprise": {
@@ -196,14 +210,14 @@
         "yearly": "$23.99"
       },
       "description": "Perfect for teams and organizations.",
-      "features": {
-        "everythingInPro": "Everything in Pro plan",
-        "teamCollaboration": "Team collaboration",
-        "dedicatedManager": "Dedicated account manager",
-        "customIntegrations": "Custom integrations",
-        "advancedSecurity": "Advanced security",
-        "slaGuarantee": "99.9% SLA guarantee"
-      },
+      "features": [
+        "Everything in Pro plan",
+        "Team collaboration",
+        "Dedicated account manager",
+        "Custom integrations",
+        "Advanced security",
+        "99.9% SLA guarantee"
+      ],
       "button": "Contact Sales"
     },
     "faq": {

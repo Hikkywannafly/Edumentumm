@@ -1,4 +1,5 @@
 import { HtmlTitle } from "@/components/shared/editor/html-title";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowRight, CheckCircle, Eye, Users } from "lucide-react";
@@ -13,6 +14,12 @@ type ExploreCardProps = {
   attemptCount?: number;
   viewCount?: number;
   completionCount?: number;
+  // Add user information
+  user?: {
+    userId: number;
+    username: string;
+    imageUrl?: string | null;
+  };
 };
 
 export default function ExploreCard({
@@ -24,6 +31,7 @@ export default function ExploreCard({
   attemptCount = 0,
   viewCount = 0,
   completionCount = 0,
+  user,
 }: ExploreCardProps) {
   const formatTimeDisplay = () => {
     if (daysAgo > 30) {
@@ -63,6 +71,24 @@ export default function ExploreCard({
           </div>
         </div>
 
+        {/* Creator Information */}
+        {user && (
+          <div className="mb-3 flex items-center gap-2">
+            <Avatar className="h-6 w-6">
+              <AvatarImage
+                src={user.imageUrl || undefined}
+                alt={user.username}
+              />
+              <AvatarFallback className="text-xs">
+                {user.username.charAt(0).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <span className="text-muted-foreground text-sm">
+              {user.username}
+            </span>
+          </div>
+        )}
+
         <div className="mb-3 flex flex-wrap gap-2">
           {attemptCount > 0 && (
             <div className="flex items-center gap-1 text-muted-foreground text-xs">
@@ -86,6 +112,20 @@ export default function ExploreCard({
 
         <div className="mt-auto">
           <div className="flex flex-wrap justify-end gap-2 pt-4">
+            {/* View Results Button - Only show if there are attempts */}
+            {attemptCount > 0 && (
+              <Button
+                size="sm"
+                variant="secondary"
+                className="h-8 justify-center gap-2 font-medium text-xs"
+                asChild
+              >
+                <LocalizedLink href={`/quizzes/${slug}-${id}/results`}>
+                  <CheckCircle className="h-4 w-4" />
+                  <span>View Results</span>
+                </LocalizedLink>
+              </Button>
+            )}
             <Button
               size="sm"
               className="h-8 justify-center gap-2 bg-blue-600 font-medium text-white text-xs hover:bg-blue-700"

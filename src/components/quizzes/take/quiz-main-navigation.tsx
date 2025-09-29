@@ -1,5 +1,6 @@
 "use client";
 
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -16,6 +17,7 @@ import {
   Share,
   Trash2,
   Undo,
+  User,
 } from "lucide-react";
 import { useState } from "react";
 import { QuizWarningDialog } from "./quiz-warning-dialog";
@@ -35,10 +37,12 @@ export function QuizMainNavigation({
   isTextInputQuestion = false,
   isTextInputValid = true,
   mode, // Destructure mode prop
+  quiz, // Add quiz prop to access creator information
 }: QuizMainNavigationProps & {
   isTextInputQuestion?: boolean;
   isTextInputValid?: boolean;
   mode?: string;
+  quiz?: any; // Add quiz prop type
 }) {
   const [showWarning, setShowWarning] = useState(false);
   const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
@@ -89,6 +93,24 @@ export function QuizMainNavigation({
     <div className="sticky bottom-0 left-0 z-10 w-full bg-secondary p-4 sm:px-6 md:p-8">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 md:flex-nowrap md:gap-8">
         <div className="flex grow items-center md:w-3/5">
+          {/* Creator Information */}
+          {quiz?.user && (
+            <div className="mr-4 flex items-center">
+              <Avatar className="h-8 w-8">
+                <AvatarImage
+                  src={quiz.user.imageUrl || undefined}
+                  alt={quiz.user.username}
+                />
+                <AvatarFallback>
+                  <User className="h-4 w-4" />
+                </AvatarFallback>
+              </Avatar>
+              <span className="ml-2 hidden font-medium text-sm md:inline">
+                {quiz.user.username}
+              </span>
+            </div>
+          )}
+
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button

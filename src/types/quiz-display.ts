@@ -1,10 +1,8 @@
-export interface TagObjectDisplay {
-  id?: number;
-  name: string;
-  slug?: string;
-  icon?: string;
-  color?: string;
-  description?: string;
+// Add UserDisplay type
+export interface UserDisplay {
+  userId: number;
+  username: string;
+  imageUrl?: string | null;
 }
 
 export interface QuizDisplayData {
@@ -17,7 +15,10 @@ export interface QuizDisplayData {
   estimatedTime: number;
   status: "DRAFT" | "PUBLISHED" | "ARCHIVED";
   visibility: "PUBLIC" | "PRIVATE";
-  tags: (string | TagObjectDisplay)[];
+  tags: (
+    | string
+    | { name: string; description?: string; icon?: string; color?: string }
+  )[];
   keywords: string[];
   createdAt: string;
   viewCount: number;
@@ -26,6 +27,8 @@ export interface QuizDisplayData {
   maxAttempts?: number;
   publishedAt?: string | null;
   lastAttemptAt?: string;
+  // Add user field
+  user?: UserDisplay;
 }
 
 export interface QuizCardProps {
