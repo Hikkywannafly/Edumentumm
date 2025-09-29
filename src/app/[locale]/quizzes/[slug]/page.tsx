@@ -7,13 +7,14 @@ import { LocalizedLink } from "@/components/localized-link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { usePublicQuizDetail } from "@/hooks/quiz/use-public-quiz-detail";
 import { useQuizDetail } from "@/hooks/quiz/use-quiz-detail";
 import { useLocalizedNavigation } from "@/lib/utils/navigation";
 import type { QuizTakeMode } from "@/types/quiz-take";
 import { extractIdFromSlug } from "@/utils/index";
 import { ArrowLeft, Play } from "lucide-react";
 import { useParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { HtmlTitle } from "@/components/shared/editor/html-title";
 
@@ -22,18 +23,52 @@ export default function QuizDetailPage() {
   const { navigate } = useLocalizedNavigation();
   const [selectedMode, setSelectedMode] = useState<QuizTakeMode>("QUIZ");
 
+  // State to track if this is a public quiz
+  const [isPublicQuiz, setIsPublicQuiz] = useState(false);
+
   const slug = params.slug as string;
   const quizId = slug ? extractIdFromSlug(slug) : "0";
 
   const {
     data: quiz,
-    isLoading,
-    isError,
-    error,
+    isLoading: isQuizLoading,
+    isError: isQuizError,
+    error: quizError,
   } = useQuizDetail({
     id: quizId,
-    enabled: !!quizId,
+    enabled: !!quizId && !isPublicQuiz,
   });
+
+  const {
+    data: publicQuiz,
+    isLoading: isPublicQuizLoading,
+    isError: isPublicQuizError,
+    error: publicQuizError,
+  } = usePublicQuizDetail({
+    id: quizId,
+    enabled: !!quizId && isPublicQuiz,
+  });
+
+  // Try to fetch as a private quiz first, if that fails, try as public
+  useEffect(() => {
+    if (quizId) {
+      // Initially assume it's a private quiz
+      setIsPublicQuiz(false);
+    }
+  }, [quizId]);
+
+  // If private quiz fetch fails, try public quiz
+  useEffect(() => {
+    if (isQuizError && !isPublicQuiz) {
+      setIsPublicQuiz(true);
+    }
+  }, [isQuizError, isPublicQuiz]);
+
+  // Determine which data and loading states to use
+  const currentQuiz = quiz || publicQuiz;
+  const isLoading = isQuizLoading || (isPublicQuiz && isPublicQuizLoading);
+  const isError = !isPublicQuiz ? isQuizError : isPublicQuizError;
+  const error = !isPublicQuiz ? quizError : publicQuizError;
 
   // Loading state
   if (isLoading) {
@@ -123,7 +158,7 @@ export default function QuizDetailPage() {
   }
 
   // Error state
-  if (isError || !quiz) {
+  if (isError || !currentQuiz) {
     return (
       <DashboardLayout>
         <div className="flex min-h-screen flex-col">
@@ -168,7 +203,7 @@ export default function QuizDetailPage() {
     navigate(`/quizzes/${slug}/take?mode=${selectedMode}`);
   };
 
-  if (!quiz) {
+  if (!currentQuiz) {
     return null;
   }
 
@@ -195,13 +230,13 @@ export default function QuizDetailPage() {
           <div className="mx-auto max-w-2xl space-y-6 text-center">
             <div className="space-y-4">
               <HtmlTitle
-                content={quiz.title}
+                content={currentQuiz.title}
                 as="h1"
                 className="font-bold text-3xl text-foreground"
               />
-              {quiz.description && (
+              {currentQuiz.description && (
                 <p className="text-lg text-muted-foreground leading-relaxed">
-                  {quiz.description}
+                  {currentQuiz.description}
                 </p>
               )}
             </div>
@@ -210,38 +245,38 @@ export default function QuizDetailPage() {
             <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
               <Card className="rounded-lg border bg-card p-4">
                 <div className="font-semibold text-2xl text-foreground">
-                  {quiz.totalQuestions}
+                  {currentQuiz.totalQuestions}
                 </div>
                 <div className="text-muted-foreground text-sm">Questions</div>
               </Card>
               <Card className="rounded-lg bg-card p-4">
                 <div className="font-semibold text-2xl text-foreground">
-                  {quiz.estimatedTime}m
+                  {currentQuiz.estimatedTime}m
                 </div>
                 <div className="text-muted-foreground text-sm">Duration</div>
               </Card>
               <Card className="rounded-lg bg-card p-4">
                 <div className="font-semibold text-2xl text-foreground">
-                  {quiz.totalPoints}
+                  {currentQuiz.totalPoints}
                 </div>
                 <div className="text-muted-foreground text-sm">Points</div>
               </Card>
               <Card className="rounded-lg bg-card p-4">
                 <div className="font-semibold text-2xl text-foreground">
-                  {quiz.passingScore}%
+                  {currentQuiz.passingScore}%
                 </div>
                 <div className="text-muted-foreground text-sm">To Pass</div>
               </Card>
             </div>
 
             {/* Instructions */}
-            {quiz.quizData?.instructions && (
+            {currentQuiz.quizData?.instructions && (
               <div className="rounded-lg bg-muted/50 p-4">
                 <h3 className="mb-2 font-medium text-foreground">
                   Instructions
                 </h3>
                 <p className="text-muted-foreground text-sm">
-                  {quiz.quizData.instructions}
+                  {currentQuiz.quizData.instructions}
                 </p>
               </div>
             )}
@@ -336,9 +371,9 @@ export default function QuizDetailPage() {
               Start {selectedMode === "QUIZ" ? "Quiz" : "Exam"}
             </Button>
 
-            {quiz.maxAttempts > 1 && (
+            {currentQuiz.maxAttempts > 1 && (
               <p className="text-muted-foreground text-sm">
-                You have {quiz.maxAttempts} attempts for this quiz
+                You have {currentQuiz.maxAttempts} attempts for this quiz
               </p>
             )}
           </div>

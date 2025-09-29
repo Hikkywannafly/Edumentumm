@@ -6,11 +6,13 @@ import ThinLayout from "@/components/layout/thin-layout";
 import { QuizTakeContent } from "@/components/quizzes/take";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { usePublicQuizDetail } from "@/hooks/quiz/use-public-quiz-detail";
 import { useQuizDetail } from "@/hooks/quiz/use-quiz-detail";
 import type { QuizTakeMode } from "@/types/quiz-take";
 import { extractIdFromSlug } from "@/utils/index";
 import { ArrowLeft } from "lucide-react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 
 export default function QuizTakePage() {
   const params = useParams();
@@ -21,21 +23,49 @@ export default function QuizTakePage() {
   const quizId = slug ? extractIdFromSlug(slug) : "0";
   const mode = (searchParams.get("mode") as QuizTakeMode) || "QUIZ";
 
+  const [isPublicQuiz, setIsPublicQuiz] = useState(false);
+
   const {
     data: quiz,
-    isLoading,
-    isError,
-    error,
+    isLoading: isQuizLoading,
+    isError: isQuizError,
+    error: quizError,
   } = useQuizDetail({
     id: quizId,
-    enabled: !!quizId,
+    enabled: !!quizId && !isPublicQuiz,
   });
+
+  const {
+    data: publicQuiz,
+    isLoading: isPublicQuizLoading,
+    isError: isPublicQuizError,
+    error: publicQuizError,
+  } = usePublicQuizDetail({
+    id: quizId,
+    enabled: !!quizId && isPublicQuiz,
+  });
+
+  useEffect(() => {
+    if (quizId) {
+      setIsPublicQuiz(false);
+    }
+  }, [quizId]);
+
+  useEffect(() => {
+    if (isQuizError && !isPublicQuiz) {
+      setIsPublicQuiz(true);
+    }
+  }, [isQuizError, isPublicQuiz]);
 
   const handleBack = () => {
     router.back();
   };
 
-  // Loading state
+  const currentQuiz = quiz || publicQuiz;
+  const isLoading = isQuizLoading || (isPublicQuiz && isPublicQuizLoading);
+  const isError = !isPublicQuiz ? isQuizError : isPublicQuizError;
+  const error = !isPublicQuiz ? quizError : publicQuizError;
+
   if (isLoading) {
     return (
       <DashboardLayout>
@@ -63,8 +93,7 @@ export default function QuizTakePage() {
     );
   }
 
-  // Error state
-  if (isError || !quiz) {
+  if (isError || !currentQuiz) {
     return (
       <DashboardLayout>
         <div className="flex min-h-screen flex-col">
@@ -115,7 +144,7 @@ export default function QuizTakePage() {
           showLanguageSwitcher={true}
         />
         <div className="flex-1">
-          <QuizTakeContent quiz={quiz} mode={mode} />
+          <QuizTakeContent quiz={currentQuiz} mode={mode} />
         </div>
       </div>
     </DashboardLayout>
