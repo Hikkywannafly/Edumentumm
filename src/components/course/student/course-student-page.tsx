@@ -114,14 +114,13 @@ export default function CourseStudentPage() {
   return (
     <div className="container mx-auto p-4">
       <div className="flex flex-col gap-6 md:flex-row">
-        <aside className="w-full md:w-64">
-          <CourseFilter
-            onFilterChange={handleFilterChange}
-            maxPriceValue={1000}
-          />
-        </aside>
-
         <main className="flex-1">
+          <aside className="w-full">
+            <CourseFilter
+              onFilterChange={handleFilterChange}
+              maxPriceValue={1000}
+            />
+          </aside>
           {/* Filter summary */}
           <div className="mb-4 flex items-center justify-between">
             <div className="text-muted-foreground text-sm">

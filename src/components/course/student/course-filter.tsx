@@ -193,94 +193,83 @@ export function CourseFilter({
           placeholder="Search by title or description..."
           value={searchTerm}
           onChange={handleSearchChange}
-          className="w-full"
+          className="max-w-md"
           id="course-search-input"
         />
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="courseLevel" className="font-medium text-sm">
-          Course Level
-        </Label>
-        <Select value={selectedLevel} onValueChange={handleLevelChange}>
-          <SelectTrigger id="courseLevel">
-            <SelectValue placeholder="All Levels" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Levels</SelectItem>
-            {Object.values(CourseLevel).map((level) => (
-              <SelectItem key={level} value={level}>
-                {level.replace("_", " ")}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      {/* Price Range + Course Level cùng 1 hàng */}
+      <div className="flex items-start gap-12">
+        {/* Price Range */}
+        <div className="flex w-1/3 flex-col">
+          <label className="mb-3 font-medium text-sm" htmlFor="price-range">
+            Price Range: ${priceRange[0]} - ${priceRange[1]}
+          </label>
 
-      <div className="space-y-3">
-        <label className="font-medium text-sm" htmlFor="price-range">
-          Price Range: ${priceRange[0]} - ${priceRange[1]}
-        </label>
+          {/* Slider */}
+          <div className="relative mt-2 w-full" id="price-range">
+            <div className="price-slider-track relative h-1.5 rounded-full bg-gray-200">
+              <div
+                className="absolute h-1.5 rounded-full bg-black"
+                style={{
+                  left: `${(priceRange[0] / maxPriceValue) * 100}%`,
+                  width: `${((priceRange[1] - priceRange[0]) / maxPriceValue) * 100}%`,
+                }}
+              />
+              <div
+                className="-translate-x-1/2 -translate-y-1/3 absolute h-4 w-4 transform cursor-pointer rounded-full border-2 border-black bg-white"
+                style={{
+                  left: `${(priceRange[0] / maxPriceValue) * 100}%`,
+                }}
+                onMouseDown={(e) => handleMouseDown(e, "min")}
+              />
+              <div
+                className="-translate-x-1/2 -translate-y-1/3 absolute h-4 w-4 transform cursor-pointer rounded-full border-2 border-black bg-white"
+                style={{
+                  left: `${(priceRange[1] / maxPriceValue) * 100}%`,
+                }}
+                onMouseDown={(e) => handleMouseDown(e, "max")}
+              />
+            </div>
+          </div>
 
-        {/* Custom Dual Range Slider */}
-        <div className="relative w-full" id="price-range">
-          {/* Track background */}
-          <div className="price-slider-track relative h-2 rounded-lg bg-gray-200">
-            {/* Active range */}
-            <div
-              className="absolute h-2 rounded-lg bg-black"
-              style={{
-                left: `${(priceRange[0] / maxPriceValue) * 100}%`,
-                width: `${((priceRange[1] - priceRange[0]) / maxPriceValue) * 100}%`,
-              }}
+          {/* Inputs */}
+          <div className="mt-3 flex items-center gap-2">
+            <Input
+              type="number"
+              value={priceRange[0]}
+              onChange={handleMinPriceInputChange}
+              className="w-20 text-sm"
             />
-
-            {/* Min thumb */}
-            <div
-              className="-translate-x-1/2 -translate-y-1.5 absolute h-5 w-5 transform cursor-pointer select-none rounded-full border-2 border-black bg-white transition-shadow hover:shadow-lg"
-              style={{
-                left: `${(priceRange[0] / maxPriceValue) * 100}%`,
-              }}
-              onMouseDown={(e) => handleMouseDown(e, "min")}
-            />
-
-            {/* Max thumb */}
-            <div
-              className="-translate-x-1/2 -translate-y-1.5 absolute h-5 w-5 transform cursor-pointer select-none rounded-full border-2 border-black bg-white transition-shadow hover:shadow-lg"
-              style={{
-                left: `${(priceRange[1] / maxPriceValue) * 100}%`,
-              }}
-              onMouseDown={(e) => handleMouseDown(e, "max")}
+            <span className="text-muted-foreground text-sm">to</span>
+            <Input
+              type="number"
+              value={priceRange[1]}
+              onChange={handleMaxPriceInputChange}
+              className="w-20 text-sm"
             />
           </div>
         </div>
 
-        {/* Price inputs */}
-        <div className="flex items-center gap-2">
-          <Input
-            type="number"
-            placeholder="Min"
-            value={priceRange[0]}
-            onChange={handleMinPriceInputChange}
-            className="w-24 text-sm"
-            min={0}
-            max={priceRange[1] - 10}
-          />
-          <span className="text-muted-foreground text-sm">to</span>
-          <Input
-            type="number"
-            placeholder="Max"
-            value={priceRange[1]}
-            onChange={handleMaxPriceInputChange}
-            className="w-24 text-sm"
-            min={priceRange[0] + 10}
-            max={maxPriceValue}
-          />
-        </div>
+        {/* Course Level */}
 
-        <div className="flex justify-between text-muted-foreground text-xs">
-          <span>$0</span>
-          <span>${maxPriceValue}</span>
+        <div className="space-y-2">
+          <Label htmlFor="courseLevel" className="font-medium text-sm">
+            Course Level
+          </Label>
+          <Select value={selectedLevel} onValueChange={handleLevelChange}>
+            <SelectTrigger id="courseLevel">
+              <SelectValue placeholder="All Levels" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Levels</SelectItem>
+              {Object.values(CourseLevel).map((level) => (
+                <SelectItem key={level} value={level}>
+                  {level.replace("_", " ")}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
