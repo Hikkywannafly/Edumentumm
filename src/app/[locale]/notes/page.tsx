@@ -26,7 +26,7 @@ export default async function NotesPage({
           className="border-border border-b"
         />
 
-        {/* Main Content */}
+        {/* Nội dung chính */}
         <div className="flex-1 overflow-hidden">
           <NotesContent />
         </div>

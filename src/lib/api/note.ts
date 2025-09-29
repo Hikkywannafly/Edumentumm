@@ -1,6 +1,5 @@
 import type {
   ApiError,
-  ApiResponse,
   BlockRequest,
   BlockResponse,
   CreateBlockRequest,
@@ -20,32 +19,11 @@ const API_BASE_URL =
 class NoteAPI {
   private getAuthHeaders() {
     const accessToken = localStorage.getItem("accessToken");
-    console.log(
-      "Getting access token from localStorage:",
-      accessToken ? "Found" : "Not found",
-    );
-    console.log("Token length:", accessToken?.length);
-    console.log(`Token starts with: ${accessToken?.substring(0, 20)}...`);
-
-    // Check if token might be expired by decoding JWT payload
-    if (accessToken) {
-      try {
-        const payload = JSON.parse(atob(accessToken.split(".")[1]));
-        const expiry = new Date(payload.exp * 1000);
-        const now = new Date();
-        console.log("Token expiry:", expiry.toISOString());
-        console.log("Current time:", now.toISOString());
-        console.log("Token expired:", expiry < now);
-        console.log("Current user ID from token:", payload.userId);
-        console.log("Current user email from token:", payload.sub);
-      } catch (e) {
-        console.log("Could not decode token:", e);
-      }
-    }
 
     if (!accessToken) {
-      throw new Error("No access token found. Please login first.");
+      throw new Error("Không tìm thấy access token. Vui lòng đăng nhập trước.");
     }
+
     return {
       Authorization: `Bearer ${accessToken}`,
       "Content-Type": "application/json",
@@ -57,33 +35,19 @@ class NoteAPI {
     operation: string,
   ): Promise<T> {
     if (!response.ok) {
-      let errorMessage = `${operation} failed: ${response.status}`;
-      let errorDetails = "";
+      let errorMessage = `${operation} thất bại: ${response.status}`;
 
       try {
         const errorData: ApiError = await response.json();
         errorMessage = errorData.message || errorMessage;
-        errorDetails = JSON.stringify(errorData, null, 2);
-        console.error(`❌ ${operation} Error Details:`, errorDetails);
-
-        // Special handling for permission errors
-        if (response.status === 403) {
-          console.error(
-            "🚫 Permission Error: User may not have EDIT permission for this resource",
-          );
-        }
       } catch {
-        // If JSON parsing fails, don't try to read the stream again
-        errorMessage = `${operation} failed: ${response.status} ${response.statusText}`;
-        console.error(
-          `❌ ${operation} Raw Error: ${response.status} ${response.statusText}`,
-        );
+        errorMessage = `${operation} thất bại: ${response.status} ${response.statusText}`;
       }
 
       throw new Error(errorMessage);
     }
 
-    // Handle responses that shouldn't have content (like DELETE 204)
+    // Xử lý response không có content (như DELETE 204)
     if (
       response.status === 204 ||
       response.headers.get("content-length") === "0"
@@ -98,11 +62,11 @@ class NoteAPI {
       }
       return JSON.parse(text);
     } catch {
-      throw new Error(`Failed to parse response for ${operation}`);
+      throw new Error(`Không thể parse response cho ${operation}`);
     }
   }
 
-  // 1. Lấy danh sách Notes
+  // Lấy danh sách Notes
   async getNotes(filter: NoteFilter = {}): Promise<NotesListResponse> {
     const params = new URLSearchParams();
 
@@ -123,9 +87,9 @@ class NoteAPI {
     });
 
     const backendResponse: PaginatedResponse<NoteData> =
-      await this.handleResponse(response, "Get notes");
+      await this.handleResponse(response, "Lấy danh sách notes");
 
-    // Transform backend response to frontend format
+    // Chuyển đổi response từ backend sang format frontend
     return {
       content: backendResponse.data,
       page: backendResponse.currentPage,
@@ -137,49 +101,43 @@ class NoteAPI {
     };
   }
 
-  // 2. Lấy Note theo ID
+  // Lấy Note theo ID
   async getNoteById(noteId: number): Promise<NoteData> {
-    console.log("Getting note by ID:", noteId);
     const url = `${API_BASE_URL}/user/notes/${noteId}`;
-    console.log("Request URL:", url);
 
     const response = await fetch(url, {
       method: "GET",
       headers: this.getAuthHeaders(),
     });
 
-    console.log("Raw response:", response.status, response.statusText);
-
     if (response.status === 404) {
-      throw new Error(`Note with ID ${noteId} not found`);
+      throw new Error(`Không tìm thấy note với ID ${noteId}`);
     }
 
-    const rawResponse = await this.handleResponse(response, "Get note by ID");
+    const rawResponse = await this.handleResponse(response, "Lấy note theo ID");
 
-    console.log("Raw response data:", rawResponse);
-
-    // Check if response is wrapped in ApiResponse format
+    // Kiểm tra nếu response được wrap trong ApiResponse format
     if (
       rawResponse &&
       typeof rawResponse === "object" &&
       "data" in rawResponse
     ) {
-      console.log("Response has .data property:", rawResponse.data);
       const noteData = (rawResponse as any).data;
       if (!noteData) {
-        throw new Error(`Note with ID ${noteId} not found in response data`);
+        throw new Error(
+          `Không tìm thấy note với ID ${noteId} trong response data`,
+        );
       }
       return noteData;
     }
 
-    console.log("Response is direct NoteData:", rawResponse);
     if (!rawResponse) {
-      throw new Error(`Note with ID ${noteId} not found - empty response`);
+      throw new Error(`Không tìm thấy note với ID ${noteId} - response rỗng`);
     }
     return rawResponse as NoteData;
   }
 
-  // 3. Tạo Note mới
+  // Tạo Note mới
   async createNote(noteData: CreateNoteRequest): Promise<NoteData> {
     const response = await fetch(`${API_BASE_URL}/user/notes`, {
       method: "POST",
@@ -187,144 +145,55 @@ class NoteAPI {
       body: JSON.stringify(noteData),
     });
 
-    const apiResponse: ApiResponse<NoteData> = await this.handleResponse(
+    // API trả về trực tiếp NoteData, không wrap trong ApiResponse
+    const noteResponse: NoteData = await this.handleResponse(
       response,
-      "Create note",
+      "Tạo note",
     );
 
-    return apiResponse.data;
+    return noteResponse;
   }
 
-  // 4. Cập nhật Note
+  // Cập nhật Note
   async updateNote(
     noteId: number,
     noteData: UpdateNoteRequest,
   ): Promise<NoteData> {
-    console.log("🔄 Updating note:", noteId, "with data:", noteData);
-
-    // Debug auth headers
-    const headers = this.getAuthHeaders();
-    console.log("📋 Request headers:", {
-      Authorization: `${headers.Authorization.substring(0, 30)}...`,
-      "Content-Type": headers["Content-Type"],
-    });
-
-    // First, check if we can get the note (to verify ownership)
-    try {
-      const existingNote = await this.getNoteById(noteId);
-      console.log("📝 Existing note info:", {
-        id: existingNote.id,
-        title: existingNote.title,
-        ownerId: existingNote.ownerId,
-        type: existingNote.type,
-      });
-
-      // Check current user from token and localStorage
-      const accessToken = localStorage.getItem("accessToken");
-      const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
-
-      let currentUserId = null;
-
-      // Try to get user ID from localStorage first (user.userId according to schema)
-      if (currentUser.userId && typeof currentUser.userId === "number") {
-        currentUserId = currentUser.userId;
-      } else if (currentUser.id && typeof currentUser.id === "number") {
-        currentUserId = currentUser.id;
-      } else if (accessToken) {
-        // If not found in localStorage, try to decode from token
-        try {
-          const payload = JSON.parse(atob(accessToken.split(".")[1]));
-          // Try different possible field names in token
-          currentUserId =
-            payload.id || payload.userId || payload.user_id || payload.sub;
-
-          // If still not found, maybe it's in a nested object
-          if (!currentUserId && payload.user) {
-            currentUserId = payload.user.id || payload.user.userId;
-          }
-
-          // Convert string numbers to number
-          if (
-            typeof currentUserId === "string" &&
-            !Number.isNaN(Number(currentUserId))
-          ) {
-            currentUserId = Number(currentUserId);
-          }
-        } catch (e) {
-          console.log("Could not decode token:", e);
-        }
-      }
-
-      console.log("👤 Current user ID:", currentUserId);
-      console.log("👤 Current user from localStorage:", currentUser);
-      console.log("🏠 Note owner ID:", existingNote.ownerId);
-      console.log("✅ Can edit?", existingNote.ownerId === currentUserId);
-    } catch (error) {
-      console.log("❌ Could not verify note ownership:", error);
-    }
-
-    console.log("📡 Final request body:", JSON.stringify(noteData, null, 2));
-
     const response = await fetch(`${API_BASE_URL}/user/notes/${noteId}`, {
       method: "PUT",
-      headers,
+      headers: this.getAuthHeaders(),
       body: JSON.stringify(noteData),
     });
 
-    console.log(
-      "📡 Update response status:",
-      response.status,
-      response.statusText,
-    ); // For debugging 403 errors, try to get response body
-    if (response.status === 403) {
-      const clonedResponse = response.clone();
-      try {
-        const errorBody = await clonedResponse.text();
-        console.log("403 Error response body:", errorBody);
+    const rawResponse = await this.handleResponse(response, "Cập nhật note");
 
-        // If token expired, suggest refresh
-        console.log(
-          "🔄 Suggestion: Token might be expired. Try refreshing the page or re-login.",
-        );
-      } catch (e) {
-        console.log("Could not read 403 error body:", e);
-      }
-    }
-
-    const rawResponse = await this.handleResponse(response, "Update note");
-
-    console.log("Update raw response:", rawResponse);
-
-    // Check if response is wrapped in ApiResponse format
+    // Kiểm tra nếu response được wrap trong ApiResponse format
     if (
       rawResponse &&
       typeof rawResponse === "object" &&
       "data" in rawResponse
     ) {
-      console.log("Update response has .data property:", rawResponse.data);
       return (rawResponse as any).data;
     }
 
-    console.log("Update response is direct NoteData:", rawResponse);
     return rawResponse as NoteData;
   }
 
-  // 5. Xóa Note
+  // Xóa Note
   async deleteNote(noteId: number): Promise<void> {
     const response = await fetch(`${API_BASE_URL}/user/notes/${noteId}`, {
       method: "DELETE",
       headers: this.getAuthHeaders(),
     });
 
-    await this.handleResponse(response, "Delete note");
+    await this.handleResponse(response, "Xóa note");
   }
 
-  // 6. Thêm Block vào Note
+  // Thêm Block vào Note
   async addBlock(
     noteId: number,
     blockData: CreateBlockRequest,
   ): Promise<BlockResponse> {
-    console.log("Adding block to note:", noteId, "with data:", blockData);
     const response = await fetch(
       `${API_BASE_URL}/user/notes/${noteId}/blocks`,
       {
@@ -334,13 +203,9 @@ class NoteAPI {
       },
     );
 
-    console.log("Add block response status:", response.status);
+    const rawResponse = await this.handleResponse(response, "Thêm block");
 
-    const rawResponse = await this.handleResponse(response, "Add block");
-
-    console.log("Add block raw response:", rawResponse);
-
-    // Check if response is wrapped in ApiResponse format
+    // Kiểm tra nếu response được wrap trong ApiResponse format
     if (
       rawResponse &&
       typeof rawResponse === "object" &&
@@ -352,56 +217,23 @@ class NoteAPI {
     return rawResponse as BlockResponse;
   }
 
-  // 7. Cập nhật Block
+  // Cập nhật Block
   async updateBlock(
     blockId: number,
     blockData: UpdateBlockRequest,
   ): Promise<BlockResponse> {
-    console.log("Updating block:", blockId, "with data:", blockData);
-
-    // Log current user for debugging permissions
-    const accessToken = localStorage.getItem("accessToken");
-    if (accessToken) {
-      try {
-        const payload = JSON.parse(atob(accessToken.split(".")[1]));
-        console.log("🔍 Debug - Current user ID:", payload.userId);
-        console.log("🔍 Debug - Current user email:", payload.sub);
-      } catch (e) {
-        console.log("Could not decode token for debug:", e);
-      }
-    }
-
-    // Test if we can GET the block first (for debugging)
-    try {
-      console.log("🧪 Testing GET block access first...");
-      const testResponse = await fetch(
-        `${API_BASE_URL}/user/notes/blocks/${blockId}`,
-        {
-          method: "GET",
-          headers: this.getAuthHeaders(),
-        },
-      );
-      console.log("🧪 GET block response status:", testResponse.status);
-    } catch (e) {
-      console.log("🧪 GET block test failed:", e);
-    }
-
     const response = await fetch(
       `${API_BASE_URL}/user/notes/blocks/${blockId}`,
       {
-        method: "PUT", // Use PUT according to documentation
+        method: "PUT",
         headers: this.getAuthHeaders(),
         body: JSON.stringify(blockData),
       },
     );
 
-    console.log("Update block response status:", response.status);
+    const rawResponse = await this.handleResponse(response, "Cập nhật block");
 
-    const rawResponse = await this.handleResponse(response, "Update block");
-
-    console.log("Update block raw response:", rawResponse);
-
-    // Check if response is wrapped in ApiResponse format
+    // Kiểm tra nếu response được wrap trong ApiResponse format
     if (
       rawResponse &&
       typeof rawResponse === "object" &&
@@ -413,7 +245,7 @@ class NoteAPI {
     return rawResponse as BlockResponse;
   }
 
-  // 8. Xóa Block
+  // Xóa Block
   async deleteBlock(blockId: number): Promise<void> {
     const response = await fetch(
       `${API_BASE_URL}/user/notes/blocks/${blockId}`,
@@ -423,10 +255,10 @@ class NoteAPI {
       },
     );
 
-    await this.handleResponse(response, "Delete block");
+    await this.handleResponse(response, "Xóa block");
   }
 
-  // 9. Sắp xếp lại Blocks
+  // Sắp xếp lại Blocks
   async reorderBlocks(reorderData: ReorderBlocksRequest): Promise<void> {
     const response = await fetch(
       `${API_BASE_URL}/user/notes/${reorderData.noteId}/blocks/reorder`,
@@ -437,7 +269,7 @@ class NoteAPI {
       },
     );
 
-    await this.handleResponse(response, "Reorder blocks");
+    await this.handleResponse(response, "Sắp xếp lại blocks");
   }
 
   // Helper methods
@@ -518,6 +350,7 @@ class NoteAPI {
       orderIndex,
     };
   }
+
   async testConnection(): Promise<boolean> {
     try {
       const response = await fetch(`${API_BASE_URL}/user/notes?page=0&size=1`, {

@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useQuizCreator } from "@/hooks/quiz/use-quiz-creator";
+import { useQuizLimit } from "@/hooks/quiz/use-quiz-limit";
 import {
   FILE_UPLOAD_LIMITS,
   getAcceptedFileTypes,
@@ -48,15 +49,18 @@ interface AIGeneratedUploaderProps {
   onProcessingStart?: (fileName: string, label?: string) => void;
   onProcessingDone?: (done: boolean) => void;
   onProcessingUpdate?: (updates: { label?: string }) => void;
+  onLimitReached?: () => void; // Add this prop to handle limit reached
 }
 
 export function AIGeneratedUploader({
   onProcessingStart,
   onProcessingDone,
   onProcessingUpdate,
+  onLimitReached, // Destructure the new prop
 }: AIGeneratedUploaderProps) {
   const t = useTranslations("Quizzes");
-  const { goQuizEdit } = useLocalizedNavigation();
+  const { goQuizEdit } = useLocalizedNavigation(); // Remove goPricing since it's not used
+  const { data: limitData } = useQuizLimit();
 
   const {
     uploadedFiles,
@@ -136,8 +140,18 @@ export function AIGeneratedUploader({
     maxSize: FILE_UPLOAD_LIMITS.maxSize,
   });
 
+  // Check if user has reached the limit
+  const hasReachedLimit = limitData && limitData.quizzesCreatedThisWeek >= 3;
+
   const handleGenerateQuiz = async () => {
     if (!hasFiles) return;
+
+    // Check if user has reached the limit before proceeding
+    if (hasReachedLimit) {
+      // Notify parent component about limit reached instead of redirecting
+      onLimitReached?.();
+      return;
+    }
 
     const settings = {
       generationMode,

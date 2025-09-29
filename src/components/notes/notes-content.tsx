@@ -26,7 +26,6 @@ import {
   List,
   RefreshCw,
   Search,
-  User,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -35,289 +34,387 @@ import ThinLayout from "../layout/thin-layout";
 
 export function NotesContent() {
   const t = useTranslations("Notes");
+  const _tCommon = useTranslations("Common");
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
 
-  // URL state
+  // State từ URL
   const currentPage = Number(searchParams.get("page")) || 1;
   const searchQuery = searchParams.get("search") || "";
   const sortBy = searchParams.get("sortBy") || "updatedAt";
   const sortDir = searchParams.get("sortDir") || "desc";
 
-  // Local state
+  // State local
   const [searchInput, setSearchInput] = useState(searchQuery);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
-  // Store state
-  const { filter, setFilter } = useNoteStore();
+  // Pagination state
+  const pageSize = 9;
 
-  // Debounce search input
+  // Debounced search
   const debouncedSearch = useDebounce(searchInput, 500);
 
-  const pageSize = 12;
-  const apiPage = currentPage - 1; // Convert to 0-based for API
+  // Store state
+  const { isLoading, error, filter, setFilter, setSearchQuery } =
+    useNoteStore();
 
-  // Update search params in URL
-  const updateSearchParams = useCallback(
-    (updates: Record<string, string | null>) => {
-      const newSearchParams = new URLSearchParams(searchParams.toString());
-
-      for (const [key, value] of Object.entries(updates)) {
-        if (value === null || value === "") {
-          newSearchParams.delete(key);
-        } else {
-          newSearchParams.set(key, value);
-        }
-      }
-
-      // Reset to page 1 when search or sort changes
-      if ("search" in updates || "sortBy" in updates || "sortDir" in updates) {
-        newSearchParams.set("page", "1");
-      }
-
-      const newUrl = `${pathname}?${newSearchParams.toString()}`;
-      router.push(newUrl, { scroll: false });
-    },
-    [searchParams, pathname, router],
-  );
-
-  // Update URL when debounced search changes
+  // Cập nhật URL khi search thay đổi
   useEffect(() => {
-    if (debouncedSearch !== searchQuery) {
-      updateSearchParams({ search: debouncedSearch });
+    const params = new URLSearchParams(searchParams);
+    if (debouncedSearch) {
+      params.set("search", debouncedSearch);
+    } else {
+      params.delete("search");
     }
-  }, [debouncedSearch, searchQuery, updateSearchParams]);
+    params.set("page", "1"); // Reset về trang 1 khi search
+    router.replace(`${pathname}?${params.toString()}`);
+    setSearchQuery(debouncedSearch);
+  }, [debouncedSearch, router, pathname, searchParams, setSearchQuery]);
 
-  // Sync search input with URL on mount
-  useEffect(() => {
-    setSearchInput(searchQuery);
-  }, [searchQuery]);
-
-  // Update store filter
+  // Cập nhật filter khi URL thay đổi
   useEffect(() => {
     setFilter({
-      page: apiPage,
+      page: currentPage - 1,
       size: pageSize,
       query: searchQuery,
     });
-  }, [apiPage, searchQuery, setFilter]);
+  }, [currentPage, searchQuery, setFilter]);
 
   // Fetch notes
-  const {
-    data: notesResponse,
-    isLoading,
-    error,
-    refetch,
-    isFetching,
-  } = useNoteList(filter);
+  const { data, refetch } = useNoteList(filter);
 
-  // Extract data
-  const notes = notesResponse?.content || [];
-  const pagination = notesResponse
-    ? {
-        currentPage: notesResponse.page + 1, // Convert to 1-based
-        totalPages: notesResponse.totalPages,
-        totalElements: notesResponse.totalElements,
-        hasNext: !notesResponse.last,
-        hasPrevious: !notesResponse.first,
-      }
-    : null;
+  // Sắp xếp notes để đảm bảo note mới cập nhật hiển thị ở đầu
+  const sortedNotes = data?.content
+    ? [...data.content].sort((a, b) => {
+        if (sortBy === "updatedAt") {
+          return sortDir === "desc"
+            ? new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+            : new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime();
+        }
+        if (sortBy === "createdAt") {
+          return sortDir === "desc"
+            ? new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+            : new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+        }
+        if (sortBy === "title") {
+          return sortDir === "desc"
+            ? b.title.localeCompare(a.title)
+            : a.title.localeCompare(b.title);
+        }
+        return 0;
+      })
+    : [];
 
-  // Event handlers
-  const handlePageChange = (page: number) => {
-    updateSearchParams({ page: page.toString() });
-  };
-
+  // Xử lý sắp xếp
   const handleSortChange = (newSortBy: string) => {
-    updateSearchParams({ sortBy: newSortBy });
+    const params = new URLSearchParams(searchParams);
+    params.set("sortBy", newSortBy);
+    params.set("sortDir", sortDir === "asc" ? "desc" : "asc");
+    router.push(`${pathname}?${params.toString()}`);
   };
 
-  const handleSortDirectionChange = (newSortDir: string) => {
-    updateSearchParams({ sortDir: newSortDir });
+  // Xử lý chuyển trang
+  const handlePageChange = (page: number) => {
+    const params = new URLSearchParams(searchParams);
+    params.set("page", String(page));
+    router.push(`${pathname}?${params.toString()}`);
   };
 
-  const handleSearchChange = (value: string) => {
-    setSearchInput(value);
-  };
-
-  const handleRefresh = () => {
+  // Xử lý refresh
+  const handleRefresh = useCallback(() => {
     refetch();
+  }, [refetch]);
+
+  // Lấy locale từ pathname
+  const locale = pathname.split("/")[1] || "vi";
+
+  // Xử lý tạo note mới
+  const handleCreateNote = () => {
+    router.push(`/${locale}/notes/create`);
   };
 
-  // Show loading skeleton on initial load
-  const isInitialLoad = isLoading && !notesResponse;
+  // Xử lý click vào note
+  const handleNoteClick = (note: NoteData) => {
+    // Thêm parameter mode để NoteEditor biết phải mở chế độ nào
+    const mode = note.type === "markdown" ? "markdown" : "block";
+    router.push(`/${locale}/notes/edit/${note.id}?mode=${mode}`);
+  };
 
-  if (isInitialLoad) {
-    return (
-      <ThinLayout classNames="space-y-6">
-        <div className="space-y-4">
-          <Skeleton className="h-32 w-full" />
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <Skeleton key={i} className="h-48 w-full" />
-            ))}
+  // Render note card
+  const renderNoteCard = (note: NoteData) => (
+    <Card
+      key={note.id}
+      className="cursor-pointer transition-all hover:scale-[1.02] hover:shadow-md dark:border-border/50 dark:hover:shadow-lg"
+      onClick={() => handleNoteClick(note)}
+    >
+      <CardContent className="p-4">
+        <div className="space-y-3">
+          {/* Header */}
+          <div className="flex items-start justify-between">
+            <h3 className="line-clamp-2 font-semibold text-lg dark:text-foreground">
+              {note.title}
+            </h3>
+            <Badge
+              variant={note.type === "markdown" ? "default" : "secondary"}
+              className="text-xs dark:bg-muted/50"
+            >
+              {note.type === "markdown"
+                ? t("stats.markdownMode")
+                : t("editor.blockMode")}
+            </Badge>
           </div>
-        </div>
-      </ThinLayout>
-    );
-  }
 
-  if (error) {
-    return (
-      <ThinLayout classNames="space-y-6">
-        <Card className="border-destructive">
-          <CardContent className="flex items-center justify-between p-6">
-            <div className="flex items-center space-x-2">
-              <AlertCircle className="h-5 w-5 text-destructive" />
-              <span className="text-destructive">
-                {t("errors.loadFailed")}: {error.message}
+          {/* Content preview */}
+          <div className="line-clamp-3 text-muted-foreground text-sm dark:text-muted-foreground">
+            {note.type === "markdown" && note.content
+              ? note.content.substring(0, 150)
+              : note.blocks && note.blocks.length > 0
+                ? note.blocks
+                    .slice(0, 2)
+                    .map((block) => block.content?.text || "")
+                    .join(" ")
+                    .substring(0, 150)
+                : t("emptyState.noContent")}
+          </div>
+
+          {/* Tags */}
+          {note.tags &&
+            note.tags.filter((tag) => tag !== "markdown" && tag !== "block")
+              .length > 0 && (
+              <div className="flex flex-wrap gap-1">
+                {note.tags
+                  .filter((tag) => tag !== "markdown" && tag !== "block")
+                  .slice(0, 3)
+                  .map((tag) => (
+                    <Badge key={tag} variant="outline" className="text-xs">
+                      {tag}
+                    </Badge>
+                  ))}
+                {note.tags.filter(
+                  (tag) => tag !== "markdown" && tag !== "block",
+                ).length > 3 && (
+                  <Badge variant="outline" className="text-xs">
+                    +
+                    {note.tags.filter(
+                      (tag) => tag !== "markdown" && tag !== "block",
+                    ).length - 3}
+                  </Badge>
+                )}
+              </div>
+            )}
+
+          {/* Footer */}
+          <div className="flex items-center justify-between text-muted-foreground text-xs">
+            <div className="flex items-center gap-1">
+              <Clock className="h-3 w-3" />
+              <span>
+                {formatDistanceToNow(new Date(note.updatedAt), {
+                  addSuffix: true,
+                })}
               </span>
             </div>
-            <Button variant="outline" size="sm" onClick={handleRefresh}>
+            <div className="flex items-center gap-1">
+              <FileText className="h-3 w-3" />
+              <span>
+                {note.type === "markdown"
+                  ? t("stats.markdownMode")
+                  : `${note.blocks?.length || 0} ${t("stats.blocks")}`}
+              </span>
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+
+  // Render note list item
+  const renderNoteListItem = (note: NoteData) => (
+    <Card
+      key={note.id}
+      className="cursor-pointer transition-all hover:shadow-sm"
+      onClick={() => handleNoteClick(note)}
+    >
+      <CardContent className="p-4">
+        <div className="flex items-center justify-between">
+          <div className="min-w-0 flex-1">
+            <div className="mb-2 flex items-center gap-2">
+              <h3 className="truncate font-semibold text-lg">{note.title}</h3>
+              <Badge
+                variant={note.type === "markdown" ? "default" : "secondary"}
+                className="text-xs"
+              >
+                {note.type === "markdown"
+                  ? t("stats.markdownMode")
+                  : t("editor.blockMode")}
+              </Badge>
+            </div>
+            <p className="mb-2 line-clamp-2 text-muted-foreground text-sm">
+              {note.type === "markdown" && note.content
+                ? note.content.substring(0, 100)
+                : note.blocks && note.blocks.length > 0
+                  ? note.blocks
+                      .slice(0, 1)
+                      .map((block) => block.content?.text || "")
+                      .join(" ")
+                      .substring(0, 100)
+                  : t("emptyState.noContent")}
+            </p>
+            <div className="flex items-center gap-4 text-muted-foreground text-xs">
+              <div className="flex items-center gap-1">
+                <Clock className="h-3 w-3" />
+                <span>
+                  {formatDistanceToNow(new Date(note.updatedAt), {
+                    addSuffix: true,
+                  })}
+                </span>
+              </div>
+              <div className="flex items-center gap-1">
+                <FileText className="h-3 w-3" />
+                <span>
+                  {note.type === "markdown"
+                    ? t("stats.markdownMode")
+                    : `${note.blocks?.length || 0} ${t("stats.blocks")}`}
+                </span>
+              </div>
+            </div>
+          </div>
+          {note.tags &&
+            note.tags.filter((tag) => tag !== "markdown" && tag !== "block")
+              .length > 0 && (
+              <div className="ml-4 flex flex-wrap gap-1">
+                {note.tags
+                  .filter((tag) => tag !== "markdown" && tag !== "block")
+                  .slice(0, 2)
+                  .map((tag) => (
+                    <Badge key={tag} variant="outline" className="text-xs">
+                      {tag}
+                    </Badge>
+                  ))}
+                {note.tags.filter(
+                  (tag) => tag !== "markdown" && tag !== "block",
+                ).length > 2 && (
+                  <Badge variant="outline" className="text-xs">
+                    +
+                    {note.tags.filter(
+                      (tag) => tag !== "markdown" && tag !== "block",
+                    ).length - 2}
+                  </Badge>
+                )}
+              </div>
+            )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+
+  // Loading skeleton
+  const renderSkeleton = () => (
+    <div className="space-y-4">
+      {Array.from({ length: 6 }).map((_, i) => (
+        <Card key={i}>
+          <CardContent className="p-4">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Skeleton className="h-6 w-3/4" />
+                <Skeleton className="h-5 w-16" />
+              </div>
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-2/3" />
+              <div className="flex gap-2">
+                <Skeleton className="h-5 w-12" />
+                <Skeleton className="h-5 w-16" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
+
+  return (
+    <ThinLayout>
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="font-bold text-3xl">{t("title")}</h1>
+            <p className="text-muted-foreground">{t("description")}</p>
+          </div>
+          <Button onClick={handleCreateNote} className="gap-2">
+            <FileText className="h-4 w-4" />
+            {t("actions.createNote")}
+          </Button>
+        </div>
+
+        {/* Filters */}
+        <div className="flex flex-col gap-4 sm:flex-row">
+          {/* Search */}
+          <div className="relative flex-1">
+            <Search className="-translate-y-1/2 absolute top-1/2 left-3 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder={t("search.placeholder")}
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+
+          {/* Sort */}
+          <Select value={sortBy} onValueChange={handleSortChange}>
+            <SelectTrigger className="w-48">
+              <SelectValue placeholder={t("sort.lastModified")} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="updatedAt">
+                {t("sort.lastModified")}
+              </SelectItem>
+              <SelectItem value="createdAt">{t("sort.dateCreated")}</SelectItem>
+              <SelectItem value="title">{t("sort.title")}</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {/* View mode */}
+          <div className="flex gap-1 rounded-md border p-1">
+            <Button
+              variant={viewMode === "grid" ? "default" : "ghost"}
+              size="sm"
+              onClick={() => setViewMode("grid")}
+            >
+              <Grid3x3 className="h-4 w-4" />
+            </Button>
+            <Button
+              variant={viewMode === "list" ? "default" : "ghost"}
+              size="sm"
+              onClick={() => setViewMode("list")}
+            >
+              <List className="h-4 w-4" />
+            </Button>
+          </div>
+
+          {/* Refresh */}
+          <Button variant="outline" size="sm" onClick={handleRefresh}>
+            <RefreshCw className="h-4 w-4" />
+          </Button>
+        </div>
+
+        {/* Content */}
+        {error ? (
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <AlertCircle className="mb-4 h-12 w-12 text-destructive" />
+            <h3 className="mb-2 font-semibold text-lg">
+              {t("errors.loadFailed")}
+            </h3>
+            <p className="mb-4 text-muted-foreground">{error}</p>
+            <Button onClick={handleRefresh} variant="outline">
               <RefreshCw className="mr-2 h-4 w-4" />
               {t("actions.retry")}
             </Button>
-          </CardContent>
-        </Card>
-      </ThinLayout>
-    );
-  }
-
-  return (
-    <ThinLayout classNames="space-y-6">
-      {/* Stats Section */}
-      <Card>
-        <CardContent className="p-6">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            <div className="flex items-center space-x-3">
-              <FileText className="h-8 w-8 text-primary" />
-              <div>
-                <p className="font-bold text-2xl">
-                  {pagination?.totalElements || 0}
-                </p>
-                <p className="text-muted-foreground text-sm">
-                  {t("stats.totalNotes")}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-3">
-              <Clock className="h-8 w-8 text-blue-500" />
-              <div>
-                <p className="font-bold text-2xl">
-                  {
-                    notes.filter((note) => {
-                      if (!note.updatedAt) return false;
-                      const lastWeek = new Date();
-                      lastWeek.setDate(lastWeek.getDate() - 7);
-                      return new Date(note.updatedAt) > lastWeek;
-                    }).length
-                  }
-                </p>
-                <p className="text-muted-foreground text-sm">
-                  {t("stats.recentlyUpdated")}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-3">
-              <User className="h-8 w-8 text-green-500" />
-              <div>
-                <p className="font-bold text-2xl">
-                  {notes.filter((note) => note.ownerId).length}
-                </p>
-                <p className="text-muted-foreground text-sm">
-                  {t("stats.myNotes")}
-                </p>
-              </div>
-            </div>
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Search and Filters */}
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            {/* Search */}
-            <div className="relative max-w-sm flex-1">
-              <Search className="-translate-y-1/2 absolute top-1/2 left-3 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder={t("search.placeholder")}
-                value={searchInput}
-                onChange={(e) => handleSearchChange(e.target.value)}
-                className="pl-9"
-              />
-            </div>
-
-            {/* Filters and View Controls */}
-            <div className="flex items-center gap-2">
-              {/* Sort by */}
-              <Select value={sortBy} onValueChange={handleSortChange}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="updatedAt">
-                    {t("sort.lastModified")}
-                  </SelectItem>
-                  <SelectItem value="createdAt">
-                    {t("sort.dateCreated")}
-                  </SelectItem>
-                  <SelectItem value="title">{t("sort.title")}</SelectItem>
-                </SelectContent>
-              </Select>
-
-              {/* Sort direction */}
-              <Select value={sortDir} onValueChange={handleSortDirectionChange}>
-                <SelectTrigger className="w-[120px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="desc">{t("sort.desc")}</SelectItem>
-                  <SelectItem value="asc">{t("sort.asc")}</SelectItem>
-                </SelectContent>
-              </Select>
-
-              {/* View mode toggle */}
-              <div className="flex rounded-lg border">
-                <Button
-                  variant={viewMode === "grid" ? "default" : "ghost"}
-                  size="sm"
-                  onClick={() => setViewMode("grid")}
-                  className="rounded-r-none"
-                >
-                  <Grid3x3 className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant={viewMode === "list" ? "default" : "ghost"}
-                  size="sm"
-                  onClick={() => setViewMode("list")}
-                  className="rounded-l-none"
-                >
-                  <List className="h-4 w-4" />
-                </Button>
-              </div>
-
-              {/* Refresh */}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleRefresh}
-                disabled={isFetching}
-              >
-                <RefreshCw
-                  className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`}
-                />
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Notes List */}
-      {notes.length === 0 ? (
-        <Card>
-          <CardContent className="flex min-h-[400px] flex-col items-center justify-center p-6 text-center">
+        ) : isLoading ? (
+          renderSkeleton()
+        ) : !data?.content || data.content.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12 text-center">
             <FileText className="mb-4 h-12 w-12 text-muted-foreground" />
             <h3 className="mb-2 font-semibold text-lg">
               {searchQuery
@@ -330,179 +427,165 @@ export function NotesContent() {
                 : t("emptyState.createFirst")}
             </p>
             {!searchQuery && (
-              <Button onClick={() => router.push(`${pathname}/create`)}>
+              <Button onClick={handleCreateNote}>
+                <FileText className="mr-2 h-4 w-4" />
                 {t("actions.createNote")}
               </Button>
             )}
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="space-y-4">
-          {viewMode === "grid" ? (
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {notes.map((note) => (
-                <NoteCard key={note.id} note={note} />
-              ))}
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {notes.map((note) => (
-                <NoteCard key={note.id} note={note} viewMode="list" />
-              ))}
-            </div>
-          )}
+          </div>
+        ) : (
+          <>
+            {/* Pagination controls - Top */}
+            {data && data.totalPages > 1 && (
+              <div className="flex items-center justify-center gap-2">
+                <Button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1 || isLoading}
+                  variant="outline"
+                  size="sm"
+                  className="min-w-[80px]"
+                >
+                  Trước
+                </Button>
 
-          {/* Simple Pagination */}
-          {pagination && pagination.totalPages > 1 && (
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div className="text-muted-foreground text-sm">
-                    Showing {(pagination.currentPage - 1) * pageSize + 1} to{" "}
-                    {Math.min(
-                      pagination.currentPage * pageSize,
-                      pagination.totalElements,
-                    )}{" "}
-                    of {pagination.totalElements} results
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() =>
-                        handlePageChange(pagination.currentPage - 1)
+                {/* Page numbers */}
+                <div className="flex items-center gap-1">
+                  {Array.from(
+                    { length: Math.min(5, data.totalPages) },
+                    (_, i) => {
+                      let pageNumber: number;
+                      if (data.totalPages <= 5) {
+                        pageNumber = i + 1;
+                      } else if (currentPage <= 3) {
+                        pageNumber = i + 1;
+                      } else if (currentPage >= data.totalPages - 2) {
+                        pageNumber = data.totalPages - 4 + i;
+                      } else {
+                        pageNumber = currentPage - 2 + i;
                       }
-                      disabled={!pagination.hasPrevious}
-                    >
-                      Previous
-                    </Button>
-                    <span className="text-sm">
-                      Page {pagination.currentPage} of {pagination.totalPages}
-                    </span>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() =>
-                        handlePageChange(pagination.currentPage + 1)
-                      }
-                      disabled={!pagination.hasNext}
-                    >
-                      Next
-                    </Button>
-                  </div>
+
+                      return (
+                        <Button
+                          key={pageNumber}
+                          onClick={() => handlePageChange(pageNumber)}
+                          variant={
+                            currentPage === pageNumber ? "default" : "outline"
+                          }
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                          disabled={isLoading}
+                        >
+                          {pageNumber}
+                        </Button>
+                      );
+                    },
+                  )}
                 </div>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-      )}
-    </ThinLayout>
-  );
-}
 
-// Simple Note Card Component
-function NoteCard({
-  note,
-  viewMode = "grid",
-}: {
-  note: NoteData;
-  viewMode?: "grid" | "list";
-}) {
-  const router = useRouter();
-  const pathname = usePathname();
-
-  const handleClick = () => {
-    router.push(`${pathname}/edit/${note.id}`);
-  };
-
-  const getPreview = (blocks: any[]) => {
-    if (!blocks || !Array.isArray(blocks)) return "";
-
-    for (const block of blocks) {
-      // Check for blocks with text content
-      if (block.content?.text && typeof block.content.text === "string") {
-        const text = block.content.text.trim();
-        if (text.length > 0) {
-          return text.substring(0, 150);
-        }
-      }
-    }
-    return "";
-  };
-
-  if (viewMode === "list") {
-    return (
-      <Card
-        className="cursor-pointer transition-shadow hover:shadow-md"
-        onClick={handleClick}
-      >
-        <CardContent className="p-4">
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <h3 className="truncate font-semibold text-lg">{note.title}</h3>
-              <p className="mt-1 line-clamp-2 text-muted-foreground text-sm">
-                {note.type === "markdown"
-                  ? note.content?.slice(0, 150) || "No content"
-                  : getPreview(note.blocks || [])}
-              </p>
-              <div className="mt-2 flex items-center gap-4 text-muted-foreground text-xs">
-                <span className="flex items-center gap-1">
-                  <Calendar className="h-3 w-3" />
-                  {note.updatedAt
-                    ? formatDistanceToNow(new Date(note.updatedAt), {
-                        addSuffix: true,
-                      })
-                    : "Unknown"}
-                </span>
-                <span className="flex items-center gap-1">
-                  <FileText className="h-3 w-3" />
-                  {Array.isArray(note.blocks) ? note.blocks.length : 0} blocks
-                </span>
+                <Button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage >= data.totalPages || isLoading}
+                  variant="outline"
+                  size="sm"
+                  className="min-w-[80px]"
+                >
+                  Sau
+                </Button>
               </div>
+            )}
+
+            <div
+              className={
+                viewMode === "grid"
+                  ? "grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3"
+                  : "space-y-4"
+              }
+            >
+              {sortedNotes.map((note) =>
+                viewMode === "grid"
+                  ? renderNoteCard(note)
+                  : renderNoteListItem(note),
+              )}
             </div>
-            <div className="ml-4 flex flex-col items-end gap-2">
-              <Badge variant="secondary">Private</Badge>
+
+            {/* Pagination controls - Bottom */}
+            {data && data.totalPages > 1 && (
+              <div className="flex items-center justify-center gap-2 pt-4">
+                <Button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1 || isLoading}
+                  variant="outline"
+                  size="sm"
+                  className="min-w-[80px]"
+                >
+                  Trước
+                </Button>
+
+                {/* Page numbers */}
+                <div className="flex items-center gap-1">
+                  {Array.from(
+                    { length: Math.min(5, data.totalPages) },
+                    (_, i) => {
+                      let pageNumber: number;
+                      if (data.totalPages <= 5) {
+                        pageNumber = i + 1;
+                      } else if (currentPage <= 3) {
+                        pageNumber = i + 1;
+                      } else if (currentPage >= data.totalPages - 2) {
+                        pageNumber = data.totalPages - 4 + i;
+                      } else {
+                        pageNumber = currentPage - 2 + i;
+                      }
+
+                      return (
+                        <Button
+                          key={pageNumber}
+                          onClick={() => handlePageChange(pageNumber)}
+                          variant={
+                            currentPage === pageNumber ? "default" : "outline"
+                          }
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                          disabled={isLoading}
+                        >
+                          {pageNumber}
+                        </Button>
+                      );
+                    },
+                  )}
+                </div>
+
+                <Button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage >= data.totalPages || isLoading}
+                  variant="outline"
+                  size="sm"
+                  className="min-w-[80px]"
+                >
+                  Sau
+                </Button>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Pagination info */}
+        {data && data.content.length > 0 && (
+          <div className="flex items-center justify-between text-muted-foreground text-sm">
+            <div>
+              Hiển thị {data.content.length} trong tổng số {data.totalElements}{" "}
+              ghi chú
+              {searchQuery && ` cho "${searchQuery}"`}
+            </div>
+            <div className="flex items-center gap-2">
+              <Calendar className="h-4 w-4" />
+              <span>
+                Trang {currentPage} trong tổng số {data.totalPages} trang
+              </span>
             </div>
           </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  return (
-    <Card
-      className="cursor-pointer transition-shadow hover:shadow-md"
-      onClick={handleClick}
-    >
-      <CardContent className="p-4">
-        <div className="space-y-3">
-          <div className="flex items-start justify-between">
-            <h3 className="line-clamp-2 font-semibold text-lg">{note.title}</h3>
-            <Badge variant="secondary">Private</Badge>
-          </div>
-
-          <p className="line-clamp-3 text-muted-foreground text-sm">
-            {note.type === "markdown"
-              ? note.content?.slice(0, 150) || "No content"
-              : getPreview(note.blocks || [])}
-          </p>
-
-          <div className="flex items-center justify-between text-muted-foreground text-xs">
-            <span className="flex items-center gap-1">
-              <Calendar className="h-3 w-3" />
-              {note.updatedAt
-                ? formatDistanceToNow(new Date(note.updatedAt), {
-                    addSuffix: true,
-                  })
-                : "Unknown"}
-            </span>
-            <span className="flex items-center gap-1">
-              <FileText className="h-3 w-3" />
-              {Array.isArray(note.blocks) ? note.blocks.length : 0} blocks
-            </span>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+        )}
+      </div>
+    </ThinLayout>
   );
 }

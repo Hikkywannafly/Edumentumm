@@ -7,17 +7,16 @@ import type {
   NoteFilter,
   NoteType,
 } from "@/types/note";
-import { isBlockNote } from "@/types/note";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-// Helper function to convert BlockResponse to BlockData
+// Hàm helper để chuyển đổi BlockResponse thành BlockData
 const convertBlockResponseToBlockData = (
   blockResponse: BlockResponse,
 ): BlockData => {
   return {
     id: blockResponse.id,
-    type: blockResponse.type as BlockType, // Cast string to BlockType
+    type: blockResponse.type as BlockType,
     content:
       typeof blockResponse.content === "string"
         ? { text: blockResponse.content }
@@ -30,28 +29,28 @@ const convertBlockResponseToBlockData = (
 };
 
 interface NoteState {
-  // Notes data
+  // Dữ liệu notes
   notes: NoteData[];
   currentNote: NoteData | null;
 
-  // UI state
+  // State UI
   isLoading: boolean;
   error: string | null;
 
-  // Filter and search
+  // Filter và search
   filter: NoteFilter;
   searchQuery: string;
 
-  // Editor state
+  // State editor
   selectedBlockId: number | null;
   isEditing: boolean;
-  isDirty: boolean; // Has unsaved changes
+  isDirty: boolean; // Có thay đổi chưa lưu
 
-  // Sidebar state
+  // State sidebar
   sidebarCollapsed: boolean;
   selectedTags: string[];
 
-  // Actions - Notes CRUD with API
+  // Actions - Notes CRUD với API
   fetchNotes: () => Promise<void>;
   createNewNote: (noteData: {
     title: string;
@@ -79,7 +78,7 @@ interface NoteState {
   removeBlock: (noteId: number, blockId: number) => void;
   reorderBlocks: (noteId: number, newBlockOrder: BlockData[]) => void;
 
-  // Actions - Block operations with API
+  // Actions - Block operations với API
   addBlockToNote: (noteId: number, blockData: any) => Promise<void>;
   updateNoteBlock: (
     noteId: number,
@@ -102,12 +101,10 @@ interface NoteState {
 
   // Actions - Sidebar
   setSidebarCollapsed: (collapsed: boolean) => void;
-  toggleTag: (tag: string) => void;
-  clearSelectedTags: () => void;
+  setSelectedTags: (tags: string[]) => void;
 
   // Utility actions
   reset: () => void;
-  resetEditor: () => void;
 }
 
 const defaultFilter: NoteFilter = {
@@ -140,7 +137,9 @@ export const useNoteStore = create<NoteState>()(
         } catch (error) {
           set({
             error:
-              error instanceof Error ? error.message : "Failed to fetch notes",
+              error instanceof Error
+                ? error.message
+                : "Lỗi tải danh sách notes",
             isLoading: false,
           });
         }
@@ -162,8 +161,7 @@ export const useNoteStore = create<NoteState>()(
           return newNote;
         } catch (error) {
           set({
-            error:
-              error instanceof Error ? error.message : "Failed to create note",
+            error: error instanceof Error ? error.message : "Lỗi tạo note",
             isLoading: false,
           });
           return null;
@@ -177,18 +175,20 @@ export const useNoteStore = create<NoteState>()(
         set({ isLoading: true, error: null });
         try {
           const updatedNote = await noteAPI.updateNote(currentNote.id, updates);
-          set((state) => ({
-            notes: state.notes.map((note) =>
-              note.id === currentNote.id ? updatedNote : note,
-            ),
-            currentNote: updatedNote,
-            isDirty: false,
-            isLoading: false,
-          }));
+          set((state) => {
+            // Loại bỏ note cũ và thêm note đã cập nhật lên đầu danh sách
+            const filteredNotes = state.notes.filter(
+              (note) => note.id !== currentNote.id,
+            );
+            return {
+              notes: [updatedNote, ...filteredNotes],
+              currentNote: updatedNote,
+              isLoading: false,
+            };
+          });
         } catch (error) {
           set({
-            error:
-              error instanceof Error ? error.message : "Failed to update note",
+            error: error instanceof Error ? error.message : "Lỗi cập nhật note",
             isLoading: false,
           });
         }
@@ -206,8 +206,7 @@ export const useNoteStore = create<NoteState>()(
           }));
         } catch (error) {
           set({
-            error:
-              error instanceof Error ? error.message : "Failed to delete note",
+            error: error instanceof Error ? error.message : "Lỗi xóa note",
             isLoading: false,
           });
         }
@@ -220,140 +219,7 @@ export const useNoteStore = create<NoteState>()(
           set({ currentNote: note, isLoading: false });
         } catch (error) {
           set({
-            error:
-              error instanceof Error ? error.message : "Failed to fetch note",
-            isLoading: false,
-          });
-        }
-      },
-
-      addBlockToNote: async (noteId, blockData) => {
-        set({ isLoading: true, error: null });
-        try {
-          const newBlockResponse = await noteAPI.addBlock(noteId, blockData);
-          const newBlock = convertBlockResponseToBlockData(newBlockResponse);
-          set((state) => {
-            const updatedNotes = state.notes.map((note) => {
-              if (note.id === noteId && isBlockNote(note)) {
-                return {
-                  ...note,
-                  blocks: [...note.blocks, newBlock],
-                };
-              }
-              return note;
-            });
-
-            const updatedCurrentNote =
-              state.currentNote?.id === noteId && isBlockNote(state.currentNote)
-                ? {
-                    ...state.currentNote,
-                    blocks: [...state.currentNote.blocks, newBlock],
-                  }
-                : state.currentNote;
-
-            return {
-              notes: updatedNotes,
-              currentNote: updatedCurrentNote,
-              isLoading: false,
-            };
-          });
-        } catch (error) {
-          set({
-            error:
-              error instanceof Error ? error.message : "Failed to add block",
-            isLoading: false,
-          });
-        }
-      },
-
-      updateNoteBlock: async (noteId, blockId, updates) => {
-        set({ isLoading: true, error: null });
-        try {
-          const updatedBlockResponse = await noteAPI.updateBlock(
-            blockId,
-            updates,
-          );
-          const updatedBlock =
-            convertBlockResponseToBlockData(updatedBlockResponse);
-          set((state) => {
-            const updateBlockInArray = (blocks: BlockData[]) =>
-              blocks.map((block) =>
-                block.id === blockId ? updatedBlock : block,
-              );
-
-            const updatedNotes = state.notes.map((note) => {
-              if (note.id === noteId && isBlockNote(note)) {
-                return {
-                  ...note,
-                  blocks: updateBlockInArray(note.blocks),
-                };
-              }
-              return note;
-            });
-
-            const updatedCurrentNote =
-              state.currentNote?.id === noteId && isBlockNote(state.currentNote)
-                ? {
-                    ...state.currentNote,
-                    blocks: updateBlockInArray(state.currentNote.blocks),
-                  }
-                : state.currentNote;
-
-            return {
-              notes: updatedNotes,
-              currentNote: updatedCurrentNote,
-              isLoading: false,
-            };
-          });
-        } catch (error) {
-          set({
-            error:
-              error instanceof Error ? error.message : "Failed to update block",
-            isLoading: false,
-          });
-        }
-      },
-
-      removeBlockFromNote: async (noteId, blockId) => {
-        set({ isLoading: true, error: null });
-        try {
-          await noteAPI.deleteBlock(blockId);
-          set((state) => {
-            const filterBlocks = (blocks: BlockData[]) =>
-              blocks.filter((block) => block.id !== blockId);
-
-            const updatedNotes = state.notes.map((note) => {
-              if (note.id === noteId && isBlockNote(note)) {
-                return {
-                  ...note,
-                  blocks: filterBlocks(note.blocks),
-                };
-              }
-              return note;
-            });
-
-            const updatedCurrentNote =
-              state.currentNote?.id === noteId && isBlockNote(state.currentNote)
-                ? {
-                    ...state.currentNote,
-                    blocks: filterBlocks(state.currentNote.blocks),
-                  }
-                : state.currentNote;
-
-            return {
-              notes: updatedNotes,
-              currentNote: updatedCurrentNote,
-              selectedBlockId:
-                state.selectedBlockId === blockId
-                  ? null
-                  : state.selectedBlockId,
-              isLoading: false,
-            };
-          });
-        } catch (error) {
-          set({
-            error:
-              error instanceof Error ? error.message : "Failed to remove block",
+            error: error instanceof Error ? error.message : "Lỗi tải note",
             isLoading: false,
           });
         }
@@ -361,12 +227,7 @@ export const useNoteStore = create<NoteState>()(
 
       // Local state methods
       setNotes: (notes) => set({ notes }),
-
-      addNote: (note) =>
-        set((state) => ({
-          notes: [note, ...state.notes],
-        })),
-
+      addNote: (note) => set((state) => ({ notes: [note, ...state.notes] })),
       updateNote: (id, updates) =>
         set((state) => ({
           notes: state.notes.map((note) =>
@@ -377,202 +238,234 @@ export const useNoteStore = create<NoteState>()(
               ? { ...state.currentNote, ...updates }
               : state.currentNote,
         })),
-
       removeNote: (id) =>
         set((state) => ({
           notes: state.notes.filter((note) => note.id !== id),
           currentNote: state.currentNote?.id === id ? null : state.currentNote,
         })),
+      setCurrentNote: (note) => set({ currentNote: note }),
 
-      setCurrentNote: (note) =>
-        set({
-          currentNote: note,
-          selectedBlockId: null,
-          isEditing: false,
-          isDirty: false,
-        }),
-
-      // Block actions - only for block notes
+      // Block local state methods
       addBlock: (noteId, block) =>
-        set((state) => {
-          const updatedNotes = state.notes.map((note) => {
-            if (note.id === noteId && isBlockNote(note)) {
-              return {
-                ...note,
-                blocks: [...note.blocks, block],
-              };
-            }
-            return note;
-          });
-
-          const updatedCurrentNote =
-            state.currentNote?.id === noteId && isBlockNote(state.currentNote)
-              ? {
-                  ...state.currentNote,
-                  blocks: [...state.currentNote.blocks, block],
-                }
-              : state.currentNote;
-
-          return {
-            notes: updatedNotes,
-            currentNote: updatedCurrentNote,
-            isDirty: true,
-          };
-        }),
-
-      updateBlock: (noteId, blockId, updates) =>
-        set((state) => {
-          const updateBlockInArray = (blocks: BlockData[]) =>
-            blocks.map((block) =>
-              block.id === blockId ? { ...block, ...updates } : block,
-            );
-
-          const updatedNotes = state.notes.map((note) => {
-            if (note.id === noteId && isBlockNote(note)) {
-              return {
-                ...note,
-                blocks: updateBlockInArray(note.blocks),
-              };
-            }
-            return note;
-          });
-
-          const updatedCurrentNote =
-            state.currentNote?.id === noteId && isBlockNote(state.currentNote)
-              ? {
-                  ...state.currentNote,
-                  blocks: updateBlockInArray(state.currentNote.blocks),
-                }
-              : state.currentNote;
-
-          return {
-            notes: updatedNotes,
-            currentNote: updatedCurrentNote,
-            isDirty: true,
-          };
-        }),
-
-      removeBlock: (noteId, blockId) =>
-        set((state) => {
-          const filterBlocks = (blocks: BlockData[]) =>
-            blocks.filter((block) => block.id !== blockId);
-
-          const updatedNotes = state.notes.map((note) => {
-            if (note.id === noteId && isBlockNote(note)) {
-              return {
-                ...note,
-                blocks: filterBlocks(note.blocks),
-              };
-            }
-            return note;
-          });
-
-          const updatedCurrentNote =
-            state.currentNote?.id === noteId && isBlockNote(state.currentNote)
-              ? {
-                  ...state.currentNote,
-                  blocks: filterBlocks(state.currentNote.blocks),
-                }
-              : state.currentNote;
-
-          return {
-            notes: updatedNotes,
-            currentNote: updatedCurrentNote,
-            isDirty: true,
-            selectedBlockId:
-              state.selectedBlockId === blockId ? null : state.selectedBlockId,
-          };
-        }),
-
-      reorderBlocks: (noteId, newBlockOrder) =>
-        set((state) => {
-          const updatedNotes = state.notes.map((note) => {
-            if (note.id === noteId && isBlockNote(note)) {
-              return {
-                ...note,
-                blocks: newBlockOrder,
-              };
-            }
-            return note;
-          });
-
-          const updatedCurrentNote =
-            state.currentNote?.id === noteId && isBlockNote(state.currentNote)
-              ? {
-                  ...state.currentNote,
-                  blocks: newBlockOrder,
-                }
-              : state.currentNote;
-
-          return {
-            notes: updatedNotes,
-            currentNote: updatedCurrentNote,
-            isDirty: true,
-          };
-        }),
-
-      // UI state actions
-      setLoading: (loading) => set({ isLoading: loading }),
-      setError: (error) => set({ error }),
-
-      setFilter: (newFilter) =>
         set((state) => ({
-          filter: { ...state.filter, ...newFilter },
+          notes: state.notes.map((note) =>
+            note.id === noteId
+              ? {
+                  ...note,
+                  blocks: [...(note.blocks || []), block],
+                }
+              : note,
+          ),
+          currentNote:
+            state.currentNote?.id === noteId
+              ? {
+                  ...state.currentNote,
+                  blocks: [...(state.currentNote.blocks || []), block],
+                }
+              : state.currentNote,
         })),
 
+      updateBlock: (noteId, blockId, updates) =>
+        set((state) => ({
+          notes: state.notes.map((note) =>
+            note.id === noteId
+              ? {
+                  ...note,
+                  blocks:
+                    note.blocks?.map((block) =>
+                      block.id === blockId ? { ...block, ...updates } : block,
+                    ) || [],
+                }
+              : note,
+          ),
+          currentNote:
+            state.currentNote?.id === noteId
+              ? {
+                  ...state.currentNote,
+                  blocks:
+                    state.currentNote.blocks?.map((block) =>
+                      block.id === blockId ? { ...block, ...updates } : block,
+                    ) || [],
+                }
+              : state.currentNote,
+        })),
+
+      removeBlock: (noteId, blockId) =>
+        set((state) => ({
+          notes: state.notes.map((note) =>
+            note.id === noteId
+              ? {
+                  ...note,
+                  blocks:
+                    note.blocks?.filter((block) => block.id !== blockId) || [],
+                }
+              : note,
+          ),
+          currentNote:
+            state.currentNote?.id === noteId
+              ? {
+                  ...state.currentNote,
+                  blocks:
+                    state.currentNote.blocks?.filter(
+                      (block) => block.id !== blockId,
+                    ) || [],
+                }
+              : state.currentNote,
+        })),
+
+      reorderBlocks: (noteId, newBlockOrder) =>
+        set((state) => ({
+          notes: state.notes.map((note) =>
+            note.id === noteId ? { ...note, blocks: newBlockOrder } : note,
+          ),
+          currentNote:
+            state.currentNote?.id === noteId
+              ? { ...state.currentNote, blocks: newBlockOrder }
+              : state.currentNote,
+        })),
+
+      // Block API methods
+      addBlockToNote: async (noteId, blockData) => {
+        try {
+          const blockResponse = await noteAPI.addBlock(noteId, blockData);
+          const blockDataConverted =
+            convertBlockResponseToBlockData(blockResponse);
+
+          set((state) => ({
+            notes: state.notes.map((note) =>
+              note.id === noteId
+                ? {
+                    ...note,
+                    blocks: [...(note.blocks || []), blockDataConverted],
+                  }
+                : note,
+            ),
+            currentNote:
+              state.currentNote?.id === noteId
+                ? {
+                    ...state.currentNote,
+                    blocks: [
+                      ...(state.currentNote.blocks || []),
+                      blockDataConverted,
+                    ],
+                  }
+                : state.currentNote,
+          }));
+        } catch (error) {
+          set({
+            error: error instanceof Error ? error.message : "Lỗi thêm block",
+          });
+        }
+      },
+
+      updateNoteBlock: async (noteId, blockId, updates) => {
+        try {
+          const blockResponse = await noteAPI.updateBlock(blockId, updates);
+          const blockDataConverted =
+            convertBlockResponseToBlockData(blockResponse);
+
+          set((state) => ({
+            notes: state.notes.map((note) =>
+              note.id === noteId
+                ? {
+                    ...note,
+                    blocks:
+                      note.blocks?.map((block) =>
+                        block.id === blockId ? blockDataConverted : block,
+                      ) || [],
+                  }
+                : note,
+            ),
+            currentNote:
+              state.currentNote?.id === noteId
+                ? {
+                    ...state.currentNote,
+                    blocks:
+                      state.currentNote.blocks?.map((block) =>
+                        block.id === blockId ? blockDataConverted : block,
+                      ) || [],
+                  }
+                : state.currentNote,
+          }));
+        } catch (error) {
+          set({
+            error:
+              error instanceof Error ? error.message : "Lỗi cập nhật block",
+          });
+        }
+      },
+
+      removeBlockFromNote: async (noteId, blockId) => {
+        try {
+          await noteAPI.deleteBlock(blockId);
+          set((state) => ({
+            notes: state.notes.map((note) =>
+              note.id === noteId
+                ? {
+                    ...note,
+                    blocks:
+                      note.blocks?.filter((block) => block.id !== blockId) ||
+                      [],
+                  }
+                : note,
+            ),
+            currentNote:
+              state.currentNote?.id === noteId
+                ? {
+                    ...state.currentNote,
+                    blocks:
+                      state.currentNote.blocks?.filter(
+                        (block) => block.id !== blockId,
+                      ) || [],
+                  }
+                : state.currentNote,
+          }));
+        } catch (error) {
+          set({
+            error: error instanceof Error ? error.message : "Lỗi xóa block",
+          });
+        }
+      },
+
+      // UI state methods
+      setLoading: (loading) => set({ isLoading: loading }),
+      setError: (error) => set({ error }),
+      setFilter: (filter) =>
+        set((state) => ({ filter: { ...state.filter, ...filter } })),
       setSearchQuery: (query) => set({ searchQuery: query }),
+      clearFilter: () => set({ filter: defaultFilter, searchQuery: "" }),
 
-      clearFilter: () =>
-        set({
-          filter: defaultFilter,
-          searchQuery: "",
-          selectedTags: [],
-        }),
-
-      // Editor actions
+      // Editor methods
       setSelectedBlock: (blockId) => set({ selectedBlockId: blockId }),
       setEditing: (editing) => set({ isEditing: editing }),
       setDirty: (dirty) => set({ isDirty: dirty }),
 
-      // Sidebar actions
+      // Sidebar methods
       setSidebarCollapsed: (collapsed) => set({ sidebarCollapsed: collapsed }),
+      setSelectedTags: (tags) => set({ selectedTags: tags }),
 
-      toggleTag: (tag) =>
-        set((state) => ({
-          selectedTags: state.selectedTags.includes(tag)
-            ? state.selectedTags.filter((t) => t !== tag)
-            : [...state.selectedTags, tag],
-        })),
-
-      clearSelectedTags: () => set({ selectedTags: [] }),
-
-      // Utility actions
+      // Utility methods
       reset: () =>
         set({
           notes: [],
           currentNote: null,
           isLoading: false,
           error: null,
+          filter: defaultFilter,
           searchQuery: "",
           selectedBlockId: null,
           isEditing: false,
           isDirty: false,
+          sidebarCollapsed: false,
           selectedTags: [],
-        }),
-
-      resetEditor: () =>
-        set({
-          selectedBlockId: null,
-          isEditing: false,
-          isDirty: false,
         }),
     }),
     {
       name: "note-store",
       partialize: (state) => ({
-        filter: state.filter,
         sidebarCollapsed: state.sidebarCollapsed,
         selectedTags: state.selectedTags,
+        filter: state.filter,
       }),
     },
   ),

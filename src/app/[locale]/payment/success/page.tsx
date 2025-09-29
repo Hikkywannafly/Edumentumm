@@ -1,8 +1,8 @@
 import BaseLayout from "@/components/layout/base-layout";
-import PaymentContent from "@/components/payment/payment-content";
+import PaymentSuccess from "@/components/payment/payment-success";
 import { setRequestLocale } from "next-intl/server";
 
-export default async function PaymentPage({
+export default async function PaymentSuccessPage({
   params,
 }: {
   params: Promise<{ locale: string }>;
@@ -13,7 +13,7 @@ export default async function PaymentPage({
 
   return (
     <BaseLayout>
-      <PaymentContent />
+      <PaymentSuccess />
     </BaseLayout>
   );
 }

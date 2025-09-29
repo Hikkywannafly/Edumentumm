@@ -3,6 +3,7 @@
 import { authAPI } from "@/lib/api/auth";
 import type { AuthResponse, User } from "@/lib/schemas/auth";
 import type { Roles } from "@/types/auth";
+import { useQueryClient } from "@tanstack/react-query";
 import { createContext, useContext, useEffect, useState } from "react";
 
 interface AuthContextType {
@@ -31,6 +32,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [refreshToken, setRefreshToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
 
   // Check if user has any roles other than GUEST
   const hasRole =
@@ -147,6 +149,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
     localStorage.removeItem("attendance_dates");
+    queryClient.clear();
   };
 
   const value: AuthContextType = {

@@ -64,6 +64,31 @@
     "dashboard": "Dashboard",
     "upgrade": "Upgrade"
   },
+  "Footer": {
+    "description": "Smart learning platform for the future of education.",
+    "product": {
+      "title": "Product",
+      "features": "Features",
+      "courses": "Courses",
+      "community": "Community",
+      "reports": "Reports"
+    },
+    "support": {
+      "title": "Support",
+      "helpCenter": "Help Center",
+      "contact": "Contact",
+      "faq": "FAQ",
+      "documentation": "Documentation"
+    },
+    "company": {
+      "title": "Company",
+      "aboutUs": "About Us",
+      "recruitment": "Recruitment",
+      "privacy": "Privacy Policy",
+      "terms": "Terms of Service"
+    },
+    "copyright": "2025 Edumentum. All rights reserved."
+  },
   "Dashboard": {
     "title": "Dashboard",
     "createQuiz": "Create Quiz",
@@ -131,6 +156,7 @@
       "monthly": "Monthly",
       "yearly": "Yearly",
       "save20": "Save 20%",
+      "save40": "Save 40%",
       "perMonth": "month",
       "perYear": "year"
     },
@@ -149,8 +175,8 @@
     "pro": {
       "title": "Pro",
       "price": {
-        "monthly": "$9.99",
-        "yearly": "$7.99"
+        "monthly": "$5",
+        "yearly": "$3"
       },
       "description": "Perfect for students and professionals who want more features.",
       "features": {
@@ -161,7 +187,7 @@
         "offlineAccess": "Offline access",
         "customBranding": "Custom branding"
       },
-      "button": "Start Free Trial"
+      "button": "Get Started"
     },
     "enterprise": {
       "title": "Enterprise",
@@ -202,29 +228,6 @@
         }
       }
     }
-  },
-  "Common": {
-    "loading": "Loading...",
-    "error": "An error occurred",
-    "success": "Success",
-    "save": "Save",
-    "cancel": "Cancel",
-    "delete": "Delete",
-    "edit": "Edit",
-    "create": "Create",
-    "search": "Search",
-    "filter": "Filter",
-    "sort": "Sort",
-    "export": "Export",
-    "import": "Import",
-    "yes": "Yes",
-    "no": "No",
-    "confirm": "Confirm",
-    "back": "Back",
-    "next": "Next",
-    "previous": "Previous",
-    "submit": "Submit",
-    "reset": "Reset"
   },
   "Mindmap": {
     "title": "Mindmaps",
@@ -467,7 +470,12 @@
         "extractingQuestions": "Extracting Questions...",
         "createQuiz": "Create Quiz",
         "guidance": "Paste clear and well-structured content for better question extraction."
-      }
+      },
+      "limitReached": "Free Plan Limit Reached",
+      "limitInfo": "You have created {created} of {limit} quizzes this week.",
+      "upgradeToPro": "Upgrade to Pro",
+      "cancel": "Cancel",
+      "upgradeToCreateMore": "Upgrade to Pro plan to create more quizzes."
     },
     "edit": {
       "title": "Edit Quiz",
@@ -856,7 +864,9 @@
     "stats": {
       "totalNotes": "Total Notes",
       "recentlyUpdated": "Recently Updated",
-      "myNotes": "My Notes"
+      "myNotes": "My Notes",
+      "blocks": "blocks",
+      "markdownMode": "Markdown"
     },
     "search": {
       "placeholder": "Search notes..."
@@ -883,11 +893,14 @@
       "loadFailed": "Failed to load notes",
       "failedToLoadNote": "Failed to load note",
       "noteNotFound": "Note not found",
-      "updateFailed": "Failed to update note"
+      "updateFailed": "Failed to update note",
+      "deleteFailed": "Failed to delete note"
     },
     "create": {
       "title": "Create New Note",
       "button": "Create Note",
+      "success": "Note created successfully",
+      "error": "Failed to create note",
       "templates": {
         "blank": {
           "title": "Blank Note",
@@ -915,9 +928,50 @@
       "settings": "Settings",
       "addTag": "Add tag...",
       "addBlock": "Add a block",
+      "switchMode": "Switch Mode",
+      "blockMode": "Block Mode",
+      "markdownMode": "Markdown Mode",
+      "editMode": "Edit",
+      "previewMode": "Preview",
+      "switchingMode": "Switching mode...",
+      "autoSaveTitle": "Title auto-saved successfully!",
+      "autoSaveTag": "Tag \"{tag}\" added successfully!",
+      "autoRemoveTag": "Tag \"{tag}\" removed successfully!",
+      "addBlockSuccess": "New {type} block added!",
+      "deleteBlockSuccess": "Block deleted successfully!",
+      "modeSwitchSuccess": "Switched to {mode} mode successfully!",
+      "modeSwitchError": "Error saving changes when switching modes",
+      "titlePlaceholder": "Untitled note",
+      "tagPlaceholder": "Add tag",
+      "addBlockPlaceholder": "Add block",
+      "blockTypes": {
+        "paragraph": "Paragraph",
+        "heading_1": "Heading 1",
+        "heading_2": "Heading 2",
+        "heading_3": "Heading 3",
+        "bulleted_list_item": "Bulleted List",
+        "numbered_list_item": "Numbered List",
+        "to_do": "To-do List",
+        "quote": "Quote",
+        "code": "Code",
+        "divider": "Divider"
+      },
+      "placeholders": {
+        "heading_1": "Heading 1",
+        "heading_2": "Heading 2",
+        "heading_3": "Heading 3",
+        "quote": "Quote",
+        "code": "Code",
+        "bulleted_list_item": "List item",
+        "numbered_list_item": "List item",
+        "to_do": "To-do item",
+        "default": "Type something...",
+        "preview": "No content to preview"
+      },
       "success": {
         "noteUpdated": "Note updated",
-        "noteUpdatedDesc": "Your note has been saved successfully"
+        "noteUpdatedDesc": "Your note has been saved successfully",
+        "noteDeleted": "Note deleted successfully"
       }
     }
   },
@@ -926,5 +980,19 @@
     "description": "You don't have permission to access this resource. Please log in again if your session has expired.",
     "homeButton": "GO HOME",
     "loginButton": "LOGIN"
+  },
+  "Common": {
+    "unknownError": "Unknown error",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "confirmDelete": "Are you sure you want to delete this note?",
+    "delete": "Delete",
+    "edit": "Edit",
+    "save": "Save",
+    "close": "Close",
+    "notes": "Notes"
   }
 }

@@ -575,7 +575,7 @@ export function TeacherCourseEdit({ courseId }: TeacherCourseEditProps) {
                 )}
               </Button>
 
-              <LocalizedLink href="/course/teacher/${courseId}">
+              <LocalizedLink href={`/${locale}/course/teacher/${courseId}`}>
                 <Button type="button" variant="outline" className="w-full">
                   Cancel
                 </Button>

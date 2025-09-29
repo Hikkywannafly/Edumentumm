@@ -3,7 +3,9 @@
 import { useFlashcardPrefetch } from "@/hooks/flashcard/use-flashcard-prefecth";
 import { useKanbanPrefetch } from "@/hooks/kanban/use-kanban-query";
 import { useQuizPrefetch } from "@/hooks/quiz/use-quiz-prefetch";
+import { useSearchParams } from "next/navigation";
 import { useEffect } from "react";
+import { toast } from "sonner";
 import DashboardStats from "./dashboard-stats";
 import KanbanBoard from "./kanban-board";
 import RecentNotes from "./recent-notes";
@@ -11,11 +13,29 @@ import StudyGroupsActivity from "./study-groups-activity";
 import StudyTime from "./study-time";
 
 export default function DashboardContent() {
+  const searchParams = useSearchParams();
+
   // Prefetch hooks
   useQuizPrefetch();
   useFlashcardPrefetch();
 
   const { prefetchEssentialData } = useKanbanPrefetch();
+
+  // Check for payment success parameter and show toast
+  useEffect(() => {
+    const paymentSuccess = searchParams.get("payment");
+    if (paymentSuccess === "success") {
+      toast.success("Thanh toán thành công!", {
+        description: "Tài khoản Pro của bạn đã được kích hoạt.",
+        duration: 5000,
+      });
+
+      // Remove the query parameter from URL
+      const url = new URL(window.location.href);
+      url.searchParams.delete("payment");
+      window.history.replaceState({}, document.title, url.toString());
+    }
+  }, [searchParams]);
 
   // Prefetch kanban data when dashboard loads
   useEffect(() => {

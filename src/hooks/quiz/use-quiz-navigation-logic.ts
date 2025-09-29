@@ -33,9 +33,17 @@ export function useQuizNavigationLogic({
   const questionTimesRef = useRef<Record<string, number>>({});
   const currentQuestionIdRef = useRef<string | null>(null);
 
-  // Initialize current question ID
+  // Initialize current question ID and reset state when questions change
   useEffect(() => {
-    if (questions.length > 0 && currentQuestionIdRef.current === null) {
+    if (questions.length > 0) {
+      // Reset all state when questions change (new quiz or quiz update)
+      setCurrentQuestionIndex(0);
+      setAnswers([]);
+      setIsCompleted(false);
+
+      // Reset time tracking
+      questionStartTimeRef.current = Date.now();
+      questionTimesRef.current = {};
       currentQuestionIdRef.current = questions[0]?.id || null;
     }
   }, [questions]);

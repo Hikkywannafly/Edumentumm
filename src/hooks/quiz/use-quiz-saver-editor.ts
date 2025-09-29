@@ -91,6 +91,12 @@ export function useQuizSaverEditor(
     },
     onSuccess: (data) => {
       updateCacheWithQuizData(queryClient, quizId, data);
+      // Clear any quiz progress when quiz is updated
+      try {
+        localStorage.removeItem(`quiz-progress-${quizId}`);
+      } catch (error) {
+        console.warn("Failed to clear quiz progress:", error);
+      }
     },
   });
 
@@ -227,6 +233,7 @@ export function updateCacheWithQuizData(
   // Invalidate queries to ensure fresh data is fetched
   queryClient.invalidateQueries({ queryKey: ["quizzes"] });
   queryClient.invalidateQueries({ queryKey: ["quiz", quizId] });
+  queryClient.invalidateQueries({ queryKey: ["quiz-editing", quizId] });
 }
 
 // Helper function to convert frontend format back to backend format for cache consistency
