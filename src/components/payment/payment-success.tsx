@@ -28,13 +28,14 @@ export default function PaymentSuccess() {
       try {
         const vnpay = searchParams.get("vnpay");
         const packageId = searchParams.get("packageId");
+        const transactionId = searchParams.get("transactionId");
 
         if (vnpay === "success" && packageId) {
           // Confirm payment with backend
           const response = await subscriptionAPI.confirmPayment({
             packageId: packageId,
             paymentMethod: "vnpay",
-            transactionId: `vnpay_${Date.now()}`,
+            transactionId: transactionId || `vnpay_${Date.now()}`,
           });
 
           if (response.success) {
