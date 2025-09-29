@@ -1,10 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import type { NodeData } from "@/stores/mindmap";
 import { Plus, X } from "lucide-react";
 import { memo, useState } from "react";
 import { Handle, type NodeProps, Position } from "reactflow";
 
-const MindMapNode = ({ data }: NodeProps) => {
+const MindMapNode = ({ data }: NodeProps<NodeData>) => {
   const [isEditing, setIsEditing] = useState(false);
   const [label, setLabel] = useState(data.label || "");
 
@@ -27,16 +28,95 @@ const MindMapNode = ({ data }: NodeProps) => {
     border: "1px solid hsl(var(--border))",
   };
 
-  return (
-    <div
-      className="rounded-lg shadow-lg transition-all hover:shadow-xl"
-      style={nodeStyle}
-    >
-      <Handle type="target" position={Position.Top} className="h-2 w-2" />
+  // Determine shape classes based on data.shape
+  const getShapeClasses = () => {
+    const baseClasses = "relative shadow-lg transition-all hover:shadow-xl";
+    switch (data.shape) {
+      case "circle":
+        return `${baseClasses} rounded-full w-32 h-32 flex items-center justify-center`;
+      case "diamond":
+        return `${baseClasses} w-24 h-24 transform rotate-45 flex items-center justify-center`;
+      case "square":
+        return `${baseClasses} rounded-none w-28 h-28 flex items-center justify-center`;
+      default:
+        return `${baseClasses} rounded-lg`;
+    }
+  };
 
-      <div className="min-w-[120px] max-w-[200px] p-4">
+  const isCompactShape =
+    data.shape && ["circle", "diamond", "square"].includes(data.shape);
+
+  return (
+    <div className={getShapeClasses()} style={nodeStyle}>
+      {/* Top handle - both input and output */}
+      <Handle
+        type="target"
+        position={Position.Top}
+        className="h-2 w-2 border-blue-600 bg-blue-500"
+        id="top-target"
+        style={
+          data.shape === "diamond" ? { top: "0%", left: "50%" } : undefined
+        }
+      />
+      <Handle
+        type="source"
+        position={Position.Top}
+        className="h-2 w-2 border-blue-600 bg-blue-500"
+        id="top-source"
+        style={
+          data.shape === "diamond" ? { top: "0%", left: "50%" } : undefined
+        }
+      />
+
+      {/* Left handle - both input and output */}
+      <Handle
+        type="target"
+        position={Position.Left}
+        className="h-2 w-2 border-green-600 bg-green-500"
+        id="left-target"
+        style={
+          data.shape === "diamond" ? { left: "0%", top: "50%" } : undefined
+        }
+      />
+      <Handle
+        type="source"
+        position={Position.Left}
+        className="h-2 w-2 border-green-600 bg-green-500"
+        id="left-source"
+        style={
+          data.shape === "diamond" ? { left: "0%", top: "50%" } : undefined
+        }
+      />
+
+      {/* Right handle - both input and output */}
+      <Handle
+        type="target"
+        position={Position.Right}
+        className="h-2 w-2 border-orange-600 bg-orange-500"
+        id="right-target"
+        style={
+          data.shape === "diamond" ? { right: "0%", top: "50%" } : undefined
+        }
+      />
+      <Handle
+        type="source"
+        position={Position.Right}
+        className="h-2 w-2 border-orange-600 bg-orange-500"
+        id="right-source"
+        style={
+          data.shape === "diamond" ? { right: "0%", top: "50%" } : undefined
+        }
+      />
+
+      <div
+        className={
+          isCompactShape
+            ? "flex items-center justify-center p-2"
+            : "min-w-[120px] max-w-[200px] p-4"
+        }
+      >
         {isEditing ? (
-          <div className="space-y-2">
+          <div className={isCompactShape ? "w-full" : "space-y-2"}>
             <Input
               value={label}
               onChange={(e) => setLabel(e.target.value)}
@@ -51,7 +131,7 @@ const MindMapNode = ({ data }: NodeProps) => {
                   setLabel(data.label || "");
                 }
               }}
-              className="h-8 text-sm"
+              className={isCompactShape ? "h-6 w-full text-xs" : "h-8 text-sm"}
               autoFocus
             />
             <div className="flex gap-1">
@@ -74,18 +154,48 @@ const MindMapNode = ({ data }: NodeProps) => {
             </div>
           </div>
         ) : (
-          <div className="space-y-2">
+          <div
+            className={
+              isCompactShape
+                ? "flex items-center justify-center text-center"
+                : "space-y-2"
+            }
+          >
             <div
-              className="cursor-pointer break-words font-medium text-sm"
+              className={`cursor-pointer break-words font-medium ${
+                isCompactShape
+                  ? "max-w-full overflow-hidden text-ellipsis text-xs leading-tight"
+                  : "text-sm"
+              }`}
               onDoubleClick={() => setIsEditing(true)}
             >
-              {label || "Double click to edit"}
+              {isCompactShape && label && label.length > 12
+                ? `${label.slice(0, 12)}...`
+                : label || "Double click to edit"}
             </div>
           </div>
         )}
       </div>
 
-      <Handle type="source" position={Position.Bottom} className="h-2 w-2" />
+      {/* Bottom handle - both input and output */}
+      <Handle
+        type="target"
+        position={Position.Bottom}
+        className="h-2 w-2 border-purple-600 bg-purple-500"
+        id="bottom-target"
+        style={
+          data.shape === "diamond" ? { bottom: "0%", left: "50%" } : undefined
+        }
+      />
+      <Handle
+        type="source"
+        position={Position.Bottom}
+        className="h-2 w-2 border-purple-600 bg-purple-500"
+        id="bottom-source"
+        style={
+          data.shape === "diamond" ? { bottom: "0%", left: "50%" } : undefined
+        }
+      />
     </div>
   );
 };

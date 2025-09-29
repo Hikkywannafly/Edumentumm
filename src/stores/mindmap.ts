@@ -16,6 +16,18 @@ import type {
 import { MarkerType, applyEdgeChanges, applyNodeChanges } from "reactflow";
 import { create } from "zustand";
 
+export type NodeShape = "rectangle" | "circle" | "diamond" | "square";
+
+export interface NodeData {
+  label: string;
+  shape?: NodeShape;
+  background?: string;
+  color?: string;
+  onChange?: (label: string) => void;
+  onAddChild?: () => void;
+  onDelete?: () => void;
+}
+
 export type MindmapConfigState = {
   layoutOption: string;
   showMinimap: boolean;
@@ -40,7 +52,11 @@ export type RFMindmapState = {
   // Actions
   onMindmapNodesChange: OnNodesChange;
   onMindmapEdgesChange: OnEdgesChange;
-  addMindmapChildNode: (parentNode: Node, position: XYPosition) => void;
+  addMindmapChildNode: (
+    parentNode: Node,
+    position: XYPosition,
+    direction?: string,
+  ) => void;
   updateMindmapNodeData: (nodeId: string, data: any) => void;
   deleteMindmapNode: (nodeId: string) => void;
   addMindmapNode: (node: Node, position: XYPosition) => void;
@@ -70,7 +86,7 @@ const DEFAULT_ROOT_NAME = "New Node";
 export const DEFAULT_ROOT_NODE: Node = {
   id: "root",
   type: DEFAULT_MINDMAP_TYPE,
-  data: { label: DEFAULT_ROOT_NAME },
+  data: { label: DEFAULT_ROOT_NAME, shape: "rectangle" as NodeShape },
   position: { x: 0, y: 0 },
 };
 
@@ -109,18 +125,51 @@ export const useMindmapStore = create<RFMindmapState>((set, get) => ({
   },
 
   // Node operations
-  addMindmapChildNode: (parentNode: Node, position: XYPosition) => {
+  addMindmapChildNode: (
+    parentNode: Node,
+    position: XYPosition,
+    direction?: string,
+  ) => {
     const newNode: Node = {
       id: nanoid(),
       type: DEFAULT_MINDMAP_TYPE,
-      data: { label: "New Node" },
+      data: { label: "New Node", shape: "rectangle" as NodeShape },
       position,
     };
+
+    // Determine source and target handles based on direction
+    let sourceHandle: string | undefined;
+    let targetHandle: string | undefined;
+
+    switch (direction) {
+      case "left":
+        sourceHandle = "left-source";
+        targetHandle = "right-target";
+        break;
+      case "right":
+        sourceHandle = "right-source";
+        targetHandle = "left-target";
+        break;
+      case "up":
+        sourceHandle = "top-source";
+        targetHandle = "bottom-target";
+        break;
+      case "down":
+        sourceHandle = "bottom-source";
+        targetHandle = "top-target";
+        break;
+      default:
+        // Default behavior (bottom to top)
+        sourceHandle = "bottom-source";
+        targetHandle = "top-target";
+    }
 
     const newEdge: Edge = {
       id: nanoid(),
       source: parentNode.id,
       target: newNode.id,
+      sourceHandle,
+      targetHandle,
       type: "mindmap",
       markerEnd: {
         type: MarkerType.ArrowClosed,
@@ -240,7 +289,7 @@ export const useMindmapStore = create<RFMindmapState>((set, get) => ({
       const newNode: Node = {
         id: nanoid(),
         type: DEFAULT_MINDMAP_TYPE,
-        data: { label: copilotNode.label },
+        data: { label: copilotNode.label, shape: "rectangle" as NodeShape },
         position: { x: Math.random() * 200, y: Math.random() * 200 },
       };
 

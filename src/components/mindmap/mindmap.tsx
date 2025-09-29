@@ -3,6 +3,7 @@ import ReactFlow, {
   Background,
   ConnectionLineType,
   Controls,
+  MarkerType,
   MiniMap,
   type Node,
   type NodeOrigin,
@@ -11,13 +12,13 @@ import ReactFlow, {
   useStoreApi,
 } from "reactflow";
 import "reactflow/dist/style.css";
-import { Button } from "@/components/ui/button";
 import { useMindmapStore } from "@/stores/mindmap";
 import { nanoid } from "nanoid";
 import { useTranslations } from "next-intl";
-import ContextMenu from "./context-menu";
+import { NodeContextMenu, PaneContextMenu } from "./context-menu";
 import MindMapEdge from "./edge";
 import MindMapNode from "./node";
+import { type NodeShape, NodeStyleDialog } from "./node-style-dialog";
 
 const nodeTypes = {
   mindmap: MindMapNode,
@@ -63,6 +64,7 @@ const Mindmap = ({ isFullScreen = false }: MindmapProps) => {
   const setMindmapData = useMindmapStore((state) => state.setMindmapData);
 
   const connectingNodeId = useRef<string | null>(null);
+  const connectingHandle = useRef<string | null>(null);
   const [rfInstance, setRfInstance] = useState<any>(null);
   const t = useTranslations("Mindmap");
 
@@ -99,8 +101,9 @@ const Mindmap = ({ isFullScreen = false }: MindmapProps) => {
     [screenToFlowPosition, store],
   );
 
-  const onConnectStart = useCallback((_: any, { nodeId }: any) => {
+  const onConnectStart = useCallback((_: any, { nodeId, handleId }: any) => {
     connectingNodeId.current = nodeId;
+    connectingHandle.current = handleId;
   }, []);
 
   // Thêm callback onConnect
@@ -112,7 +115,11 @@ const Mindmap = ({ isFullScreen = false }: MindmapProps) => {
         params.target &&
         params.source !== params.target &&
         !mindmapEdges.some(
-          (e) => e.source === params.source && e.target === params.target,
+          (e) =>
+            e.source === params.source &&
+            e.target === params.target &&
+            e.sourceHandle === params.sourceHandle &&
+            e.targetHandle === params.targetHandle,
         )
       ) {
         setMindmapData(mindmapNodes, [
@@ -121,6 +128,12 @@ const Mindmap = ({ isFullScreen = false }: MindmapProps) => {
             id: nanoid(),
             source: params.source,
             target: params.target,
+            sourceHandle: params.sourceHandle,
+            targetHandle: params.targetHandle,
+            type: "mindmap",
+            markerEnd: {
+              type: MarkerType.ArrowClosed,
+            },
           },
         ]);
       }
@@ -139,7 +152,20 @@ const Mindmap = ({ isFullScreen = false }: MindmapProps) => {
         const parentNode = nodeInternals.get(connectingNodeId.current);
         const childNodePosition = getChildNodePosition(event, parentNode);
         if (parentNode && childNodePosition) {
-          addMindmapChildNode(parentNode, childNodePosition);
+          // Determine direction based on the handle that was dragged
+          let direction = "right"; // default
+          if (connectingHandle.current) {
+            if (connectingHandle.current.includes("left")) {
+              direction = "left";
+            } else if (connectingHandle.current.includes("right")) {
+              direction = "right";
+            } else if (connectingHandle.current.includes("top")) {
+              direction = "up";
+            } else if (connectingHandle.current.includes("bottom")) {
+              direction = "down";
+            }
+          }
+          addMindmapChildNode(parentNode, childNodePosition, direction);
         }
       }
     },
@@ -175,7 +201,7 @@ const Mindmap = ({ isFullScreen = false }: MindmapProps) => {
 
   const onPaneClick = useCallback(() => setMenu(null), []);
 
-  const handleContextMenuAction = (action: string) => {
+  const handleContextMenuAction = (action: string, direction?: string) => {
     if (menu?.id === "pane") {
       if (action === "add") {
         const position = rfInstance.screenToFlowPosition({
@@ -196,11 +222,40 @@ const Mindmap = ({ isFullScreen = false }: MindmapProps) => {
       const node = mindmapNodes.find((n) => n.id === menu.id);
       if (node) {
         if (action === "add") {
-          const position = {
-            x: node.position.x + 200,
-            y: node.position.y,
-          };
-          addMindmapChildNode(node, position);
+          let position: { x: number; y: number };
+          switch (direction) {
+            case "left":
+              position = {
+                x: node.position.x - 200,
+                y: node.position.y,
+              };
+              break;
+            case "right":
+              position = {
+                x: node.position.x + 200,
+                y: node.position.y,
+              };
+              break;
+            case "up":
+              position = {
+                x: node.position.x,
+                y: node.position.y - 120,
+              };
+              break;
+            case "down":
+              position = {
+                x: node.position.x,
+                y: node.position.y + 120,
+              };
+              break;
+            default:
+              // Default behavior (right)
+              position = {
+                x: node.position.x + 200,
+                y: node.position.y,
+              };
+          }
+          addMindmapChildNode(node, position, direction);
         } else if (action === "delete") {
           deleteMindmapNode(node.id);
         }
@@ -225,7 +280,35 @@ const Mindmap = ({ isFullScreen = false }: MindmapProps) => {
         x: node.position.x + 200,
         y: node.position.y,
       };
-      addMindmapChildNode(node, position);
+      addMindmapChildNode(node, position, "right");
+    },
+    onAddChildLeft: () => {
+      const position = {
+        x: node.position.x - 200,
+        y: node.position.y,
+      };
+      addMindmapChildNode(node, position, "left");
+    },
+    onAddChildRight: () => {
+      const position = {
+        x: node.position.x + 200,
+        y: node.position.y,
+      };
+      addMindmapChildNode(node, position, "right");
+    },
+    onAddChildUp: () => {
+      const position = {
+        x: node.position.x,
+        y: node.position.y - 120,
+      };
+      addMindmapChildNode(node, position, "up");
+    },
+    onAddChildDown: () => {
+      const position = {
+        x: node.position.x,
+        y: node.position.y + 120,
+      };
+      addMindmapChildNode(node, position, "down");
     },
     onDelete: () => deleteMindmapNode(node.id),
   });
@@ -281,7 +364,7 @@ const Mindmap = ({ isFullScreen = false }: MindmapProps) => {
           {/* Save button is now in the header */}
 
           {menu && menu.id !== "pane" && (
-            <ContextMenu
+            <NodeContextMenu
               top={menu.top}
               left={menu.left}
               onAddChild={() => handleContextMenuAction("add")}
@@ -290,57 +373,36 @@ const Mindmap = ({ isFullScreen = false }: MindmapProps) => {
               onClose={() => setMenu(null)}
             />
           )}
-          {styleDialog.node && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
-              <div className="min-w-[360px] rounded-lg border border-border bg-background p-6 shadow-lg">
-                <div className="mb-4 font-bold">{t("node.editStyle")}</div>
-                {/* ô chọn màu */}
-                <div className="grid grid-cols-[150px,1fr] items-center gap-3">
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="text-muted-foreground text-sm">
-                      {t("node.backgroundColor")}:
-                    </span>
-                    <input
-                      type="color"
-                      value={styleDialog.node?.data?.background || "#ffffff"}
-                      onChange={(e) =>
-                        styleDialog.node &&
-                        updateMindmapNodeData(styleDialog.node.id, {
-                          background: e.target.value,
-                        })
-                      }
-                      className="h-10 w-24 cursor-pointer rounded border border-border"
-                    />
-                  </div>
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="text-muted-foreground text-sm">
-                      {t("node.textColor")}:
-                    </div>
-                    <input
-                      type="color"
-                      value={styleDialog.node?.data?.color}
-                      onChange={(e) =>
-                        styleDialog.node &&
-                        updateMindmapNodeData(styleDialog.node.id, {
-                          color: e.target.value,
-                        })
-                      }
-                      className="h-10 w-24 cursor-pointer rounded border border-border"
-                    />
-                  </div>
-                </div>
-
-                <div className="mt-5 flex justify-end gap-2">
-                  <Button
-                    size="sm"
-                    onClick={() => setStyleDialog({ node: null })}
-                  >
-                    {t("node.close")}
-                  </Button>
-                </div>
-              </div>
-            </div>
+          {menu && menu.id === "pane" && (
+            <PaneContextMenu
+              top={menu.top}
+              left={menu.left}
+              onAddNode={() => handleContextMenuAction("add")}
+              onClose={() => setMenu(null)}
+            />
           )}
+          <NodeStyleDialog
+            open={!!styleDialog.node}
+            onOpenChange={(open) => !open && setStyleDialog({ node: null })}
+            currentShape={styleDialog.node?.data?.shape || "rectangle"}
+            currentBackground={styleDialog.node?.data?.background}
+            currentColor={styleDialog.node?.data?.color}
+            onShapeChange={(shape: NodeShape) => {
+              if (styleDialog.node) {
+                updateMindmapNodeData(styleDialog.node.id, { shape });
+              }
+            }}
+            onBackgroundChange={(background: string) => {
+              if (styleDialog.node) {
+                updateMindmapNodeData(styleDialog.node.id, { background });
+              }
+            }}
+            onColorChange={(color: string) => {
+              if (styleDialog.node) {
+                updateMindmapNodeData(styleDialog.node.id, { color });
+              }
+            }}
+          />
         </ReactFlow>
       </div>
     </div>
