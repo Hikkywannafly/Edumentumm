@@ -15,4 +15,5 @@ export const flashcardQueryKeys = {
       "title-description",
       { content, flashcards, options },
     ] as const,
+  limit: () => [...flashcardQueryKeys.all, "limit"] as const,
 };

@@ -709,6 +709,11 @@
       "backToFlashcards": "Back to Flashcards",
       "generateFlashcards": "Generate Flashcards",
       "subtitle": "Quickly create a new flashcard deck from your study materials!",
+      "limitReached": "Free Plan Limit Reached",
+      "limitInfo": "You have created {created} of {limit} flashcard decks this week.",
+      "upgradeToPro": "Upgrade to Pro",
+      "cancel": "Cancel",
+      "upgradeToCreateMore": "Upgrade to Pro plan to create more flashcard decks.",
       "tabs": {
         "manual": "Manual Creation",
         "aiGenerated": "AI Generated",

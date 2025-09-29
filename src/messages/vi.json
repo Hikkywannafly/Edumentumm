@@ -709,6 +709,11 @@
       "backToFlashcards": "Quay lại Flashcards",
       "generateFlashcards": "Tạo Flashcards",
       "subtitle": "Nhanh chóng tạo bộ flashcard mới từ tài liệu học tập của bạn!",
+      "limitReached": "Đã đạt giới hạn gói miễn phí",
+      "limitInfo": "Bạn đã tạo {created} trong số {limit} bộ flashcard trong tuần này.",
+      "upgradeToPro": "Nâng cấp lên Pro",
+      "cancel": "Hủy",
+      "upgradeToCreateMore": "Nâng cấp lên gói Pro để tạo thêm bộ flashcard.",
       "tabs": {
         "manual": "Tạo thủ công",
         "aiGenerated": "AI tạo",

@@ -16,6 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useFlashcardLimit } from "@/hooks/flashcard/use-flashcard-limit";
 import { useFlashProcessor } from "@/hooks/use-flash-processor";
 import {
   FILE_UPLOAD_LIMITS,
@@ -36,16 +37,20 @@ type InputMode = "FILE" | "TEXT";
 interface AIGeneratedUploaderProps {
   onProcessingStart?: (fileName: string, label?: string) => void;
   onProcessingDone?: (done: boolean) => void;
+  onLimitReached?: () => void;
 }
 
 export function AIGeneratedUploader({
   onProcessingStart,
   onProcessingDone,
+  onLimitReached,
 }: AIGeneratedUploaderProps) {
   const t = useTranslations("Flashcards");
   const { goFlashcardEdit } = useLocalizedNavigation();
   const [isInitialMount, setIsInitialMount] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
+
+  const { data: limitData } = useFlashcardLimit();
 
   // Input mode selection (auto-detected)
   const [inputMode, setInputMode] = useState<InputMode>("FILE");
@@ -102,6 +107,18 @@ export function AIGeneratedUploader({
   }, [hasFiles]);
 
   const handleGenerateFlashcards = async () => {
+    // Check if user has reached the limit
+    // Use both backend flag and manual check as fallback
+    const hasReachedLimit =
+      limitData &&
+      (!limitData.canCreateFlashcard ||
+        limitData.flashcardSetsCreatedThisWeek >= limitData.weeklyLimit);
+
+    if (hasReachedLimit) {
+      onLimitReached?.();
+      return;
+    }
+
     setIsGenerating(true);
     onProcessingStart?.(
       uploadedFiles[0]?.name || "File",
