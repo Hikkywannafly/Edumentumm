@@ -3,6 +3,7 @@
 import { useFlashcardPrefetch } from "@/hooks/flashcard/use-flashcard-prefecth";
 import { useKanbanPrefetch } from "@/hooks/kanban/use-kanban-query";
 import { useQuizPrefetch } from "@/hooks/quiz/use-quiz-prefetch";
+import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 import { toast } from "sonner";
@@ -13,6 +14,7 @@ import StudyGroupsActivity from "./study-groups-activity";
 import StudyTime from "./study-time";
 
 export default function DashboardContent() {
+  const t = useTranslations("Dashboard");
   const searchParams = useSearchParams();
 
   // Prefetch hooks
@@ -25,8 +27,10 @@ export default function DashboardContent() {
   useEffect(() => {
     const paymentSuccess = searchParams.get("payment");
     if (paymentSuccess === "success") {
-      toast.success("Thanh toán thành công!", {
-        description: "Tài khoản Pro của bạn đã được kích hoạt.",
+      toast.success(t("paymentSuccessTitle") || "Payment successful!", {
+        description:
+          t("paymentSuccessDescription") ||
+          "Your Pro account has been activated.",
         duration: 5000,
       });
 
@@ -35,7 +39,7 @@ export default function DashboardContent() {
       url.searchParams.delete("payment");
       window.history.replaceState({}, document.title, url.toString());
     }
-  }, [searchParams]);
+  }, [searchParams, t]);
 
   // Prefetch kanban data when dashboard loads
   useEffect(() => {

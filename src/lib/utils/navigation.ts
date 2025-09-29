@@ -137,7 +137,7 @@ export function useLocalizedNavigation() {
 }
 
 /**
- * Utility function để tạo localized href
+ * Utility function to create localized href
  */
 export function createLocalizedHref(href: string, locale?: string): string {
   // If no locale provided, try to get it from window location
@@ -147,6 +147,7 @@ export function createLocalizedHref(href: string, locale?: string): string {
       ? getLocaleFromPathname(window.location.pathname)
       : "en");
 
+  // Ensure href starts with a slash
   const cleanHref = href.startsWith("/") ? href : `/${href}`;
   return `/${currentLocale}${cleanHref}`;
 }

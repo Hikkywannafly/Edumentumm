@@ -3,7 +3,7 @@
 import {
   Archive,
   BookOpen,
-  BookIcon as BookReader,
+  BookText,
   BrainCircuit,
   Calendar,
   ChevronDown,
@@ -13,7 +13,7 @@ import {
   GraduationCap,
   Group,
   HelpCircle,
-  LayoutDashboard,
+  Home,
   Pin,
   PinOff,
   StickyNote,
@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/collapsible";
 import { useSidebarContext } from "@/contexts/sidebar-context";
 import { usePrefetchQuizList } from "@/hooks/quiz/use-quiz-list";
+import { useTranslations } from "next-intl";
 import { LocalizedLink } from "../localized-link";
 
 type MenuItem = {
@@ -44,106 +45,108 @@ type MenuData = {
   [key: string]: MenuItem[];
 };
 
-const menuData: MenuData = {
-  overview: [
-    {
-      title: "Dashboard",
-      url: "/dashboard",
-      icon: LayoutDashboard,
-    },
-    {
-      title: "Explore",
-      url: "/explore",
-      icon: Compass,
-    },
-  ],
-  contentCreation: [
-    {
-      title: "Materials",
-      url: "/materials",
-      icon: BookOpen,
-    },
-    {
-      title: "Quizzes",
-      url: "/quizzes",
-      icon: HelpCircle,
-    },
-    {
-      title: "Flashcards",
-      url: "/flashcards",
-      icon: CreditCard,
-    },
-    {
-      title: "Collections",
-      url: "/collections",
-      icon: FolderOpen,
-    },
-  ],
-  studyTools: [
-    {
-      title: "Notes",
-      url: "/notes",
-      icon: StickyNote,
-    },
-    {
-      title: "Mind Map",
-      url: "/mindmap",
-      icon: BrainCircuit,
-    },
-    {
-      title: "Reader",
-      url: "/reader",
-      icon: BookReader,
-      badge: "New",
-    },
-    {
-      title: "Tutors",
-      url: "/tutors",
-      icon: Users,
-      badge: "Beta",
-    },
-    {
-      title: "Pomodoro",
-      url: "/pomodoro",
-      icon: Timer,
-    },
-  ],
-  planning: [
-    {
-      title: "Planner",
-      url: "/planner",
-      icon: Calendar,
-    },
-    {
-      title: "Kanban Board",
-      url: "/kanban",
-      icon: Trello,
-    },
-  ],
-  socialprogress: [
-    {
-      title: "Course",
-      url: "/course",
-      icon: GraduationCap,
-    },
-    {
-      title: "Study Group",
-      url: "/group",
-      icon: Group,
-    },
-    {
-      title: "Achievements",
-      url: "/achievements",
-      icon: Archive,
-    },
-  ],
-};
-
 export function AppSidebar() {
+  const t = useTranslations("Navigation");
   const { isPinned, isHovered, setIsPinned, setIsHovered, isExpanded } =
     useSidebarContext();
   const timeoutRef = React.useRef<NodeJS.Timeout | null>(null);
   const prefetchQuizList = usePrefetchQuizList();
+
+  // Menu data with translations and improved icons
+  const menuData: MenuData = {
+    overview: [
+      {
+        title: t("dashboard"),
+        url: "/dashboard",
+        icon: Home,
+      },
+      {
+        title: t("explore"),
+        url: "/explore",
+        icon: Compass,
+      },
+    ],
+    contentCreation: [
+      {
+        title: t("materials"),
+        url: "/materials",
+        icon: BookOpen,
+      },
+      {
+        title: t("quizzes"),
+        url: "/quizzes",
+        icon: HelpCircle,
+      },
+      {
+        title: t("flashcards"),
+        url: "/flashcards",
+        icon: CreditCard,
+      },
+      {
+        title: t("collections"),
+        url: "/collections",
+        icon: FolderOpen,
+      },
+    ],
+    studyTools: [
+      {
+        title: t("notes"),
+        url: "/notes",
+        icon: StickyNote,
+      },
+      {
+        title: t("mindMap"),
+        url: "/mindmap",
+        icon: BrainCircuit,
+      },
+      {
+        title: t("reader"),
+        url: "/reader",
+        icon: BookText,
+        badge: "New",
+      },
+      {
+        title: t("tutors"),
+        url: "/tutors",
+        icon: Users,
+        badge: "Beta",
+      },
+      {
+        title: t("pomodoro"),
+        url: "/pomodoro",
+        icon: Timer,
+      },
+    ],
+    planning: [
+      {
+        title: t("planner"),
+        url: "/planner",
+        icon: Calendar,
+      },
+      {
+        title: t("kanbanBoard"),
+        url: "/kanban",
+        icon: Trello,
+      },
+    ],
+    socialprogress: [
+      {
+        title: t("course"),
+        url: "/course",
+        icon: GraduationCap,
+      },
+      {
+        title: t("studyGroup"),
+        url: "/group",
+        icon: Group,
+      },
+      {
+        title: t("achievements"),
+        url: "/achievements",
+        icon: Archive,
+      },
+    ],
+  };
 
   // Suppress ResizeObserver errors
   React.useEffect(() => {
@@ -213,6 +216,24 @@ export function AppSidebar() {
     ? "opacity-100 w-3"
     : "opacity-0 w-0 overflow-hidden";
 
+  // Function to get translated section titles
+  const getSectionTitle = (key: string) => {
+    switch (key) {
+      case "overview":
+        return t("overview");
+      case "contentCreation":
+        return t("contentCreation");
+      case "studyTools":
+        return t("studyTools");
+      case "planning":
+        return t("planning");
+      case "socialprogress":
+        return t("socialProgress");
+      default:
+        return key;
+    }
+  };
+
   return (
     <div
       onMouseEnter={handleMouseEnter}
@@ -240,7 +261,7 @@ export function AppSidebar() {
               size="icon"
               className={`h-6 w-6 transition-opacity duration-200 hover:opacity-100 ${textVisibility}`}
               onClick={handlePinToggle}
-              title={isPinned ? "Unpin sidebar" : "Pin sidebar"}
+              title={isPinned ? t("unpinSidebar") : t("pinSidebar")}
             >
               {isPinned ? (
                 <Pin className="h-4 w-4 text-blue-600" />
@@ -262,11 +283,7 @@ export function AppSidebar() {
                   <span
                     className={`transition-opacity duration-200 ${textVisibility}`}
                   >
-                    {key === "overview" && "OVERVIEW"}
-                    {key === "contentCreation" && "CONTENT CREATION"}
-                    {key === "studyTools" && "STUDY TOOLS"}
-                    {key === "planning" && "PLANNING & ORGANIZATION"}
-                    {key === "socialprogress" && "SOCIAL PROGRESS"}
+                    {getSectionTitle(key)}
                   </span>
                   <ChevronDown
                     className={`h-3 w-3 transition-all duration-200 group-data-[state=open]/collapsible:rotate-180 ${iconVisibility}`}

@@ -8,9 +8,12 @@ import { useFlashcardTotalStats } from "@/hooks/flashcard/use-flashcard-total-st
 import { useProfileStart } from "@/hooks/profile/use-profile-start";
 import { useQuizStats } from "@/hooks/quiz/use-quiz-list";
 import { BookOpen, Clock, Layers, Zap } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { LocalizedLink } from "../localized-link";
 
 export default function DashboardStats() {
+  const t = useTranslations("Dashboard");
+
   const { data: flashcardStats, isLoading: flashcardLoading } =
     useFlashcardTotalStats();
   const { data: quizStats, isLoading: quizLoading } = useQuizStats();
@@ -38,11 +41,11 @@ export default function DashboardStats() {
           ) : (
             <div>
               <h1 className="font-bold text-2xl">
-                Welcome back, {profileInfo?.username || "User"}!
+                {t("welcomeBack", {
+                  username: profileInfo?.username || "User",
+                })}
               </h1>
-              <p className="text-muted-foreground">
-                Ready for another productive study session?
-              </p>
+              <p className="text-muted-foreground">{t("readyForSession")}</p>
             </div>
           )}
         </div>
@@ -55,9 +58,14 @@ export default function DashboardStats() {
             </div>
           ) : (
             <div>
-              <p className="font-medium text-sm">Level {currentLevel}</p>
+              <p className="font-medium text-sm">
+                {t("level", { level: currentLevel })}
+              </p>
               <p className="text-muted-foreground text-xs">
-                {userLevel.currentXP} / {userLevel.requiredXP} XP
+                {t("xpProgress", {
+                  currentXP: userLevel.currentXP,
+                  requiredXP: userLevel.requiredXP,
+                })}
               </p>
               <Progress value={progressPercentage} className="mt-1 w-32" />
             </div>
@@ -87,13 +95,13 @@ export default function DashboardStats() {
                 <div className="flex items-start justify-between">
                   <div className="space-y-2">
                     <p className="font-medium text-muted-foreground text-sm">
-                      Quizzes
+                      {t("quizzes")}
                     </p>
                     <p className="font-bold text-3xl">
                       {(quizStats?.totalQuizzes || 0).toString()}
                     </p>
                     <p className="text-muted-foreground text-sm">
-                      Created quizzes
+                      {t("createdQuizzes")}
                     </p>
                   </div>
                   <div className="rounded-lg bg-blue-50 p-3">
@@ -106,7 +114,7 @@ export default function DashboardStats() {
                   asChild
                 >
                   <LocalizedLink href="/quizzes/create">
-                    Create Quiz
+                    {t("createQuiz")}
                   </LocalizedLink>
                 </Button>
               </div>
@@ -134,13 +142,13 @@ export default function DashboardStats() {
                 <div className="flex items-start justify-between">
                   <div className="space-y-2">
                     <p className="font-medium text-muted-foreground text-sm">
-                      Flashcards
+                      {t("flashcards")}
                     </p>
                     <p className="font-bold text-3xl">
                       {(flashcardStats?.totalDecks || 0).toString()}
                     </p>
                     <p className="text-muted-foreground text-sm">
-                      Flashcard sets
+                      {t("flashcardSets")}
                     </p>
                   </div>
                   <div className="rounded-lg bg-teal-50 p-3">
@@ -153,7 +161,7 @@ export default function DashboardStats() {
                   asChild
                 >
                   <LocalizedLink href="/flashcards/create">
-                    Create Flashcards
+                    {t("createQuiz")}
                   </LocalizedLink>
                 </Button>
               </div>
@@ -167,10 +175,10 @@ export default function DashboardStats() {
             <div className="flex items-start justify-between">
               <div className="space-y-2">
                 <p className="font-medium text-muted-foreground text-sm">
-                  Set Up Study Sessions
+                  {t("setUpStudySessions")}
                 </p>
                 <p className="text-muted-foreground text-sm">
-                  Use the Pomodoro timer to maintain focus and track progress.
+                  {t("pomodoroDescription")}
                 </p>
               </div>
               <div className="rounded-lg bg-blue-50 p-3">
@@ -182,7 +190,7 @@ export default function DashboardStats() {
               className="mt-4 h-auto p-0 text-blue-500"
               asChild
             >
-              <LocalizedLink href="/pomodoro">Start Timer</LocalizedLink>
+              <LocalizedLink href="/pomodoro">{t("startTimer")}</LocalizedLink>
             </Button>
           </CardContent>
         </Card>
@@ -207,15 +215,19 @@ export default function DashboardStats() {
               <div className="flex items-start justify-between">
                 <div className="space-y-2">
                   <p className="font-medium text-muted-foreground text-sm">
-                    Study Streak
+                    {t("studyStreak")}
                   </p>
                   <p className="font-bold text-3xl">
                     {profileInfo?.streak || 0}
                   </p>
                   <div className="space-y-1 text-muted-foreground text-sm">
-                    <p>days</p>
-                    <p>Longest: {profileInfo?.maxStreak || 0} days</p>
-                    <p className="text-green-600">Keep up the great work!</p>
+                    <p>{t("days")}</p>
+                    <p>
+                      {t("longestStreak", {
+                        maxStreak: profileInfo?.maxStreak || 0,
+                      })}
+                    </p>
+                    <p className="text-green-600">{t("keepUpGreatWork")}</p>
                   </div>
                 </div>
                 <div className="rounded-lg bg-yellow-50 p-3">

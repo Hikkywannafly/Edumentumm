@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FileText, Plus } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { LocalizedLink } from "../localized-link";
 
 interface Note {
@@ -17,12 +18,14 @@ interface RecentNotesProps {
 }
 
 export default function RecentNotes({ notes = [] }: RecentNotesProps) {
+  const t = useTranslations("Dashboard");
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
         <CardTitle className="flex items-center gap-2">
           <FileText className="h-5 w-5" />
-          Recent Notes
+          {t("recentNotes")}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -43,18 +46,16 @@ export default function RecentNotes({ notes = [] }: RecentNotesProps) {
               </div>
             ))}
             <Button variant="outline" className="w-full" asChild>
-              <LocalizedLink href="/notes">View All Notes</LocalizedLink>
+              <LocalizedLink href="/notes">{t("viewAllNotes")}</LocalizedLink>
             </Button>
           </div>
         ) : (
           <div className="space-y-3">
-            <p className="text-muted-foreground text-sm">
-              No notes yet. Create one to organize your study materials!
-            </p>
+            <p className="text-muted-foreground text-sm">{t("noNotesYet")}</p>
             <Button variant="outline" className="w-full" asChild>
               <LocalizedLink href="/notes/create">
                 <Plus className="mr-2 h-4 w-4" />
-                Create Note
+                {t("createNote")}
               </LocalizedLink>
             </Button>
           </div>
