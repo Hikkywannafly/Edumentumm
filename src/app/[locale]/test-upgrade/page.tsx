@@ -1,5 +1,6 @@
 import BaseLayout from "@/components/layout/base-layout";
 import { PageHeaderClient } from "@/components/layout/page-header-client";
+import { ResponsivePageWrapper } from "@/components/layout/responsive-page-wrapper";
 import { setRequestLocale } from "next-intl/server";
 
 export default async function TestUpgradePage({
@@ -14,7 +15,7 @@ export default async function TestUpgradePage({
 
   return (
     <BaseLayout>
-      <div className="pt-16">
+      <ResponsivePageWrapper>
         <PageHeaderClient title="Test Upgrade Page" showUpgradeButton={true} />
         <div className="p-8">
           <h2 className="font-bold text-2xl">Test Page with Upgrade Button</h2>
@@ -23,7 +24,7 @@ export default async function TestUpgradePage({
             should have animations and a crown icon.
           </p>
         </div>
-      </div>
+      </ResponsivePageWrapper>
     </BaseLayout>
   );
 }

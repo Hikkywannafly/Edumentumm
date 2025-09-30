@@ -1,6 +1,7 @@
 "use client";
 
 import { LanguageSwitcher } from "@/components/language-switcher";
+import { SidebarToggle } from "@/components/sidebar/sidebar-toggle";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { useSidebarContext } from "@/contexts/sidebar-context";
@@ -32,7 +33,7 @@ export function PageHeaderClient({
   showLanguageSwitcher = true,
   showUpgradeButton = true,
 }: PageHeaderClientProps) {
-  const { isExpanded } = useSidebarContext();
+  const { isExpanded, isMobile } = useSidebarContext();
   const t = useTranslations("Header");
   const { goPricing } = useLocalizedNavigation();
   const { subscription, loading } = useSubscription();
@@ -40,12 +41,19 @@ export function PageHeaderClient({
 
   return (
     <header
-      className={`fixed top-0 right-0 left-0 z-20 flex h-16 items-center gap-3 bg-background ${
-        isExpanded ? "pl-64" : "pl-16"
+      className={`z-20 flex h-16 items-center gap-3 bg-background ${
+        isMobile
+          ? "relative w-full px-4"
+          : `fixed top-0 right-0 left-0 ${isExpanded ? "pl-64" : "pl-16"}`
       } ${className}`}
     >
-      <div className="mx-auto flex w-full items-center justify-between gap-2 px-4">
-        <h1 className="font-semibold text-xl">{title}</h1>
+      <div
+        className={`mx-auto flex w-full items-center justify-between gap-2 ${isMobile ? "" : "px-4"}`}
+      >
+        <div className="flex items-center gap-2">
+          <SidebarToggle />
+          <h1 className="font-semibold text-xl">{title}</h1>
+        </div>
         <div className="flex-1">{children}</div>
 
         <div className="flex items-center gap-2">

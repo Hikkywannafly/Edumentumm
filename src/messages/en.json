@@ -208,7 +208,9 @@
     "achievements": "Achievements",
     "explore": "Explore",
     "pinSidebar": "Pin sidebar",
-    "unpinSidebar": "Unpin sidebar"
+    "unpinSidebar": "Unpin sidebar",
+    "openSidebar": "Open sidebar",
+    "closeSidebar": "Close sidebar"
   },
   "Pricing": {
     "title": "Simple, transparent pricing",

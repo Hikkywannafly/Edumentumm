@@ -252,7 +252,9 @@
     "achievements": "Thành tựu",
     "explore": "Khám phá",
     "pinSidebar": "Ghim thanh bên",
-    "unpinSidebar": "Bỏ ghim thanh bên"
+    "unpinSidebar": "Bỏ ghim thanh bên",
+    "openSidebar": "Mở thanh bên",
+    "closeSidebar": "Đóng thanh bên"
   },
   "Pricing": {
     "title": "Bảng giá đơn giản, minh bạch",

@@ -10,17 +10,21 @@ interface DashboardLayoutProps {
 }
 
 function DashboardContent({ children }: DashboardLayoutProps) {
-  const { isExpanded } = useSidebarContext();
+  const { isExpanded, isMobile } = useSidebarContext();
 
   return (
     <div className="flex h-screen overflow-hidden">
       <AppSidebar />
       <div
         className={`flex min-w-0 flex-1 flex-col overflow-hidden transition-all duration-200 ease-in-out ${
-          isExpanded ? "ml-64" : "ml-16"
+          isMobile ? "ml-0" : isExpanded ? "ml-64" : "ml-16"
         }`}
       >
-        <main className="flex-1 overflow-y-auto pt-16">{children}</main>
+        <main
+          className={`flex-1 overflow-y-auto ${isMobile ? "pt-0" : "pt-16"}`}
+        >
+          {children}
+        </main>
       </div>
     </div>
   );
