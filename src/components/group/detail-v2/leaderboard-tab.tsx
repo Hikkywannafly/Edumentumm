@@ -17,7 +17,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { useChannel } from "@/hooks/chat/use-channel";
 import { formatDistanceToNow, parseISO } from "date-fns";
-import { MessageCircle } from "lucide-react";
+import { MessageCircle, PlusCircle } from "lucide-react";
 import { useState } from "react";
 
 interface ChatChannelTabProps {
@@ -46,31 +46,32 @@ export function ChatChannelTab({ groupId, onClick }: ChatChannelTabProps) {
   };
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
+    <Card className="border-0 bg-gradient-to-br shadow-lg">
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
         <div>
-          <CardTitle className="flex items-center gap-2 font-semibold text-sm">
-            <MessageCircle className="h-5 w-5 text-blue-500" />
-            Kênh trò chuyện nhóm
+          <CardTitle className="flex items-center gap-2 font-bold text-base text-blue-700">
+            <MessageCircle className="h-6 w-6 text-blue-500" />
+            Channel Group Chat
           </CardTitle>
           <CardDescription className="text-muted-foreground text-xs">
-            Trao đổi, hỏi đáp và chia sẻ trong nhóm học tập của bạn
+            Exchange, Q&A, and share in your study group
           </CardDescription>
         </div>
         <Button
-          className="ml-auto"
+          className="ml-auto flex items-center gap-1 border-blue-400 text-blue-700 hover:bg-blue-50"
           variant="outline"
           size="sm"
           onClick={() => setOpen(true)}
         >
-          + Tạo kênh chat
+          <PlusCircle className="h-4 w-4" />
+          Create Channel
         </Button>
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
           {isLoading && (
             <div className="text-center text-muted-foreground text-sm">
-              Đang tải kênh chat...
+              Loading chat channels...
             </div>
           )}
           {isError && (
@@ -80,17 +81,19 @@ export function ChatChannelTab({ groupId, onClick }: ChatChannelTabProps) {
           )}
           {!isLoading && !isError && channels.length === 0 && (
             <div className="text-center text-muted-foreground text-sm">
-              Chưa có kênh chat nào.
+              No chat channels yet.
             </div>
           )}
           {channels.map((channel) => (
-            <div
+            <button
+              type="button"
               onClick={() => onClick(channel.id, channel.name)}
               key={channel.id}
-              className="flex items-center justify-between rounded-md border bg-card px-4 py-3 transition hover:bg-muted/50"
+              className="flex w-full items-center justify-between rounded-xl border border-blue-100 bg-white/80 px-4 py-3 shadow-sm transition hover:bg-blue-50/80 focus:outline-none"
+              style={{ boxShadow: "0 2px 8px #dbeafe55" }}
             >
-              <div className="flex items-center gap-4">
-                <Avatar className="h-9 w-9">
+              <div className="flex gap-4">
+                <Avatar className="h-10 w-10 ring-2 ring-blue-200">
                   <AvatarFallback>
                     {channel.name
                       .split(" ")
@@ -101,22 +104,23 @@ export function ChatChannelTab({ groupId, onClick }: ChatChannelTabProps) {
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <p className="font-medium">{channel.name}</p>
-                  <p className="max-w-[180px] truncate text-muted-foreground text-xs">
-                    Tin nhắn mới nhất :{" "}
-                    {channel.lastMessage || "Chưa có tin nhắn"}
+                  <p className="font-semibold text-blue-800">{channel.name}</p>
+                  <p className="max-w-[180px] truncate text-gray-500 text-xs">
+                    New messages:{" "}
+                    <span className="font-medium text-gray-700">
+                      {channel.lastMessage || "No messages yet"}
+                    </span>
                   </p>
                 </div>
               </div>
-              <span className="text-muted-foreground text-xs">
+              <span className="min-w-[80px] text-right font-medium text-blue-500 text-xs">
                 {channel.time
                   ? formatDistanceToNow(parseISO(channel.time), {
                       addSuffix: true,
-                      locale: undefined,
                     })
                   : ""}
               </span>
-            </div>
+            </button>
           ))}
         </div>
       </CardContent>
@@ -125,21 +129,25 @@ export function ChatChannelTab({ groupId, onClick }: ChatChannelTabProps) {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>Tạo kênh chat mới</DialogTitle>
+            <DialogTitle className="text-blue-700">
+              Create New Chat Channel
+            </DialogTitle>
           </DialogHeader>
           <Input
-            placeholder="Nhập tên kênh chat..."
+            placeholder="Enter chat channel name..."
             value={channelName}
             onChange={(e) => setChannelName(e.target.value)}
             autoFocus
+            className="border-blue-300 focus:ring-blue-400"
           />
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>
-              Hủy
+              Cancel
             </Button>
             <Button
               onClick={handleCreate}
               disabled={!channelName.trim() || createChannel.isPending}
+              className="bg-blue-600 text-white hover:bg-blue-700"
             >
               {createChannel.isPending ? "Đang tạo..." : "Tạo kênh"}
             </Button>
