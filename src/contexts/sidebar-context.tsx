@@ -66,3 +66,23 @@ export function useSidebarContext() {
   }
   return context;
 }
+
+// Safe version that returns default values when context is not available
+export function useSidebarContextSafe() {
+  const context = React.useContext(SidebarContext);
+  const isMobile = useIsMobile(); // Always get the mobile state
+
+  if (context === undefined) {
+    return {
+      isPinned: false,
+      isHovered: false,
+      isMobileOpen: false,
+      setIsPinned: () => {},
+      setIsHovered: () => {},
+      setIsMobileOpen: () => {},
+      isExpanded: false,
+      isMobile,
+    };
+  }
+  return context;
+}
