@@ -5,13 +5,17 @@ import { CardHeader } from "@/components/ui/card";
 import { X } from "lucide-react";
 
 interface ChatHeaderProps {
+  name?: string;
   setClose: () => void;
 }
 
-export function ChatHeader({ setClose }: ChatHeaderProps) {
+export function ChatHeader({ name, setClose }: ChatHeaderProps) {
   return (
     <CardHeader className="flex flex-row items-center justify-between bg-primary p-3 text-primary-foreground">
-      <span className="font-semibold">Group Chat</span>
+      <span className="font-semibold">
+        {" "}
+        {`Channel [${name}]` || "Group Chat"}
+      </span>
       <Button
         type="button"
         variant="ghost"

@@ -7,51 +7,32 @@ export function MembersTab({ members }: { members?: UserGroupResponse[] }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 font-semibold text-sm">
-          <Users className="h-5 w-5 " />
+        <CardTitle className="flex items-center gap-2 font-bold text-blue-700 text-xs">
+          <Users className="h-5 w-5 text-blue-500" />
           Danh sách thành viên
         </CardTitle>
-        <p className="text-muted-foreground text-sm">
+        <p className="text-muted-foreground text-xs">
           Tất cả thành viên trong nhóm học tập
         </p>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {members?.map((member) => (
-            <Card
+            <div
               key={member?.id}
-              className="flex items-center justify-between rounded-xl border border-gray-200 p-4 transition hover:shadow-md dark:border-zinc-700 dark:bg-zinc-900"
+              className="flex items-center gap-4 rounded-sm border border-gray-100 bg-gradient-to-br from-blue-50 via-white to-purple-50 p-3 shadow transition-all hover:shadow-lg"
             >
-              <div className="flex items-center gap-3">
-                <div className="relative">
-                  <Avatar className="h-10 w-10">
-                    <img src={member?.imageUrl} alt={member?.username} />
-                  </Avatar>
-                  <img
-                    className={`absolute right-0 bottom-0 h-3 w-3 rounded-full border-2 border-white dark:border-zinc-900 ${
-                      member?.imageUrl ? "bg-green-500" : "bg-gray-400"
-                    }`}
-                    aria-label={
-                      member?.imageUrl
-                        ? "Online status indicator"
-                        : "Offline status indicator"
-                    }
-                  />
-                </div>
-                <div>
-                  <p className="font-medium">{member?.username}</p>
-                  {/* <p className="text-muted-foreground text-sm">
-                    {member?.points} điểm
-                  </p> */}
-                </div>
+              <div className="relative">
+                <Avatar className="h-12 w-12 ring-2 ring-blue-200">
+                  <img src={member?.imageUrl} alt={member?.username} />
+                </Avatar>
               </div>
-              {/* <Badge
-                variant={member.isOnline ? "default" : "outline"}
-                className="text-xs"
-              >
-                {member.isOnline ? "Đang online" : "Offline"}
-              </Badge> */}
-            </Card>
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-semibold text-blue-800 text-sm">
+                  {member?.username}
+                </p>
+              </div>
+            </div>
           ))}
         </div>
       </CardContent>

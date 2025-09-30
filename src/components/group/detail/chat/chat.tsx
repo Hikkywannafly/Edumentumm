@@ -1,6 +1,7 @@
 "use client";
 
 import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Client } from "@stomp/stompjs";
 import { useCallback, useEffect, useRef, useState } from "react";
 import SockJS from "sockjs-client";
@@ -12,38 +13,47 @@ import { ChatMessages } from "./chat-message";
 interface ChatProps {
   setClose: () => void;
   roomId: string;
+  name: string;
+  channelId: string;
   currentUserId: number;
   currentUserName?: string;
   currentUserAvatar?: string;
 }
 
 interface Message {
-  roomId: number;
+  roomId: string;
   senderId: number;
+  channelId: string;
   senderName: string;
-  avatar?: string;
+  imageUrl: string;
   content: string;
   timestamp: string;
 }
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+
 export default function Chat({
   setClose,
   roomId,
+  name,
   currentUserId,
+  channelId,
   currentUserName,
   currentUserAvatar,
 }: ChatProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [connected, setConnected] = useState(false);
+  const [loading, setLoading] = useState(true);
   const clientRef = useRef<Client | null>(null);
   const { accessToken } = useAuth();
 
   // Load lịch sử tin nhắn
   const fetchHistory = useCallback(async () => {
     if (!accessToken) return;
+    setLoading(true);
     try {
       const res = await fetch(
-        `https://edumentumbackend-production.up.railway.app/api/v1/chat/groups/${roomId}/messages`,
+        `${API_BASE_URL}/chat/groups/${roomId}/${channelId}/messages`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -57,20 +67,19 @@ export default function Chat({
       setMessages(history.reverse());
     } catch (err) {
       console.error("Lỗi khi lấy lịch sử tin nhắn:", err);
+    } finally {
+      setLoading(false);
     }
-  }, [roomId, accessToken]);
+  }, [roomId, channelId, accessToken]);
 
   useEffect(() => {
     fetchHistory();
   }, [fetchHistory]);
 
-  // Kết nối WebSocket
   useEffect(() => {
     if (!accessToken) return;
 
-    const socket = new SockJS(
-      "https://edumentumbackend-production.up.railway.app/ws-chat",
-    );
+    const socket = new SockJS("http://localhost:8080/ws-chat");
     const client = new Client({
       webSocketFactory: () => socket,
       connectHeaders: {
@@ -80,7 +89,7 @@ export default function Chat({
       onConnect: () => {
         console.log("WebSocket connected");
         setConnected(true);
-        client.subscribe(`/topic/room/${roomId}`, (message) => {
+        client.subscribe(`/topic/room/${roomId}/${channelId}`, (message) => {
           if (message.body) {
             const msg: Message = JSON.parse(message.body);
             setMessages((prev) => [...prev, msg]);
@@ -102,21 +111,22 @@ export default function Chat({
       client.deactivate();
       setConnected(false);
     };
-  }, [roomId, accessToken]);
+  }, [roomId, channelId, accessToken]);
 
   // Gửi tin nhắn
   const handleSendMessage = (content: string) => {
     if (!clientRef.current || !connected) return;
 
     const message: Message = {
-      roomId: Number(roomId),
-      senderId: Number(currentUserId),
+      roomId: roomId,
+      channelId: channelId,
+      senderId: currentUserId,
       senderName: currentUserName || "Anonymous",
-      avatar: currentUserAvatar,
+      imageUrl: currentUserAvatar || "",
       content,
       timestamp: new Date().toISOString(),
     };
-
+    console.log(message);
     clientRef.current.publish({
       destination: "/app/chat.send",
       body: JSON.stringify(message),
@@ -125,11 +135,20 @@ export default function Chat({
 
   return (
     <Card className="flex h-[480px] w-[360px] flex-col overflow-hidden rounded-lg bg-white shadow-lg">
-      <ChatHeader setClose={setClose} />
+      <ChatHeader name={name} setClose={setClose} />
       <CardContent className="flex-1 overflow-hidden">
-        <ChatMessages messages={messages} currentUserId={currentUserId} />
+        {loading ? (
+          <div className="flex flex-col gap-2 p-2">
+            <Skeleton className="h-6 w-2/3 rounded" />
+            <Skeleton className="h-6 w-1/2 rounded" />
+            <Skeleton className="h-6 w-3/4 rounded" />
+            <Skeleton className="h-6 w-1/3 rounded" />
+          </div>
+        ) : (
+          <ChatMessages messages={messages} currentUserId={currentUserId} />
+        )}
       </CardContent>
-      <ChatInput onSend={handleSendMessage} disabled={!connected} />
+      <ChatInput onSend={handleSendMessage} disabled={!connected || loading} />
     </Card>
   );
 }

@@ -5,7 +5,7 @@ interface MessageItemProps {
   message: {
     senderId: number;
     senderName: string;
-    avatar?: string;
+    imageUrl?: string;
     content: string;
     timestamp: string;
   };
@@ -24,8 +24,8 @@ export function MessageItem({ message, currentUserId }: MessageItemProps) {
     >
       {!isMe && (
         <Avatar className="h-8 w-8">
-          {message.avatar ? (
-            <AvatarImage src={message.avatar} alt={message.senderName} />
+          {message.imageUrl ? (
+            <AvatarImage src={message.imageUrl} alt={message.senderName} />
           ) : (
             <AvatarFallback>
               {message.senderName.charAt(0).toUpperCase()}
