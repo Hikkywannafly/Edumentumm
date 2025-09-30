@@ -79,7 +79,9 @@ export default function Chat({
   useEffect(() => {
     if (!accessToken) return;
 
-    const socket = new SockJS("http://localhost:8080/ws-chat");
+    const socket = new SockJS(
+      "https://edumentumbackend-production.up.railway.app/ws-chat",
+    );
     const client = new Client({
       webSocketFactory: () => socket,
       connectHeaders: {
