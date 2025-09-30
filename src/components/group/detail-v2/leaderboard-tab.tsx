@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { useChannel } from "@/hooks/chat/use-channel";
+import { formatDistanceToNow, parseISO } from "date-fns";
 import { MessageCircle } from "lucide-react";
 import { useState } from "react";
 
@@ -102,12 +103,18 @@ export function ChatChannelTab({ groupId, onClick }: ChatChannelTabProps) {
                 <div>
                   <p className="font-medium">{channel.name}</p>
                   <p className="max-w-[180px] truncate text-muted-foreground text-xs">
+                    Tin nhắn mới nhất :{" "}
                     {channel.lastMessage || "Chưa có tin nhắn"}
                   </p>
                 </div>
               </div>
               <span className="text-muted-foreground text-xs">
-                {channel.time || ""}
+                {channel.time
+                  ? formatDistanceToNow(parseISO(channel.time), {
+                      addSuffix: true,
+                      locale: undefined,
+                    })
+                  : ""}
               </span>
             </div>
           ))}
