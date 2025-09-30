@@ -1,8 +1,8 @@
 "use client";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Gift, LucideSettings, MessageCircle, Store } from "lucide-react";
-import { useMemo } from "react";
+import { Gift, LucideSettings, Store } from "lucide-react";
+import { useMemo, useState } from "react";
 import { useAuth } from "../../../contexts/auth-context";
 import { useDialogState } from "../../../hooks/group/use-dialog";
 import { useGroupDetail } from "../../../hooks/group/use-group-detail";
@@ -12,38 +12,12 @@ import { Button } from "../../ui";
 import Chat from "../detail/chat/chat";
 import GiftPointsDialog from "../detail/gift-point-dialog";
 import GroupSettingsDialog from "../detail/group-settings-dialog";
-import { LeaderboardTab } from "./leaderboard-tab";
+import { ChatChannelTab } from "./leaderboard-tab";
 import { MembersTab } from "./members-tab";
 import { OverviewCards } from "./overview-cards";
 import { PlansTab } from "./plans-tab";
 import { ReportsTab } from "./reports-tab";
 
-const STATIC_MEMBERS = [
-  {
-    id: 1,
-    name: "Md Kaiyum Hossain",
-    initials: "MK",
-    points: "10m",
-    rank: 1,
-    isOnline: false,
-  },
-  {
-    id: 2,
-    name: "alexionesc",
-    initials: "AL",
-    points: "8m",
-    rank: 2,
-    isOnline: true,
-  },
-  {
-    id: 3,
-    name: "Jane Smith",
-    initials: "JS",
-    points: "5m",
-    rank: 3,
-    isOnline: true,
-  },
-];
 const STATIC_PLANS = [
   {
     id: 1,
@@ -209,7 +183,9 @@ export default function GroupDetailContentV2({ id }: { id: string }) {
   const { dialogState, toggleDialog } = useDialogState();
   const { expandedPlan, togglePlanExpansion } = usePlan();
   const { groupDetail, handleGroupUpdate } = useGroupDetail(id);
-
+  const [openChat, setOpenChat] = useState(false);
+  const [channelId, setChannelId] = useState("");
+  const [name, setName] = useState("");
   const groupSettings = useMemo(
     () => ({
       publicId: groupDetail?.publicId ?? "",
@@ -241,21 +217,19 @@ export default function GroupDetailContentV2({ id }: { id: string }) {
 
       {/* Chat Button */}
       <div className="fixed right-6 bottom-6 z-50">
-        {dialogState.chat ? (
+        {openChat && (
           <Chat
+            name={name}
             currentUserId={Number(user?.userId)}
             currentUserName={user?.username}
-            roomId={id}
-            currentUserAvatar="https://tse4.mm.bing.net/th/id/OIP.ep74te1OIN1PMqHDf65LDwHaNK?cb=thfvnext&rs=1&pid=ImgDetMain&o=7&rm=3"
-            setClose={() => toggleDialog("chat")}
+            roomId={groupDetail?.publicId || "default-room-id"}
+            channelId={channelId}
+            currentUserAvatar={
+              user?.imageUrl ||
+              "https://tse4.mm.bing.net/th/id/OIP.ep74te1OIN1PMqHDf65LDwHaNK?cb=thfvnext&rs=1&pid=ImgDetMain&o=7&rm=3"
+            }
+            setClose={() => setOpenChat(false)}
           />
-        ) : (
-          <Button
-            onClick={() => toggleDialog("chat")}
-            className="h-12 w-12 rounded-full bg-indigo-600 hover:bg-indigo-700"
-          >
-            <MessageCircle size={20} />
-          </Button>
         )}
       </div>
 
@@ -311,8 +285,9 @@ export default function GroupDetailContentV2({ id }: { id: string }) {
 
         {/* Tabs */}
         <Tabs defaultValue="leaderboard" className="w-full">
-          <TabsList className="grid w-full grid-cols-4 rounded-lg bg-gray-100 dark:bg-zinc-800">
-            <TabsTrigger value="leaderboard">Leaderboard</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-5 rounded-lg bg-gray-100 dark:bg-zinc-800">
+            <TabsTrigger value="leaderboard">Channel</TabsTrigger>
+            <TabsTrigger value="notes">Notes</TabsTrigger>
             <TabsTrigger value="members">Members</TabsTrigger>
             <TabsTrigger value="plans">Plans</TabsTrigger>
             <TabsTrigger value="reports">Reports</TabsTrigger>
@@ -320,7 +295,18 @@ export default function GroupDetailContentV2({ id }: { id: string }) {
 
           <div className="mt-4">
             <TabsContent value="leaderboard" className="space-y-4">
-              <LeaderboardTab members={STATIC_MEMBERS} />
+              <ChatChannelTab
+                onClick={(channelId, name) => {
+                  setOpenChat(true);
+                  setChannelId(channelId);
+                  setName(name);
+                }}
+                groupId={groupDetail?.publicId}
+              />
+            </TabsContent>
+
+            <TabsContent value="notes" className="space-y-4">
+              <MembersTab members={groupDetail?.userGroupResponseList} />
             </TabsContent>
 
             <TabsContent value="members" className="space-y-4">

@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import { MessageItem } from "./message-item";
 
 interface Message {
-  roomId: number;
+  roomId: string;
   senderId: number;
   senderName: string;
   avatar?: string;

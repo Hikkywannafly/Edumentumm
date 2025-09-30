@@ -2,24 +2,72 @@ import { Award, BarChart3, BookOpen, Clock, Trophy, Zap } from "lucide-react";
 import { useEffect, useState } from "react";
 import { type GetProfileResponse, profileAPI } from "../../lib/api/profile";
 
+const PROFILE_CACHE_KEY = "profile_info_cache";
+const PROFILE_CACHE_TIME = 5 * 60 * 1000;
+
+function getCachedProfile() {
+  try {
+    const raw = localStorage.getItem(PROFILE_CACHE_KEY);
+    if (!raw) return null;
+    const { data, timestamp } = JSON.parse(raw);
+    if (Date.now() - timestamp < PROFILE_CACHE_TIME) {
+      return data;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function setCachedProfile(data: GetProfileResponse) {
+  localStorage.setItem(
+    PROFILE_CACHE_KEY,
+    JSON.stringify({ data, timestamp: Date.now() }),
+  );
+}
+
 export function useProfileStart() {
-  const [info, setInfo] = useState<GetProfileResponse | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [info, setInfo] = useState<GetProfileResponse | null>(
+    getCachedProfile(),
+  );
+  const [loading, setLoading] = useState(!info);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    setLoading(true);
-    profileAPI
-      .getProfile()
-      .then((res) => {
-        setInfo(res);
-        setError(null);
-      })
-      .catch((err) => {
-        setError(err?.message || "Failed to fetch profile");
-        setInfo(null);
-      })
-      .finally(() => setLoading(false));
+    let isMounted = true;
+    const cached = getCachedProfile();
+    if (cached) {
+      setInfo(cached);
+      setLoading(false);
+    }
+    const cachedProfile = localStorage.getItem(PROFILE_CACHE_KEY);
+    const cachedTimestamp = cachedProfile
+      ? JSON.parse(cachedProfile).timestamp
+      : 0;
+    if (!cached || Date.now() - cachedTimestamp > PROFILE_CACHE_TIME) {
+      setLoading(true);
+      profileAPI
+        .getProfile()
+        .then((res) => {
+          if (isMounted) {
+            setInfo(res);
+            setCachedProfile(res);
+            setError(null);
+          }
+        })
+        .catch((err) => {
+          if (isMounted) {
+            setError(err?.message || "Failed to fetch profile");
+            setInfo(null);
+          }
+        })
+        .finally(() => {
+          if (isMounted) setLoading(false);
+        });
+    }
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const stats = [

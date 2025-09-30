@@ -28,6 +28,7 @@ import {
 } from "recharts";
 import {} from "recharts";
 import { useAuth } from "../../../contexts/auth-context";
+import { useProfileDailyQuiz } from "../../../hooks/profile/use-daily-quiz";
 import { useProfile } from "../../../hooks/profile/use-profile";
 import { useProfileAttendance } from "../../../hooks/profile/use-profile-attendance";
 import { useProfileStart } from "../../../hooks/profile/use-profile-start";
@@ -49,6 +50,7 @@ export default function UserProfile() {
   const { stats, info } = useProfileStart();
   const { studyTime } = useProfileStudyTime();
   const { user } = useAuth();
+  const { info: dailyQuizInfo } = useProfileDailyQuiz();
   const { attendanceDates } = useProfileAttendance();
 
   function getHeatColor(minutes: number) {
@@ -67,16 +69,6 @@ export default function UserProfile() {
     if (minutes < 45) return "#1e293b";
     return "#ffffff";
   }
-
-  const data = [
-    { name: "Mon", quizzes: 5, avgScore: 8.0 },
-    { name: "Tue", quizzes: 1, avgScore: 6.2 },
-    { name: "Wed", quizzes: 6, avgScore: 9.8 },
-    { name: "Thu", quizzes: 12, avgScore: 5.5 },
-    { name: "Fri", quizzes: 10, avgScore: 7.2 },
-    { name: "Sat", quizzes: 5, avgScore: 9.0 },
-    { name: "Sun", quizzes: 3, avgScore: 8.3 },
-  ];
 
   const dataRadar = [
     {
@@ -299,6 +291,20 @@ export default function UserProfile() {
                       }}
                       activeDot={{ r: 7 }}
                     />
+                    <Line
+                      type="monotone"
+                      dataKey="f"
+                      name="Focus Quality"
+                      stroke="#0b2414"
+                      strokeWidth={1}
+                      dot={{
+                        r: 5,
+                        stroke: "#22c55e",
+                        strokeWidth: 2,
+                        fill: "#fff",
+                      }}
+                      activeDot={{ r: 7 }}
+                    />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
@@ -393,40 +399,32 @@ export default function UserProfile() {
         <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="flex items-center gap-2 text-sm">
+              <CardTitle className="flex items-center gap-2 text-xs">
                 QuizStatsChart
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <ComposedChart data={data}>
+              <ResponsiveContainer width="100%" height={260}>
+                <ComposedChart data={dailyQuizInfo}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" />
+                  <XAxis dataKey="day" tick={{ fontSize: 10 }} />
                   <YAxis
                     yAxisId="left"
                     orientation="left"
-                    label={{
-                      value: "Quizzes",
-                      angle: -90,
-                      position: "insideLeft",
-                    }}
+                    tick={{ fontSize: 10 }}
                   />
                   <YAxis
                     yAxisId="right"
                     orientation="right"
-                    label={{
-                      value: "Avg Score (%)",
-                      angle: 90,
-                      position: "insideRight",
-                    }}
+                    tick={{ fontSize: 10 }}
                   />
-                  <Tooltip />
-                  <Legend />
+                  <Tooltip contentStyle={{ fontSize: 10 }} />
+                  <Legend wrapperStyle={{ fontSize: 10 }} />
                   <Bar
                     yAxisId="left"
-                    dataKey="quizzes"
+                    dataKey="attempts"
                     fill="#3b82f6"
-                    name="Quizzes"
+                    name="Attempts"
                   />
                   <Line
                     yAxisId="right"
@@ -434,20 +432,21 @@ export default function UserProfile() {
                     dataKey="avgScore"
                     stroke="#f59e0b"
                     strokeWidth={2}
-                    name="Avg Score (%)"
+                    name="Avg Score"
                   />
                 </ComposedChart>
               </ResponsiveContainer>
             </CardContent>
           </Card>
+
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="flex items-center gap-2 text-sm">
+              <CardTitle className="flex items-center gap-2 text-xs">
                 Radar Chart Example
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
+              <ResponsiveContainer width="100%" height={260}>
                 <RadarChart
                   cx="50%"
                   cy="50%"
@@ -455,8 +454,8 @@ export default function UserProfile() {
                   data={dataRadar}
                 >
                   <PolarGrid />
-                  <PolarAngleAxis dataKey="subject" />
-                  <PolarRadiusAxis />
+                  <PolarAngleAxis dataKey="subject" tick={{ fontSize: 10 }} />
+                  <PolarRadiusAxis tick={{ fontSize: 10 }} />
                   <Radar
                     name="Mike"
                     dataKey="A"
@@ -464,11 +463,13 @@ export default function UserProfile() {
                     fill="#8884d8"
                     fillOpacity={0.6}
                   />
+                  <Legend wrapperStyle={{ fontSize: 10 }} />
                 </RadarChart>
               </ResponsiveContainer>
             </CardContent>
           </Card>
         </div>
+
         <div className="mt-8">
           <Card>
             <CardHeader>

@@ -47,6 +47,18 @@ export interface GetProfileAPIResponse {
   status: string;
 }
 
+export interface GetDailyQuizAPIResponse {
+  data: GetDailyQuizResponse[];
+  message: string;
+  status: string;
+}
+
+export interface GetDailyQuizResponse {
+  day: string;
+  attempts: string;
+  avgScore: string;
+}
+
 export interface GetProfileAttendanceResponse {
   localDate: string[];
 }
@@ -132,6 +144,13 @@ class ProfileAPI {
 
   async getProfile(): Promise<GetProfileResponse> {
     const response = await this.request<GetProfileAPIResponse>("/user/profile");
+    return response.data;
+  }
+
+  async getDailyQuiz(): Promise<GetDailyQuizResponse[]> {
+    const response = await this.request<GetDailyQuizAPIResponse>(
+      "/user/profile/daily-quiz",
+    );
     return response.data;
   }
 
