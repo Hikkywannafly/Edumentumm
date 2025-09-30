@@ -1,6 +1,6 @@
 "use client";
 
-import { useSidebarContext } from "@/contexts/sidebar-context";
+import { useSidebarContextSafe } from "@/contexts/sidebar-context";
 import type React from "react";
 
 interface ResponsivePageWrapperProps {
@@ -19,7 +19,7 @@ export function ResponsivePageWrapper({
   hasFixedHeader = true,
   className = "",
 }: ResponsivePageWrapperProps) {
-  const { isMobile } = useSidebarContext();
+  const { isMobile } = useSidebarContextSafe();
 
   return (
     <div

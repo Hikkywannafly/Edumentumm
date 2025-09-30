@@ -4,7 +4,7 @@ import { LanguageSwitcher } from "@/components/language-switcher";
 import { SidebarToggle } from "@/components/sidebar/sidebar-toggle";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
-import { useSidebarContext } from "@/contexts/sidebar-context";
+import { useSidebarContextSafe } from "@/contexts/sidebar-context";
 import { useSubscription } from "@/hooks/use-subscription";
 import { useLocalizedNavigation } from "@/lib/utils/navigation";
 import { motion } from "framer-motion";
@@ -33,7 +33,7 @@ export function PageHeaderClient({
   showLanguageSwitcher = true,
   showUpgradeButton = true,
 }: PageHeaderClientProps) {
-  const { isExpanded, isMobile } = useSidebarContext();
+  const { isExpanded, isMobile } = useSidebarContextSafe();
   const t = useTranslations("Header");
   const { goPricing } = useLocalizedNavigation();
   const { subscription, loading } = useSubscription();

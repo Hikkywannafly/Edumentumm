@@ -1,15 +1,21 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { useSidebarContext } from "@/contexts/sidebar-context";
+import { useSidebarContextSafe } from "@/contexts/sidebar-context";
 import { Menu, X } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { usePathname } from "next/navigation";
 
 export function SidebarToggle() {
-  const { isMobile, isMobileOpen, setIsMobileOpen } = useSidebarContext();
+  const { isMobile, isMobileOpen, setIsMobileOpen } = useSidebarContextSafe();
   const t = useTranslations("Navigation");
+  const pathname = usePathname();
 
-  if (!isMobile) {
+  // Check if we're on the landing page (root path or locale root)
+  // Matches: "/", "/en", "/vi", "/en/", "/vi/" etc.
+  const isLandingPage = pathname === "/" || /^\/[a-z]{2}(\/)?$/.test(pathname);
+
+  if (!isMobile || isLandingPage) {
     return null;
   }
 
