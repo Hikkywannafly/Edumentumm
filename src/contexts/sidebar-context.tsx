@@ -1,13 +1,17 @@
 "use client";
 
+import { useIsMobile } from "@/hooks/use-mobile";
 import * as React from "react";
 
 interface SidebarContextType {
   isPinned: boolean;
   isHovered: boolean;
+  isMobileOpen: boolean;
   setIsPinned: (pinned: boolean) => void;
   setIsHovered: (hovered: boolean) => void;
+  setIsMobileOpen: (open: boolean) => void;
   isExpanded: boolean;
+  isMobile: boolean;
 }
 
 const SidebarContext = React.createContext<SidebarContextType | undefined>(
@@ -17,6 +21,8 @@ const SidebarContext = React.createContext<SidebarContextType | undefined>(
 export function SidebarProvider({ children }: { children: React.ReactNode }) {
   const [isPinned, setIsPinned] = React.useState(false);
   const [isHovered, setIsHovered] = React.useState(false);
+  const [isMobileOpen, setIsMobileOpen] = React.useState(false);
+  const isMobile = useIsMobile();
 
   // Load initial state from localStorage
   React.useEffect(() => {
@@ -26,16 +32,26 @@ export function SidebarProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const isExpanded = isPinned || isHovered;
+  // Close mobile sidebar when switching to desktop
+  React.useEffect(() => {
+    if (!isMobile && isMobileOpen) {
+      setIsMobileOpen(false);
+    }
+  }, [isMobile, isMobileOpen]);
+
+  const isExpanded = isMobile ? isMobileOpen : isPinned || isHovered;
 
   return (
     <SidebarContext.Provider
       value={{
         isPinned,
         isHovered,
+        isMobileOpen,
         setIsPinned,
         setIsHovered,
+        setIsMobileOpen,
         isExpanded,
+        isMobile,
       }}
     >
       {children}

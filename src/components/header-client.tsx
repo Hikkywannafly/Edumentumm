@@ -3,6 +3,7 @@
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { LocalizedLink } from "@/components/localized-link";
 import { MobileNav } from "@/components/mobile-nav";
+import { SidebarToggle } from "@/components/sidebar/sidebar-toggle";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/auth-context";
@@ -77,14 +78,17 @@ export function HeaderClient({ title }: HeaderClientProps) {
 
   return (
     <>
-      <header className="sticky top-0 z-50 w-full bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <header className="z-50 w-full bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 md:sticky md:top-0">
         <WideContainer classNames="container flex h-16 items-center justify-between">
-          <LocalizedLink href="" className="flex items-center space-x-2">
-            <div className="m-4 flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-              <BookOpen className="h-5 w-5 text-primary-foreground" />
-            </div>
-            <span className="font-bold text-xl">{title || t("title")}</span>
-          </LocalizedLink>
+          <div className="flex items-center space-x-2">
+            <SidebarToggle />
+            <LocalizedLink href="" className="flex items-center space-x-2">
+              <div className="mr-2 flex h-8 w-8 items-center justify-center rounded-lg bg-primary md:m-4">
+                <BookOpen className="h-5 w-5 text-primary-foreground" />
+              </div>
+              <span className="font-bold text-xl">{title || t("title")}</span>
+            </LocalizedLink>
+          </div>
 
           <nav className="hidden items-center space-x-6 md:flex">
             <a
