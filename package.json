@@ -98,7 +98,7 @@
     "html-react-parser": "^5.2.6",
     "input-otp": "^1.4.2",
     "isomorphic-dompurify": "^2.27.0",
-    "lucide-react": "^0.485.0",
+    "lucide-react": "^0.546.0",
     "mammoth": "^1.10.0",
     "nanoid": "^5.1.5",
     "next": "15.3.2",
