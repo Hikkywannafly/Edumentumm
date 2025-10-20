@@ -114,7 +114,7 @@
     "react-hook-form": "^7.61.1",
     "react-resizable-panels": "^3.0.3",
     "reactflow": "^11.11.4",
-    "recharts": "2.15.4",
+    "recharts": "3.3.0",
     "remark-gfm": "^4.0.1",
     "sockjs-client": "^1.6.1",
     "sonner": "^2.0.6",
